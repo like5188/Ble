@@ -15,6 +15,7 @@ import androidx.databinding.DataBindingUtil
 import com.like.ble.BleManager
 import com.like.ble.model.BleStatus
 import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
+import com.like.ble.utils.getBluetoothManager
 import java.util.*
 
 /**
@@ -220,6 +221,9 @@ class BlePeripheralActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        getBluetoothManager()?.getConnectedDevices(BluetoothProfile.GATT)?.forEach {
+            mBluetoothGattServer?.cancelConnection(it)
+        }
         mBluetoothGattServer?.clearServices()
         mBluetoothGattServer?.close()
         mBluetoothGattServer = null

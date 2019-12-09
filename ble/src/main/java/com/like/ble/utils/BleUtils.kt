@@ -10,19 +10,19 @@ import java.nio.ByteBuffer
 import java.util.*
 import kotlin.math.ceil
 
-internal fun Context.getBluetoothManager(): BluetoothManager? = getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
+fun Context.getBluetoothManager(): BluetoothManager? = getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
 
-internal fun Context.getBluetoothAdapter(): BluetoothAdapter? = getBluetoothManager()?.adapter
+fun Context.getBluetoothAdapter(): BluetoothAdapter? = getBluetoothManager()?.adapter
 
 /**
  * 蓝牙是否准备就绪
  */
-internal fun Context.isBluetoothEnable(): Boolean = getBluetoothAdapter()?.isEnabled ?: false
+fun Context.isBluetoothEnable(): Boolean = getBluetoothAdapter()?.isEnabled ?: false
 
 /**
  * 查看手机是否支持蓝牙功能
  */
-internal fun Context.isSupportBluetooth(): Boolean = packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
+fun Context.isSupportBluetooth(): Boolean = packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
 
 /**
  * 查找远程设备的特征，并开启通知，以便触发onCharacteristicChanged()方法
