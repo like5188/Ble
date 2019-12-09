@@ -5,7 +5,7 @@
 最新版本|[![Download](https://jitpack.io/v/like5188/Ble.svg)](https://jitpack.io/#like5188/Ble)
 
 ## 功能介绍
-1、蓝牙模块封装。
+1、低功耗蓝牙模块封装，包括central、peripheral。
 
 ## 使用方法：
 
@@ -32,4 +32,7 @@
     // coroutines
     compileOnly 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2'
     compileOnly 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.2'
+
+    compileOnly 'io.reactivex.rxjava2:rxjava:2.2.11'
+    compileOnly 'com.github.tbruyelle:rxpermissions:0.10.2'
 ```
