@@ -162,12 +162,7 @@ class ConnectState(
     override fun connect(command: BleConnectCommand) {
         if (isConnected(command.address)) return
         command.connect(mActivity.lifecycleScope, mGattCallback, mActivity.getBluetoothManager()?.adapter) {
-            disconnect(
-                BleDisconnectCommand(
-                    mActivity,
-                    command.address
-                )
-            )
+            disconnect(BleDisconnectCommand(mActivity, command.address))
         }
     }
 
