@@ -104,9 +104,8 @@ class BleManager(private val mActivity: FragmentActivity) {
     private val mObserver = Observer<BleResult> {
         when (it?.status) {
             BleStatus.INIT_SUCCESS -> {
-                val bluetoothManager = mBleState?.getBluetoothManager() ?: return@Observer
                 val bluetoothAdapter = mBleState?.getBluetoothAdapter() ?: return@Observer
-                mBleState = ScanState(mActivity, mLiveData, bluetoothManager, bluetoothAdapter)
+                mBleState = ScanState(mActivity, mLiveData, bluetoothAdapter)
             }
             else -> {
             }
@@ -139,9 +138,8 @@ class BleManager(private val mActivity: FragmentActivity) {
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun startAdvertising(settings: AdvertiseSettings, advertiseData: AdvertiseData, scanResponse: AdvertiseData) {
         if (mBleState !is AdvertisingState) {
-            val bluetoothManager = mBleState?.getBluetoothManager() ?: return
             val bluetoothAdapter = mBleState?.getBluetoothAdapter() ?: return
-            mBleState = AdvertisingState(mLiveData, bluetoothManager, bluetoothAdapter)
+            mBleState = AdvertisingState(mLiveData, bluetoothAdapter)
         }
         mBleState?.startAdvertising(settings, advertiseData, scanResponse)
     }
@@ -172,10 +170,8 @@ class BleManager(private val mActivity: FragmentActivity) {
         when (command) {
             is BleConnectCommand -> {
                 if (mBleState is ScanState) {
-                    val bluetoothManager = mBleState?.getBluetoothManager() ?: return
                     val bluetoothAdapter = mBleState?.getBluetoothAdapter() ?: return
-                    mBleState =
-                        ConnectState(mActivity, mLiveData, bluetoothManager, bluetoothAdapter)
+                    mBleState = ConnectState(mActivity, mLiveData, bluetoothAdapter)
                 }
                 if (mBleState is ConnectState) {
                     mBleState?.connect(command)

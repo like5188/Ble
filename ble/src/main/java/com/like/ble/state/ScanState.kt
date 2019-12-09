@@ -1,7 +1,6 @@
 package com.like.ble.state
 
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothManager
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
@@ -20,7 +19,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 class ScanState(
     private val mActivity: FragmentActivity,
     private val mBleResultLiveData: MutableLiveData<BleResult>,
-    private var mBluetoothManager: BluetoothManager?,
     private var mBluetoothAdapter: BluetoothAdapter?
 ) : BaseBleState() {
 
@@ -53,14 +51,10 @@ class ScanState(
         stopScan()
         mScanStrategy = null
         mBluetoothAdapter = null
-        mBluetoothManager = null
     }
 
     override fun getBluetoothAdapter(): BluetoothAdapter? {
         return mBluetoothAdapter
     }
 
-    override fun getBluetoothManager(): BluetoothManager? {
-        return mBluetoothManager
-    }
 }

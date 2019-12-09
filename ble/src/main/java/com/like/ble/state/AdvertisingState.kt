@@ -1,7 +1,6 @@
 package com.like.ble.state
 
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothManager
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
@@ -20,7 +19,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class AdvertisingState(
     private val mBleResultLiveData: MutableLiveData<BleResult>,
-    private var mBluetoothManager: BluetoothManager?,
     private var mBluetoothAdapter: BluetoothAdapter?
 ) : BaseBleState() {
     private val mIsRunning = AtomicBoolean(false)
@@ -81,15 +79,10 @@ class AdvertisingState(
         stopAdvertising()
         mBluetoothLeAdvertiser = null
         mBluetoothAdapter = null
-        mBluetoothManager = null
     }
 
     override fun getBluetoothAdapter(): BluetoothAdapter? {
         return mBluetoothAdapter
-    }
-
-    override fun getBluetoothManager(): BluetoothManager? {
-        return mBluetoothManager
     }
 
 }

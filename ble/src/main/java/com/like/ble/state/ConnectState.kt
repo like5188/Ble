@@ -16,7 +16,6 @@ import kotlinx.coroutines.launch
 class ConnectState(
     private val mActivity: FragmentActivity,
     private val mBleResultLiveData: MutableLiveData<BleResult>,
-    private var mBluetoothManager: BluetoothManager?,
     private var mBluetoothAdapter: BluetoothAdapter?
 ) : BaseBleState() {
 
@@ -92,9 +91,9 @@ class ConnectState(
 
         // 谁进行读数据操作，然后外围设备才会被动的发出一个数据，而这个数据只能是读操作的对象才有资格获得到这个数据。
         override fun onCharacteristicRead(
-                gatt: BluetoothGatt,
-                characteristic: BluetoothGattCharacteristic,
-                status: Int
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic,
+            status: Int
         ) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 mBleResultLiveData.postValue(BleResult(BleStatus.ON_CHARACTERISTIC_READ_SUCCESS, characteristic.value))
@@ -105,9 +104,9 @@ class ConnectState(
 
         // 写特征值
         override fun onCharacteristicWrite(
-                gatt: BluetoothGatt,
-                characteristic: BluetoothGattCharacteristic,
-                status: Int
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic,
+            status: Int
         ) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 mBleResultLiveData.postValue(BleResult(BleStatus.ON_CHARACTERISTIC_WRITE_SUCCESS, characteristic.value))
@@ -159,7 +158,14 @@ class ConnectState(
     // 如果连接失败了（例如出错，或者连接超时失败），就马上调用 BluetoothGatt.disconnect() 来释放建立连接请求，然后处理下一个设备连接请求。
     override fun connect(command: BleConnectCommand) {
         if (isConnected(command.address)) return
-        command.connect(mActivity.lifecycleScope, mGattCallback, mBluetoothAdapter) { disconnect(BleDisconnectCommand(mActivity, command.address)) }
+        command.connect(mActivity.lifecycleScope, mGattCallback, mBluetoothAdapter) {
+            disconnect(
+                BleDisconnectCommand(
+                    mActivity,
+                    command.address
+                )
+            )
+        }
     }
 
     override fun disconnect(command: BleDisconnectCommand) {
@@ -229,18 +235,13 @@ class ConnectState(
         mConnectedBluetoothGattList.clear()
 
         mBluetoothAdapter = null
-        mBluetoothManager = null
     }
 
     override fun getBluetoothAdapter(): BluetoothAdapter? {
         return mBluetoothAdapter
     }
 
-    override fun getBluetoothManager(): BluetoothManager? {
-        return mBluetoothManager
-    }
-
     private fun isConnected(address: String) =
-            mConnectedBluetoothGattList.any { it.device.address == address }
+        mConnectedBluetoothGattList.any { it.device.address == address }
 
 }

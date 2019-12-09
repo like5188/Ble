@@ -2,9 +2,13 @@ package com.like.ble.utils
 
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothManager
+import android.content.Context
 import java.nio.ByteBuffer
 import java.util.*
 import kotlin.math.ceil
+
+internal fun Context.getBluetoothManager() = getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
 
 /**
  * 查找远程设备的特征，并开启通知，以便触发onCharacteristicChanged()方法
