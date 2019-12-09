@@ -16,14 +16,28 @@ abstract class BaseBleState(
     protected val mActivity: FragmentActivity,
     protected val mBleResultLiveData: MutableLiveData<BleResult>
 ) {
+
+    private fun checkSupport(): Boolean {
+        if (!mActivity.isSupportBluetooth()) {
+            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE, errorMsg = "phone does not support Bluetooth"))
+            return false
+        }
+        return true
+    }
+
+    private fun checkEnable(): Boolean {
+        if (!mActivity.isBluetoothEnable()) {
+            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
+            return false
+        }
+        return true
+    }
+
     /**
      * 初始化蓝牙
      */
     fun init() {
-        if (!mActivity.isSupportBluetooth()) {
-            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE, errorMsg = "phone does not support Bluetooth"))
-            return
-        }
+        if (!checkSupport()) return
         onInit()
     }
 
@@ -33,10 +47,7 @@ abstract class BaseBleState(
      * 开始广播
      */
     fun startAdvertising(settings: AdvertiseSettings, advertiseData: AdvertiseData, scanResponse: AdvertiseData) {
-        if (!mActivity.isBluetoothEnable()) {
-            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
-            return
-        }
+        if (!checkEnable()) return
         onStartAdvertising(settings, advertiseData, scanResponse)
     }
 
@@ -46,10 +57,7 @@ abstract class BaseBleState(
      * 停止广播
      */
     fun stopAdvertising() {
-        if (!mActivity.isBluetoothEnable()) {
-            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
-            return
-        }
+        if (!checkEnable()) return
         onStopAdvertising()
     }
 
@@ -59,10 +67,7 @@ abstract class BaseBleState(
      * 开始扫描设备
      */
     fun startScan(scanStrategy: IScanStrategy, scanTimeout: Long) {
-        if (!mActivity.isBluetoothEnable()) {
-            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
-            return
-        }
+        if (!checkEnable()) return
         onStartScan(scanStrategy, scanTimeout)
     }
 
@@ -72,10 +77,7 @@ abstract class BaseBleState(
      * 停止扫描设备
      */
     fun stopScan() {
-        if (!mActivity.isBluetoothEnable()) {
-            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
-            return
-        }
+        if (!checkEnable()) return
         onStopScan()
     }
 
@@ -85,10 +87,7 @@ abstract class BaseBleState(
      *  连接指定蓝牙设备
      */
     fun connect(command: BleConnectCommand) {
-        if (!mActivity.isBluetoothEnable()) {
-            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
-            return
-        }
+        if (!checkEnable()) return
         onConnect(command)
     }
 
@@ -98,10 +97,7 @@ abstract class BaseBleState(
      * 断开指定蓝牙设备
      */
     fun disconnect(command: BleDisconnectCommand) {
-        if (!mActivity.isBluetoothEnable()) {
-            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
-            return
-        }
+        if (!checkEnable()) return
         onDisconnect(command)
     }
 
@@ -111,10 +107,7 @@ abstract class BaseBleState(
      * 读数据
      */
     fun read(command: BleReadCharacteristicCommand) {
-        if (!mActivity.isBluetoothEnable()) {
-            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
-            return
-        }
+        if (!checkEnable()) return
         onRead(command)
     }
 
@@ -124,10 +117,7 @@ abstract class BaseBleState(
      * 写数据
      */
     fun write(command: BleWriteCharacteristicCommand) {
-        if (!mActivity.isBluetoothEnable()) {
-            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
-            return
-        }
+        if (!checkEnable()) return
         onWrite(command)
     }
 
@@ -137,10 +127,7 @@ abstract class BaseBleState(
      * 设置mtu
      */
     fun setMtu(command: BleSetMtuCommand) {
-        if (!mActivity.isBluetoothEnable()) {
-            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
-            return
-        }
+        if (!checkEnable()) return
         onSetMtu(command)
     }
 
@@ -150,10 +137,7 @@ abstract class BaseBleState(
      * 释放资源
      */
     fun close() {
-        if (!mActivity.isBluetoothEnable()) {
-            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
-            return
-        }
+        if (!checkEnable()) return
         onClose()
     }
 
