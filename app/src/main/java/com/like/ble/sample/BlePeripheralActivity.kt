@@ -56,6 +56,8 @@ class BlePeripheralActivity : AppCompatActivity() {
         }
 
         /**
+         * 此方法要求作出响应
+         *
          * @param requestId     请求的标识
          * @param offset        特性值偏移量
          */
@@ -67,15 +69,36 @@ class BlePeripheralActivity : AppCompatActivity() {
         ) {
             appendText("onCharacteristicReadRequest device=$device requestId=$requestId offset=$offset characteristic=$characteristic value=${characteristic.value?.contentToString()}")
             val curWriteData = mCurWriteData
-            if (curWriteData != null && curWriteData.isNotEmpty() && curWriteData[0] == 0x1.toByte()) {
+            if (curWriteData == null || curWriteData.isEmpty()) {
                 // 此方法要求作出响应
                 mBluetoothGattServer?.sendResponse(
                     device,
                     requestId,
                     BluetoothGatt.GATT_SUCCESS,
                     offset,
-                    byteArrayOf(0x07, 0x08)
-                )// 最后一个参数是传的数据。
+                    byteArrayOf()// 最后一个参数是传的数据。
+                )
+            } else {
+                when (curWriteData[0]) {
+                    0x1.toByte() -> {
+                        mBluetoothGattServer?.sendResponse(
+                            device,
+                            requestId,
+                            BluetoothGatt.GATT_SUCCESS,
+                            offset,
+                            byteArrayOf(0x02)
+                        )
+                    }
+                    0x2.toByte() -> {
+                        mBluetoothGattServer?.sendResponse(
+                            device,
+                            requestId,
+                            BluetoothGatt.GATT_SUCCESS,
+                            offset,
+                            byteArrayOf(0x03)
+                        )
+                    }
+                }
             }
         }
 
