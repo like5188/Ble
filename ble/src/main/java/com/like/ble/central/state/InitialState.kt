@@ -1,4 +1,4 @@
-package com.like.ble.central.blestate
+package com.like.ble.central.state
 
 import android.annotation.SuppressLint
 import android.app.Activity

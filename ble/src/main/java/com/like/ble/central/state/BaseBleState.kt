@@ -1,4 +1,4 @@
-package com.like.ble.central.blestate
+package com.like.ble.central.state
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager

@@ -11,10 +11,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
-import com.like.ble.central.blestate.BaseBleState
-import com.like.ble.central.blestate.ConnectState
-import com.like.ble.central.blestate.InitialState
-import com.like.ble.central.blestate.ScanState
+import com.like.ble.central.state.BaseBleState
+import com.like.ble.central.state.ConnectState
+import com.like.ble.central.state.InitialState
+import com.like.ble.central.state.ScanState
 import com.like.ble.central.model.*
 import com.like.ble.central.scanstrategy.IScanStrategy
 
