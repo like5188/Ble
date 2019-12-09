@@ -7,6 +7,7 @@ import com.like.ble.model.BleResult
 import com.like.ble.model.BleStatus
 import com.like.ble.scanstrategy.IScanStrategy
 import com.like.ble.utils.getBluetoothAdapter
+import com.like.ble.utils.isBluetoothEnable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -25,6 +26,10 @@ class ScanState(
     private var mScanStrategy: IScanStrategy? = null
 
     override fun startScan(scanStrategy: IScanStrategy, scanTimeout: Long) {
+        if (!mActivity.isBluetoothEnable()) {
+            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
+            return
+        }
         mScanStrategy = scanStrategy
         if (mScanning.compareAndSet(false, true)) {
             mBleResultLiveData.postValue(BleResult(BleStatus.START_SCAN_DEVICE))
@@ -40,6 +45,10 @@ class ScanState(
     }
 
     override fun stopScan() {
+        if (!mActivity.isBluetoothEnable()) {
+            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
+            return
+        }
         if (mScanning.compareAndSet(true, false)) {
             mBleResultLiveData.postValue(BleResult(BleStatus.STOP_SCAN_DEVICE))
             mScanStrategy?.stopScan(mActivity.getBluetoothAdapter())

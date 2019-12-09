@@ -11,6 +11,7 @@ import androidx.lifecycle.MutableLiveData
 import com.like.ble.model.BleResult
 import com.like.ble.model.BleStatus
 import com.like.ble.utils.getBluetoothAdapter
+import com.like.ble.utils.isBluetoothEnable
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -51,6 +52,10 @@ class AdvertisingState(
     }
 
     override fun startAdvertising(settings: AdvertiseSettings, advertiseData: AdvertiseData, scanResponse: AdvertiseData) {
+        if (!mActivity.isBluetoothEnable()) {
+            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
+            return
+        }
         if (mIsRunning.compareAndSet(false, true)) {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
                 mBleResultLiveData.postValue(
@@ -79,6 +84,10 @@ class AdvertisingState(
     }
 
     override fun stopAdvertising() {
+        if (!mActivity.isBluetoothEnable()) {
+            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
+            return
+        }
         if (mIsRunning.compareAndSet(true, false)) {
             mBleResultLiveData.postValue(BleResult(BleStatus.STOP_ADVERTISING))
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

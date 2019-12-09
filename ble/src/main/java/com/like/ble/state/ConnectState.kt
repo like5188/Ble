@@ -9,6 +9,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.model.*
 import com.like.ble.utils.getBluetoothAdapter
+import com.like.ble.utils.isBluetoothEnable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
@@ -160,6 +161,10 @@ class ConnectState(
     // 如果连接成功了，就处理下一个连接请求。
     // 如果连接失败了（例如出错，或者连接超时失败），就马上调用 BluetoothGatt.disconnect() 来释放建立连接请求，然后处理下一个设备连接请求。
     override fun connect(command: BleConnectCommand) {
+        if (!mActivity.isBluetoothEnable()) {
+            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
+            return
+        }
         if (isConnected(command.address)) return
         command.connect(mActivity.lifecycleScope, mGattCallback, mActivity.getBluetoothAdapter()) {
             disconnect(BleDisconnectCommand(mActivity, command.address))
@@ -167,6 +172,10 @@ class ConnectState(
     }
 
     override fun disconnect(command: BleDisconnectCommand) {
+        if (!mActivity.isBluetoothEnable()) {
+            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
+            return
+        }
         val address = command.address
         if (!isConnected(address)) return
         val listIterator = mConnectedBluetoothGattList.listIterator()
@@ -183,7 +192,12 @@ class ConnectState(
 
     @Synchronized
     override fun read(command: BleReadCharacteristicCommand) {
+        if (!mActivity.isBluetoothEnable()) {
+            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
+            return
+        }
         val address = command.address
+        if (!isConnected(address)) return
         if (!mChannels.containsKey(address)) {
             mBleResultLiveData.postValue(BleResult(BleStatus.ON_CHARACTERISTIC_READ_FAILURE, errorMsg = "设备未连接 $command"))
             return
@@ -196,7 +210,12 @@ class ConnectState(
 
     @Synchronized
     override fun write(command: BleWriteCharacteristicCommand) {
+        if (!mActivity.isBluetoothEnable()) {
+            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
+            return
+        }
         val address = command.address
+        if (!isConnected(address)) return
         if (!mChannels.containsKey(address)) {
             mBleResultLiveData.postValue(BleResult(BleStatus.ON_CHARACTERISTIC_WRITE_FAILURE, errorMsg = "设备未连接 $command"))
             return
@@ -209,7 +228,12 @@ class ConnectState(
 
     @Synchronized
     override fun setMtu(command: BleSetMtuCommand) {
+        if (!mActivity.isBluetoothEnable()) {
+            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
+            return
+        }
         val address = command.address
+        if (!isConnected(address)) return
         if (!mChannels.containsKey(address)) {
             mBleResultLiveData.postValue(BleResult(BleStatus.ON_MTU_CHANGED_FAILURE, errorMsg = "设备未连接 $command"))
             return
