@@ -22,11 +22,7 @@ class InitialState(
     private val mActivity: FragmentActivity,
     private val mBleResultLiveData: MutableLiveData<BleResult>
 ) : BaseBleState() {
-    private val mPermissionUtils: PermissionUtils by lazy {
-        PermissionUtils(
-            mActivity
-        )
-    }
+    private val mPermissionUtils: PermissionUtils by lazy { PermissionUtils(mActivity) }
     private val mRxCallback: RxCallback by lazy { RxCallback(mActivity) }
 
     @SuppressLint("CheckResult")
