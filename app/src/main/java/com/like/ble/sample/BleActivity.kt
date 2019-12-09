@@ -31,16 +31,13 @@ class BleActivity : AppCompatActivity() {
     private val mScanStrategy = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
         ScanStrategy21(object : ScanCallback() {
             override fun onScanResult(callbackType: Int, result: ScanResult?) {
-                Log.d(
-                    TAG,
-                    "address=${result?.device?.address} rssi=${result?.rssi} scanRecord=${result?.scanRecord}"
-                )
+                Log.d(TAG, "device=${result?.device} rssi=${result?.rssi} scanRecord=${result?.scanRecord}")
                 addItem(result?.device)
             }
         })
     } else {
         ScanStrategy18(BluetoothAdapter.LeScanCallback { device, rssi, scanRecord ->
-            Log.d(TAG, "address=${device.address} rssi=$rssi scanRecord=$scanRecord")
+            Log.d(TAG, "device=$device rssi=$rssi scanRecord=$scanRecord")
             addItem(device)
         })
     }
