@@ -17,13 +17,13 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 可以进行扫描操作
  */
 class ScanState(
-    activity: FragmentActivity,
-    bleResultLiveData: MutableLiveData<BleResult>
-) : BaseBleState(activity, bleResultLiveData) {
+    private val mActivity: FragmentActivity,
+    private val mBleResultLiveData: MutableLiveData<BleResult>
+) : BleStateAdapter() {
     private val mScanning = AtomicBoolean(false)
     private var mScanStrategy: IScanStrategy? = null
 
-    override fun onStartScan(scanStrategy: IScanStrategy, scanTimeout: Long) {
+    override fun startScan(scanStrategy: IScanStrategy, scanTimeout: Long) {
         mScanStrategy = scanStrategy
         if (mScanning.compareAndSet(false, true)) {
             mBleResultLiveData.postValue(BleResult(BleStatus.START_SCAN_DEVICE))
@@ -38,14 +38,14 @@ class ScanState(
         }
     }
 
-    override fun onStopScan() {
+    override fun stopScan() {
         if (mScanning.compareAndSet(true, false)) {
             mBleResultLiveData.postValue(BleResult(BleStatus.STOP_SCAN_DEVICE))
             mScanStrategy?.stopScan(mActivity.getBluetoothAdapter())
         }
     }
 
-    override fun onClose() {
+    override fun close() {
         stopScan()
         mScanStrategy = null
     }

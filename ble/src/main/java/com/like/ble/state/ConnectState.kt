@@ -18,9 +18,9 @@ import kotlinx.coroutines.launch
  * 可以进行连接、操作数据等等操作
  */
 class ConnectState(
-    activity: FragmentActivity,
-    bleResultLiveData: MutableLiveData<BleResult>
-) : BaseBleState(activity, bleResultLiveData) {
+    private val mActivity: FragmentActivity,
+    private val mBleResultLiveData: MutableLiveData<BleResult>
+) : BleStateAdapter() {
     private val mChannels: MutableMap<String, Channel<BleCommand>> = mutableMapOf()
     private val mConnectedBluetoothGattList = mutableListOf<BluetoothGatt>()
     // 连接蓝牙设备的回调函数
@@ -158,14 +158,14 @@ class ConnectState(
     // 前一个设备请求建立连接，后面请求在队列中等待。
     // 如果连接成功了，就处理下一个连接请求。
     // 如果连接失败了（例如出错，或者连接超时失败），就马上调用 BluetoothGatt.disconnect() 来释放建立连接请求，然后处理下一个设备连接请求。
-    override fun onConnect(command: BleConnectCommand) {
+    override fun connect(command: BleConnectCommand) {
         if (isConnected(command.address)) return
         command.connect(mActivity.lifecycleScope, mGattCallback, mActivity.getBluetoothAdapter()) {
             disconnect(BleDisconnectCommand(mActivity, command.address))
         }
     }
 
-    override fun onDisconnect(command: BleDisconnectCommand) {
+    override fun disconnect(command: BleDisconnectCommand) {
         val address = command.address
         if (!isConnected(address)) return
         val listIterator = mConnectedBluetoothGattList.listIterator()
@@ -181,7 +181,7 @@ class ConnectState(
     }
 
     @Synchronized
-    override fun onRead(command: BleReadCharacteristicCommand) {
+    override fun read(command: BleReadCharacteristicCommand) {
         val address = command.address
         if (!isConnected(address)) return
         if (!mChannels.containsKey(address)) {
@@ -195,7 +195,7 @@ class ConnectState(
     }
 
     @Synchronized
-    override fun onWrite(command: BleWriteCharacteristicCommand) {
+    override fun write(command: BleWriteCharacteristicCommand) {
         val address = command.address
         if (!isConnected(address)) return
         if (!mChannels.containsKey(address)) {
@@ -209,7 +209,7 @@ class ConnectState(
     }
 
     @Synchronized
-    override fun onSetMtu(command: BleSetMtuCommand) {
+    override fun setMtu(command: BleSetMtuCommand) {
         val address = command.address
         if (!isConnected(address)) return
         if (!mChannels.containsKey(address)) {
@@ -222,7 +222,7 @@ class ConnectState(
         }
     }
 
-    override fun onClose() {
+    override fun close() {
         mChannels.values.forEach {
             it.close()
         }

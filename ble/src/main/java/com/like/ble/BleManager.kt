@@ -56,7 +56,6 @@ import com.like.ble.state.*
  * created on 2017/4/14 11:52
  */
 class BleManager(private val mActivity: FragmentActivity) {
-    private var mBleState: BaseBleState? = null
     private val mLiveData = MutableLiveData<BleResult>()
     // 过滤 BleResult，只发送一部分，其它的用回调替代。
     private val mFilterLiveData: MediatorLiveData<BleResult> by lazy {
@@ -79,6 +78,8 @@ class BleManager(private val mActivity: FragmentActivity) {
         }
     }
 
+    private var mBleState: BleStateWrapper = BleStateWrapper(mActivity, mLiveData)
+
     // 蓝牙打开关闭监听器
     private val mReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -91,7 +92,7 @@ class BleManager(private val mActivity: FragmentActivity) {
                         }
                         BluetoothAdapter.STATE_OFF -> {// 蓝牙已关闭
                             mLiveData.postValue(BleResult(BleStatus.OFF))
-                            mBleState?.close()
+                            mBleState.close()
                         }
                     }
                 }
@@ -101,7 +102,7 @@ class BleManager(private val mActivity: FragmentActivity) {
     private val mObserver = Observer<BleResult> {
         when (it?.status) {
             BleStatus.INIT_SUCCESS -> {
-                mBleState = ScanState(mActivity, mLiveData)
+                mBleState.mBleState = ScanState(mActivity, mLiveData)
             }
             else -> {
             }
@@ -122,65 +123,65 @@ class BleManager(private val mActivity: FragmentActivity) {
      */
     @MainThread
     fun initBle() {
-        if (mBleState == null || mBleState !is InitialState) {
-            mBleState = InitialState(mActivity, mLiveData)
+        if (mBleState.mBleState !is InitialState) {
+            mBleState.mBleState = InitialState(mActivity, mLiveData)
         }
-        mBleState?.init()
+        mBleState.init()
     }
 
     /**
      * 开始广播
      */
     fun startAdvertising(settings: AdvertiseSettings, advertiseData: AdvertiseData, scanResponse: AdvertiseData) {
-        if (mBleState !is AdvertisingState) {
-            mBleState = AdvertisingState(mActivity, mLiveData)
+        if (mBleState.mBleState !is AdvertisingState) {
+            mBleState.mBleState = AdvertisingState(mActivity, mLiveData)
         }
-        mBleState?.startAdvertising(settings, advertiseData, scanResponse)
+        mBleState.startAdvertising(settings, advertiseData, scanResponse)
     }
 
     /**
      * 停止广播
      */
     fun stopAdvertising() {
-        mBleState?.stopAdvertising()
+        mBleState.stopAdvertising()
     }
 
     /**
      * 扫描蓝牙设备
      */
     fun scanBleDevice(scanStrategy: IScanStrategy, ScanTimeout: Long = 3000) {
-        mBleState?.startScan(scanStrategy, ScanTimeout)
+        mBleState.startScan(scanStrategy, ScanTimeout)
     }
 
     /**
      * 停止扫描蓝牙设备
      */
     fun stopScanBleDevice() {
-        mBleState?.stopScan()
+        mBleState.stopScan()
     }
 
     fun sendCommand(command: BleCommand) {
         command.mLiveData = mLiveData
         when (command) {
             is BleConnectCommand -> {
-                if (mBleState is ScanState) {
-                    mBleState = ConnectState(mActivity, mLiveData)
+                if (mBleState.mBleState is ScanState) {
+                    mBleState.mBleState = ConnectState(mActivity, mLiveData)
                 }
-                if (mBleState is ConnectState) {
-                    mBleState?.connect(command)
+                if (mBleState.mBleState is ConnectState) {
+                    mBleState.connect(command)
                 }
             }
             is BleDisconnectCommand -> {
-                mBleState?.disconnect(command)
+                mBleState.disconnect(command)
             }
             is BleReadCharacteristicCommand -> {
-                mBleState?.read(command)
+                mBleState.read(command)
             }
             is BleWriteCharacteristicCommand -> {
-                mBleState?.write(command)
+                mBleState.write(command)
             }
             is BleSetMtuCommand -> {
-                mBleState?.setMtu(command)
+                mBleState.setMtu(command)
             }
         }
     }
@@ -189,8 +190,7 @@ class BleManager(private val mActivity: FragmentActivity) {
      * 关闭所有蓝牙连接
      */
     fun close() {
-        mBleState?.close()
-        mBleState = null
+        mBleState.close()
         try {
             mActivity.unregisterReceiver(mReceiver)
             mLiveData.removeObserver(mObserver)

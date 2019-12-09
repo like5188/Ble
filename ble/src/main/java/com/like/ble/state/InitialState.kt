@@ -19,14 +19,14 @@ import com.like.ble.utils.isBluetoothEnable
  * 可以进行初始化操作
  */
 class InitialState(
-    activity: FragmentActivity,
-    bleResultLiveData: MutableLiveData<BleResult>
-) : BaseBleState(activity, bleResultLiveData) {
+    private val mActivity: FragmentActivity,
+    private val mBleResultLiveData: MutableLiveData<BleResult>
+) : BleStateAdapter() {
     private val mPermissionUtils: PermissionUtils by lazy { PermissionUtils(mActivity) }
     private val mRxCallback: RxCallback by lazy { RxCallback(mActivity) }
 
     @SuppressLint("CheckResult")
-    override fun onInit() {
+    override fun init() {
         mPermissionUtils.checkPermissions(
             android.Manifest.permission.BLUETOOTH_ADMIN,
             android.Manifest.permission.BLUETOOTH,

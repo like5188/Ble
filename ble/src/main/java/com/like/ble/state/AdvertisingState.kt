@@ -18,9 +18,9 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 可以进行发送广播、停止广播操作
  */
 class AdvertisingState(
-    activity: FragmentActivity,
-    bleResultLiveData: MutableLiveData<BleResult>
-) : BaseBleState(activity, bleResultLiveData) {
+    private val mActivity: FragmentActivity,
+    private val mBleResultLiveData: MutableLiveData<BleResult>
+) : BleStateAdapter() {
     private val mIsRunning = AtomicBoolean(false)
     private var mBluetoothLeAdvertiser: BluetoothLeAdvertiser? = null
 
@@ -50,7 +50,7 @@ class AdvertisingState(
         }
     }
 
-    override fun onStartAdvertising(settings: AdvertiseSettings, advertiseData: AdvertiseData, scanResponse: AdvertiseData) {
+    override fun startAdvertising(settings: AdvertiseSettings, advertiseData: AdvertiseData, scanResponse: AdvertiseData) {
         if (mIsRunning.compareAndSet(false, true)) {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
                 mBleResultLiveData.postValue(
@@ -78,7 +78,7 @@ class AdvertisingState(
         }
     }
 
-    override fun onStopAdvertising() {
+    override fun stopAdvertising() {
         if (mIsRunning.compareAndSet(true, false)) {
             mBleResultLiveData.postValue(BleResult(BleStatus.STOP_ADVERTISING))
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -87,7 +87,7 @@ class AdvertisingState(
         }
     }
 
-    override fun onClose() {
+    override fun close() {
         stopAdvertising()
         mBluetoothLeAdvertiser = null
     }
