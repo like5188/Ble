@@ -11,6 +11,11 @@ enum class BleStatus(val des: String) {
     INIT_SUCCESS("蓝牙初始化成功"),
     INIT_FAILURE("蓝牙初始化失败"),
 
+    START_ADVERTISING("开始广播"),
+    START_ADVERTISING_SUCCESS("广播成功"),
+    START_ADVERTISING_FAILURE("广播失败"),
+    STOP_ADVERTISING("停止广播"),
+
     START_SCAN_DEVICE("开始扫描蓝牙设备"),
     STOP_SCAN_DEVICE("停止扫描蓝牙设备"),
 

@@ -1,22 +1,23 @@
 package com.like.ble.central
 
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothGattServer
+import android.bluetooth.BluetoothGattServerCallback
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
 import androidx.annotation.MainThread
+import androidx.annotation.RequiresApi
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
-import com.like.ble.central.state.BaseBleState
-import com.like.ble.central.state.ConnectState
-import com.like.ble.central.state.InitialState
-import com.like.ble.central.state.ScanState
 import com.like.ble.central.model.*
 import com.like.ble.central.scanstrategy.IScanStrategy
+import com.like.ble.central.state.*
 
 /**
  * 蓝牙是一种近距离无线通信技术。它的特性就是近距离通信，典型距离是 10 米以内，传输速度最高可达 24 Mbps，支持多连接，安全性高，非常适合用智能设备上。
@@ -130,6 +131,47 @@ class BleManager(private val mActivity: FragmentActivity) {
     }
 
     /**
+     * 开始广播
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    fun startAdvertising(
+        serviceUuidString: String,
+        readCharUuidString: String,
+        writeCharUuidString: String,
+        descriptorUuidString: String,
+        bluetoothGattServerCallback: BluetoothGattServerCallback
+    ) {
+        if (mBleState !is AdvertisingState) {
+            val bluetoothManager = mBleState?.getBluetoothManager() ?: return
+            val bluetoothAdapter = mBleState?.getBluetoothAdapter() ?: return
+            mBleState = AdvertisingState(
+                mActivity,
+                mLiveData,
+                bluetoothManager,
+                bluetoothAdapter
+            )
+            mBleState?.startAdvertising(
+                serviceUuidString,
+                readCharUuidString,
+                writeCharUuidString,
+                descriptorUuidString,
+                bluetoothGattServerCallback
+            )
+        }
+    }
+
+    /**
+     * 停止广播
+     */
+    fun stopAdvertising() {
+        mBleState?.stopAdvertising()
+    }
+
+    fun getBluetoothGattServer(): BluetoothGattServer? {
+        return mBleState?.getBluetoothGattServer()
+    }
+
+    /**
      * 扫描蓝牙设备
      */
     fun scanBleDevice(scanStrategy: IScanStrategy, ScanTimeout: Long = 3000) {
@@ -150,7 +192,8 @@ class BleManager(private val mActivity: FragmentActivity) {
                 if (mBleState is ScanState) {
                     val bluetoothManager = mBleState?.getBluetoothManager() ?: return
                     val bluetoothAdapter = mBleState?.getBluetoothAdapter() ?: return
-                    mBleState = ConnectState(mActivity, mLiveData, bluetoothManager, bluetoothAdapter)
+                    mBleState =
+                        ConnectState(mActivity, mLiveData, bluetoothManager, bluetoothAdapter)
                 }
                 if (mBleState is ConnectState) {
                     mBleState?.connect(command)

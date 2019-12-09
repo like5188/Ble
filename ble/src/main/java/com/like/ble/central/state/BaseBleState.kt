@@ -1,6 +1,8 @@
 package com.like.ble.central.state
 
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothGattServer
+import android.bluetooth.BluetoothGattServerCallback
 import android.bluetooth.BluetoothManager
 import com.like.ble.central.model.*
 import com.like.ble.central.scanstrategy.IScanStrategy
@@ -13,6 +15,27 @@ abstract class BaseBleState {
      * 初始化蓝牙
      */
     open fun init() {}
+
+    /**
+     * 开始广播
+     */
+    open fun startAdvertising(
+        serviceUuidString: String,
+        readCharUuidString: String,
+        writeCharUuidString: String,
+        descriptorUuidString: String,
+        bluetoothGattServerCallback: BluetoothGattServerCallback
+    ) {
+    }
+
+    /**
+     * 停止广播
+     */
+    open fun stopAdvertising() {}
+
+    open fun getBluetoothGattServer(): BluetoothGattServer? {
+        return null
+    }
 
     /**
      * 开始扫描设备
