@@ -60,11 +60,11 @@ import com.like.ble.state.*
 class BleManager(private val mActivity: FragmentActivity) {
     private var mBleState: BaseBleState? = null
     private val mLiveData = MutableLiveData<BleResult>()
-    private val mPartLiveData: MediatorLiveData<BleResult> by lazy {
+    // 过滤 BleResult，只发送一部分，其它的用回调替代。
+    private val mFilterLiveData: MediatorLiveData<BleResult> by lazy {
         MediatorLiveData<BleResult>().apply {
             addSource(mLiveData) {
                 it ?: return@addSource
-                // 过滤状态，只发送一部分，其它的用回调替代。
                 when {
                     it.status == BleStatus.ON ||
                             it.status == BleStatus.OFF ||
@@ -117,7 +117,7 @@ class BleManager(private val mActivity: FragmentActivity) {
         mLiveData.observe(mActivity, mObserver)
     }
 
-    fun getLiveData(): LiveData<BleResult> = mPartLiveData
+    fun getLiveData(): LiveData<BleResult> = mFilterLiveData
 
     /**
      * 初始化蓝牙适配器
