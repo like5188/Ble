@@ -57,6 +57,14 @@ class ConnectState(
             }
         }
 
+        /**
+         * 关闭指定 BluetoothGatt，并移除
+         */
+        private fun closeGattAndRemove(gatt: BluetoothGatt) {
+            gatt.close()
+            mConnectedBluetoothGattList.remove(gatt)
+        }
+
         // 当连接状态改变
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             when (newState) {
@@ -66,7 +74,7 @@ class ConnectState(
                 }
                 BluetoothGatt.STATE_DISCONNECTED -> {// 连接蓝牙设备失败
                     closeChannelAndRemove(gatt.device.address)
-                    mConnectedBluetoothGattList.remove(gatt)
+                    closeGattAndRemove(gatt)
                     mBleResultLiveData.postValue(BleResult(BleStatus.DISCONNECTED, gatt.device.address))
                 }
             }
@@ -81,7 +89,7 @@ class ConnectState(
                 mBleResultLiveData.postValue(BleResult(BleStatus.CONNECTED, gatt.device.address))
             } else {
                 closeChannelAndRemove(address)
-                mConnectedBluetoothGattList.remove(gatt)
+                closeGattAndRemove(gatt)
                 mBleResultLiveData.postValue(BleResult(BleStatus.DISCONNECTED, gatt.device.address))
             }
         }
