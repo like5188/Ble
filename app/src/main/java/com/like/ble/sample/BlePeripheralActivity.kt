@@ -45,7 +45,7 @@ class BlePeripheralActivity : AppCompatActivity() {
         private var mCurWriteData: ByteArray? = null
 
         /**
-         * @param newState  连接状态，只能为BluetoothProfile.STATE_CONNECTED和BluetoothProfile.STATE_DISCONNECTED。
+         * @param newState  连接状态，只能为[BluetoothProfile.STATE_CONNECTED]和[BluetoothProfile.STATE_DISCONNECTED]。
          */
         override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
             appendText("onConnectionStateChange device=$device status=$status newState=$newState")
