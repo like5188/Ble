@@ -32,7 +32,8 @@
     // coroutines
     compileOnly 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2'
     compileOnly 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.2'
-
+    compileOnly 'androidx.lifecycle:lifecycle-runtime-ktx:2.2.0-rc03'// Activity 或 Fragment 对协程的支持：lifecycleScope
+    // rxjava2
     compileOnly 'io.reactivex.rxjava2:rxjava:2.2.11'
     compileOnly 'com.github.tbruyelle:rxpermissions:0.10.2'
 ```
