@@ -220,6 +220,9 @@ class BlePeripheralActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        mBluetoothGattServer?.clearServices()
+        mBluetoothGattServer?.close()
+        mBluetoothGattServer = null
         mBleManager.close()
         super.onDestroy()
     }
