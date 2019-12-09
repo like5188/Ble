@@ -24,7 +24,7 @@ class ScanState(
     private var mBluetoothAdapter: BluetoothAdapter?
 ) : BaseBleState() {
 
-    private var mScanning = AtomicBoolean(false)
+    private val mScanning = AtomicBoolean(false)
     private var mScanStrategy: IScanStrategy? = null
 
     override fun startScan(scanStrategy: IScanStrategy, scanTimeout: Long) {
