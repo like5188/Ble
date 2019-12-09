@@ -8,4 +8,7 @@
     <color name="ble_text_black">#5c5c5c</color>
     <color name="ble_text_white">#ffffff</color>
     <color name="ble_divider">#dbdbdb</color>
+
+    <color name="ble_flexbox_textview_bg_normal">#4EAAFF</color>
+    <color name="ble_flexbox_textview_bg_press">#167AD2</color>
 </resources>

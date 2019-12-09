@@ -1,6 +1,10 @@
 package com.like.ble.sample
 
 import android.app.Activity
+import android.view.Gravity
+import android.widget.TextView
+import androidx.core.content.ContextCompat
+import com.google.android.flexbox.FlexboxLayout
 import com.like.ble.BleManager
 import com.like.ble.model.*
 import com.like.ble.sample.databinding.ItemBleBinding
@@ -9,9 +13,15 @@ import com.like.livedatarecyclerview.model.IRecyclerViewItem
 import com.like.livedatarecyclerview.viewholder.CommonViewHolder
 import java.nio.ByteBuffer
 
-class BleAdapter(private val mActivity: Activity, private val mBleManager: BleManager) : BaseAdapter() {
+class BleAdapter(private val mActivity: Activity, private val mBleManager: BleManager) :
+    BaseAdapter() {
+    private val mCommandArray = arrayOf("读特征", "写特征", "设置MTU")
 
-    override fun bindOtherVariable(holder: CommonViewHolder, position: Int, item: IRecyclerViewItem?) {
+    override fun bindOtherVariable(
+        holder: CommonViewHolder,
+        position: Int,
+        item: IRecyclerViewItem?
+    ) {
         super.bindOtherVariable(holder, position, item)
         if (item !is BleInfo) return
         val binding = holder.binding
@@ -45,53 +55,75 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: BleMa
                 )
             }
         }
-        binding.btnReadChar.setOnClickListener {
-            mBleManager.sendCommand(object : BleReadCharacteristicCommand(
-                mActivity,
-                address,
-                "0000fff2-0000-1000-8000-00805f9b34fb",
-                5000,
-                300,
-                {
-                    mActivity.shortToastCenter("读特征成功 ${it?.contentToString()}")
-                },
-                {
-                    mActivity.shortToastCenter("读特征失败！${it.message}")
+        mCommandArray.forEachIndexed { index, title ->
+            // 通过代码向FlexboxLayout添加View
+            val textView = TextView(mActivity)
+            textView.text = title
+            textView.gravity = Gravity.CENTER
+            textView.setPadding(20, 10, 20, 10)
+            textView.setTextColor(ContextCompat.getColor(mActivity, R.color.ble_text_white))
+            textView.background = ContextCompat.getDrawable(mActivity, R.drawable.flexbox_textview_bg)
+            binding.flexBoxLayout.addView(textView)
+
+            // 通过FlexboxLayout.LayoutParams 设置子元素支持的属性
+            val params = textView.layoutParams
+            if (params is FlexboxLayout.LayoutParams) {
+                params.leftMargin = 10
+                params.topMargin = 10
+                params.rightMargin = 10
+                params.bottomMargin = 10
+            }
+            val bleCommand = when (index) {
+                0 -> object : BleReadCharacteristicCommand(
+                    mActivity,
+                    address,
+                    "0000fff2-0000-1000-8000-00805f9b34fb",
+                    5000,
+                    300,
+                    {
+                        mActivity.shortToastCenter("读特征成功 ${it?.contentToString()}")
+                    },
+                    {
+                        mActivity.shortToastCenter("读特征失败！${it.message}")
+                    }
+                ) {
+                    override fun isWholeFrame(data: ByteBuffer): Boolean {
+                        return true
+                    }
                 }
-            ) {
-                override fun isWholeFrame(data: ByteBuffer): Boolean {
-                    return true
+                1 -> BleWriteCharacteristicCommand(
+                    mActivity,
+                    byteArrayOf(0x1),
+                    address,
+                    "0000fff2-0000-1000-8000-00805f9b34fb",
+                    5000,
+                    20,
+                    {
+                        mActivity.shortToastCenter("写特征成功")
+                    },
+                    {
+                        mActivity.shortToastCenter("写特征失败！${it.message}")
+                    }
+                )
+                2 -> BleSetMtuCommand(
+                    mActivity,
+                    address,
+                    50,
+                    {
+                        mActivity.shortToastCenter("设置MTU成功 $it")
+                    },
+                    {
+                        mActivity.shortToastCenter("设置MTU失败！${it.message}")
+                    }
+                )
+                else -> null
+            }
+            textView.setOnClickListener {
+                bleCommand?.let {
+                    mBleManager.sendCommand(it)
                 }
-            })
-        }
-        binding.btnWriteChar.setOnClickListener {
-            mBleManager.sendCommand(BleWriteCharacteristicCommand(
-                mActivity,
-                byteArrayOf(0x1),
-                address,
-                "0000fff2-0000-1000-8000-00805f9b34fb",
-                5000,
-                20,
-                {
-                    mActivity.shortToastCenter("写特征成功")
-                },
-                {
-                    mActivity.shortToastCenter("写特征失败！${it.message}")
-                }
-            ))
-        }
-        binding.btnSetMtu.setOnClickListener {
-            mBleManager.sendCommand(BleSetMtuCommand(
-                mActivity,
-                address,
-                50,
-                {
-                    mActivity.shortToastCenter("设置MTU成功 $it")
-                },
-                {
-                    mActivity.shortToastCenter("设置MTU失败！${it.message}")
-                }
-            ))
+            }
         }
     }
+
 }
