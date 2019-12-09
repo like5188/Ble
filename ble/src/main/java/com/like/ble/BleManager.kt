@@ -7,9 +7,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.Build
 import androidx.annotation.MainThread
-import androidx.annotation.RequiresApi
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
@@ -133,7 +131,6 @@ class BleManager(private val mActivity: FragmentActivity) {
     /**
      * 开始广播
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun startAdvertising(settings: AdvertiseSettings, advertiseData: AdvertiseData, scanResponse: AdvertiseData) {
         if (mBleState !is AdvertisingState) {
             mBleState = AdvertisingState(mActivity, mLiveData)

@@ -17,7 +17,6 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 蓝牙广播状态
  * 可以进行发送广播、停止广播操作
  */
-@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class AdvertisingState(
     private val mActivity: FragmentActivity,
     private val mBleResultLiveData: MutableLiveData<BleResult>
@@ -25,7 +24,8 @@ class AdvertisingState(
     private val mIsRunning = AtomicBoolean(false)
     private var mBluetoothLeAdvertiser: BluetoothLeAdvertiser? = null
 
-    private val mAdvertiseCallback: AdvertiseCallback = object : AdvertiseCallback() {
+    private val mAdvertiseCallback: AdvertiseCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    object : AdvertiseCallback() {
         override fun onStartFailure(errorCode: Int) {
             super.onStartFailure(errorCode)
             val errorMsg = when (errorCode) {
@@ -52,6 +52,15 @@ class AdvertisingState(
 
     override fun startAdvertising(settings: AdvertiseSettings, advertiseData: AdvertiseData, scanResponse: AdvertiseData) {
         if (mIsRunning.compareAndSet(false, true)) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                mBleResultLiveData.postValue(
+                    BleResult(
+                        BleStatus.START_ADVERTISING_FAILURE,
+                        errorMsg = "phone does not support Bluetooth Advertiser"
+                    )
+                )
+                return
+            }
             if (mBluetoothLeAdvertiser == null) {
                 mBluetoothLeAdvertiser = mActivity.getBluetoothManager()?.adapter?.bluetoothLeAdvertiser
                 if (mBluetoothLeAdvertiser == null) {
@@ -72,7 +81,9 @@ class AdvertisingState(
     override fun stopAdvertising() {
         if (mIsRunning.compareAndSet(true, false)) {
             mBleResultLiveData.postValue(BleResult(BleStatus.STOP_ADVERTISING))
-            mBluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mBluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)
+            }
         }
     }
 
