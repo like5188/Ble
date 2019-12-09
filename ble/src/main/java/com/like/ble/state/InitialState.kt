@@ -71,10 +71,7 @@ class InitialState(
                         },
                         {
                             mBleResultLiveData.postValue(
-                                BleResult(
-                                    BleStatus.INIT_FAILURE, errorMsg = it.message
-                                        ?: "unknown error"
-                                )
+                                BleResult(BleStatus.INIT_FAILURE, errorMsg = it.message ?: "unknown error")
                             )
                         }
                     ).bindToLifecycleOwner(mActivity)
