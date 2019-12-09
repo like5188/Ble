@@ -5,6 +5,8 @@
 
     <data>
 
+        <import type="android.view.View" />
+
         <variable
             name="bleInfo"
             type="com.like.ble.sample.BleInfo" />
@@ -57,6 +59,7 @@
             android:id="@+id/flex_box_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:visibility="@{bleInfo.isConnected?View.VISIBLE:View.GONE}"
             app:alignContent="flex_start"
             app:alignItems="center"
             app:flexDirection="row"

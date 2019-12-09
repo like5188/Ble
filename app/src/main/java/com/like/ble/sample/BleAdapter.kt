@@ -54,6 +54,8 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: BleMa
                 )
             }
         }
+
+        binding.flexBoxLayout.removeAllViews()
         mCommandArray.forEachIndexed { index, title ->
             // 通过代码向FlexboxLayout添加View
             val textView = TextView(mActivity)
@@ -72,51 +74,51 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: BleMa
                 params.rightMargin = 10
                 params.bottomMargin = 10
             }
-            val bleCommand = when (index) {
-                0 -> BleReadCharacteristicCommand(
-                    mActivity,
-                    address,
-                    "0000fff2-0000-1000-8000-00805f9b34fb",
-                    5000,
-                    300,
-                    {
-                        mActivity.shortToastCenter("读特征成功 ${it?.contentToString()}")
-                    },
-                    {
-                        mActivity.shortToastCenter("读特征失败！${it.message}")
-                    },
-                    {
-                        true
-                    }
-                )
-                1 -> BleWriteCharacteristicCommand(
-                    mActivity,
-                    byteArrayOf(0x1),
-                    address,
-                    "0000fff2-0000-1000-8000-00805f9b34fb",
-                    5000,
-                    20,
-                    {
-                        mActivity.shortToastCenter("写特征成功")
-                    },
-                    {
-                        mActivity.shortToastCenter("写特征失败！${it.message}")
-                    }
-                )
-                2 -> BleSetMtuCommand(
-                    mActivity,
-                    address,
-                    50,
-                    {
-                        mActivity.shortToastCenter("设置MTU成功 $it")
-                    },
-                    {
-                        mActivity.shortToastCenter("设置MTU失败！${it.message}")
-                    }
-                )
-                else -> null
-            }
             textView.setOnClickListener {
+                val bleCommand = when (index) {
+                    0 -> BleReadCharacteristicCommand(
+                        mActivity,
+                        address,
+                        "0000fff2-0000-1000-8000-00805f9b34fb",
+                        5000,
+                        300,
+                        {
+                            mActivity.shortToastCenter("读特征成功 ${it?.contentToString()}")
+                        },
+                        {
+                            mActivity.shortToastCenter("读特征失败！${it.message}")
+                        },
+                        {
+                            true
+                        }
+                    )
+                    1 -> BleWriteCharacteristicCommand(
+                        mActivity,
+                        byteArrayOf(0x1),
+                        address,
+                        "0000fff2-0000-1000-8000-00805f9b34fb",
+                        5000,
+                        20,
+                        {
+                            mActivity.shortToastCenter("写特征成功")
+                        },
+                        {
+                            mActivity.shortToastCenter("写特征失败！${it.message}")
+                        }
+                    )
+                    2 -> BleSetMtuCommand(
+                        mActivity,
+                        address,
+                        50,
+                        {
+                            mActivity.shortToastCenter("设置MTU成功 $it")
+                        },
+                        {
+                            mActivity.shortToastCenter("设置MTU失败！${it.message}")
+                        }
+                    )
+                    else -> null
+                }
                 bleCommand?.let {
                     mBleManager.sendCommand(it)
                 }
