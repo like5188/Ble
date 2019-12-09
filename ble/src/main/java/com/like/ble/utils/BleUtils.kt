@@ -1,14 +1,28 @@
 package com.like.ble.utils
 
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothManager
 import android.content.Context
+import android.content.pm.PackageManager
 import java.nio.ByteBuffer
 import java.util.*
 import kotlin.math.ceil
 
-internal fun Context.getBluetoothManager() = getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
+internal fun Context.getBluetoothManager(): BluetoothManager? = getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
+
+internal fun Context.getBluetoothAdapter(): BluetoothAdapter? = getBluetoothManager()?.adapter
+
+/**
+ * 蓝牙是否准备就绪
+ */
+internal fun Context.isBluetoothEnable(): Boolean = getBluetoothAdapter()?.isEnabled ?: false
+
+/**
+ * 查看手机是否支持蓝牙功能
+ */
+internal fun Context.isSupportBluetooth(): Boolean = packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
 
 /**
  * 查找远程设备的特征，并开启通知，以便触发onCharacteristicChanged()方法
