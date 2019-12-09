@@ -11,7 +11,6 @@ import com.like.ble.sample.databinding.ItemBleBinding
 import com.like.livedatarecyclerview.adapter.BaseAdapter
 import com.like.livedatarecyclerview.model.IRecyclerViewItem
 import com.like.livedatarecyclerview.viewholder.CommonViewHolder
-import java.nio.ByteBuffer
 
 class BleAdapter(private val mActivity: Activity, private val mBleManager: BleManager) :
     BaseAdapter() {
@@ -74,7 +73,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: BleMa
                 params.bottomMargin = 10
             }
             val bleCommand = when (index) {
-                0 -> object : BleReadCharacteristicCommand(
+                0 -> BleReadCharacteristicCommand(
                     mActivity,
                     address,
                     "0000fff2-0000-1000-8000-00805f9b34fb",
@@ -85,12 +84,11 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: BleMa
                     },
                     {
                         mActivity.shortToastCenter("读特征失败！${it.message}")
+                    },
+                    {
+                        true
                     }
-                ) {
-                    override fun isWholeFrame(data: ByteBuffer): Boolean {
-                        return true
-                    }
-                }
+                )
                 1 -> BleWriteCharacteristicCommand(
                     mActivity,
                     byteArrayOf(0x1),

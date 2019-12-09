@@ -19,15 +19,17 @@ import java.util.concurrent.TimeoutException
  * @param maxFrameTransferSize      由硬件开发者约定的一帧传输的最大字节数
  * @param onSuccess                 命令执行成功回调
  * @param onFailure                 命令执行失败回调
+ * @param isWholeFrame              判断返回的是否是完整的一帧数据
  */
-abstract class BleReadCharacteristicCommand(
-        private val activity: Activity,
-        address: String,
-        private val characteristicUuidString: String,
-        private val readTimeout: Long = 0L,
-        private val maxFrameTransferSize: Int = 300,
-        private val onSuccess: ((ByteArray?) -> Unit)? = null,
-        private val onFailure: ((Throwable) -> Unit)? = null
+class BleReadCharacteristicCommand(
+    private val activity: Activity,
+    address: String,
+    private val characteristicUuidString: String,
+    private val readTimeout: Long = 0L,
+    private val maxFrameTransferSize: Int = 300,
+    private val onSuccess: ((ByteArray?) -> Unit)? = null,
+    private val onFailure: ((Throwable) -> Unit)? = null,
+    private val isWholeFrame: (ByteBuffer) -> Boolean
 ) : BleCommand(address) {
     // 缓存返回数据，因为一帧有可能分为多次接收
     private var resultCache: ByteBuffer = ByteBuffer.allocate(maxFrameTransferSize)
@@ -104,13 +106,6 @@ abstract class BleReadCharacteristicCommand(
         }
 
     }
-
-    /**
-     * 判断返回的是否是完整的一帧数据
-     *
-     * @param data  当前接收到的所有数据
-     */
-    abstract fun isWholeFrame(data: ByteBuffer): Boolean
 }
 
 
