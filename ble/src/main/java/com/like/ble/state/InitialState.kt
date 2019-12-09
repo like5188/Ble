@@ -8,27 +8,25 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.MutableLiveData
 import com.like.ble.model.BleResult
 import com.like.ble.model.BleStatus
-import com.like.ble.utils.*
+import com.like.ble.utils.PermissionUtils
+import com.like.ble.utils.bindToLifecycleOwner
 import com.like.ble.utils.callback.RxCallback
+import com.like.ble.utils.getBluetoothManager
+import com.like.ble.utils.isBluetoothEnable
 
 /**
  * 蓝牙初始状态
  * 可以进行初始化操作
  */
 class InitialState(
-    private val mActivity: FragmentActivity,
-    private val mBleResultLiveData: MutableLiveData<BleResult>
-) : BaseBleState() {
+    activity: FragmentActivity,
+    bleResultLiveData: MutableLiveData<BleResult>
+) : BaseBleState(activity, bleResultLiveData) {
     private val mPermissionUtils: PermissionUtils by lazy { PermissionUtils(mActivity) }
     private val mRxCallback: RxCallback by lazy { RxCallback(mActivity) }
 
     @SuppressLint("CheckResult")
-    override fun init() {
-        if (!mActivity.isSupportBluetooth()) {
-            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE, errorMsg = "phone does not support Bluetooth"))
-            return
-        }
-
+    override fun onInit() {
         mPermissionUtils.checkPermissions(
             android.Manifest.permission.BLUETOOTH_ADMIN,
             android.Manifest.permission.BLUETOOTH,

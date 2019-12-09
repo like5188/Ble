@@ -7,7 +7,6 @@ import com.like.ble.model.BleResult
 import com.like.ble.model.BleStatus
 import com.like.ble.scanstrategy.IScanStrategy
 import com.like.ble.utils.getBluetoothAdapter
-import com.like.ble.utils.isBluetoothEnable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -18,18 +17,13 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 可以进行扫描操作
  */
 class ScanState(
-    private val mActivity: FragmentActivity,
-    private val mBleResultLiveData: MutableLiveData<BleResult>
-) : BaseBleState() {
-
+    activity: FragmentActivity,
+    bleResultLiveData: MutableLiveData<BleResult>
+) : BaseBleState(activity, bleResultLiveData) {
     private val mScanning = AtomicBoolean(false)
     private var mScanStrategy: IScanStrategy? = null
 
-    override fun startScan(scanStrategy: IScanStrategy, scanTimeout: Long) {
-        if (!mActivity.isBluetoothEnable()) {
-            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
-            return
-        }
+    override fun onStartScan(scanStrategy: IScanStrategy, scanTimeout: Long) {
         mScanStrategy = scanStrategy
         if (mScanning.compareAndSet(false, true)) {
             mBleResultLiveData.postValue(BleResult(BleStatus.START_SCAN_DEVICE))
@@ -44,18 +38,14 @@ class ScanState(
         }
     }
 
-    override fun stopScan() {
-        if (!mActivity.isBluetoothEnable()) {
-            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
-            return
-        }
+    override fun onStopScan() {
         if (mScanning.compareAndSet(true, false)) {
             mBleResultLiveData.postValue(BleResult(BleStatus.STOP_SCAN_DEVICE))
             mScanStrategy?.stopScan(mActivity.getBluetoothAdapter())
         }
     }
 
-    override fun close() {
+    override fun onClose() {
         stopScan()
         mScanStrategy = null
     }

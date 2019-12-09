@@ -9,7 +9,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.model.*
 import com.like.ble.utils.getBluetoothAdapter
-import com.like.ble.utils.isBluetoothEnable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
@@ -19,10 +18,9 @@ import kotlinx.coroutines.launch
  * 可以进行连接、操作数据等等操作
  */
 class ConnectState(
-    private val mActivity: FragmentActivity,
-    private val mBleResultLiveData: MutableLiveData<BleResult>
-) : BaseBleState() {
-
+    activity: FragmentActivity,
+    bleResultLiveData: MutableLiveData<BleResult>
+) : BaseBleState(activity, bleResultLiveData) {
     private val mChannels: MutableMap<String, Channel<BleCommand>> = mutableMapOf()
     private val mConnectedBluetoothGattList = mutableListOf<BluetoothGatt>()
     // 连接蓝牙设备的回调函数
@@ -160,22 +158,14 @@ class ConnectState(
     // 前一个设备请求建立连接，后面请求在队列中等待。
     // 如果连接成功了，就处理下一个连接请求。
     // 如果连接失败了（例如出错，或者连接超时失败），就马上调用 BluetoothGatt.disconnect() 来释放建立连接请求，然后处理下一个设备连接请求。
-    override fun connect(command: BleConnectCommand) {
-        if (!mActivity.isBluetoothEnable()) {
-            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
-            return
-        }
+    override fun onConnect(command: BleConnectCommand) {
         if (isConnected(command.address)) return
         command.connect(mActivity.lifecycleScope, mGattCallback, mActivity.getBluetoothAdapter()) {
             disconnect(BleDisconnectCommand(mActivity, command.address))
         }
     }
 
-    override fun disconnect(command: BleDisconnectCommand) {
-        if (!mActivity.isBluetoothEnable()) {
-            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
-            return
-        }
+    override fun onDisconnect(command: BleDisconnectCommand) {
         val address = command.address
         if (!isConnected(address)) return
         val listIterator = mConnectedBluetoothGattList.listIterator()
@@ -191,11 +181,7 @@ class ConnectState(
     }
 
     @Synchronized
-    override fun read(command: BleReadCharacteristicCommand) {
-        if (!mActivity.isBluetoothEnable()) {
-            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
-            return
-        }
+    override fun onRead(command: BleReadCharacteristicCommand) {
         val address = command.address
         if (!isConnected(address)) return
         if (!mChannels.containsKey(address)) {
@@ -209,11 +195,7 @@ class ConnectState(
     }
 
     @Synchronized
-    override fun write(command: BleWriteCharacteristicCommand) {
-        if (!mActivity.isBluetoothEnable()) {
-            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
-            return
-        }
+    override fun onWrite(command: BleWriteCharacteristicCommand) {
         val address = command.address
         if (!isConnected(address)) return
         if (!mChannels.containsKey(address)) {
@@ -227,11 +209,7 @@ class ConnectState(
     }
 
     @Synchronized
-    override fun setMtu(command: BleSetMtuCommand) {
-        if (!mActivity.isBluetoothEnable()) {
-            mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE))
-            return
-        }
+    override fun onSetMtu(command: BleSetMtuCommand) {
         val address = command.address
         if (!isConnected(address)) return
         if (!mChannels.containsKey(address)) {
@@ -244,7 +222,7 @@ class ConnectState(
         }
     }
 
-    override fun close() {
+    override fun onClose() {
         mChannels.values.forEach {
             it.close()
         }
