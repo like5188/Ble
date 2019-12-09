@@ -1,4 +1,4 @@
-package com.like.ble.central.utils.callback
+package com.like.ble.utils.callback
 
 import android.content.Intent
 import androidx.fragment.app.Fragment

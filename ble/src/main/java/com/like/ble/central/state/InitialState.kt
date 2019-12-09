@@ -11,9 +11,9 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.MutableLiveData
 import com.like.ble.central.model.BleResult
 import com.like.ble.central.model.BleStatus
-import com.like.ble.central.utils.PermissionUtils
-import com.like.ble.central.utils.bindToLifecycleOwner
-import com.like.ble.central.utils.callback.RxCallback
+import com.like.ble.utils.PermissionUtils
+import com.like.ble.utils.bindToLifecycleOwner
+import com.like.ble.utils.callback.RxCallback
 
 /**
  * 蓝牙初始状态
@@ -26,7 +26,11 @@ class InitialState(
     private var mBluetoothManager: BluetoothManager? = null
     private var mBluetoothAdapter: BluetoothAdapter? = null
 
-    private val mPermissionUtils: PermissionUtils by lazy { PermissionUtils(mActivity) }
+    private val mPermissionUtils: PermissionUtils by lazy {
+        PermissionUtils(
+            mActivity
+        )
+    }
     private val mRxCallback: RxCallback by lazy { RxCallback(mActivity) }
 
     @SuppressLint("CheckResult")

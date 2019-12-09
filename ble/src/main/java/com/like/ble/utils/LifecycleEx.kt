@@ -1,4 +1,4 @@
-package com.like.ble.central.utils
+package com.like.ble.utils
 
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
