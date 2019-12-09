@@ -10,7 +10,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.MutableLiveData
 import com.like.ble.model.BleResult
 import com.like.ble.model.BleStatus
-import com.like.ble.utils.getBluetoothManager
+import com.like.ble.utils.getBluetoothAdapter
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -62,7 +62,7 @@ class AdvertisingState(
                 return
             }
             if (mBluetoothLeAdvertiser == null) {
-                mBluetoothLeAdvertiser = mActivity.getBluetoothManager()?.adapter?.bluetoothLeAdvertiser
+                mBluetoothLeAdvertiser = mActivity.getBluetoothAdapter()?.bluetoothLeAdvertiser
                 if (mBluetoothLeAdvertiser == null) {
                     mBleResultLiveData.postValue(
                         BleResult(

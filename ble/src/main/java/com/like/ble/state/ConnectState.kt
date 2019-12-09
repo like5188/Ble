@@ -8,7 +8,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.model.*
-import com.like.ble.utils.getBluetoothManager
+import com.like.ble.utils.getBluetoothAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
@@ -161,7 +161,7 @@ class ConnectState(
     // 如果连接失败了（例如出错，或者连接超时失败），就马上调用 BluetoothGatt.disconnect() 来释放建立连接请求，然后处理下一个设备连接请求。
     override fun connect(command: BleConnectCommand) {
         if (isConnected(command.address)) return
-        command.connect(mActivity.lifecycleScope, mGattCallback, mActivity.getBluetoothManager()?.adapter) {
+        command.connect(mActivity.lifecycleScope, mGattCallback, mActivity.getBluetoothAdapter()) {
             disconnect(BleDisconnectCommand(mActivity, command.address))
         }
     }

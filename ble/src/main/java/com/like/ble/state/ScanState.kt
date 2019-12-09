@@ -6,7 +6,7 @@ import androidx.lifecycle.lifecycleScope
 import com.like.ble.model.BleResult
 import com.like.ble.model.BleStatus
 import com.like.ble.scanstrategy.IScanStrategy
-import com.like.ble.utils.getBluetoothManager
+import com.like.ble.utils.getBluetoothAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -28,7 +28,7 @@ class ScanState(
         mScanStrategy = scanStrategy
         if (mScanning.compareAndSet(false, true)) {
             mBleResultLiveData.postValue(BleResult(BleStatus.START_SCAN_DEVICE))
-            scanStrategy.startScan(mActivity.getBluetoothManager()?.adapter)
+            scanStrategy.startScan(mActivity.getBluetoothAdapter())
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
                 // 在指定超时时间时取消扫描
                 delay(scanTimeout)
@@ -42,7 +42,7 @@ class ScanState(
     override fun stopScan() {
         if (mScanning.compareAndSet(true, false)) {
             mBleResultLiveData.postValue(BleResult(BleStatus.STOP_SCAN_DEVICE))
-            mScanStrategy?.stopScan(mActivity.getBluetoothManager()?.adapter)
+            mScanStrategy?.stopScan(mActivity.getBluetoothAdapter())
         }
     }
 
