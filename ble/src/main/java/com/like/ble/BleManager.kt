@@ -12,7 +12,6 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
 import com.like.ble.model.*
 import com.like.ble.scanstrategy.IScanStrategy
 import com.like.ble.state.*
@@ -62,17 +61,17 @@ class BleManager(private val mActivity: FragmentActivity) {
         MediatorLiveData<BleResult>().apply {
             addSource(mLiveData) {
                 it ?: return@addSource
-                when {
-                    it.status == BleStatus.ON ||
-                            it.status == BleStatus.OFF ||
-                            it.status == BleStatus.INIT_SUCCESS ||
-                            it.status == BleStatus.INIT_FAILURE ||
-                            it.status == BleStatus.START_SCAN_DEVICE ||
-                            it.status == BleStatus.STOP_SCAN_DEVICE ||
-                            it.status == BleStatus.START_ADVERTISING_SUCCESS ||
-                            it.status == BleStatus.START_ADVERTISING_FAILURE ||
-                            it.status == BleStatus.STOP_ADVERTISING
-                    -> postValue(it)
+                if (it.status == BleStatus.ON ||
+                    it.status == BleStatus.OFF ||
+                    it.status == BleStatus.INIT_SUCCESS ||
+                    it.status == BleStatus.INIT_FAILURE ||
+                    it.status == BleStatus.START_SCAN_DEVICE ||
+                    it.status == BleStatus.STOP_SCAN_DEVICE ||
+                    it.status == BleStatus.START_ADVERTISING_SUCCESS ||
+                    it.status == BleStatus.START_ADVERTISING_FAILURE ||
+                    it.status == BleStatus.STOP_ADVERTISING
+                ) {
+                    postValue(it)
                 }
             }
         }
@@ -99,21 +98,10 @@ class BleManager(private val mActivity: FragmentActivity) {
             }
         }
     }
-    private val mObserver = Observer<BleResult> {
-        when (it?.status) {
-            BleStatus.INIT_SUCCESS -> {
-                mBleState.mBleState = ScanState(mActivity, mLiveData)
-            }
-            else -> {
-            }
-        }
-    }
 
     init {
         // 注册蓝牙打开关闭监听
         mActivity.registerReceiver(mReceiver, IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
-
-        mLiveData.observe(mActivity, mObserver)
     }
 
     fun getLiveData(): LiveData<BleResult> = mFilterLiveData
@@ -124,6 +112,7 @@ class BleManager(private val mActivity: FragmentActivity) {
     @MainThread
     fun initBle() {
         if (mBleState.mBleState !is InitialState) {
+            mBleState.mBleState?.close()
             mBleState.mBleState = InitialState(mActivity, mLiveData)
         }
         mBleState.init()
@@ -134,6 +123,9 @@ class BleManager(private val mActivity: FragmentActivity) {
      */
     fun startAdvertising(settings: AdvertiseSettings, advertiseData: AdvertiseData, scanResponse: AdvertiseData) {
         if (mBleState.mBleState !is AdvertisingState) {
+            if (mBleState.mBleState !is InitialState) {
+                mBleState.mBleState?.close()
+            }
             mBleState.mBleState = AdvertisingState(mActivity, mLiveData)
         }
         mBleState.startAdvertising(settings, advertiseData, scanResponse)
@@ -150,6 +142,12 @@ class BleManager(private val mActivity: FragmentActivity) {
      * 扫描蓝牙设备
      */
     fun scanBleDevice(scanStrategy: IScanStrategy, ScanTimeout: Long = 3000) {
+        if (mBleState.mBleState !is ScanState) {
+            if (mBleState.mBleState !is InitialState) {
+                mBleState.mBleState?.close()
+            }
+            mBleState.mBleState = ScanState(mActivity, mLiveData)
+        }
         mBleState.startScan(scanStrategy, ScanTimeout)
     }
 
@@ -161,15 +159,16 @@ class BleManager(private val mActivity: FragmentActivity) {
     }
 
     fun sendCommand(command: BleCommand) {
+        if (mBleState.mBleState !is ConnectState) {
+            if (mBleState.mBleState !is InitialState) {
+                mBleState.mBleState?.close()
+            }
+            mBleState.mBleState = ConnectState(mActivity, mLiveData)
+        }
         command.mLiveData = mLiveData
         when (command) {
             is BleConnectCommand -> {
-                if (mBleState.mBleState is ScanState) {
-                    mBleState.mBleState = ConnectState(mActivity, mLiveData)
-                }
-                if (mBleState.mBleState is ConnectState) {
-                    mBleState.connect(command)
-                }
+                mBleState.connect(command)
             }
             is BleDisconnectCommand -> {
                 mBleState.disconnect(command)
@@ -193,7 +192,6 @@ class BleManager(private val mActivity: FragmentActivity) {
         mBleState.close()
         try {
             mActivity.unregisterReceiver(mReceiver)
-            mLiveData.removeObserver(mObserver)
         } catch (e: Exception) {// 避免 java.lang.IllegalArgumentException: Receiver not registered
             e.printStackTrace()
         }
