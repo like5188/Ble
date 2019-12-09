@@ -27,9 +27,9 @@ class BleReadCharacteristicCommand(
     private val characteristicUuidString: String,
     private val readTimeout: Long = 0L,
     private val maxFrameTransferSize: Int = 300,
+    private val isWholeFrame: (ByteBuffer) -> Boolean,
     private val onSuccess: ((ByteArray?) -> Unit)? = null,
-    private val onFailure: ((Throwable) -> Unit)? = null,
-    private val isWholeFrame: (ByteBuffer) -> Boolean
+    private val onFailure: ((Throwable) -> Unit)? = null
 ) : BleCommand(address) {
     // 缓存返回数据，因为一帧有可能分为多次接收
     private var resultCache: ByteBuffer = ByteBuffer.allocate(maxFrameTransferSize)

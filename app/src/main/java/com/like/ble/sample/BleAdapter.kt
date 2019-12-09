@@ -83,13 +83,13 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: BleMa
                         5000,
                         300,
                         {
+                            true
+                        },
+                        {
                             mActivity.shortToastCenter("读特征成功 ${it?.contentToString()}")
                         },
                         {
                             mActivity.shortToastCenter("读特征失败！${it.message}")
-                        },
-                        {
-                            true
                         }
                     )
                     1 -> BleWriteCharacteristicCommand(
