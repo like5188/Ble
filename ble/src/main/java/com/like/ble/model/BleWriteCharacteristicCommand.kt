@@ -25,14 +25,14 @@ import java.util.concurrent.atomic.AtomicInteger
  * @param onFailure                 命令执行失败回调
  */
 class BleWriteCharacteristicCommand(
-        private val activity: Activity,
-        private val data: ByteArray,
-        address: String,
-        private val characteristicUuidString: String,
-        private val writeTimeout: Long = 0L,
-        private val maxTransferSize: Int = 20,
-        private val onSuccess: (() -> Unit)? = null,
-        private val onFailure: ((Throwable) -> Unit)? = null
+    private val activity: Activity,
+    private val data: ByteArray,
+    address: String,
+    private val characteristicUuidString: String,
+    private val writeTimeout: Long = 0L,
+    private val maxTransferSize: Int = 20,
+    private val onSuccess: (() -> Unit)? = null,
+    private val onFailure: ((Throwable) -> Unit)? = null
 ) : BleCommand(address) {
     private val mDataList: List<ByteArray> by lazy { data.batch(maxTransferSize) }
     // 记录所有的数据批次，在所有的数据都发送完成后，才调用onSuccess()
@@ -71,10 +71,14 @@ class BleWriteCharacteristicCommand(
         var observer: Observer<BleResult>? = null
         observer = Observer { bleResult ->
             if (bleResult?.status == BleStatus.ON_CHARACTERISTIC_WRITE_SUCCESS) {
-                mBatchCount.decrementAndGet()
+                if (mBatchCount.decrementAndGet() <= 0) {
+                    removeObserver(observer)
+                    onSuccess?.invoke()
+                }
             } else if (bleResult?.status == BleStatus.ON_CHARACTERISTIC_WRITE_FAILURE) {
                 job?.cancel()
                 removeObserver(observer)
+                mBatchCount.set(0)
                 onFailure?.invoke(RuntimeException("写特征值失败：$characteristicUuidString"))
             }
         }
@@ -101,9 +105,6 @@ class BleWriteCharacteristicCommand(
                         return@withContext
                     }
                 }
-
-                removeObserver(observer)
-                onSuccess?.invoke()
             }
         }
     }

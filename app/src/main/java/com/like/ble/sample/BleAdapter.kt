@@ -89,7 +89,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: BleMa
                             mActivity.shortToastCenter("读特征成功 ${it?.contentToString()}")
                         },
                         {
-                            mActivity.shortToastCenter("读特征失败！${it.message}")
+                            mActivity.shortToastCenter("${it.message}")
                         }
                     )
                     1 -> BleWriteCharacteristicCommand(
@@ -103,7 +103,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: BleMa
                             mActivity.shortToastCenter("写特征成功")
                         },
                         {
-                            mActivity.shortToastCenter("写特征失败！${it.message}")
+                            mActivity.shortToastCenter("${it.message}")
                         }
                     )
                     2 -> BleSetMtuCommand(
@@ -114,7 +114,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: BleMa
                             mActivity.shortToastCenter("设置MTU成功 $it")
                         },
                         {
-                            mActivity.shortToastCenter("设置MTU失败！${it.message}")
+                            mActivity.shortToastCenter("${it.message}")
                         }
                     )
                     else -> null
