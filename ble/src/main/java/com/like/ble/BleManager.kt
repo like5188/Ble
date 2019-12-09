@@ -1,8 +1,8 @@
 package com.like.ble
 
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothGattServer
-import android.bluetooth.BluetoothGattServerCallback
+import android.bluetooth.le.AdvertiseData
+import android.bluetooth.le.AdvertiseSettings
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -72,7 +72,10 @@ class BleManager(private val mActivity: FragmentActivity) {
                             it.status == BleStatus.INIT_SUCCESS ||
                             it.status == BleStatus.INIT_FAILURE ||
                             it.status == BleStatus.START_SCAN_DEVICE ||
-                            it.status == BleStatus.STOP_SCAN_DEVICE
+                            it.status == BleStatus.STOP_SCAN_DEVICE ||
+                            it.status == BleStatus.START_ADVERTISING_SUCCESS ||
+                            it.status == BleStatus.START_ADVERTISING_FAILURE ||
+                            it.status == BleStatus.STOP_ADVERTISING
                     -> postValue(it)
                 }
             }
@@ -134,30 +137,13 @@ class BleManager(private val mActivity: FragmentActivity) {
      * 开始广播
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    fun startAdvertising(
-        serviceUuidString: String,
-        readCharUuidString: String,
-        writeCharUuidString: String,
-        descriptorUuidString: String,
-        bluetoothGattServerCallback: BluetoothGattServerCallback
-    ) {
+    fun startAdvertising(settings: AdvertiseSettings, advertiseData: AdvertiseData, scanResponse: AdvertiseData) {
         if (mBleState !is AdvertisingState) {
             val bluetoothManager = mBleState?.getBluetoothManager() ?: return
             val bluetoothAdapter = mBleState?.getBluetoothAdapter() ?: return
-            mBleState = AdvertisingState(
-                mActivity,
-                mLiveData,
-                bluetoothManager,
-                bluetoothAdapter
-            )
-            mBleState?.startAdvertising(
-                serviceUuidString,
-                readCharUuidString,
-                writeCharUuidString,
-                descriptorUuidString,
-                bluetoothGattServerCallback
-            )
+            mBleState = AdvertisingState(mLiveData, bluetoothManager, bluetoothAdapter)
         }
+        mBleState?.startAdvertising(settings, advertiseData, scanResponse)
     }
 
     /**
@@ -165,10 +151,6 @@ class BleManager(private val mActivity: FragmentActivity) {
      */
     fun stopAdvertising() {
         mBleState?.stopAdvertising()
-    }
-
-    fun getBluetoothGattServer(): BluetoothGattServer? {
-        return mBleState?.getBluetoothGattServer()
     }
 
     /**
