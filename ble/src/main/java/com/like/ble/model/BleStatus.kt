@@ -7,7 +7,6 @@ enum class BleStatus(val des: String) {
     ON("蓝牙已打开"),
     OFF("蓝牙已关闭"),
 
-    INIT("开始初始化蓝牙"),
     INIT_SUCCESS("蓝牙初始化成功"),
     INIT_FAILURE("蓝牙初始化失败"),
 

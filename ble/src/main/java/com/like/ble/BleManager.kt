@@ -68,7 +68,6 @@ class BleManager(private val mActivity: FragmentActivity) {
                 when {
                     it.status == BleStatus.ON ||
                             it.status == BleStatus.OFF ||
-                            it.status == BleStatus.INIT ||
                             it.status == BleStatus.INIT_SUCCESS ||
                             it.status == BleStatus.INIT_FAILURE ||
                             it.status == BleStatus.START_SCAN_DEVICE ||
@@ -104,8 +103,7 @@ class BleManager(private val mActivity: FragmentActivity) {
     private val mObserver = Observer<BleResult> {
         when (it?.status) {
             BleStatus.INIT_SUCCESS -> {
-                val bluetoothAdapter = mBleState?.getBluetoothAdapter() ?: return@Observer
-                mBleState = ScanState(mActivity, mLiveData, bluetoothAdapter)
+                mBleState = ScanState(mActivity, mLiveData)
             }
             else -> {
             }
@@ -138,8 +136,7 @@ class BleManager(private val mActivity: FragmentActivity) {
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun startAdvertising(settings: AdvertiseSettings, advertiseData: AdvertiseData, scanResponse: AdvertiseData) {
         if (mBleState !is AdvertisingState) {
-            val bluetoothAdapter = mBleState?.getBluetoothAdapter() ?: return
-            mBleState = AdvertisingState(mLiveData, bluetoothAdapter)
+            mBleState = AdvertisingState(mActivity, mLiveData)
         }
         mBleState?.startAdvertising(settings, advertiseData, scanResponse)
     }
@@ -170,8 +167,7 @@ class BleManager(private val mActivity: FragmentActivity) {
         when (command) {
             is BleConnectCommand -> {
                 if (mBleState is ScanState) {
-                    val bluetoothAdapter = mBleState?.getBluetoothAdapter() ?: return
-                    mBleState = ConnectState(mActivity, mLiveData, bluetoothAdapter)
+                    mBleState = ConnectState(mActivity, mLiveData)
                 }
                 if (mBleState is ConnectState) {
                     mBleState?.connect(command)

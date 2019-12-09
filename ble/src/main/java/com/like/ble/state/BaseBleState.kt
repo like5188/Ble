@@ -1,6 +1,5 @@
 package com.like.ble.state
 
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import com.like.ble.model.*
@@ -64,12 +63,5 @@ abstract class BaseBleState {
      * 释放资源
      */
     open fun close() {}
-
-    /**
-     * 获取 BluetoothAdapter
-     */
-    internal open fun getBluetoothAdapter(): BluetoothAdapter? {
-        return null
-    }
 
 }

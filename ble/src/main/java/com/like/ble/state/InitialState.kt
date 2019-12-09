@@ -22,8 +22,6 @@ class InitialState(
     private val mActivity: FragmentActivity,
     private val mBleResultLiveData: MutableLiveData<BleResult>
 ) : BaseBleState() {
-    private var mBluetoothAdapter: BluetoothAdapter? = null
-
     private val mPermissionUtils: PermissionUtils by lazy {
         PermissionUtils(
             mActivity
@@ -33,8 +31,6 @@ class InitialState(
 
     @SuppressLint("CheckResult")
     override fun init() {
-        mBleResultLiveData.postValue(BleResult(BleStatus.INIT))
-
         if (!isSupportBle()) {
             mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE, errorMsg = "phone does not support Bluetooth"))
             return
@@ -63,8 +59,7 @@ class InitialState(
                     return@checkPermissions
                 }
 
-                mBluetoothAdapter = bluetoothManager.adapter
-                if (mBluetoothAdapter == null) {
+                if (bluetoothManager.adapter == null) {
                     mBleResultLiveData.postValue(BleResult(BleStatus.INIT_FAILURE, errorMsg = "failed to get BluetoothAdapter"))
                     return@checkPermissions
                 }
@@ -72,7 +67,6 @@ class InitialState(
                 if (isBlueEnable()) {// 蓝牙初始化成功
                     mBleResultLiveData.postValue(BleResult(BleStatus.INIT_SUCCESS))
                 } else {// 蓝牙功能未打开
-                    mBluetoothAdapter = null
                     // 弹出开启蓝牙的对话框
                     mRxCallback.startActivityForResult(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)).subscribe(
                         {
@@ -95,18 +89,10 @@ class InitialState(
             })
     }
 
-    override fun close() {
-        mBluetoothAdapter = null
-    }
-
-    override fun getBluetoothAdapter(): BluetoothAdapter? {
-        return mBluetoothAdapter
-    }
-
     /**
      * 蓝牙是否就绪
      */
-    private fun isBlueEnable() = mBluetoothAdapter?.isEnabled ?: false
+    private fun isBlueEnable(): Boolean = mActivity.getBluetoothManager()?.adapter?.isEnabled ?: false
 
     private fun isSupportBle() = mActivity.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
 }

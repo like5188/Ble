@@ -1,15 +1,16 @@
 package com.like.ble.state
 
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import android.bluetooth.le.BluetoothLeAdvertiser
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.MutableLiveData
 import com.like.ble.model.BleResult
 import com.like.ble.model.BleStatus
+import com.like.ble.utils.getBluetoothManager
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -18,8 +19,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class AdvertisingState(
-    private val mBleResultLiveData: MutableLiveData<BleResult>,
-    private var mBluetoothAdapter: BluetoothAdapter?
+    private val mActivity: FragmentActivity,
+    private val mBleResultLiveData: MutableLiveData<BleResult>
 ) : BaseBleState() {
     private val mIsRunning = AtomicBoolean(false)
     private var mBluetoothLeAdvertiser: BluetoothLeAdvertiser? = null
@@ -52,7 +53,7 @@ class AdvertisingState(
     override fun startAdvertising(settings: AdvertiseSettings, advertiseData: AdvertiseData, scanResponse: AdvertiseData) {
         if (mIsRunning.compareAndSet(false, true)) {
             if (mBluetoothLeAdvertiser == null) {
-                mBluetoothLeAdvertiser = mBluetoothAdapter?.bluetoothLeAdvertiser
+                mBluetoothLeAdvertiser = mActivity.getBluetoothManager()?.adapter?.bluetoothLeAdvertiser
                 if (mBluetoothLeAdvertiser == null) {
                     mBleResultLiveData.postValue(
                         BleResult(
@@ -78,11 +79,6 @@ class AdvertisingState(
     override fun close() {
         stopAdvertising()
         mBluetoothLeAdvertiser = null
-        mBluetoothAdapter = null
-    }
-
-    override fun getBluetoothAdapter(): BluetoothAdapter? {
-        return mBluetoothAdapter
     }
 
 }

@@ -1,12 +1,12 @@
 package com.like.ble.state
 
-import android.bluetooth.BluetoothAdapter
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.model.BleResult
 import com.like.ble.model.BleStatus
 import com.like.ble.scanstrategy.IScanStrategy
+import com.like.ble.utils.getBluetoothManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -18,8 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 class ScanState(
     private val mActivity: FragmentActivity,
-    private val mBleResultLiveData: MutableLiveData<BleResult>,
-    private var mBluetoothAdapter: BluetoothAdapter?
+    private val mBleResultLiveData: MutableLiveData<BleResult>
 ) : BaseBleState() {
 
     private val mScanning = AtomicBoolean(false)
@@ -29,7 +28,7 @@ class ScanState(
         mScanStrategy = scanStrategy
         if (mScanning.compareAndSet(false, true)) {
             mBleResultLiveData.postValue(BleResult(BleStatus.START_SCAN_DEVICE))
-            scanStrategy.startScan(mBluetoothAdapter)
+            scanStrategy.startScan(mActivity.getBluetoothManager()?.adapter)
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
                 // 在指定超时时间时取消扫描
                 delay(scanTimeout)
@@ -43,18 +42,13 @@ class ScanState(
     override fun stopScan() {
         if (mScanning.compareAndSet(true, false)) {
             mBleResultLiveData.postValue(BleResult(BleStatus.STOP_SCAN_DEVICE))
-            mScanStrategy?.stopScan(mBluetoothAdapter)
+            mScanStrategy?.stopScan(mActivity.getBluetoothManager()?.adapter)
         }
     }
 
     override fun close() {
         stopScan()
         mScanStrategy = null
-        mBluetoothAdapter = null
-    }
-
-    override fun getBluetoothAdapter(): BluetoothAdapter? {
-        return mBluetoothAdapter
     }
 
 }
