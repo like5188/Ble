@@ -1,13 +1,13 @@
-package com.like.ble.central.state
+package com.like.ble.state
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
-import com.like.ble.central.model.BleResult
-import com.like.ble.central.model.BleStatus
-import com.like.ble.central.scanstrategy.IScanStrategy
+import com.like.ble.model.BleResult
+import com.like.ble.model.BleStatus
+import com.like.ble.scanstrategy.IScanStrategy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

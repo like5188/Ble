@@ -1,4 +1,4 @@
-package com.like.ble.central.state
+package com.like.ble.state
 
 import android.bluetooth.*
 import android.bluetooth.le.AdvertiseCallback
@@ -10,8 +10,8 @@ import android.os.ParcelUuid
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.MutableLiveData
-import com.like.ble.central.model.BleResult
-import com.like.ble.central.model.BleStatus
+import com.like.ble.model.BleResult
+import com.like.ble.model.BleStatus
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 

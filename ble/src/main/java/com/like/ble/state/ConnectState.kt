@@ -1,10 +1,10 @@
-package com.like.ble.central.state
+package com.like.ble.state
 
 import android.bluetooth.*
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
-import com.like.ble.central.model.*
+import com.like.ble.model.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch

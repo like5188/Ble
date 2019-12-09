@@ -1,6 +1,6 @@
 @file:Suppress("DEPRECATION")
 
-package com.like.ble.central.scanstrategy
+package com.like.ble.scanstrategy
 
 import android.annotation.TargetApi
 import android.bluetooth.BluetoothAdapter

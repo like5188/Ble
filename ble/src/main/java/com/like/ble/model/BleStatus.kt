@@ -1,4 +1,4 @@
-package com.like.ble.central.model
+package com.like.ble.model
 
 /**
  * 蓝牙的状态

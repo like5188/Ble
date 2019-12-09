@@ -1,14 +1,11 @@
-package com.like.ble.central.model
+package com.like.ble.model
 
 import android.app.Activity
 import android.bluetooth.BluetoothGatt
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
-import com.like.ble.central.model.BleCommand
-import com.like.ble.central.model.BleResult
-import com.like.ble.central.model.BleStatus
-import com.like.ble.central.utils.findCharacteristic
-import com.like.ble.central.utils.toByteArrayOrNull
+import com.like.ble.utils.findCharacteristic
+import com.like.ble.utils.toByteArrayOrNull
 import kotlinx.coroutines.*
 import java.nio.ByteBuffer
 import java.util.concurrent.TimeoutException

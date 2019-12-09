@@ -1,11 +1,11 @@
-package com.like.ble.central.state
+package com.like.ble.state
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothGattServer
 import android.bluetooth.BluetoothGattServerCallback
 import android.bluetooth.BluetoothManager
-import com.like.ble.central.model.*
-import com.like.ble.central.scanstrategy.IScanStrategy
+import com.like.ble.model.*
+import com.like.ble.scanstrategy.IScanStrategy
 
 /**
  * 蓝牙状态

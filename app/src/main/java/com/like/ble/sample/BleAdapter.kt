@@ -1,8 +1,8 @@
 package com.like.ble.sample
 
 import android.app.Activity
-import com.like.ble.central.BleManager
-import com.like.ble.central.model.*
+import com.like.ble.BleManager
+import com.like.ble.model.*
 import com.like.ble.sample.databinding.ItemBleBinding
 import com.like.livedatarecyclerview.adapter.BaseAdapter
 import com.like.livedatarecyclerview.model.IRecyclerViewItem

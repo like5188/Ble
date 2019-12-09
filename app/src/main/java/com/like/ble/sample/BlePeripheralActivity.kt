@@ -8,7 +8,7 @@ import android.view.View
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
-import com.like.ble.central.BleManager
+import com.like.ble.BleManager
 import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
 
 /**

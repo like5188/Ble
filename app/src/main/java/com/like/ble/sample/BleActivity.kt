@@ -11,9 +11,9 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
-import com.like.ble.central.BleManager
-import com.like.ble.central.scanstrategy.ScanStrategy18
-import com.like.ble.central.scanstrategy.ScanStrategy21
+import com.like.ble.BleManager
+import com.like.ble.scanstrategy.ScanStrategy18
+import com.like.ble.scanstrategy.ScanStrategy21
 import com.like.ble.sample.databinding.ActivityBleBinding
 import com.like.livedatarecyclerview.layoutmanager.WrapLinearLayoutManager
 

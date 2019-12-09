@@ -1,12 +1,9 @@
-package com.like.ble.central.model
+package com.like.ble.model
 
 import android.app.Activity
 import android.bluetooth.BluetoothGatt
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
-import com.like.ble.central.model.BleCommand
-import com.like.ble.central.model.BleResult
-import com.like.ble.central.model.BleStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

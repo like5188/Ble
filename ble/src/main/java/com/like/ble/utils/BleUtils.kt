@@ -1,4 +1,4 @@
-package com.like.ble.central.utils
+package com.like.ble.utils
 
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic

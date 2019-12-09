@@ -1,4 +1,4 @@
-package com.like.ble.central.state
+package com.like.ble.state
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -9,8 +9,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.MutableLiveData
-import com.like.ble.central.model.BleResult
-import com.like.ble.central.model.BleStatus
+import com.like.ble.model.BleResult
+import com.like.ble.model.BleStatus
 import com.like.ble.utils.PermissionUtils
 import com.like.ble.utils.bindToLifecycleOwner
 import com.like.ble.utils.callback.RxCallback

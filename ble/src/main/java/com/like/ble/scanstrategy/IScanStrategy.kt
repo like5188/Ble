@@ -1,4 +1,4 @@
-package com.like.ble.central.scanstrategy
+package com.like.ble.scanstrategy
 
 import android.bluetooth.BluetoothAdapter
 

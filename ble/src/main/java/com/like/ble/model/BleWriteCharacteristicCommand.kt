@@ -1,12 +1,12 @@
-package com.like.ble.central.model
+package com.like.ble.model
 
 import android.app.Activity
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
-import com.like.ble.central.utils.batch
-import com.like.ble.central.utils.findCharacteristic
+import com.like.ble.utils.batch
+import com.like.ble.utils.findCharacteristic
 import kotlinx.coroutines.*
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
