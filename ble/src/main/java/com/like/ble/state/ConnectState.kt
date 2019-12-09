@@ -233,7 +233,6 @@ class ConnectState(
         mConnectedBluetoothGattList.clear()
     }
 
-    private fun isConnected(address: String) =
-        mConnectedBluetoothGattList.any { it.device.address == address }
+    private fun isConnected(address: String): Boolean = mConnectedBluetoothGattList.any { it.device.address == address }
 
 }
