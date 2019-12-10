@@ -1,6 +1,6 @@
 package com.like.ble.command
 
-import com.like.ble.model.BleScanResult
+import android.bluetooth.BluetoothDevice
 import com.like.ble.receiver.IState
 
 /**
@@ -12,7 +12,7 @@ import com.like.ble.receiver.IState
  */
 class StartScanCommand(
     val scanTimeout: Long = 2000L,
-    val onSuccess: ((BleScanResult?) -> Unit)? = null,
+    val onSuccess: ((BluetoothDevice, Int, ByteArray?) -> Unit)? = null,
     val onFailure: ((Throwable) -> Unit)? = null
 ) : ICommand {
     var mReceiver: IState? = null

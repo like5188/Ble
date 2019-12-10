@@ -12,7 +12,6 @@ import com.like.ble.command.CloseCommand
 import com.like.ble.command.StartScanCommand
 import com.like.ble.command.StopScanCommand
 import com.like.ble.model.BleResult
-import com.like.ble.model.BleScanResult
 import com.like.ble.model.BleStatus
 import com.like.ble.receiver.StateAdapter
 import com.like.ble.utils.getBluetoothAdapter
@@ -30,22 +29,20 @@ class ScanState(
     private val mLiveData: MutableLiveData<BleResult>
 ) : StateAdapter() {
     private val mScanning = AtomicBoolean(false)
-    private var mOnSuccess: ((BleScanResult?) -> Unit)? = null
-    private var mOnFailure: ((Throwable) -> Unit)? = null
+    private var mStartScanCommand: StartScanCommand? = null
     private val mScanCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
-            mOnSuccess?.invoke(BleScanResult(result.device, result.rssi, result.scanRecord?.bytes))
+            mStartScanCommand?.onSuccess?.invoke(result.device, result.rssi, result.scanRecord?.bytes)
         }
     }
     private val mLeScanCallback: BluetoothAdapter.LeScanCallback = BluetoothAdapter.LeScanCallback { device, rssi, scanRecord ->
-        mOnSuccess?.invoke(BleScanResult(device, rssi, scanRecord))
+        mStartScanCommand?.onSuccess?.invoke(device, rssi, scanRecord)
     }
 
     override fun startScan(command: StartScanCommand) {
         super.startScan(command)
         if (mScanning.compareAndSet(false, true)) {
-            mOnSuccess = command.onSuccess
-            mOnFailure = command.onFailure
+            mStartScanCommand = command
             mLiveData.postValue(BleResult(BleStatus.START_SCAN_DEVICE))
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(mScanCallback)
