@@ -25,8 +25,7 @@ class ScanState(
 ) : BleStateAdapter() {
     private val mScanning = AtomicBoolean(false)
     private var mBleStartScanCommand: BleStartScanCommand? = null
-    private val mScanCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    object : ScanCallback() {
+    private val mScanCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             mBleStartScanCommand?.onSuccess?.invoke(BleScanResult(result.device, result.rssi, result.scanRecord?.bytes))
         }
