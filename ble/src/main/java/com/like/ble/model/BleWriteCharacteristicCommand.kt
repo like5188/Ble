@@ -27,13 +27,13 @@ import java.util.concurrent.atomic.AtomicInteger
 class BleWriteCharacteristicCommand(
     private val activity: Activity,
     private val data: ByteArray,
-    address: String,
+    val address: String,
     private val characteristicUuidString: String,
     private val writeTimeout: Long = 0L,
     private val maxTransferSize: Int = 20,
     private val onSuccess: (() -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
-) : BleCommand(address) {
+) : BleCommand() {
     private val mDataList: List<ByteArray> by lazy { data.batch(maxTransferSize) }
     // 记录所有的数据批次，在所有的数据都发送完成后，才调用onSuccess()
     private val mBatchCount: AtomicInteger by lazy { AtomicInteger(mDataList.size) }

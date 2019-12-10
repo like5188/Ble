@@ -15,11 +15,11 @@ import kotlinx.coroutines.withContext
  */
 class BleSetMtuCommand(
     private val activity: Activity,
-    address: String,
+    val address: String,
     private val mtu: Int,
     private val onSuccess: ((Int) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
-) : BleCommand(address) {
+) : BleCommand() {
 
     override fun setMtu(coroutineScope: CoroutineScope, bluetoothGatt: BluetoothGatt?) {
         if (bluetoothGatt == null) {

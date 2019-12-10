@@ -13,11 +13,11 @@ import kotlinx.coroutines.withContext
  * 蓝牙断开连接的命令
  */
 class BleDisconnectCommand(
-        private val activity: Activity,
-        address: String,
-        private val onSuccess: (() -> Unit)? = null,
-        private val onFailure: ((Throwable) -> Unit)? = null
-) : BleCommand(address) {
+    private val activity: Activity,
+    val address: String,
+    private val onSuccess: (() -> Unit)? = null,
+    private val onFailure: ((Throwable) -> Unit)? = null
+) : BleCommand() {
 
     override fun disconnect(coroutineScope: CoroutineScope, bluetoothGatt: BluetoothGatt?) {
         if (bluetoothGatt == null) {

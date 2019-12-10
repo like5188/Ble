@@ -13,14 +13,19 @@ import kotlinx.coroutines.*
  * 蓝牙连接的命令
  */
 class BleConnectCommand(
-        private val activity: Activity,
-        address: String,
-        private val connectTimeout: Long = 20000L,
-        private val onSuccess: (() -> Unit)? = null,
-        private val onFailure: ((Throwable) -> Unit)? = null
-) : BleCommand(address) {
+    private val activity: Activity,
+    val address: String,
+    private val connectTimeout: Long = 20000L,
+    private val onSuccess: (() -> Unit)? = null,
+    private val onFailure: ((Throwable) -> Unit)? = null
+) : BleCommand() {
 
-    override fun connect(coroutineScope: CoroutineScope, gattCallback: BluetoothGattCallback, bluetoothAdapter: BluetoothAdapter?, disconnect: () -> Unit) {
+    override fun connect(
+        coroutineScope: CoroutineScope,
+        gattCallback: BluetoothGattCallback,
+        bluetoothAdapter: BluetoothAdapter?,
+        disconnect: () -> Unit
+    ) {
         if (address.isEmpty()) {
             onFailure?.invoke(IllegalArgumentException("连接蓝牙设备失败：地址不能为空"))
             return
