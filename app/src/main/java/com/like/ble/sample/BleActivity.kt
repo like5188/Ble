@@ -46,10 +46,10 @@ class BleActivity : AppCompatActivity() {
     fun startScan(view: View) {
         mAdapter.mAdapterDataManager.clear()
         mBleManager.sendCommand(
-            StartScanCommand(2000L, { device, rssi, scanRecord ->
+            StartScanCommand(2000L) { device, rssi, scanRecord ->
                 Log.d(TAG, "device=$device rssi=$rssi scanRecord=$scanRecord")
                 addItem(device)
-            })
+            }
         )
     }
 
