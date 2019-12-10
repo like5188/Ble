@@ -2,7 +2,7 @@ package com.like.ble.command
 
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
-import com.like.ble.receiver.IState
+import com.like.ble.state.IState
 
 /**
  * 开始广播命令

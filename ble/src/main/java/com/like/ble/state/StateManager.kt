@@ -1,13 +1,9 @@
-package com.like.ble.receiver
+package com.like.ble.state
 
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.MutableLiveData
 import com.like.ble.command.*
 import com.like.ble.model.BleResult
-import com.like.ble.receiver.state.AdvertisingState
-import com.like.ble.receiver.state.ConnectState
-import com.like.ble.receiver.state.InitialState
-import com.like.ble.receiver.state.ScanState
 
 /**
  * 蓝牙状态管理

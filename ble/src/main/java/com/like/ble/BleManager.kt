@@ -13,7 +13,7 @@ import com.like.ble.command.*
 import com.like.ble.invoker.Invoker
 import com.like.ble.model.BleResult
 import com.like.ble.model.BleStatus
-import com.like.ble.receiver.StateManager
+import com.like.ble.state.StateManager
 
 /**
  * 蓝牙是一种近距离无线通信技术。它的特性就是近距离通信，典型距离是 10 米以内，传输速度最高可达 24 Mbps，支持多连接，安全性高，非常适合用智能设备上。

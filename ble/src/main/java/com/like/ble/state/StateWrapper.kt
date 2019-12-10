@@ -1,4 +1,4 @@
-package com.like.ble.receiver
+package com.like.ble.state
 
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.MutableLiveData

@@ -1,6 +1,6 @@
 package com.like.ble.command
 
-import com.like.ble.receiver.IState
+import com.like.ble.state.IState
 
 /**
  * 断开蓝牙连接命令

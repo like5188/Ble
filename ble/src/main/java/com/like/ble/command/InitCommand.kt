@@ -1,6 +1,6 @@
 package com.like.ble.command
 
-import com.like.ble.receiver.IState
+import com.like.ble.state.IState
 
 /**
  * 初始化蓝牙命令

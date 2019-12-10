@@ -1,6 +1,6 @@
 package com.like.ble.command
 
-import com.like.ble.receiver.IState
+import com.like.ble.state.IState
 
 /**
  * 停止扫描命令

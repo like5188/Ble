@@ -1,7 +1,7 @@
 package com.like.ble.command
 
 import android.bluetooth.BluetoothDevice
-import com.like.ble.receiver.IState
+import com.like.ble.state.IState
 
 /**
  * 开始扫描蓝牙命令
