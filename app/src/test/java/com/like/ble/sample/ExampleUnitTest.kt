@@ -1,4 +1,4 @@
-package com.like.ble
+package com.like.ble.sample
 
 import org.junit.Test
 
