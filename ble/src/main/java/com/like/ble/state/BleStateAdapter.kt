@@ -3,7 +3,6 @@ package com.like.ble.state
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import com.like.ble.model.*
-import com.like.ble.scanstrategy.IScanStrategy
 
 /**
  * 蓝牙状态
@@ -18,10 +17,10 @@ abstract class BleStateAdapter : IBleState {
     override fun stopAdvertising() {
     }
 
-    override fun startScan(scanStrategy: IScanStrategy, scanTimeout: Long) {
+    override fun startScan(command: BleStartScanCommand) {
     }
 
-    override fun stopScan() {
+    override fun stopScan(command: BleStopScanCommand) {
     }
 
     override fun connect(command: BleConnectCommand) {

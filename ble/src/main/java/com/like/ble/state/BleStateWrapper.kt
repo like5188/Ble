@@ -5,7 +5,6 @@ import android.bluetooth.le.AdvertiseSettings
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.MutableLiveData
 import com.like.ble.model.*
-import com.like.ble.scanstrategy.IScanStrategy
 import com.like.ble.utils.isBluetoothEnable
 import com.like.ble.utils.isSupportBluetooth
 
@@ -33,14 +32,14 @@ class BleStateWrapper(
         mBleState?.stopAdvertising()
     }
 
-    override fun startScan(scanStrategy: IScanStrategy, scanTimeout: Long) {
+    override fun startScan(command: BleStartScanCommand) {
         if (!checkEnable()) return
-        mBleState?.startScan(scanStrategy, scanTimeout)
+        mBleState?.startScan(command)
     }
 
-    override fun stopScan() {
+    override fun stopScan(command: BleStopScanCommand) {
         if (!checkEnable()) return
-        mBleState?.stopScan()
+        mBleState?.stopScan(command)
     }
 
     override fun connect(command: BleConnectCommand) {

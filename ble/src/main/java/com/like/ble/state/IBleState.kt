@@ -3,7 +3,6 @@ package com.like.ble.state
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import com.like.ble.model.*
-import com.like.ble.scanstrategy.IScanStrategy
 
 /**
  * 蓝牙状态
@@ -28,12 +27,12 @@ interface IBleState {
     /**
      * 开始扫描设备
      */
-    fun startScan(scanStrategy: IScanStrategy, scanTimeout: Long)
+    fun startScan(command: BleStartScanCommand)
 
     /**
      * 停止扫描设备
      */
-    fun stopScan()
+    fun stopScan(command: BleStopScanCommand)
 
     /**
      *  连接指定蓝牙设备

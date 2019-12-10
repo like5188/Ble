@@ -13,7 +13,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import com.like.ble.model.*
-import com.like.ble.scanstrategy.IScanStrategy
 import com.like.ble.state.*
 
 /**
@@ -111,10 +110,7 @@ class BleManager(private val mActivity: FragmentActivity) {
      */
     @MainThread
     fun initBle() {
-        if (mBleState.mBleState !is InitialState) {
-            mBleState.mBleState?.close()
-            mBleState.mBleState = InitialState(mActivity, mLiveData)
-        }
+        updateState<InitialState>()
         mBleState.init()
     }
 
@@ -122,12 +118,7 @@ class BleManager(private val mActivity: FragmentActivity) {
      * 开始广播
      */
     fun startAdvertising(settings: AdvertiseSettings, advertiseData: AdvertiseData, scanResponse: AdvertiseData) {
-        if (mBleState.mBleState !is AdvertisingState) {
-            if (mBleState.mBleState !is InitialState) {
-                mBleState.mBleState?.close()
-            }
-            mBleState.mBleState = AdvertisingState(mActivity, mLiveData)
-        }
+        updateState<AdvertisingState>()
         mBleState.startAdvertising(settings, advertiseData, scanResponse)
     }
 
@@ -138,48 +129,35 @@ class BleManager(private val mActivity: FragmentActivity) {
         mBleState.stopAdvertising()
     }
 
-    /**
-     * 扫描蓝牙设备
-     */
-    fun scanBleDevice(scanStrategy: IScanStrategy, ScanTimeout: Long = 3000) {
-        if (mBleState.mBleState !is ScanState) {
-            if (mBleState.mBleState !is InitialState) {
-                mBleState.mBleState?.close()
-            }
-            mBleState.mBleState = ScanState(mActivity, mLiveData)
-        }
-        mBleState.startScan(scanStrategy, ScanTimeout)
-    }
-
-    /**
-     * 停止扫描蓝牙设备
-     */
-    fun stopScanBleDevice() {
-        mBleState.stopScan()
-    }
-
     fun sendCommand(command: BleCommand) {
-        if (mBleState.mBleState !is ConnectState) {
-            if (mBleState.mBleState !is InitialState) {
-                mBleState.mBleState?.close()
-            }
-            mBleState.mBleState = ConnectState(mActivity, mLiveData)
-        }
         command.mLiveData = mLiveData
         when (command) {
+            is BleStartScanCommand -> {
+                updateState<ScanState>()
+                mBleState.startScan(command)
+            }
+            is BleStopScanCommand -> {
+                updateState<ScanState>()
+                mBleState.stopScan(command)
+            }
             is BleConnectCommand -> {
+                updateState<ConnectState>()
                 mBleState.connect(command)
             }
             is BleDisconnectCommand -> {
+                updateState<ConnectState>()
                 mBleState.disconnect(command)
             }
             is BleReadCharacteristicCommand -> {
+                updateState<ConnectState>()
                 mBleState.read(command)
             }
             is BleWriteCharacteristicCommand -> {
+                updateState<ConnectState>()
                 mBleState.write(command)
             }
             is BleSetMtuCommand -> {
+                updateState<ConnectState>()
                 mBleState.setMtu(command)
             }
         }
@@ -196,4 +174,41 @@ class BleManager(private val mActivity: FragmentActivity) {
             e.printStackTrace()
         }
     }
+
+    private inline fun <reified T> updateState() {
+        when (T::class.java) {
+            InitialState::class.java -> {
+                if (mBleState.mBleState !is InitialState) {
+                    mBleState.mBleState?.close()
+                    mBleState.mBleState = InitialState(mActivity, mLiveData)
+                }
+            }
+            AdvertisingState::class.java -> {
+                if (mBleState.mBleState !is AdvertisingState) {
+                    if (mBleState.mBleState !is InitialState) {
+                        mBleState.mBleState?.close()
+                    }
+                    mBleState.mBleState = AdvertisingState(mActivity, mLiveData)
+                }
+            }
+            ScanState::class.java -> {
+                if (mBleState.mBleState !is ScanState) {
+                    if (mBleState.mBleState !is InitialState) {
+                        mBleState.mBleState?.close()
+                    }
+                    mBleState.mBleState = ScanState(mActivity, mLiveData)
+                }
+            }
+            ConnectState::class.java -> {
+                if (mBleState.mBleState !is ConnectState) {
+                    if (mBleState.mBleState !is InitialState) {
+                        mBleState.mBleState?.close()
+                    }
+                    mBleState.mBleState = ConnectState(mActivity, mLiveData)
+                }
+            }
+        }
+
+    }
+
 }

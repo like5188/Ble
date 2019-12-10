@@ -1,10 +1,6 @@
 package com.like.ble.sample
 
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.le.ScanCallback
-import android.bluetooth.le.ScanResult
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -12,8 +8,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import com.like.ble.BleManager
-import com.like.ble.scanstrategy.ScanStrategy18
-import com.like.ble.scanstrategy.ScanStrategy21
+import com.like.ble.model.BleStartScanCommand
+import com.like.ble.model.BleStopScanCommand
 import com.like.ble.sample.databinding.ActivityBleBinding
 import com.like.livedatarecyclerview.layoutmanager.WrapLinearLayoutManager
 
@@ -27,19 +23,6 @@ class BleActivity : AppCompatActivity() {
 
     private val mBinding: ActivityBleBinding by lazy {
         DataBindingUtil.setContentView<ActivityBleBinding>(this, R.layout.activity_ble)
-    }
-    private val mScanStrategy = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-        ScanStrategy21(object : ScanCallback() {
-            override fun onScanResult(callbackType: Int, result: ScanResult?) {
-                Log.d(TAG, "device=${result?.device} rssi=${result?.rssi} scanRecord=${result?.scanRecord}")
-                addItem(result?.device)
-            }
-        })
-    } else {
-        ScanStrategy18(BluetoothAdapter.LeScanCallback { device, rssi, scanRecord ->
-            Log.d(TAG, "device=$device rssi=$rssi scanRecord=$scanRecord")
-            addItem(device)
-        })
     }
     private val mBleManager: BleManager by lazy {
         BleManager(this)
@@ -61,11 +44,16 @@ class BleActivity : AppCompatActivity() {
 
     fun startScan(view: View) {
         mAdapter.mAdapterDataManager.clear()
-        mBleManager.scanBleDevice(mScanStrategy)
+        mBleManager.sendCommand(
+            BleStartScanCommand(2000L, {
+                Log.d(TAG, "device=${it?.device} rssi=${it?.rssi} scanRecord=${it?.scanRecord}")
+                addItem(it?.device)
+            })
+        )
     }
 
     fun stopScan(view: View) {
-        mBleManager.stopScanBleDevice()
+        mBleManager.sendCommand(BleStopScanCommand())
     }
 
     private fun addItem(device: BluetoothDevice?) {
