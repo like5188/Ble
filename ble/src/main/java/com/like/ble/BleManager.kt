@@ -10,7 +10,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import com.like.ble.command.*
-import com.like.ble.invoker.Invoker
 import com.like.ble.model.BleResult
 import com.like.ble.model.BleStatus
 import com.like.ble.state.StateManager
@@ -77,7 +76,6 @@ class BleManager(private val mActivity: FragmentActivity) {
     }
 
     private val mStateManager: StateManager by lazy { StateManager(mActivity, mLiveData) }
-    private val mInvoker: Invoker by lazy { Invoker() }
 
     // 蓝牙打开关闭监听器
     private val mReceiver = object : BroadcastReceiver() {
@@ -107,64 +105,7 @@ class BleManager(private val mActivity: FragmentActivity) {
     fun getLiveData(): LiveData<BleResult> = mFilterLiveData
 
     fun sendCommand(command: ICommand) {
-        val state = mStateManager.update(command)
-        when (command) {
-            is InitCommand -> {
-                command.mReceiver = state
-                mInvoker.mInitCommand = command
-                mInvoker.init()
-            }
-            is StartAdvertisingCommand -> {
-                command.mReceiver = state
-                mInvoker.mStartAdvertisingCommand = command
-                mInvoker.startAdvertising()
-            }
-            is StopAdvertisingCommand -> {
-                command.mReceiver = state
-                mInvoker.mStopAdvertisingCommand = command
-                mInvoker.stopAdvertising()
-            }
-            is StartScanCommand -> {
-                command.mReceiver = state
-                mInvoker.mStartScanCommand = command
-                mInvoker.startScan()
-            }
-            is StopScanCommand -> {
-                command.mReceiver = state
-                mInvoker.mStopScanCommand = command
-                mInvoker.stopScan()
-            }
-            is ConnectCommand -> {
-                command.mReceiver = state
-                mInvoker.mConnectCommand = command
-                mInvoker.connect()
-            }
-            is DisconnectCommand -> {
-                command.mReceiver = state
-                mInvoker.mDisconnectCommand = command
-                mInvoker.disconnect()
-            }
-            is ReadCommand -> {
-                command.mReceiver = state
-                mInvoker.mReadCommand = command
-                mInvoker.read()
-            }
-            is WriteCommand -> {
-                command.mReceiver = state
-                mInvoker.mWriteCommand = command
-                mInvoker.write()
-            }
-            is SetMtuCommand -> {
-                command.mReceiver = state
-                mInvoker.mSetMtuCommand = command
-                mInvoker.setMtu()
-            }
-            is CloseCommand -> {
-                command.mReceiver = state
-                mInvoker.mCloseCommand = command
-                mInvoker.close()
-            }
-        }
+        mStateManager.updateStateAndExecute(command)
     }
 
     /**
