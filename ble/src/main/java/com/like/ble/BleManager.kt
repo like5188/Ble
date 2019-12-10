@@ -64,11 +64,11 @@ class BleManager(private val mActivity: FragmentActivity) {
                     it.status == BleStatus.OFF ||
                     it.status == BleStatus.INIT_SUCCESS ||
                     it.status == BleStatus.INIT_FAILURE ||
-                    it.status == BleStatus.START_SCAN_DEVICE ||
-                    it.status == BleStatus.STOP_SCAN_DEVICE ||
                     it.status == BleStatus.START_ADVERTISING_SUCCESS ||
                     it.status == BleStatus.START_ADVERTISING_FAILURE ||
-                    it.status == BleStatus.STOP_ADVERTISING
+                    it.status == BleStatus.STOP_ADVERTISING ||
+                    it.status == BleStatus.START_SCAN_DEVICE ||
+                    it.status == BleStatus.STOP_SCAN_DEVICE
                 ) {
                     postValue(it)
                 }
