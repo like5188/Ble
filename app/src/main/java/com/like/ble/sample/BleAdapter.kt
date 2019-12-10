@@ -6,7 +6,7 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.google.android.flexbox.FlexboxLayout
 import com.like.ble.BleManager
-import com.like.ble.model.*
+import com.like.ble.command.*
 import com.like.ble.sample.databinding.ItemBleBinding
 import com.like.livedatarecyclerview.adapter.BaseAdapter
 import com.like.livedatarecyclerview.model.IRecyclerViewItem
@@ -29,8 +29,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: BleMa
         binding.tvConnectStatus.setOnClickListener {
             if (item.isConnected.get()) {
                 mBleManager.sendCommand(
-                    BleDisconnectCommand(
-                        mActivity,
+                    DisconnectCommand(
                         address,
                         {
                             item.isConnected.set(false)
@@ -41,8 +40,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: BleMa
                 )
             } else {
                 mBleManager.sendCommand(
-                    BleConnectCommand(
-                        mActivity,
+                    ConnectCommand(
                         address,
                         5000L,
                         {
@@ -75,9 +73,8 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: BleMa
                 params.bottomMargin = 10
             }
             textView.setOnClickListener {
-                val bleCommand = when (index) {
-                    0 -> BleReadCharacteristicCommand(
-                        mActivity,
+                val command = when (index) {
+                    0 -> ReadCommand(
                         address,
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         5000,
@@ -92,8 +89,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: BleMa
                             mActivity.shortToastCenter("${it.message}")
                         }
                     )
-                    1 -> BleWriteCharacteristicCommand(
-                        mActivity,
+                    1 -> WriteCommand(
                         byteArrayOf(0x1),
                         address,
                         "0000fff2-0000-1000-8000-00805f9b34fb",
@@ -106,8 +102,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: BleMa
                             mActivity.shortToastCenter("${it.message}")
                         }
                     )
-                    2 -> BleSetMtuCommand(
-                        mActivity,
+                    2 -> SetMtuCommand(
                         address,
                         50,
                         {
@@ -119,7 +114,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: BleMa
                     )
                     else -> null
                 }
-                bleCommand?.let {
+                command?.let {
                     mBleManager.sendCommand(it)
                 }
             }

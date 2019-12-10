@@ -1,4 +1,7 @@
-package com.like.ble.model
+package com.like.ble.command
+
+import com.like.ble.model.BleScanResult
+import com.like.ble.receiver.IState
 
 /**
  * 蓝牙开始扫描的命令
@@ -7,8 +10,15 @@ package com.like.ble.model
  * @param onSuccess                 命令执行成功回调
  * @param onFailure                 命令执行失败回调
  */
-class BleStartScanCommand(
+class StartScanCommand(
     val scanTimeout: Long = 2000L,
     val onSuccess: ((BleScanResult?) -> Unit)? = null,
     val onFailure: ((Throwable) -> Unit)? = null
-) : BleCommand()
+) : ICommand {
+    var mReceiver: IState? = null
+
+    override fun execute() {
+        mReceiver?.startScan(this)
+    }
+
+}

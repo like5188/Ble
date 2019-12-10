@@ -8,8 +8,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import com.like.ble.BleManager
-import com.like.ble.model.BleStartScanCommand
-import com.like.ble.model.BleStopScanCommand
+import com.like.ble.command.InitCommand
+import com.like.ble.command.StartScanCommand
+import com.like.ble.command.StopScanCommand
 import com.like.ble.sample.databinding.ActivityBleBinding
 import com.like.livedatarecyclerview.layoutmanager.WrapLinearLayoutManager
 
@@ -39,13 +40,13 @@ class BleActivity : AppCompatActivity() {
     }
 
     fun initBle(view: View) {
-        mBleManager.initBle()
+        mBleManager.sendCommand(InitCommand())
     }
 
     fun startScan(view: View) {
         mAdapter.mAdapterDataManager.clear()
         mBleManager.sendCommand(
-            BleStartScanCommand(2000L, {
+            StartScanCommand(2000L, {
                 Log.d(TAG, "device=${it?.device} rssi=${it?.rssi} scanRecord=${it?.scanRecord}")
                 addItem(it?.device)
             })
@@ -53,7 +54,7 @@ class BleActivity : AppCompatActivity() {
     }
 
     fun stopScan(view: View) {
-        mBleManager.sendCommand(BleStopScanCommand())
+        mBleManager.sendCommand(StopScanCommand())
     }
 
     private fun addItem(device: BluetoothDevice?) {

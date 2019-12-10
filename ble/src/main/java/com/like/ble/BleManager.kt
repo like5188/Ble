@@ -1,19 +1,18 @@
 package com.like.ble
 
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.le.AdvertiseData
-import android.bluetooth.le.AdvertiseSettings
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import androidx.annotation.MainThread
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
-import com.like.ble.model.*
-import com.like.ble.state.*
+import com.like.ble.command.*
+import com.like.ble.invoker.Invoker
+import com.like.ble.model.BleResult
+import com.like.ble.model.BleStatus
 
 /**
  * 蓝牙是一种近距离无线通信技术。它的特性就是近距离通信，典型距离是 10 米以内，传输速度最高可达 24 Mbps，支持多连接，安全性高，非常适合用智能设备上。
@@ -76,7 +75,7 @@ class BleManager(private val mActivity: FragmentActivity) {
         }
     }
 
-    private var mBleState: BleStateWrapper = BleStateWrapper(mActivity, mLiveData)
+    private val mInvoker: Invoker by lazy { Invoker(mActivity, mLiveData) }
 
     // 蓝牙打开关闭监听器
     private val mReceiver = object : BroadcastReceiver() {
@@ -86,11 +85,11 @@ class BleManager(private val mActivity: FragmentActivity) {
                     when (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, 0)) {
                         BluetoothAdapter.STATE_ON -> {// 蓝牙已打开
                             mLiveData.postValue(BleResult(BleStatus.ON))
-                            initBle()// 初始化蓝牙
+                            sendCommand(InitCommand())
                         }
                         BluetoothAdapter.STATE_OFF -> {// 蓝牙已关闭
                             mLiveData.postValue(BleResult(BleStatus.OFF))
-                            mBleState.close()
+                            sendCommand(CloseCommand())
                         }
                     }
                 }
@@ -105,60 +104,41 @@ class BleManager(private val mActivity: FragmentActivity) {
 
     fun getLiveData(): LiveData<BleResult> = mFilterLiveData
 
-    /**
-     * 初始化蓝牙适配器
-     */
-    @MainThread
-    fun initBle() {
-        updateState<InitialState>()
-        mBleState.init()
-    }
-
-    /**
-     * 开始广播
-     */
-    fun startAdvertising(settings: AdvertiseSettings, advertiseData: AdvertiseData, scanResponse: AdvertiseData) {
-        updateState<AdvertisingState>()
-        mBleState.startAdvertising(settings, advertiseData, scanResponse)
-    }
-
-    /**
-     * 停止广播
-     */
-    fun stopAdvertising() {
-        mBleState.stopAdvertising()
-    }
-
-    fun sendCommand(command: BleCommand) {
-        command.mLiveData = mLiveData
+    fun sendCommand(command: ICommand) {
+        mInvoker.mCommand = command
         when (command) {
-            is BleStartScanCommand -> {
-                updateState<ScanState>()
-                mBleState.startScan(command)
+            is InitCommand -> {
+                mInvoker.init()
             }
-            is BleStopScanCommand -> {
-                updateState<ScanState>()
-                mBleState.stopScan(command)
+            is StartAdvertisingCommand -> {
+                mInvoker.startAdvertising()
             }
-            is BleConnectCommand -> {
-                updateState<ConnectState>()
-                mBleState.connect(command)
+            is StopAdvertisingCommand -> {
+                mInvoker.stopAdvertising()
             }
-            is BleDisconnectCommand -> {
-                updateState<ConnectState>()
-                mBleState.disconnect(command)
+            is StartScanCommand -> {
+                mInvoker.startScan()
             }
-            is BleReadCharacteristicCommand -> {
-                updateState<ConnectState>()
-                mBleState.read(command)
+            is StopScanCommand -> {
+                mInvoker.stopScan()
             }
-            is BleWriteCharacteristicCommand -> {
-                updateState<ConnectState>()
-                mBleState.write(command)
+            is ConnectCommand -> {
+                mInvoker.connect()
             }
-            is BleSetMtuCommand -> {
-                updateState<ConnectState>()
-                mBleState.setMtu(command)
+            is DisconnectCommand -> {
+                mInvoker.disconnect()
+            }
+            is ReadCommand -> {
+                mInvoker.read()
+            }
+            is WriteCommand -> {
+                mInvoker.write()
+            }
+            is SetMtuCommand -> {
+                mInvoker.setMtu()
+            }
+            is CloseCommand -> {
+                mInvoker.close()
             }
         }
     }
@@ -167,48 +147,11 @@ class BleManager(private val mActivity: FragmentActivity) {
      * 关闭所有蓝牙连接
      */
     fun close() {
-        mBleState.close()
+        sendCommand(CloseCommand())
         try {
             mActivity.unregisterReceiver(mReceiver)
         } catch (e: Exception) {// 避免 java.lang.IllegalArgumentException: Receiver not registered
             e.printStackTrace()
         }
     }
-
-    private inline fun <reified T> updateState() {
-        when (T::class.java) {
-            InitialState::class.java -> {
-                if (mBleState.mBleState !is InitialState) {
-                    mBleState.mBleState?.close()
-                    mBleState.mBleState = InitialState(mActivity, mLiveData)
-                }
-            }
-            AdvertisingState::class.java -> {
-                if (mBleState.mBleState !is AdvertisingState) {
-                    if (mBleState.mBleState !is InitialState) {
-                        mBleState.mBleState?.close()
-                    }
-                    mBleState.mBleState = AdvertisingState(mActivity, mLiveData)
-                }
-            }
-            ScanState::class.java -> {
-                if (mBleState.mBleState !is ScanState) {
-                    if (mBleState.mBleState !is InitialState) {
-                        mBleState.mBleState?.close()
-                    }
-                    mBleState.mBleState = ScanState(mActivity, mLiveData)
-                }
-            }
-            ConnectState::class.java -> {
-                if (mBleState.mBleState !is ConnectState) {
-                    if (mBleState.mBleState !is InitialState) {
-                        mBleState.mBleState?.close()
-                    }
-                    mBleState.mBleState = ConnectState(mActivity, mLiveData)
-                }
-            }
-        }
-
-    }
-
 }

@@ -13,6 +13,9 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import com.like.ble.BleManager
+import com.like.ble.command.InitCommand
+import com.like.ble.command.StartAdvertisingCommand
+import com.like.ble.command.StopAdvertisingCommand
 import com.like.ble.model.BleStatus
 import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
 import com.like.ble.utils.getBluetoothManager
@@ -35,7 +38,9 @@ class BlePeripheralActivity : AppCompatActivity() {
     private val mBinding: ActivityBlePeripheralBinding by lazy {
         DataBindingUtil.setContentView<ActivityBlePeripheralBinding>(this, R.layout.activity_ble_peripheral)
     }
-    private val mBleManager: BleManager by lazy { BleManager(this) }
+    private val mBleManager: BleManager by lazy {
+        BleManager(this)
+    }
     private var mBluetoothGattServer: BluetoothGattServer? = null
     private val mBluetoothGattServerCallback = object : BluetoothGattServerCallback() {
         private var mCurWriteData: ByteArray? = null
@@ -192,19 +197,21 @@ class BlePeripheralActivity : AppCompatActivity() {
     }
 
     fun init(view: View) {
-        mBleManager.initBle()
+        mBleManager.sendCommand(InitCommand())
     }
 
     fun startAdvertising(view: View) {
-        mBleManager.startAdvertising(
-            createAdvertiseSettings(),
-            createAdvertiseData(byteArrayOf(0x34, 0x56)),
-            createScanResponseAdvertiseData()
+        mBleManager.sendCommand(
+            StartAdvertisingCommand(
+                createAdvertiseSettings(),
+                createAdvertiseData(byteArrayOf(0x34, 0x56)),
+                createScanResponseAdvertiseData()
+            )
         )
     }
 
     fun stopAdvertising(view: View) {
-        mBleManager.stopAdvertising()
+        mBleManager.sendCommand(StopAdvertisingCommand())
     }
 
     private fun appendText(text: String) {
