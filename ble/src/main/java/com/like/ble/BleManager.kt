@@ -13,6 +13,11 @@ import com.like.ble.command.*
 import com.like.ble.invoker.Invoker
 import com.like.ble.model.BleResult
 import com.like.ble.model.BleStatus
+import com.like.ble.receiver.StateWrapper
+import com.like.ble.receiver.state.AdvertisingState
+import com.like.ble.receiver.state.ConnectState
+import com.like.ble.receiver.state.InitialState
+import com.like.ble.receiver.state.ScanState
 
 /**
  * 蓝牙是一种近距离无线通信技术。它的特性就是近距离通信，典型距离是 10 米以内，传输速度最高可达 24 Mbps，支持多连接，安全性高，非常适合用智能设备上。
@@ -75,7 +80,8 @@ class BleManager(private val mActivity: FragmentActivity) {
         }
     }
 
-    private val mInvoker: Invoker by lazy { Invoker(mActivity, mLiveData) }
+    private val mState: StateWrapper by lazy { StateWrapper(mActivity, mLiveData) }
+    private val mInvoker: Invoker by lazy { Invoker() }
 
     // 蓝牙打开关闭监听器
     private val mReceiver = object : BroadcastReceiver() {
@@ -105,39 +111,70 @@ class BleManager(private val mActivity: FragmentActivity) {
     fun getLiveData(): LiveData<BleResult> = mFilterLiveData
 
     fun sendCommand(command: ICommand) {
-        mInvoker.mCommand = command
         when (command) {
             is InitCommand -> {
+                updateState<InitialState>()
+                command.mReceiver = mState
+                mInvoker.mInitCommand = command
                 mInvoker.init()
             }
             is StartAdvertisingCommand -> {
+                updateState<AdvertisingState>()
+                command.mReceiver = mState
+                mInvoker.mStartAdvertisingCommand = command
                 mInvoker.startAdvertising()
             }
             is StopAdvertisingCommand -> {
+                updateState<AdvertisingState>()
+                command.mReceiver = mState
+                mInvoker.mStopAdvertisingCommand = command
                 mInvoker.stopAdvertising()
             }
             is StartScanCommand -> {
+                updateState<ScanState>()
+                command.mReceiver = mState
+                mInvoker.mStartScanCommand = command
                 mInvoker.startScan()
             }
             is StopScanCommand -> {
+                updateState<ScanState>()
+                command.mReceiver = mState
+                mInvoker.mStopScanCommand = command
                 mInvoker.stopScan()
             }
             is ConnectCommand -> {
+                updateState<ConnectState>()
+                command.mReceiver = mState
+                mInvoker.mConnectCommand = command
                 mInvoker.connect()
             }
             is DisconnectCommand -> {
+                updateState<ConnectState>()
+                command.mReceiver = mState
+                mInvoker.mDisconnectCommand = command
                 mInvoker.disconnect()
             }
             is ReadCommand -> {
+                updateState<ConnectState>()
+                command.mReceiver = mState
+                mInvoker.mReadCommand = command
                 mInvoker.read()
             }
             is WriteCommand -> {
+                updateState<ConnectState>()
+                command.mReceiver = mState
+                mInvoker.mWriteCommand = command
                 mInvoker.write()
             }
             is SetMtuCommand -> {
+                updateState<ConnectState>()
+                command.mReceiver = mState
+                mInvoker.mSetMtuCommand = command
                 mInvoker.setMtu()
             }
             is CloseCommand -> {
+                command.mReceiver = mState
+                mInvoker.mCloseCommand = command
                 mInvoker.close()
             }
         }
@@ -153,5 +190,41 @@ class BleManager(private val mActivity: FragmentActivity) {
         } catch (e: Exception) {// 避免 java.lang.IllegalArgumentException: Receiver not registered
             e.printStackTrace()
         }
+    }
+
+    private inline fun <reified T> updateState() {
+        when (T::class.java) {
+            InitialState::class.java -> {
+                if (mState.mState !is InitialState) {
+                    mState.mState?.close(CloseCommand())
+                    mState.mState = InitialState(mActivity, mLiveData)
+                }
+            }
+            AdvertisingState::class.java -> {
+                if (mState.mState !is AdvertisingState) {
+                    if (mState.mState !is InitialState) {
+                        mState.mState?.close(CloseCommand())
+                    }
+                    mState.mState = AdvertisingState(mActivity, mLiveData)
+                }
+            }
+            ScanState::class.java -> {
+                if (mState.mState !is ScanState) {
+                    if (mState.mState !is InitialState) {
+                        mState.mState?.close(CloseCommand())
+                    }
+                    mState.mState = ScanState(mActivity, mLiveData)
+                }
+            }
+            ConnectState::class.java -> {
+                if (mState.mState !is ConnectState) {
+                    if (mState.mState !is InitialState) {
+                        mState.mState?.close(CloseCommand())
+                    }
+                    mState.mState = ConnectState(mActivity, mLiveData)
+                }
+            }
+        }
+
     }
 }
