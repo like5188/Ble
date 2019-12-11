@@ -31,20 +31,10 @@ class InitialState : StateAdapter() {
             android.Manifest.permission.ACCESS_FINE_LOCATION,
             android.Manifest.permission.ACCESS_COARSE_LOCATION,
             onDenied = {
-                mLiveData.postValue(
-                    BleResult(
-                        BleStatus.INIT_FAILURE,
-                        errorMsg = "the permissions was denied."
-                    )
-                )
+                mLiveData.postValue(BleResult(BleStatus.INIT_FAILURE, errorMsg = "the permissions was denied."))
             },
             onError = {
-                mLiveData.postValue(
-                    BleResult(
-                        BleStatus.INIT_FAILURE,
-                        errorMsg = it.message ?: "unknown error"
-                    )
-                )
+                mLiveData.postValue(BleResult(BleStatus.INIT_FAILURE, errorMsg = it.message ?: "unknown error"))
             },
             onGranted = {
                 if (mActivity.isBluetoothEnable()) {// 蓝牙已经初始化
@@ -54,22 +44,12 @@ class InitialState : StateAdapter() {
 
                 val bluetoothManager = mActivity.getBluetoothManager()
                 if (bluetoothManager == null) {
-                    mLiveData.postValue(
-                        BleResult(
-                            BleStatus.INIT_FAILURE,
-                            errorMsg = "failed to get BluetoothManager"
-                        )
-                    )
+                    mLiveData.postValue(BleResult(BleStatus.INIT_FAILURE, errorMsg = "failed to get BluetoothManager"))
                     return@checkPermissions
                 }
 
                 if (bluetoothManager.adapter == null) {
-                    mLiveData.postValue(
-                        BleResult(
-                            BleStatus.INIT_FAILURE,
-                            errorMsg = "failed to get BluetoothAdapter"
-                        )
-                    )
+                    mLiveData.postValue(BleResult(BleStatus.INIT_FAILURE, errorMsg = "failed to get BluetoothAdapter"))
                     return@checkPermissions
                 }
 
@@ -83,21 +63,11 @@ class InitialState : StateAdapter() {
                                 if (it.resultCode == Activity.RESULT_OK) {
                                     mLiveData.postValue(BleResult(BleStatus.INIT_SUCCESS))
                                 } else {
-                                    mLiveData.postValue(
-                                        BleResult(
-                                            BleStatus.INIT_FAILURE,
-                                            errorMsg = "failed to open Bluetooth"
-                                        )
-                                    )
+                                    mLiveData.postValue(BleResult(BleStatus.INIT_FAILURE, errorMsg = "failed to open Bluetooth"))
                                 }
                             },
                             {
-                                mLiveData.postValue(
-                                    BleResult(
-                                        BleStatus.INIT_FAILURE,
-                                        errorMsg = it.message ?: "unknown error"
-                                    )
-                                )
+                                mLiveData.postValue(BleResult(BleStatus.INIT_FAILURE, errorMsg = it.message ?: "unknown error"))
                             }
                         ).bindToLifecycleOwner(mActivity)
                 }
