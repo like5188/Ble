@@ -18,7 +18,7 @@ class SetMtuCommand(
 ) : Command() {
 
     override fun execute() {
-        mReceiver?.setMtu(this)
+        mReceiver.setMtu(this)
     }
 
 }

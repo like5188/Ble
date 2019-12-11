@@ -16,7 +16,7 @@ class DisconnectCommand(
 ) : Command() {
 
     override fun execute() {
-        mReceiver?.disconnect(this)
+        mReceiver.disconnect(this)
     }
 
 }

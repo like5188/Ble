@@ -8,7 +8,7 @@ import com.like.ble.command.Command
 class InitCommand : Command() {
 
     override fun execute() {
-        mReceiver?.init(this)
+        mReceiver.init(this)
     }
 
 }

@@ -2,7 +2,7 @@ package com.like.ble.state
 
 import com.like.ble.command.concrete.*
 
-abstract class StateAdapter : IState {
+abstract class StateAdapter : State() {
     override fun init(command: InitCommand) {
     }
 

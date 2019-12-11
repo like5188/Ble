@@ -2,11 +2,9 @@ package com.like.ble.state.concrete
 
 import android.bluetooth.*
 import android.os.Build
-import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
-import com.like.ble.command.*
+import com.like.ble.command.Command
 import com.like.ble.command.concrete.*
 import com.like.ble.model.BleResult
 import com.like.ble.model.BleStatus
@@ -25,10 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * 蓝牙连接状态
  * 可以进行连接、操作数据等等操作
  */
-class ConnectState(
-    private val mActivity: FragmentActivity,
-    private val mLiveData: MutableLiveData<BleResult>
-) : StateAdapter() {
+class ConnectState : StateAdapter() {
     private var delayJob: Job? = null
     private val mChannels: MutableMap<String, Channel<Command>> = mutableMapOf()
     private val mConnectedBluetoothGattList = mutableListOf<BluetoothGatt>()
@@ -64,8 +59,16 @@ class ConnectState(
         }
 
         // 外围设备调用 notifyCharacteristicChanged() 通知所有中心设备，数据改变了，此方法被触发。
-        override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
-            mLiveData.postValue(BleResult(BleStatus.ON_CHARACTERISTIC_CHANGED, characteristic.value))
+        override fun onCharacteristicChanged(
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic
+        ) {
+            mLiveData.postValue(
+                BleResult(
+                    BleStatus.ON_CHARACTERISTIC_CHANGED,
+                    characteristic.value
+                )
+            )
         }
 
         // 谁进行读数据操作，然后外围设备才会被动的发出一个数据，而这个数据只能是读操作的对象才有资格获得到这个数据。
@@ -75,9 +78,19 @@ class ConnectState(
             status: Int
         ) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                mLiveData.postValue(BleResult(BleStatus.ON_CHARACTERISTIC_READ_SUCCESS, characteristic.value))
+                mLiveData.postValue(
+                    BleResult(
+                        BleStatus.ON_CHARACTERISTIC_READ_SUCCESS,
+                        characteristic.value
+                    )
+                )
             } else {
-                mLiveData.postValue(BleResult(BleStatus.ON_CHARACTERISTIC_READ_FAILURE, characteristic.value))
+                mLiveData.postValue(
+                    BleResult(
+                        BleStatus.ON_CHARACTERISTIC_READ_FAILURE,
+                        characteristic.value
+                    )
+                )
             }
         }
 
@@ -88,27 +101,65 @@ class ConnectState(
             status: Int
         ) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                mLiveData.postValue(BleResult(BleStatus.ON_CHARACTERISTIC_WRITE_SUCCESS, characteristic.value))
+                mLiveData.postValue(
+                    BleResult(
+                        BleStatus.ON_CHARACTERISTIC_WRITE_SUCCESS,
+                        characteristic.value
+                    )
+                )
             } else {
-                mLiveData.postValue(BleResult(BleStatus.ON_CHARACTERISTIC_WRITE_FAILURE, characteristic.value))
+                mLiveData.postValue(
+                    BleResult(
+                        BleStatus.ON_CHARACTERISTIC_WRITE_FAILURE,
+                        characteristic.value
+                    )
+                )
             }
         }
 
         // 读描述值
-        override fun onDescriptorRead(gatt: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) {
+        override fun onDescriptorRead(
+            gatt: BluetoothGatt,
+            descriptor: BluetoothGattDescriptor,
+            status: Int
+        ) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                mLiveData.postValue(BleResult(BleStatus.ON_DESCRIPTOR_READ_SUCCESS, descriptor.value))
+                mLiveData.postValue(
+                    BleResult(
+                        BleStatus.ON_DESCRIPTOR_READ_SUCCESS,
+                        descriptor.value
+                    )
+                )
             } else {
-                mLiveData.postValue(BleResult(BleStatus.ON_DESCRIPTOR_READ_FAILURE, descriptor.value))
+                mLiveData.postValue(
+                    BleResult(
+                        BleStatus.ON_DESCRIPTOR_READ_FAILURE,
+                        descriptor.value
+                    )
+                )
             }
         }
 
         // 写描述值
-        override fun onDescriptorWrite(gatt: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) {
+        override fun onDescriptorWrite(
+            gatt: BluetoothGatt,
+            descriptor: BluetoothGattDescriptor,
+            status: Int
+        ) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                mLiveData.postValue(BleResult(BleStatus.ON_DESCRIPTOR_WRITE_SUCCESS, descriptor.value))
+                mLiveData.postValue(
+                    BleResult(
+                        BleStatus.ON_DESCRIPTOR_WRITE_SUCCESS,
+                        descriptor.value
+                    )
+                )
             } else {
-                mLiveData.postValue(BleResult(BleStatus.ON_DESCRIPTOR_WRITE_FAILURE, descriptor.value))
+                mLiveData.postValue(
+                    BleResult(
+                        BleStatus.ON_DESCRIPTOR_WRITE_FAILURE,
+                        descriptor.value
+                    )
+                )
             }
         }
 
@@ -168,7 +219,12 @@ class ConnectState(
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                bluetoothDevice.connectGatt(mActivity, false, mGattCallback, BluetoothDevice.TRANSPORT_LE)// 第二个参数表示是否自动重连
+                bluetoothDevice.connectGatt(
+                    mActivity,
+                    false,
+                    mGattCallback,
+                    BluetoothDevice.TRANSPORT_LE
+                )// 第二个参数表示是否自动重连
             } else {
                 bluetoothDevice.connectGatt(mActivity, false, mGattCallback)// 第二个参数表示是否自动重连
             }
@@ -218,7 +274,12 @@ class ConnectState(
         super.readCharacteristic(command)
         if (!isConnected(command.address)) return
         if (!mChannels.containsKey(command.address)) {
-            mLiveData.postValue(BleResult(BleStatus.ON_CHARACTERISTIC_READ_FAILURE, errorMsg = "设备未连接 $command"))
+            mLiveData.postValue(
+                BleResult(
+                    BleStatus.ON_CHARACTERISTIC_READ_FAILURE,
+                    errorMsg = "设备未连接 $command"
+                )
+            )
             return
         }
 
@@ -231,7 +292,12 @@ class ConnectState(
         super.writeCharacteristic(command)
         if (!isConnected(command.address)) return
         if (!mChannels.containsKey(command.address)) {
-            mLiveData.postValue(BleResult(BleStatus.ON_CHARACTERISTIC_WRITE_FAILURE, errorMsg = "设备未连接 $command"))
+            mLiveData.postValue(
+                BleResult(
+                    BleStatus.ON_CHARACTERISTIC_WRITE_FAILURE,
+                    errorMsg = "设备未连接 $command"
+                )
+            )
             return
         }
 
@@ -244,7 +310,12 @@ class ConnectState(
         super.setMtu(command)
         if (!isConnected(command.address)) return
         if (!mChannels.containsKey(command.address)) {
-            mLiveData.postValue(BleResult(BleStatus.ON_MTU_CHANGED_FAILURE, errorMsg = "设备未连接 $command"))
+            mLiveData.postValue(
+                BleResult(
+                    BleStatus.ON_MTU_CHANGED_FAILURE,
+                    errorMsg = "设备未连接 $command"
+                )
+            )
             return
         }
 
@@ -267,7 +338,8 @@ class ConnectState(
         mConnectedBluetoothGattList.clear()
     }
 
-    private fun isConnected(address: String): Boolean = mConnectedBluetoothGattList.any { it.device.address == address }
+    private fun isConnected(address: String): Boolean =
+        mConnectedBluetoothGattList.any { it.device.address == address }
 
     private fun removeObserver(observer: Observer<BleResult>?) {
         observer ?: return
@@ -289,7 +361,8 @@ class ConnectState(
                     when (command) {
                         is ReadCharacteristicCommand -> {
                             // 缓存返回数据，因为一帧有可能分为多次接收
-                            val resultCache: ByteBuffer = ByteBuffer.allocate(command.maxFrameTransferSize)
+                            val resultCache: ByteBuffer =
+                                ByteBuffer.allocate(command.maxFrameTransferSize)
                             // 过期时间
                             val expired = command.readTimeout + System.currentTimeMillis()
 
@@ -325,7 +398,8 @@ class ConnectState(
                                 return@launch
                             }
 
-                            val characteristic = gatt.findCharacteristic(command.characteristicUuidString)
+                            val characteristic =
+                                gatt.findCharacteristic(command.characteristicUuidString)
                             if (characteristic == null) {
                                 command.onFailure?.invoke(IllegalArgumentException("特征值不存在：${command.characteristicUuidString}"))
                                 return@launch
@@ -367,7 +441,8 @@ class ConnectState(
                                 return@launch
                             }
 
-                            val characteristic = gatt.findCharacteristic(command.characteristicUuidString)
+                            val characteristic =
+                                gatt.findCharacteristic(command.characteristicUuidString)
                             if (characteristic == null) {
                                 command.onFailure?.invoke(IllegalArgumentException("特征值不存在：${command.characteristicUuidString}"))
                                 return@launch
@@ -378,7 +453,8 @@ class ConnectState(
                                 WRITE_TYPE_NO_RESPONSE 设置该类型不需要外围设备的回应，可以继续写数据。加快传输速率。
                                 WRITE_TYPE_SIGNED  写特征携带认证签名，具体作用不太清楚。
                              */
-                            characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+                            characteristic.writeType =
+                                BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
 
                             var job: Job? = null
                             var writeObserver: Observer<BleResult>? = null

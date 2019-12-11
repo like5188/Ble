@@ -15,7 +15,7 @@ class StartScanCommand(
 ) : Command() {
 
     override fun execute() {
-        mReceiver?.startScan(this)
+        mReceiver.startScan(this)
     }
 
 }

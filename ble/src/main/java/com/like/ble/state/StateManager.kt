@@ -2,7 +2,7 @@ package com.like.ble.state
 
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.MutableLiveData
-import com.like.ble.command.*
+import com.like.ble.command.Command
 import com.like.ble.command.CommandInvoker
 import com.like.ble.command.concrete.*
 import com.like.ble.model.BleResult
@@ -18,7 +18,12 @@ class StateManager(
     private val mActivity: FragmentActivity,
     private val mLiveData: MutableLiveData<BleResult>
 ) {
-    private val mState: StateWrapper by lazy { StateWrapper(mActivity, mLiveData) }
+    private val mState: StateWrapper by lazy {
+        StateWrapper().also {
+            it.mActivity = mActivity
+            it.mLiveData = mLiveData
+        }
+    }
     private val mCommandInvoker: CommandInvoker by lazy { CommandInvoker() }
 
     fun updateStateAndExecute(command: Command) {
@@ -70,7 +75,10 @@ class StateManager(
             InitialState::class.java -> {
                 if (mState.mState !is InitialState) {
                     mState.mState?.close(CloseCommand())
-                    mState.mState = InitialState(mActivity, mLiveData)
+                    mState.mState = InitialState().also {
+                        it.mActivity = mActivity
+                        it.mLiveData = mLiveData
+                    }
                 }
             }
             AdvertisingState::class.java -> {
@@ -78,8 +86,10 @@ class StateManager(
                     if (mState.mState !is InitialState) {
                         mState.mState?.close(CloseCommand())
                     }
-                    mState.mState =
-                        AdvertisingState(mActivity, mLiveData)
+                    mState.mState = AdvertisingState().also {
+                        it.mActivity = mActivity
+                        it.mLiveData = mLiveData
+                    }
                 }
             }
             ScanState::class.java -> {
@@ -87,7 +97,10 @@ class StateManager(
                     if (mState.mState !is InitialState) {
                         mState.mState?.close(CloseCommand())
                     }
-                    mState.mState = ScanState(mActivity, mLiveData)
+                    mState.mState = ScanState().also {
+                        it.mActivity = mActivity
+                        it.mLiveData = mLiveData
+                    }
                 }
             }
             ConnectState::class.java -> {
@@ -95,7 +108,10 @@ class StateManager(
                     if (mState.mState !is InitialState) {
                         mState.mState?.close(CloseCommand())
                     }
-                    mState.mState = ConnectState(mActivity, mLiveData)
+                    mState.mState = ConnectState().also {
+                        it.mActivity = mActivity
+                        it.mLiveData = mLiveData
+                    }
                 }
             }
         }

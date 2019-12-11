@@ -5,8 +5,6 @@ import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.concrete.CloseCommand
 import com.like.ble.command.concrete.StartScanCommand
@@ -24,20 +22,22 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 蓝牙扫描状态
  * 可以进行扫描操作
  */
-class ScanState(
-    private val mActivity: FragmentActivity,
-    private val mLiveData: MutableLiveData<BleResult>
-) : StateAdapter() {
+class ScanState : StateAdapter() {
     private val mScanning = AtomicBoolean(false)
     private var mStartScanCommand: StartScanCommand? = null
     private val mScanCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
-            mStartScanCommand?.onSuccess?.invoke(result.device, result.rssi, result.scanRecord?.bytes)
+            mStartScanCommand?.onSuccess?.invoke(
+                result.device,
+                result.rssi,
+                result.scanRecord?.bytes
+            )
         }
     }
-    private val mLeScanCallback: BluetoothAdapter.LeScanCallback = BluetoothAdapter.LeScanCallback { device, rssi, scanRecord ->
-        mStartScanCommand?.onSuccess?.invoke(device, rssi, scanRecord)
-    }
+    private val mLeScanCallback: BluetoothAdapter.LeScanCallback =
+        BluetoothAdapter.LeScanCallback { device, rssi, scanRecord ->
+            mStartScanCommand?.onSuccess?.invoke(device, rssi, scanRecord)
+        }
 
     override fun startScan(command: StartScanCommand) {
         super.startScan(command)

@@ -1,18 +1,13 @@
 package com.like.ble.state
 
-import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.MutableLiveData
 import com.like.ble.command.concrete.*
 import com.like.ble.model.BleResult
 import com.like.ble.model.BleStatus
 import com.like.ble.utils.isBluetoothEnable
 import com.like.ble.utils.isSupportBluetooth
 
-class StateWrapper(
-    private val mActivity: FragmentActivity,
-    private val mLiveData: MutableLiveData<BleResult>
-) : IState {
-    var mState: IState? = null
+class StateWrapper : State() {
+    var mState: State? = null
 
     override fun init(command: InitCommand) {
         if (!checkSupport()) return
@@ -72,7 +67,12 @@ class StateWrapper(
     private fun checkSupport(): Boolean {
         mState ?: return false
         if (!mActivity.isSupportBluetooth()) {
-            mLiveData.postValue(BleResult(BleStatus.INIT_FAILURE, errorMsg = "phone does not support Bluetooth"))
+            mLiveData.postValue(
+                BleResult(
+                    BleStatus.INIT_FAILURE,
+                    errorMsg = "phone does not support Bluetooth"
+                )
+            )
             return false
         }
         return true

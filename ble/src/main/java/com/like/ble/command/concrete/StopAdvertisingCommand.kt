@@ -8,7 +8,7 @@ import com.like.ble.command.Command
 class StopAdvertisingCommand : Command() {
 
     override fun execute() {
-        mReceiver?.stopAdvertising(this)
+        mReceiver.stopAdvertising(this)
     }
 
 }
