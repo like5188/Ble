@@ -3,60 +3,20 @@ package com.like.ble.invoker
 import com.like.ble.command.Command
 
 class Invoker {
-    var mInitCommand: Command? = null
-    var mStartAdvertisingCommand: Command? = null
-    var mStopAdvertisingCommand: Command? = null
-    var mStartScanCommand: Command? = null
-    var mStopScanCommand: Command? = null
-    var mConnectCommand: Command? = null
-    var mDisconnectCommand: Command? = null
-    var mReadCommand: Command? = null
-    var mWriteCommand: Command? = null
-    var mSetMtuCommand: Command? = null
-    var mCloseCommand: Command? = null
+    private val mCommands = mutableListOf<Command>()
 
-    fun init() {
-        mInitCommand?.execute()
+    fun addCommand(command: Command) {
+        mCommands.add(command)
     }
 
-    fun startAdvertising() {
-        mStartAdvertisingCommand?.execute()
-    }
-
-    fun stopAdvertising() {
-        mStopAdvertisingCommand?.execute()
-    }
-
-    fun startScan() {
-        mStartScanCommand?.execute()
-    }
-
-    fun stopScan() {
-        mStopScanCommand?.execute()
-    }
-
-    fun connect() {
-        mConnectCommand?.execute()
-    }
-
-    fun disconnect() {
-        mDisconnectCommand?.execute()
-    }
-
-    fun readCharacteristic() {
-        mReadCommand?.execute()
-    }
-
-    fun writeCharacteristic() {
-        mWriteCommand?.execute()
-    }
-
-    fun setMtu() {
-        mSetMtuCommand?.execute()
-    }
-
-    fun close() {
-        mCloseCommand?.execute()
+    fun execute() {
+        if (mCommands.isEmpty()) return
+        val listIterator = mCommands.listIterator()
+        while (listIterator.hasNext()) {
+            val command = listIterator.next()
+            command.execute()
+            listIterator.remove()
+        }
     }
 
 }

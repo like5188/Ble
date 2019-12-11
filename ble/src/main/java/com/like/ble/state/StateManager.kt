@@ -17,61 +17,45 @@ class StateManager(
     private val mInvoker: Invoker by lazy { Invoker() }
 
     fun updateStateAndExecute(command: Command) {
+        updateStateByCommand(command)
         command.mReceiver = mState
+        mInvoker.addCommand(command)
+        mInvoker.execute()
+    }
+
+    private fun updateStateByCommand(command: Command) {
         when (command) {
             is InitCommand -> {
                 updateState<InitialState>()
-                mInvoker.mInitCommand = command
-                mInvoker.init()
             }
             is StartAdvertisingCommand -> {
                 updateState<AdvertisingState>()
-                mInvoker.mStartAdvertisingCommand = command
-                mInvoker.startAdvertising()
             }
             is StopAdvertisingCommand -> {
                 updateState<AdvertisingState>()
-                mInvoker.mStopAdvertisingCommand = command
-                mInvoker.stopAdvertising()
             }
             is StartScanCommand -> {
                 updateState<ScanState>()
-                mInvoker.mStartScanCommand = command
-                mInvoker.startScan()
             }
             is StopScanCommand -> {
                 updateState<ScanState>()
-                mInvoker.mStopScanCommand = command
-                mInvoker.stopScan()
             }
             is ConnectCommand -> {
                 updateState<ConnectState>()
-                mInvoker.mConnectCommand = command
-                mInvoker.connect()
             }
             is DisconnectCommand -> {
                 updateState<ConnectState>()
-                mInvoker.mDisconnectCommand = command
-                mInvoker.disconnect()
             }
             is ReadCharacteristicCommand -> {
                 updateState<ConnectState>()
-                mInvoker.mReadCommand = command
-                mInvoker.readCharacteristic()
             }
             is WriteCharacteristicCommand -> {
                 updateState<ConnectState>()
-                mInvoker.mWriteCommand = command
-                mInvoker.writeCharacteristic()
             }
             is SetMtuCommand -> {
                 updateState<ConnectState>()
-                mInvoker.mSetMtuCommand = command
-                mInvoker.setMtu()
             }
             is CloseCommand -> {
-                mInvoker.mCloseCommand = command
-                mInvoker.close()
             }
         }
     }
