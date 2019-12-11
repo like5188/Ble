@@ -1,7 +1,7 @@
 package com.like.ble.command
 
 /**
- * 命令请求者
+ * 命令请求者 todo 改为队列
  */
 class CommandInvoker {
     private val mCommands = mutableListOf<Command>()
