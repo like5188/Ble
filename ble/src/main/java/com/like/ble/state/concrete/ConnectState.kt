@@ -156,10 +156,13 @@ class ConnectState : StateAdapter() {
             var job: Job? = null
             var observer: Observer<BleResult>? = null
             observer = Observer { bleResult ->
-                if (bleResult?.status == BleStatus.CONNECTED) {
+                if (bleResult?.data != command.address) {
+                    return@Observer
+                }
+                if (bleResult.status == BleStatus.CONNECTED) {
                     job?.cancel()
                     command.onSuccess?.invoke()
-                } else if (bleResult?.status == BleStatus.DISCONNECTED) {
+                } else if (bleResult.status == BleStatus.DISCONNECTED) {
                     job?.cancel()
                     removeObserver(observer)
                     command.onFailure?.invoke(RuntimeException("连接蓝牙设备失败"))
@@ -193,9 +196,12 @@ class ConnectState : StateAdapter() {
         mActivity.lifecycleScope.launch(Dispatchers.IO) {
             var observer: Observer<BleResult>? = null
             observer = Observer { bleResult ->
-                if (bleResult?.status == BleStatus.CONNECTED) {
+                if (bleResult?.data != command.address) {
+                    return@Observer
+                }
+                if (bleResult.status == BleStatus.CONNECTED) {
                     command.onFailure?.invoke(RuntimeException("断开蓝牙连接失败"))
-                } else if (bleResult?.status == BleStatus.DISCONNECTED) {
+                } else if (bleResult.status == BleStatus.DISCONNECTED) {
                     removeObserver(observer)
                     command.onSuccess?.invoke()
                 }
