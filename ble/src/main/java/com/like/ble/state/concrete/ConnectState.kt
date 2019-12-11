@@ -56,12 +56,7 @@ class ConnectState : StateAdapter() {
             gatt: BluetoothGatt,
             characteristic: BluetoothGattCharacteristic
         ) {
-            mLiveData.postValue(
-                BleResult(
-                    BleStatus.ON_CHARACTERISTIC_CHANGED,
-                    characteristic.value
-                )
-            )
+            mLiveData.postValue(BleResult(BleStatus.ON_CHARACTERISTIC_CHANGED, characteristic.value))
         }
 
         // 谁进行读数据操作，然后外围设备才会被动的发出一个数据，而这个数据只能是读操作的对象才有资格获得到这个数据。
@@ -71,19 +66,9 @@ class ConnectState : StateAdapter() {
             status: Int
         ) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                mLiveData.postValue(
-                    BleResult(
-                        BleStatus.ON_CHARACTERISTIC_READ_SUCCESS,
-                        characteristic.value
-                    )
-                )
+                mLiveData.postValue(BleResult(BleStatus.ON_CHARACTERISTIC_READ_SUCCESS, characteristic.value))
             } else {
-                mLiveData.postValue(
-                    BleResult(
-                        BleStatus.ON_CHARACTERISTIC_READ_FAILURE,
-                        characteristic.value
-                    )
-                )
+                mLiveData.postValue(BleResult(BleStatus.ON_CHARACTERISTIC_READ_FAILURE, characteristic.value))
             }
         }
 
@@ -94,19 +79,9 @@ class ConnectState : StateAdapter() {
             status: Int
         ) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                mLiveData.postValue(
-                    BleResult(
-                        BleStatus.ON_CHARACTERISTIC_WRITE_SUCCESS,
-                        characteristic.value
-                    )
-                )
+                mLiveData.postValue(BleResult(BleStatus.ON_CHARACTERISTIC_WRITE_SUCCESS, characteristic.value))
             } else {
-                mLiveData.postValue(
-                    BleResult(
-                        BleStatus.ON_CHARACTERISTIC_WRITE_FAILURE,
-                        characteristic.value
-                    )
-                )
+                mLiveData.postValue(BleResult(BleStatus.ON_CHARACTERISTIC_WRITE_FAILURE, characteristic.value))
             }
         }
 
@@ -117,19 +92,9 @@ class ConnectState : StateAdapter() {
             status: Int
         ) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                mLiveData.postValue(
-                    BleResult(
-                        BleStatus.ON_DESCRIPTOR_READ_SUCCESS,
-                        descriptor.value
-                    )
-                )
+                mLiveData.postValue(BleResult(BleStatus.ON_DESCRIPTOR_READ_SUCCESS, descriptor.value))
             } else {
-                mLiveData.postValue(
-                    BleResult(
-                        BleStatus.ON_DESCRIPTOR_READ_FAILURE,
-                        descriptor.value
-                    )
-                )
+                mLiveData.postValue(BleResult(BleStatus.ON_DESCRIPTOR_READ_FAILURE, descriptor.value))
             }
         }
 
@@ -140,19 +105,9 @@ class ConnectState : StateAdapter() {
             status: Int
         ) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                mLiveData.postValue(
-                    BleResult(
-                        BleStatus.ON_DESCRIPTOR_WRITE_SUCCESS,
-                        descriptor.value
-                    )
-                )
+                mLiveData.postValue(BleResult(BleStatus.ON_DESCRIPTOR_WRITE_SUCCESS, descriptor.value))
             } else {
-                mLiveData.postValue(
-                    BleResult(
-                        BleStatus.ON_DESCRIPTOR_WRITE_FAILURE,
-                        descriptor.value
-                    )
-                )
+                mLiveData.postValue(BleResult(BleStatus.ON_DESCRIPTOR_WRITE_FAILURE, descriptor.value))
             }
         }
 
@@ -215,12 +170,7 @@ class ConnectState : StateAdapter() {
 
             launch(Dispatchers.IO) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    bluetoothDevice.connectGatt(
-                        mActivity,
-                        false,
-                        mGattCallback,
-                        BluetoothDevice.TRANSPORT_LE
-                    )// 第二个参数表示是否自动重连
+                    bluetoothDevice.connectGatt(mActivity, false, mGattCallback, BluetoothDevice.TRANSPORT_LE)// 第二个参数表示是否自动重连
                 } else {
                     bluetoothDevice.connectGatt(mActivity, false, mGattCallback)// 第二个参数表示是否自动重连
                 }
