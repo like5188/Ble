@@ -18,17 +18,41 @@ class StateManager(
     private val mActivity: FragmentActivity,
     private val mLiveData: MutableLiveData<BleResult>
 ) {
-    private val mState: StateWrapper by lazy {
+    private val mCommandInvoker: CommandInvoker by lazy { CommandInvoker() }
+    private val mStateWrapper: StateWrapper by lazy {
         StateWrapper().also {
             it.mActivity = mActivity
             it.mLiveData = mLiveData
         }
     }
-    private val mCommandInvoker: CommandInvoker by lazy { CommandInvoker() }
+    private val mInitialState: InitialState by lazy {
+        InitialState().also {
+            it.mActivity = mActivity
+            it.mLiveData = mLiveData
+        }
+    }
+    private val mAdvertisingState: AdvertisingState by lazy {
+        AdvertisingState().also {
+            it.mActivity = mActivity
+            it.mLiveData = mLiveData
+        }
+    }
+    private val mScanState: ScanState by lazy {
+        ScanState().also {
+            it.mActivity = mActivity
+            it.mLiveData = mLiveData
+        }
+    }
+    private val mConnectState: ConnectState by lazy {
+        ConnectState().also {
+            it.mActivity = mActivity
+            it.mLiveData = mLiveData
+        }
+    }
 
     fun updateStateAndExecute(command: Command) {
         updateStateByCommand(command)
-        command.mReceiver = mState
+        command.mReceiver = mStateWrapper
         mCommandInvoker.addCommand(command)
         mCommandInvoker.execute()
     }
@@ -73,45 +97,27 @@ class StateManager(
     private inline fun <reified T> updateState() {
         when (T::class.java) {
             InitialState::class.java -> {
-                if (mState.mState !is InitialState) {
-                    mState.mState?.close(CloseCommand())
-                    mState.mState = InitialState().also {
-                        it.mActivity = mActivity
-                        it.mLiveData = mLiveData
-                    }
+                if (mStateWrapper.mState != mInitialState) {
+                    mStateWrapper.mState?.close(CloseCommand())
+                    mStateWrapper.mState = mInitialState
                 }
             }
             AdvertisingState::class.java -> {
-                if (mState.mState !is AdvertisingState) {
-                    if (mState.mState !is InitialState) {
-                        mState.mState?.close(CloseCommand())
-                    }
-                    mState.mState = AdvertisingState().also {
-                        it.mActivity = mActivity
-                        it.mLiveData = mLiveData
-                    }
+                if (mStateWrapper.mState != mAdvertisingState) {
+                    mStateWrapper.mState?.close(CloseCommand())
+                    mStateWrapper.mState = mAdvertisingState
                 }
             }
             ScanState::class.java -> {
-                if (mState.mState !is ScanState) {
-                    if (mState.mState !is InitialState) {
-                        mState.mState?.close(CloseCommand())
-                    }
-                    mState.mState = ScanState().also {
-                        it.mActivity = mActivity
-                        it.mLiveData = mLiveData
-                    }
+                if (mStateWrapper.mState != mScanState) {
+                    mStateWrapper.mState?.close(CloseCommand())
+                    mStateWrapper.mState = mScanState
                 }
             }
             ConnectState::class.java -> {
-                if (mState.mState !is ConnectState) {
-                    if (mState.mState !is InitialState) {
-                        mState.mState?.close(CloseCommand())
-                    }
-                    mState.mState = ConnectState().also {
-                        it.mActivity = mActivity
-                        it.mLiveData = mLiveData
-                    }
+                if (mStateWrapper.mState != mConnectState) {
+                    mStateWrapper.mState?.close(CloseCommand())
+                    mStateWrapper.mState = mConnectState
                 }
             }
         }
