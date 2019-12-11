@@ -1,19 +1,19 @@
 package com.like.ble.invoker
 
-import com.like.ble.command.ICommand
+import com.like.ble.command.Command
 
 class Invoker {
-    var mInitCommand: ICommand? = null
-    var mStartAdvertisingCommand: ICommand? = null
-    var mStopAdvertisingCommand: ICommand? = null
-    var mStartScanCommand: ICommand? = null
-    var mStopScanCommand: ICommand? = null
-    var mConnectCommand: ICommand? = null
-    var mDisconnectCommand: ICommand? = null
-    var mReadCommand: ICommand? = null
-    var mWriteCommand: ICommand? = null
-    var mSetMtuCommand: ICommand? = null
-    var mCloseCommand: ICommand? = null
+    var mInitCommand: Command? = null
+    var mStartAdvertisingCommand: Command? = null
+    var mStopAdvertisingCommand: Command? = null
+    var mStartScanCommand: Command? = null
+    var mStopScanCommand: Command? = null
+    var mConnectCommand: Command? = null
+    var mDisconnectCommand: Command? = null
+    var mReadCommand: Command? = null
+    var mWriteCommand: Command? = null
+    var mSetMtuCommand: Command? = null
+    var mCloseCommand: Command? = null
 
     /**
      * 初始化蓝牙

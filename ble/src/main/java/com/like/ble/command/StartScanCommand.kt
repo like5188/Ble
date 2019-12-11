@@ -1,7 +1,6 @@
 package com.like.ble.command
 
 import android.bluetooth.BluetoothDevice
-import com.like.ble.state.IState
 
 /**
  * 开始扫描蓝牙命令
@@ -12,8 +11,7 @@ import com.like.ble.state.IState
 class StartScanCommand(
     val scanTimeout: Long = 2000L,
     val onSuccess: ((BluetoothDevice, Int, ByteArray?) -> Unit)? = null
-) : ICommand {
-    var mReceiver: IState? = null
+) : Command() {
 
     override fun execute() {
         mReceiver?.startScan(this)

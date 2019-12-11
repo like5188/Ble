@@ -28,7 +28,7 @@ class ConnectState(
     private val mLiveData: MutableLiveData<BleResult>
 ) : StateAdapter() {
     private var delayJob: Job? = null
-    private val mChannels: MutableMap<String, Channel<ICommand>> = mutableMapOf()
+    private val mChannels: MutableMap<String, Channel<Command>> = mutableMapOf()
     private val mConnectedBluetoothGattList = mutableListOf<BluetoothGatt>()
     // 连接蓝牙设备的回调函数
     private val mGattCallback = object : BluetoothGattCallback() {
@@ -280,7 +280,7 @@ class ConnectState(
     private fun addChannelAndReceive(address: String, gatt: BluetoothGatt) {
         if (address.isEmpty()) return
         if (!mChannels.containsKey(address)) {
-            val channel = Channel<ICommand>()
+            val channel = Channel<Command>()
             mChannels[address] = channel
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
                 for (command in channel) {

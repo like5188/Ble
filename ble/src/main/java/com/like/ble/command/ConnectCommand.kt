@@ -1,7 +1,5 @@
 package com.like.ble.command
 
-import com.like.ble.state.IState
-
 /**
  * 连接蓝牙命令
  *
@@ -15,8 +13,7 @@ class ConnectCommand(
     val connectTimeout: Long = 20000L,
     val onSuccess: (() -> Unit)? = null,
     val onFailure: ((Throwable) -> Unit)? = null
-) : ICommand {
-    var mReceiver: IState? = null
+) : Command() {
 
     override fun execute() {
         mReceiver?.connect(this)

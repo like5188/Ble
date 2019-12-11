@@ -104,7 +104,7 @@ class BleManager(private val mActivity: FragmentActivity) {
 
     fun getLiveData(): LiveData<BleResult> = mFilterLiveData
 
-    fun sendCommand(command: ICommand) {
+    fun sendCommand(command: Command) {
         mStateManager.updateStateAndExecute(command)
     }
 

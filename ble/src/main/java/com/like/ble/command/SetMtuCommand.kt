@@ -1,7 +1,5 @@
 package com.like.ble.command
 
-import com.like.ble.state.IState
-
 /**
  * 设置MTU命令
  *
@@ -15,8 +13,7 @@ class SetMtuCommand(
     val mtu: Int,
     val onSuccess: ((Int) -> Unit)? = null,
     val onFailure: ((Throwable) -> Unit)? = null
-) : ICommand {
-    var mReceiver: IState? = null
+) : Command() {
 
     override fun execute() {
         mReceiver?.setMtu(this)

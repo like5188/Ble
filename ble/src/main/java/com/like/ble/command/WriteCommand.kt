@@ -1,7 +1,5 @@
 package com.like.ble.command
 
-import com.like.ble.state.IState
-
 /**
  * 写特征值命令
  *
@@ -21,8 +19,7 @@ class WriteCommand(
     val maxTransferSize: Int = 20,
     val onSuccess: (() -> Unit)? = null,
     val onFailure: ((Throwable) -> Unit)? = null
-) : ICommand {
-    var mReceiver: IState? = null
+) : Command() {
 
     override fun execute() {
         mReceiver?.write(this)

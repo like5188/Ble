@@ -2,7 +2,6 @@ package com.like.ble.command
 
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
-import com.like.ble.state.IState
 
 /**
  * 开始广播命令
@@ -15,8 +14,7 @@ class StartAdvertisingCommand(
     val settings: AdvertiseSettings,
     val advertiseData: AdvertiseData,
     val scanResponse: AdvertiseData
-) : ICommand {
-    var mReceiver: IState? = null
+) : Command() {
 
     override fun execute() {
         mReceiver?.startAdvertising(this)

@@ -1,6 +1,5 @@
 package com.like.ble.command
 
-import com.like.ble.state.IState
 import java.nio.ByteBuffer
 
 /**
@@ -22,8 +21,7 @@ class ReadCommand(
     val isWholeFrame: (ByteBuffer) -> Boolean,
     val onSuccess: ((ByteArray?) -> Unit)? = null,
     val onFailure: ((Throwable) -> Unit)? = null
-) : ICommand {
-    var mReceiver: IState? = null
+) : Command() {
 
     override fun execute() {
         mReceiver?.read(this)

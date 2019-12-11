@@ -16,70 +16,60 @@ class StateManager(
     private val mState: StateWrapper by lazy { StateWrapper(mActivity, mLiveData) }
     private val mInvoker: Invoker by lazy { Invoker() }
 
-    fun updateStateAndExecute(command: ICommand) {
+    fun updateStateAndExecute(command: Command) {
+        command.mReceiver = mState
         when (command) {
             is InitCommand -> {
                 updateState<InitialState>()
-                command.mReceiver = mState
                 mInvoker.mInitCommand = command
                 mInvoker.init()
             }
             is StartAdvertisingCommand -> {
                 updateState<AdvertisingState>()
-                command.mReceiver = mState
                 mInvoker.mStartAdvertisingCommand = command
                 mInvoker.startAdvertising()
             }
             is StopAdvertisingCommand -> {
                 updateState<AdvertisingState>()
-                command.mReceiver = mState
                 mInvoker.mStopAdvertisingCommand = command
                 mInvoker.stopAdvertising()
             }
             is StartScanCommand -> {
                 updateState<ScanState>()
-                command.mReceiver = mState
                 mInvoker.mStartScanCommand = command
                 mInvoker.startScan()
             }
             is StopScanCommand -> {
                 updateState<ScanState>()
-                command.mReceiver = mState
                 mInvoker.mStopScanCommand = command
                 mInvoker.stopScan()
             }
             is ConnectCommand -> {
                 updateState<ConnectState>()
-                command.mReceiver = mState
                 mInvoker.mConnectCommand = command
                 mInvoker.connect()
             }
             is DisconnectCommand -> {
                 updateState<ConnectState>()
-                command.mReceiver = mState
                 mInvoker.mDisconnectCommand = command
                 mInvoker.disconnect()
             }
             is ReadCommand -> {
                 updateState<ConnectState>()
-                command.mReceiver = mState
                 mInvoker.mReadCommand = command
                 mInvoker.read()
             }
             is WriteCommand -> {
                 updateState<ConnectState>()
-                command.mReceiver = mState
                 mInvoker.mWriteCommand = command
                 mInvoker.write()
             }
             is SetMtuCommand -> {
                 updateState<ConnectState>()
-                command.mReceiver = mState
                 mInvoker.mSetMtuCommand = command
                 mInvoker.setMtu()
             }
             is CloseCommand -> {
-                command.mReceiver = mState
                 mInvoker.mCloseCommand = command
                 mInvoker.close()
             }
