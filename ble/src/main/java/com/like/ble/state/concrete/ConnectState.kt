@@ -33,7 +33,7 @@ class ConnectState : StateAdapter() {
                     gatt.discoverServices()
                 }
                 BluetoothGatt.STATE_DISCONNECTED -> {// 连接蓝牙设备失败
-                    closeGattAndRemove(gatt)
+                    mConnectedBluetoothGattList.remove(gatt)
                     mLiveData.postValue(BleResult(BleStatus.DISCONNECTED, gatt.device.address))
                 }
             }
@@ -45,7 +45,8 @@ class ConnectState : StateAdapter() {
                 mConnectedBluetoothGattList.add(gatt)
                 mLiveData.postValue(BleResult(BleStatus.CONNECTED, gatt.device.address))
             } else {
-                closeGattAndRemove(gatt)
+                gatt.disconnect()
+                mConnectedBluetoothGattList.remove(gatt)
                 mLiveData.postValue(BleResult(BleStatus.DISCONNECTED, gatt.device.address))
             }
         }
@@ -214,7 +215,12 @@ class ConnectState : StateAdapter() {
 
             launch(Dispatchers.IO) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    bluetoothDevice.connectGatt(mActivity, false, mGattCallback, BluetoothDevice.TRANSPORT_LE)// 第二个参数表示是否自动重连
+                    bluetoothDevice.connectGatt(
+                        mActivity,
+                        false,
+                        mGattCallback,
+                        BluetoothDevice.TRANSPORT_LE
+                    )// 第二个参数表示是否自动重连
                 } else {
                     bluetoothDevice.connectGatt(mActivity, false, mGattCallback)// 第二个参数表示是否自动重连
                 }
@@ -247,7 +253,8 @@ class ConnectState : StateAdapter() {
 
             observe(observer)
 
-            closeGattAndRemove(gatt)
+            gatt.disconnect()
+            mConnectedBluetoothGattList.remove(gatt)
         }
     }
 
@@ -451,12 +458,4 @@ class ConnectState : StateAdapter() {
         return mConnectedBluetoothGattList.firstOrNull { it.device.address == address }
     }
 
-    /**
-     * 关闭指定 BluetoothGatt，并移除
-     */
-    private fun closeGattAndRemove(gatt: BluetoothGatt) {
-        gatt.disconnect()
-        gatt.close()
-        mConnectedBluetoothGattList.remove(gatt)
-    }
 }
