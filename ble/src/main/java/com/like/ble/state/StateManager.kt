@@ -60,67 +60,32 @@ class StateManager(
     private fun updateStateByCommand(command: Command) {
         when (command) {
             is InitCommand -> {
-                updateState<InitialState>()
+                if (mStateWrapper.mState != mInitialState) {
+                    mStateWrapper.mState?.close(CloseCommand())
+                    mStateWrapper.mState = mInitialState
+                }
             }
-            is StartAdvertisingCommand -> {
-                updateState<AdvertisingState>()
+            is StartAdvertisingCommand, is StopAdvertisingCommand -> {
+                if (mStateWrapper.mState != mAdvertisingState) {
+                    mStateWrapper.mState?.close(CloseCommand())
+                    mStateWrapper.mState = mAdvertisingState
+                }
             }
-            is StopAdvertisingCommand -> {
-                updateState<AdvertisingState>()
+            is StartScanCommand, is StopScanCommand -> {
+                if (mStateWrapper.mState != mScanState) {
+                    mStateWrapper.mState?.close(CloseCommand())
+                    mStateWrapper.mState = mScanState
+                }
             }
-            is StartScanCommand -> {
-                updateState<ScanState>()
-            }
-            is StopScanCommand -> {
-                updateState<ScanState>()
-            }
-            is ConnectCommand -> {
-                updateState<ConnectState>()
-            }
-            is DisconnectCommand -> {
-                updateState<ConnectState>()
-            }
-            is ReadCharacteristicCommand -> {
-                updateState<ConnectState>()
-            }
-            is WriteCharacteristicCommand -> {
-                updateState<ConnectState>()
-            }
-            is SetMtuCommand -> {
-                updateState<ConnectState>()
+            is ConnectCommand, is DisconnectCommand, is ReadCharacteristicCommand, is WriteCharacteristicCommand, is SetMtuCommand -> {
+                if (mStateWrapper.mState != mConnectState) {
+                    mStateWrapper.mState?.close(CloseCommand())
+                    mStateWrapper.mState = mConnectState
+                }
             }
             is CloseCommand -> {
             }
         }
     }
 
-    private inline fun <reified T> updateState() {
-        when (T::class.java) {
-            InitialState::class.java -> {
-                if (mStateWrapper.mState != mInitialState) {
-                    mStateWrapper.mState?.close(CloseCommand())
-                    mStateWrapper.mState = mInitialState
-                }
-            }
-            AdvertisingState::class.java -> {
-                if (mStateWrapper.mState != mAdvertisingState) {
-                    mStateWrapper.mState?.close(CloseCommand())
-                    mStateWrapper.mState = mAdvertisingState
-                }
-            }
-            ScanState::class.java -> {
-                if (mStateWrapper.mState != mScanState) {
-                    mStateWrapper.mState?.close(CloseCommand())
-                    mStateWrapper.mState = mScanState
-                }
-            }
-            ConnectState::class.java -> {
-                if (mStateWrapper.mState != mConnectState) {
-                    mStateWrapper.mState?.close(CloseCommand())
-                    mStateWrapper.mState = mConnectState
-                }
-            }
-        }
-
-    }
 }
