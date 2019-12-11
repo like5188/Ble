@@ -6,7 +6,7 @@ import com.like.ble.command.concrete.*
 import com.like.ble.model.BleResult
 
 /**
- * 蓝牙状态基类。todo 同步问题
+ * 蓝牙状态基类。
  */
 abstract class State {
     lateinit var mActivity: FragmentActivity
