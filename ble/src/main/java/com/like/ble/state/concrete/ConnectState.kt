@@ -178,6 +178,7 @@ class ConnectState : StateAdapter() {
         super.connect(command)
         val gatt = getGatt(command.address)
         if (gatt != null) {
+            command.onSuccess?.invoke()
             return
         }
 
@@ -209,10 +210,7 @@ class ConnectState : StateAdapter() {
                 }
             }
 
-            withContext(Dispatchers.Main) {
-                mLiveData.value = null// 避免残留值影响下次命令
-                mLiveData.observe(mActivity, observer)
-            }
+            observe(observer)
 
             launch(Dispatchers.IO) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -231,40 +229,36 @@ class ConnectState : StateAdapter() {
 
     override fun disconnect(command: DisconnectCommand) {
         super.disconnect(command)
-        getGatt(command.address) ?: return
-
-        val listIterator = mConnectedBluetoothGattList.listIterator()
-        while (listIterator.hasNext()) {
-            val gatt = listIterator.next()
-            if (gatt.device.address == command.address) {
-                mActivity.lifecycleScope.launch(Dispatchers.IO) {
-                    var observer: Observer<BleResult>? = null
-                    observer = Observer { bleResult ->
-                        if (bleResult?.status == BleStatus.CONNECTED) {
-                            command.onFailure?.invoke(RuntimeException("断开蓝牙连接失败"))
-                        } else if (bleResult?.status == BleStatus.DISCONNECTED) {
-                            removeObserver(observer)
-                            command.onSuccess?.invoke()
-                        }
-                    }
-
-                    withContext(Dispatchers.Main) {
-                        mLiveData.value = null// 避免残留值影响下次命令
-                        mLiveData.observe(mActivity, observer)
-                    }
-
-                    gatt.disconnect()
-                    listIterator.remove()
-                }
-                return
-            }
+        val gatt = getGatt(command.address)
+        if (gatt == null) {
+            command.onSuccess?.invoke()
+            return
         }
-        mLiveData.postValue(BleResult(BleStatus.DISCONNECTED, command.address))
+        mActivity.lifecycleScope.launch(Dispatchers.IO) {
+            var observer: Observer<BleResult>? = null
+            observer = Observer { bleResult ->
+                if (bleResult?.status == BleStatus.CONNECTED) {
+                    command.onFailure?.invoke(RuntimeException("断开蓝牙连接失败"))
+                } else if (bleResult?.status == BleStatus.DISCONNECTED) {
+                    removeObserver(observer)
+                    command.onSuccess?.invoke()
+                }
+            }
+
+            observe(observer)
+
+            closeGattAndRemove(gatt)
+        }
     }
 
     override fun readCharacteristic(command: ReadCharacteristicCommand) {
         super.readCharacteristic(command)
-        val gatt = getGatt(command.address) ?: return
+        val gatt = getGatt(command.address)
+        if (gatt == null) {
+            command.onFailure?.invoke(IllegalArgumentException("设备未连接：${command.address}"))
+            return
+        }
+
         // 缓存返回数据，因为一帧有可能分为多次接收
         val resultCache: ByteBuffer = ByteBuffer.allocate(command.maxFrameTransferSize)
         // 过期时间
@@ -284,7 +278,7 @@ class ConnectState : StateAdapter() {
             return
         }
 
-        mActivity.lifecycleScope.launch(Dispatchers.Main) {
+        mActivity.lifecycleScope.launch(Dispatchers.IO) {
             var readObserver: Observer<BleResult>? = null
             readObserver = Observer { bleResult ->
                 if (bleResult?.status == BleStatus.ON_CHARACTERISTIC_READ_SUCCESS) {
@@ -304,8 +298,7 @@ class ConnectState : StateAdapter() {
                 }
             }
 
-            mLiveData.value = null// 避免残留值影响下次命令
-            mLiveData.observe(mActivity, readObserver)
+            observe(readObserver)
 
             launch(Dispatchers.IO) {
                 gatt.readCharacteristic(characteristic)
@@ -327,7 +320,12 @@ class ConnectState : StateAdapter() {
 
     override fun writeCharacteristic(command: WriteCharacteristicCommand) {
         super.writeCharacteristic(command)
-        val gatt = getGatt(command.address) ?: return
+        val gatt = getGatt(command.address)
+        if (gatt == null) {
+            command.onFailure?.invoke(IllegalArgumentException("设备未连接：${command.address}"))
+            return
+        }
+
         val mDataList: List<ByteArray> by lazy { command.data.batch(command.maxTransferSize) }
         if (mDataList.isEmpty()) {
             command.onFailure?.invoke(IllegalArgumentException("没有数据，无法写入"))
@@ -346,7 +344,7 @@ class ConnectState : StateAdapter() {
             command.onFailure?.invoke(IllegalArgumentException("特征值不存在：${command.characteristicUuidString}"))
             return
         }
-        mActivity.lifecycleScope.launch(Dispatchers.Main) {
+        mActivity.lifecycleScope.launch(Dispatchers.IO) {
             /*
             写特征值前可以设置写的类型setWriteType()，写类型有三种，如下：
             WRITE_TYPE_DEFAULT  默认类型，需要外围设备的确认，也就是需要外围设备的回应，这样才能继续发送写。
@@ -371,8 +369,7 @@ class ConnectState : StateAdapter() {
                 }
             }
 
-            mLiveData.value = null// 避免残留值影响下次命令
-            mLiveData.observe(mActivity, writeObserver)
+            observe(writeObserver)
 
             job = launch(Dispatchers.IO) {
                 mDataList.forEach {
@@ -398,9 +395,13 @@ class ConnectState : StateAdapter() {
 
     override fun setMtu(command: SetMtuCommand) {
         super.setMtu(command)
-        val gatt = getGatt(command.address) ?: return
+        val gatt = getGatt(command.address)
+        if (gatt == null) {
+            command.onFailure?.invoke(IllegalArgumentException("设备未连接：${command.address}"))
+            return
+        }
 
-        mActivity.lifecycleScope.launch(Dispatchers.Main) {
+        mActivity.lifecycleScope.launch(Dispatchers.IO) {
             var setMtuObserver: Observer<BleResult>? = null
             setMtuObserver = Observer { bleResult ->
                 if (bleResult?.status == BleStatus.ON_MTU_CHANGED_SUCCESS) {
@@ -412,15 +413,12 @@ class ConnectState : StateAdapter() {
                 }
             }
 
-            mLiveData.value = null// 避免残留值影响下次命令
-            mLiveData.observe(mActivity, setMtuObserver)
+            observe(setMtuObserver)
 
-            launch(Dispatchers.IO) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    gatt.requestMtu(command.mtu)
-                } else {
-                    command.onFailure?.invoke(RuntimeException("android 5.0 才支持 setMtu() 操作"))
-                }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                gatt.requestMtu(command.mtu)
+            } else {
+                command.onFailure?.invoke(RuntimeException("android 5.0 才支持 setMtu() 操作"))
             }
         }
     }
@@ -432,6 +430,14 @@ class ConnectState : StateAdapter() {
             it.close()
         }
         mConnectedBluetoothGattList.clear()
+    }
+
+    private fun observe(observer: Observer<BleResult>?) {
+        observer ?: return
+        mActivity.runOnUiThread {
+            mLiveData.value = null// 避免残留值影响下次命令
+            mLiveData.observe(mActivity, observer)
+        }
     }
 
     private fun removeObserver(observer: Observer<BleResult>?) {
@@ -449,6 +455,7 @@ class ConnectState : StateAdapter() {
      * 关闭指定 BluetoothGatt，并移除
      */
     private fun closeGattAndRemove(gatt: BluetoothGatt) {
+        gatt.disconnect()
         gatt.close()
         mConnectedBluetoothGattList.remove(gatt)
     }
