@@ -1,4 +1,6 @@
-package com.like.ble.command
+package com.like.ble.command.concrete
+
+import com.like.ble.command.Command
 
 /**
  * 写特征值命令

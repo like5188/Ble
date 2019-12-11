@@ -10,6 +10,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import com.like.ble.command.*
+import com.like.ble.command.concrete.CloseCommand
+import com.like.ble.command.concrete.InitCommand
 import com.like.ble.model.BleResult
 import com.like.ble.model.BleStatus
 import com.like.ble.state.StateManager

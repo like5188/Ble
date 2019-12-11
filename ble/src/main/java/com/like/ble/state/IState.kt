@@ -1,6 +1,6 @@
 package com.like.ble.state
 
-import com.like.ble.command.*
+import com.like.ble.command.concrete.*
 
 interface IState {
     fun init(command: InitCommand)

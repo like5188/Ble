@@ -1,7 +1,8 @@
-package com.like.ble.command
+package com.like.ble.command.concrete
 
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
+import com.like.ble.command.Command
 
 /**
  * 开始广播命令

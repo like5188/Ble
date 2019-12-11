@@ -8,9 +8,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import com.like.ble.BleManager
-import com.like.ble.command.InitCommand
-import com.like.ble.command.StartScanCommand
-import com.like.ble.command.StopScanCommand
+import com.like.ble.command.concrete.InitCommand
+import com.like.ble.command.concrete.StartScanCommand
+import com.like.ble.command.concrete.StopScanCommand
 import com.like.ble.sample.databinding.ActivityBleBinding
 import com.like.livedatarecyclerview.layoutmanager.WrapLinearLayoutManager
 

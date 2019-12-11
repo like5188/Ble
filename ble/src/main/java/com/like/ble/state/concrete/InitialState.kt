@@ -1,4 +1,4 @@
-package com.like.ble.state
+package com.like.ble.state.concrete
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -6,9 +6,10 @@ import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.MutableLiveData
-import com.like.ble.command.InitCommand
+import com.like.ble.command.concrete.InitCommand
 import com.like.ble.model.BleResult
 import com.like.ble.model.BleStatus
+import com.like.ble.state.StateAdapter
 import com.like.ble.utils.PermissionUtils
 import com.like.ble.utils.bindToLifecycleOwner
 import com.like.ble.utils.callback.RxCallback

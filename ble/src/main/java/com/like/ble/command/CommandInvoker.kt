@@ -1,8 +1,9 @@
-package com.like.ble.invoker
+package com.like.ble.command
 
-import com.like.ble.command.Command
-
-class Invoker {
+/**
+ * 命令请求者
+ */
+class CommandInvoker {
     private val mCommands = mutableListOf<Command>()
 
     fun addCommand(command: Command) {

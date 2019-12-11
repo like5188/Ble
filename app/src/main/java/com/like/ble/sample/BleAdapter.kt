@@ -6,7 +6,7 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.google.android.flexbox.FlexboxLayout
 import com.like.ble.BleManager
-import com.like.ble.command.*
+import com.like.ble.command.concrete.*
 import com.like.ble.sample.databinding.ItemBleBinding
 import com.like.livedatarecyclerview.adapter.BaseAdapter
 import com.like.livedatarecyclerview.model.IRecyclerViewItem

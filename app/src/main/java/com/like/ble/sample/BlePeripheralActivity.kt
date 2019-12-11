@@ -13,9 +13,9 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import com.like.ble.BleManager
-import com.like.ble.command.InitCommand
-import com.like.ble.command.StartAdvertisingCommand
-import com.like.ble.command.StopAdvertisingCommand
+import com.like.ble.command.concrete.InitCommand
+import com.like.ble.command.concrete.StartAdvertisingCommand
+import com.like.ble.command.concrete.StopAdvertisingCommand
 import com.like.ble.model.BleStatus
 import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
 import com.like.ble.utils.getBluetoothManager

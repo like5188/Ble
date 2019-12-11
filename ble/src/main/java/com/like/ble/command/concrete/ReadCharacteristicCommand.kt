@@ -1,5 +1,6 @@
-package com.like.ble.command
+package com.like.ble.command.concrete
 
+import com.like.ble.command.Command
 import java.nio.ByteBuffer
 
 /**

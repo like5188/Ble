@@ -1,4 +1,6 @@
-package com.like.ble.command
+package com.like.ble.command.concrete
+
+import com.like.ble.command.Command
 
 /**
  * 初始化蓝牙命令

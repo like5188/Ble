@@ -1,6 +1,7 @@
-package com.like.ble.command
+package com.like.ble.command.concrete
 
 import android.bluetooth.BluetoothDevice
+import com.like.ble.command.Command
 
 /**
  * 开始扫描蓝牙命令

@@ -1,4 +1,4 @@
-package com.like.ble.state
+package com.like.ble.state.concrete
 
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseSettings
@@ -7,11 +7,12 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.MutableLiveData
-import com.like.ble.command.CloseCommand
-import com.like.ble.command.StartAdvertisingCommand
-import com.like.ble.command.StopAdvertisingCommand
+import com.like.ble.command.concrete.CloseCommand
+import com.like.ble.command.concrete.StartAdvertisingCommand
+import com.like.ble.command.concrete.StopAdvertisingCommand
 import com.like.ble.model.BleResult
 import com.like.ble.model.BleStatus
+import com.like.ble.state.StateAdapter
 import com.like.ble.utils.getBluetoothAdapter
 import java.util.concurrent.atomic.AtomicBoolean
 
