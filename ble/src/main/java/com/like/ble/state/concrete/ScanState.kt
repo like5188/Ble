@@ -27,11 +27,7 @@ class ScanState : StateAdapter() {
     private var mStartScanCommand: StartScanCommand? = null
     private val mScanCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
-            mStartScanCommand?.onSuccess?.invoke(
-                result.device,
-                result.rssi,
-                result.scanRecord?.bytes
-            )
+            mStartScanCommand?.onSuccess?.invoke(result.device, result.rssi, result.scanRecord?.bytes)
         }
     }
     private val mLeScanCallback: BluetoothAdapter.LeScanCallback =
@@ -44,16 +40,23 @@ class ScanState : StateAdapter() {
         if (mScanning.compareAndSet(false, true)) {
             mStartScanCommand = command
             mLiveData.postValue(BleResult(BleStatus.START_SCAN_DEVICE))
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(mScanCallback)
-            } else {
-                mActivity.getBluetoothAdapter()?.startLeScan(mLeScanCallback)
-            }
+
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
-                // 在指定超时时间时取消扫描
-                delay(command.scanTimeout)
-                if (mScanning.get()) {
-                    stopScan(StopScanCommand())
+
+                launch(Dispatchers.IO) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(mScanCallback)
+                    } else {
+                        mActivity.getBluetoothAdapter()?.startLeScan(mLeScanCallback)
+                    }
+                }
+
+                launch(Dispatchers.IO) {
+                    // 在指定超时时间时取消扫描
+                    delay(command.scanTimeout)
+                    if (mScanning.get()) {
+                        stopScan(StopScanCommand())
+                    }
                 }
             }
         }
@@ -63,10 +66,13 @@ class ScanState : StateAdapter() {
         super.stopScan(command)
         if (mScanning.compareAndSet(true, false)) {
             mLiveData.postValue(BleResult(BleStatus.STOP_SCAN_DEVICE))
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.stopScan(mScanCallback)
-            } else {
-                mActivity.getBluetoothAdapter()?.stopLeScan(mLeScanCallback)
+
+            mActivity.lifecycleScope.launch(Dispatchers.IO) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.stopScan(mScanCallback)
+                } else {
+                    mActivity.getBluetoothAdapter()?.stopLeScan(mLeScanCallback)
+                }
             }
         }
     }
