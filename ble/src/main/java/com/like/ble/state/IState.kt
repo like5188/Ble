@@ -10,8 +10,8 @@ interface IState {
     fun stopScan(command: StopScanCommand)
     fun connect(command: ConnectCommand)
     fun disconnect(command: DisconnectCommand)
-    fun read(command: ReadCommand)
-    fun write(command: WriteCommand)
+    fun readCharacteristic(command: ReadCharacteristicCommand)
+    fun writeCharacteristic(command: WriteCharacteristicCommand)
     fun setMtu(command: SetMtuCommand)
     fun close(command: CloseCommand)
 }

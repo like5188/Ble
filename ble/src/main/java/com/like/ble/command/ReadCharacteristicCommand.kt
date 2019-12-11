@@ -13,7 +13,7 @@ import java.nio.ByteBuffer
  * @param onSuccess                 命令执行成功回调
  * @param onFailure                 命令执行失败回调
  */
-class ReadCommand(
+class ReadCharacteristicCommand(
     val address: String,
     val characteristicUuidString: String,
     val readTimeout: Long = 0L,
@@ -24,7 +24,7 @@ class ReadCommand(
 ) : Command() {
 
     override fun execute() {
-        mReceiver?.read(this)
+        mReceiver?.readCharacteristic(this)
     }
 
 }

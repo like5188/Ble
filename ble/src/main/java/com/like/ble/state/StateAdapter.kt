@@ -24,10 +24,10 @@ abstract class StateAdapter : IState {
     override fun disconnect(command: DisconnectCommand) {
     }
 
-    override fun read(command: ReadCommand) {
+    override fun readCharacteristic(command: ReadCharacteristicCommand) {
     }
 
-    override fun write(command: WriteCommand) {
+    override fun writeCharacteristic(command: WriteCharacteristicCommand) {
     }
 
     override fun setMtu(command: SetMtuCommand) {

@@ -11,7 +11,7 @@ package com.like.ble.command
  * @param onSuccess                 命令执行成功回调
  * @param onFailure                 命令执行失败回调
  */
-class WriteCommand(
+class WriteCharacteristicCommand(
     val data: ByteArray,
     val address: String,
     val characteristicUuidString: String,
@@ -22,7 +22,7 @@ class WriteCommand(
 ) : Command() {
 
     override fun execute() {
-        mReceiver?.write(this)
+        mReceiver?.writeCharacteristic(this)
     }
 
 }

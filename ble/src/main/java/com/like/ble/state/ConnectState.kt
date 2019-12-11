@@ -212,8 +212,8 @@ class ConnectState(
         mLiveData.postValue(BleResult(BleStatus.DISCONNECTED, command.address))
     }
 
-    override fun read(command: ReadCommand) {
-        super.read(command)
+    override fun readCharacteristic(command: ReadCharacteristicCommand) {
+        super.readCharacteristic(command)
         if (!isConnected(command.address)) return
         if (!mChannels.containsKey(command.address)) {
             mLiveData.postValue(BleResult(BleStatus.ON_CHARACTERISTIC_READ_FAILURE, errorMsg = "设备未连接 $command"))
@@ -225,8 +225,8 @@ class ConnectState(
         }
     }
 
-    override fun write(command: WriteCommand) {
-        super.write(command)
+    override fun writeCharacteristic(command: WriteCharacteristicCommand) {
+        super.writeCharacteristic(command)
         if (!isConnected(command.address)) return
         if (!mChannels.containsKey(command.address)) {
             mLiveData.postValue(BleResult(BleStatus.ON_CHARACTERISTIC_WRITE_FAILURE, errorMsg = "设备未连接 $command"))
@@ -285,7 +285,7 @@ class ConnectState(
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
                 for (command in channel) {
                     when (command) {
-                        is ReadCommand -> {
+                        is ReadCharacteristicCommand -> {
                             // 缓存返回数据，因为一帧有可能分为多次接收
                             val resultCache: ByteBuffer = ByteBuffer.allocate(command.maxFrameTransferSize)
                             // 过期时间
@@ -350,7 +350,7 @@ class ConnectState(
                                 }
                             }
                         }
-                        is WriteCommand -> {
+                        is WriteCharacteristicCommand -> {
                             val mDataList: List<ByteArray> by lazy { command.data.batch(command.maxTransferSize) }
                             // 记录所有的数据批次，在所有的数据都发送完成后，才调用onSuccess()
                             val mBatchCount: AtomicInteger by lazy { AtomicInteger(mDataList.size) }

@@ -54,15 +54,15 @@ class StateManager(
                 mInvoker.mDisconnectCommand = command
                 mInvoker.disconnect()
             }
-            is ReadCommand -> {
+            is ReadCharacteristicCommand -> {
                 updateState<ConnectState>()
                 mInvoker.mReadCommand = command
-                mInvoker.read()
+                mInvoker.readCharacteristic()
             }
-            is WriteCommand -> {
+            is WriteCharacteristicCommand -> {
                 updateState<ConnectState>()
                 mInvoker.mWriteCommand = command
-                mInvoker.write()
+                mInvoker.writeCharacteristic()
             }
             is SetMtuCommand -> {
                 updateState<ConnectState>()

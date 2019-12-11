@@ -49,14 +49,14 @@ class StateWrapper(
         mState?.disconnect(command)
     }
 
-    override fun read(command: ReadCommand) {
+    override fun readCharacteristic(command: ReadCharacteristicCommand) {
         if (!checkEnable()) return
-        mState?.read(command)
+        mState?.readCharacteristic(command)
     }
 
-    override fun write(command: WriteCommand) {
+    override fun writeCharacteristic(command: WriteCharacteristicCommand) {
         if (!checkEnable()) return
-        mState?.write(command)
+        mState?.writeCharacteristic(command)
     }
 
     override fun setMtu(command: SetMtuCommand) {

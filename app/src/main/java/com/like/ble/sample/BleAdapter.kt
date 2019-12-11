@@ -74,7 +74,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: BleMa
             }
             textView.setOnClickListener {
                 val command = when (index) {
-                    0 -> ReadCommand(
+                    0 -> ReadCharacteristicCommand(
                         address,
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         5000,
@@ -89,7 +89,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: BleMa
                             mActivity.shortToastCenter("${it.message}")
                         }
                     )
-                    1 -> WriteCommand(
+                    1 -> WriteCharacteristicCommand(
                         byteArrayOf(0x1),
                         address,
                         "0000fff2-0000-1000-8000-00805f9b34fb",
