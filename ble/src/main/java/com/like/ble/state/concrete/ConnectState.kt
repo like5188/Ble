@@ -210,7 +210,6 @@ class ConnectState : StateAdapter() {
             observe(observer)
 
             gatt.disconnect()
-            mConnectedBluetoothGattList.remove(gatt)
         }
     }
 
