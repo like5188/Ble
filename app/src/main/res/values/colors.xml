@@ -4,6 +4,7 @@
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
 
+    <color name="ble_text_red">#ff2222</color>
     <color name="ble_text_yellow">#F79709</color>
     <color name="ble_text_blue">#00a7ff</color>
     <color name="ble_text_black_0">#000000</color>

@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.like.ble.BleManager
 import com.like.ble.command.concrete.InitCommand
@@ -37,10 +38,14 @@ class BleActivity : AppCompatActivity() {
 
     fun initBle(view: View) {
         mAdapter.mAdapterDataManager.clear()
+        mBinding.tvStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_black_1))
+        mBinding.tvStatus.text = "初始化中……"
         mBleManager.sendCommand(
             InitCommand({
+                mBinding.tvStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_blue))
                 mBinding.tvStatus.text = "初始化成功"
             }, {
+                mBinding.tvStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
                 mBinding.tvStatus.text = "初始化失败"
             })
         )
