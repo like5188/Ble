@@ -6,13 +6,17 @@ import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.os.Build
 import androidx.lifecycle.lifecycleScope
+import com.like.ble.command.Command
 import com.like.ble.command.concrete.*
 import com.like.ble.state.StateAdapter
 import com.like.ble.utils.batch
 import com.like.ble.utils.findCharacteristic
 import com.like.ble.utils.getBluetoothAdapter
 import com.like.ble.utils.toByteArrayOrNull
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.nio.ByteBuffer
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
@@ -24,13 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 class ConnectState : StateAdapter() {
     private var mBluetoothGatt: BluetoothGatt? = null
-
-    private var mConnectCommand: ConnectCommand? = null
-    private var mDisconnectCommand: DisconnectCommand? = null
-    private var mReadCharacteristicCommand: ReadCharacteristicCommand? = null
-    private var mWriteCharacteristicCommand: WriteCharacteristicCommand? = null
-    private var mSetMtuCommand: SetMtuCommand? = null
-
+    private var mCommand: Command? = null
     private var mJob: Job? = null
 
     // 记录写入所有的数据批次，在所有的数据都发送完成后，才调用onSuccess()
@@ -40,7 +38,12 @@ class ConnectState : StateAdapter() {
     private val mIsReadCharacteristicCompleted = AtomicBoolean(false)
     // 缓存读取特征数据时的返回数据，因为一帧有可能分为多次接收
     private val mReadCharacteristicDataCache: ByteBuffer by lazy {
-        ByteBuffer.allocate(mReadCharacteristicCommand?.maxFrameTransferSize ?: 0)
+        val command = mCommand
+        if (command is ReadCharacteristicCommand) {
+            ByteBuffer.allocate(command.maxFrameTransferSize)
+        } else {
+            ByteBuffer.allocate(0)
+        }
     }
 
     private val mGattCallback = object : BluetoothGattCallback() {
@@ -54,8 +57,14 @@ class ConnectState : StateAdapter() {
                 BluetoothGatt.STATE_DISCONNECTED -> {// 连接蓝牙设备失败
                     mBluetoothGatt = null
                     mJob?.cancel()
-                    mConnectCommand?.onFailure?.invoke(RuntimeException("连接蓝牙设备失败"))
-                    mDisconnectCommand?.onSuccess?.invoke()
+                    when (val command = mCommand) {
+                        is ConnectCommand -> {
+                            command.onFailure?.invoke(RuntimeException("连接蓝牙设备失败"))
+                        }
+                        is DisconnectCommand -> {
+                            command.onSuccess?.invoke()
+                        }
+                    }
                 }
             }
         }
@@ -65,52 +74,70 @@ class ConnectState : StateAdapter() {
             if (status == BluetoothGatt.GATT_SUCCESS) {// 发现了蓝牙服务后，才算真正的连接成功。
                 mBluetoothGatt = gatt
                 mJob?.cancel()
-                mConnectCommand?.onSuccess?.invoke()
-                mDisconnectCommand?.onFailure?.invoke(RuntimeException("断开蓝牙连接失败"))
+                when (val command = mCommand) {
+                    is ConnectCommand -> {
+                        command.onSuccess?.invoke()
+                    }
+                    is DisconnectCommand -> {
+                        command.onFailure?.invoke(RuntimeException("断开蓝牙连接失败"))
+                    }
+                }
             } else {
                 gatt.disconnect()
                 mBluetoothGatt = null
                 mJob?.cancel()
-                mConnectCommand?.onFailure?.invoke(RuntimeException("连接蓝牙设备失败"))
-                mDisconnectCommand?.onSuccess?.invoke()
+                when (val command = mCommand) {
+                    is ConnectCommand -> {
+                        command.onFailure?.invoke(RuntimeException("连接蓝牙设备失败"))
+                    }
+                    is DisconnectCommand -> {
+                        command.onSuccess?.invoke()
+                    }
+                }
             }
         }
 
         // 谁进行读数据操作，然后外围设备才会被动的发出一个数据，而这个数据只能是读操作的对象才有资格获得到这个数据。
         override fun onCharacteristicRead(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
+            val command = mCommand
+            if (command !is ReadCharacteristicCommand) return
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 if (mIsReadCharacteristicCompleted.get()) {// 说明超时了，避免超时后继续返回数据（此时没有发送下一条数据）
                     return
                 }
                 mReadCharacteristicDataCache.put(characteristic.value)
-                if (mReadCharacteristicCommand?.isWholeFrame?.invoke(mReadCharacteristicDataCache) == true) {
+                if (command.isWholeFrame(mReadCharacteristicDataCache)) {
                     mIsReadCharacteristicCompleted.set(true)
-                    mReadCharacteristicCommand?.onSuccess?.invoke(mReadCharacteristicDataCache.toByteArrayOrNull())
+                    command.onSuccess?.invoke(mReadCharacteristicDataCache.toByteArrayOrNull())
                 }
             } else {
                 mIsReadCharacteristicCompleted.set(true)
-                mReadCharacteristicCommand?.onFailure?.invoke(RuntimeException("读取特征值失败：$characteristic"))
+                command.onFailure?.invoke(RuntimeException("读取特征值失败：$characteristic"))
             }
         }
 
         // 写特征值
         override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
+            val command = mCommand
+            if (command !is WriteCharacteristicCommand) return
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 if (mWriteCharacteristicBatchCount.decrementAndGet() <= 0) {
-                    mWriteCharacteristicCommand?.onSuccess?.invoke()
+                    command.onSuccess?.invoke()
                 }
             } else {
                 mJob?.cancel()
                 mWriteCharacteristicBatchCount.set(0)
-                mWriteCharacteristicCommand?.onFailure?.invoke(RuntimeException("写特征值失败：$characteristic"))
+                command.onFailure?.invoke(RuntimeException("写特征值失败：$characteristic"))
             }
         }
 
         override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
+            val command = mCommand
+            if (command !is SetMtuCommand) return
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                mSetMtuCommand?.onSuccess?.invoke(mtu)
+                command.onSuccess?.invoke(mtu)
             } else {
-                mSetMtuCommand?.onFailure?.invoke(RuntimeException("failed to set mtu"))
+                command.onFailure?.invoke(RuntimeException("failed to set mtu"))
             }
         }
 
@@ -118,6 +145,8 @@ class ConnectState : StateAdapter() {
 
     override fun connect(command: ConnectCommand) {
         super.connect(command)
+        mCommand = command
+
         if (mBluetoothGatt != null) {
             command.onSuccess?.invoke()
             return
@@ -136,9 +165,6 @@ class ConnectState : StateAdapter() {
                 return@launch
             }
 
-            mConnectCommand = command
-            mDisconnectCommand = null// 避免回调相互影响
-
             launch(Dispatchers.IO) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     bluetoothDevice.connectGatt(mActivity, false, mGattCallback, BluetoothDevice.TRANSPORT_LE)// 第二个参数表示是否自动重连
@@ -156,20 +182,21 @@ class ConnectState : StateAdapter() {
 
     override fun disconnect(command: DisconnectCommand) {
         super.disconnect(command)
+        mCommand = command
+
         if (mBluetoothGatt == null) {
             command.onSuccess?.invoke()
             return
         }
         mActivity.lifecycleScope.launch(Dispatchers.IO) {
-            mConnectCommand = null// 避免回调相互影响
-            mDisconnectCommand = command
-
             mBluetoothGatt?.disconnect()
         }
     }
 
     override fun readCharacteristic(command: ReadCharacteristicCommand) {
         super.readCharacteristic(command)
+        mCommand = command
+
         if (mBluetoothGatt == null) {
             command.onFailure?.invoke(IllegalArgumentException("设备未连接：${command.address}"))
             return
@@ -187,7 +214,6 @@ class ConnectState : StateAdapter() {
             return
         }
 
-        mReadCharacteristicCommand = command
         mIsReadCharacteristicCompleted.set(false)
         mReadCharacteristicDataCache.clear()
 
@@ -209,6 +235,8 @@ class ConnectState : StateAdapter() {
 
     override fun writeCharacteristic(command: WriteCharacteristicCommand) {
         super.writeCharacteristic(command)
+        mCommand = command
+
         if (mBluetoothGatt == null) {
             command.onFailure?.invoke(IllegalArgumentException("设备未连接：${command.address}"))
             return
@@ -231,35 +259,33 @@ class ConnectState : StateAdapter() {
             command.onFailure?.invoke(IllegalArgumentException("特征值不存在：${command.characteristicUuidString}"))
             return
         }
-        mActivity.lifecycleScope.launch(Dispatchers.IO) {
-            mWriteCharacteristicCommand = command
-            // 记录所有的数据批次，在所有的数据都发送完成后，才调用onSuccess()
-            mWriteCharacteristicBatchCount.set(dataList.size)
 
-            /*
-            写特征值前可以设置写的类型setWriteType()，写类型有三种，如下：
-            WRITE_TYPE_DEFAULT  默认类型，需要外围设备的确认，也就是需要外围设备的回应，这样才能继续发送写。
-            WRITE_TYPE_NO_RESPONSE 设置该类型不需要外围设备的回应，可以继续写数据。加快传输速率。
-            WRITE_TYPE_SIGNED  写特征携带认证签名，具体作用不太清楚。
-         */
-            characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+        // 记录所有的数据批次，在所有的数据都发送完成后，才调用onSuccess()
+        mWriteCharacteristicBatchCount.set(dataList.size)
 
-            mJob = launch(Dispatchers.IO) {
-                dataList.forEach {
-                    characteristic.value = it
-                    mBluetoothGatt?.writeCharacteristic(characteristic)
-                    delay(1000)
-                }
+        /*
+        写特征值前可以设置写的类型setWriteType()，写类型有三种，如下：
+        WRITE_TYPE_DEFAULT  默认类型，需要外围设备的确认，也就是需要外围设备的回应，这样才能继续发送写。
+        WRITE_TYPE_NO_RESPONSE 设置该类型不需要外围设备的回应，可以继续写数据。加快传输速率。
+        WRITE_TYPE_SIGNED  写特征携带认证签名，具体作用不太清楚。
+        */
+        characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+
+        mJob = mActivity.lifecycleScope.launch(Dispatchers.IO) {
+            dataList.forEach {
+                characteristic.value = it
+                mBluetoothGatt?.writeCharacteristic(characteristic)
+                delay(1000)
             }
+        }
 
-            withContext(Dispatchers.IO) {
-                while (mWriteCharacteristicBatchCount.get() > 0) {
-                    delay(100)
-                    if (isExpired()) {// 说明是超时了
-                        mJob?.cancel()
-                        command.onFailure?.invoke(TimeoutException())
-                        return@withContext
-                    }
+        mActivity.lifecycleScope.launch(Dispatchers.IO) {
+            while (mWriteCharacteristicBatchCount.get() > 0) {
+                delay(100)
+                if (isExpired()) {// 说明是超时了
+                    mJob?.cancel()
+                    command.onFailure?.invoke(TimeoutException())
+                    return@launch
                 }
             }
         }
@@ -267,6 +293,8 @@ class ConnectState : StateAdapter() {
 
     override fun setMtu(command: SetMtuCommand) {
         super.setMtu(command)
+        mCommand = command
+
         if (mBluetoothGatt == null) {
             command.onFailure?.invoke(IllegalArgumentException("设备未连接：${command.address}"))
             return
@@ -274,7 +302,6 @@ class ConnectState : StateAdapter() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
-                mSetMtuCommand = command
                 mBluetoothGatt?.requestMtu(command.mtu)
             }
         } else {
