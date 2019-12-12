@@ -1,16 +1,13 @@
 package com.like.ble.state
 
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.MutableLiveData
 import com.like.ble.command.concrete.*
-import com.like.ble.model.BleResult
 
 /**
  * 蓝牙状态基类。
  */
 abstract class State {
     lateinit var mActivity: FragmentActivity
-    lateinit var mLiveData: MutableLiveData<BleResult>
 
     abstract fun init(command: InitCommand)
     abstract fun startAdvertising(command: StartAdvertisingCommand)

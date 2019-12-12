@@ -6,14 +6,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MediatorLiveData
-import androidx.lifecycle.MutableLiveData
-import com.like.ble.command.*
+import com.like.ble.command.Command
 import com.like.ble.command.concrete.CloseCommand
 import com.like.ble.command.concrete.InitCommand
-import com.like.ble.model.BleResult
-import com.like.ble.model.BleStatus
 import com.like.ble.state.StateManager
 
 /**
@@ -55,29 +50,7 @@ import com.like.ble.state.StateManager
  * created on 2017/4/14 11:52
  */
 class BleManager(private val mActivity: FragmentActivity) {
-    private val mLiveData = MutableLiveData<BleResult>()
-    // 过滤 BleResult，只发送一部分，其它的用回调替代。
-    private val mFilterLiveData: MediatorLiveData<BleResult> by lazy {
-        MediatorLiveData<BleResult>().apply {
-            addSource(mLiveData) {
-                it ?: return@addSource
-                if (it.status == BleStatus.ON ||
-                    it.status == BleStatus.OFF ||
-                    it.status == BleStatus.INIT_SUCCESS ||
-                    it.status == BleStatus.INIT_FAILURE ||
-                    it.status == BleStatus.START_ADVERTISING_SUCCESS ||
-                    it.status == BleStatus.START_ADVERTISING_FAILURE ||
-                    it.status == BleStatus.STOP_ADVERTISING ||
-                    it.status == BleStatus.START_SCAN_DEVICE ||
-                    it.status == BleStatus.STOP_SCAN_DEVICE
-                ) {
-                    postValue(it)
-                }
-            }
-        }
-    }
-
-    private val mStateManager: StateManager by lazy { StateManager(mActivity, mLiveData) }
+    private val mStateManager: StateManager by lazy { StateManager(mActivity) }
 
     // 蓝牙打开关闭监听器
     private val mReceiver = object : BroadcastReceiver() {
@@ -86,11 +59,9 @@ class BleManager(private val mActivity: FragmentActivity) {
                 BluetoothAdapter.ACTION_STATE_CHANGED -> {
                     when (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, 0)) {
                         BluetoothAdapter.STATE_ON -> {// 蓝牙已打开
-                            mLiveData.postValue(BleResult(BleStatus.ON))
                             sendCommand(InitCommand())
                         }
                         BluetoothAdapter.STATE_OFF -> {// 蓝牙已关闭
-                            mLiveData.postValue(BleResult(BleStatus.OFF))
                             sendCommand(CloseCommand())
                         }
                     }
@@ -104,10 +75,8 @@ class BleManager(private val mActivity: FragmentActivity) {
         mActivity.registerReceiver(mReceiver, IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
     }
 
-    fun getLiveData(): LiveData<BleResult> = mFilterLiveData
-
     fun sendCommand(command: Command) {
-        mStateManager.updateStateAndExecute(command)
+        mStateManager.execute(command)
     }
 
     /**

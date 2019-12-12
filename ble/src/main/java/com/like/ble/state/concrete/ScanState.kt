@@ -9,8 +9,6 @@ import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.concrete.CloseCommand
 import com.like.ble.command.concrete.StartScanCommand
 import com.like.ble.command.concrete.StopScanCommand
-import com.like.ble.model.BleResult
-import com.like.ble.model.BleStatus
 import com.like.ble.state.StateAdapter
 import com.like.ble.utils.getBluetoothAdapter
 import kotlinx.coroutines.Dispatchers
@@ -39,10 +37,7 @@ class ScanState : StateAdapter() {
         super.startScan(command)
         if (mScanning.compareAndSet(false, true)) {
             mStartScanCommand = command
-            mLiveData.postValue(BleResult(BleStatus.START_SCAN_DEVICE))
-
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
-
                 launch(Dispatchers.IO) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(mScanCallback)
@@ -65,8 +60,6 @@ class ScanState : StateAdapter() {
     override fun stopScan(command: StopScanCommand) {
         super.stopScan(command)
         if (mScanning.compareAndSet(true, false)) {
-            mLiveData.postValue(BleResult(BleStatus.STOP_SCAN_DEVICE))
-
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.stopScan(mScanCallback)

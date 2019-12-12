@@ -16,7 +16,6 @@ import com.like.ble.BleManager
 import com.like.ble.command.concrete.InitCommand
 import com.like.ble.command.concrete.StartAdvertisingCommand
 import com.like.ble.command.concrete.StopAdvertisingCommand
-import com.like.ble.model.BleStatus
 import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
 import com.like.ble.utils.getBluetoothManager
 import java.util.*
@@ -186,18 +185,16 @@ class BlePeripheralActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mBinding.tvStatus.movementMethod = ScrollingMovementMethod()
-        mBleManager.getLiveData().observe(this, androidx.lifecycle.Observer {
-            appendText(it?.status?.des ?: "")
-            when (it.status) {
-                BleStatus.START_ADVERTISING_SUCCESS -> {
-                    initServices()//该方法是添加一个服务，在此处调用即将服务广播出去
-                }
-            }
-        })
     }
 
     fun init(view: View) {
-        mBleManager.sendCommand(InitCommand())
+        mBleManager.sendCommand(
+            InitCommand({
+                mBinding.tvStatus.text = "蓝牙初始化成功"
+            }, {
+                mBinding.tvStatus.text = "蓝牙初始化失败"
+            })
+        )
     }
 
     fun startAdvertising(view: View) {
@@ -205,12 +202,20 @@ class BlePeripheralActivity : AppCompatActivity() {
             StartAdvertisingCommand(
                 createAdvertiseSettings(),
                 createAdvertiseData(byteArrayOf(0x34, 0x56)),
-                createScanResponseAdvertiseData()
+                createScanResponseAdvertiseData(),
+                {
+                    appendText("广播成功")
+                    initServices()//该方法是添加一个服务，在此处调用即将服务广播出去
+                },
+                {
+                    appendText("广播失败")
+                }
             )
         )
     }
 
     fun stopAdvertising(view: View) {
+        appendText("停止广播")
         mBleManager.sendCommand(StopAdvertisingCommand())
     }
 

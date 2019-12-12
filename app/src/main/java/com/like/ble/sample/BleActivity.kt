@@ -6,7 +6,6 @@ import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.Observer
 import com.like.ble.BleManager
 import com.like.ble.command.concrete.InitCommand
 import com.like.ble.command.concrete.StartScanCommand
@@ -32,15 +31,18 @@ class BleActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mBleManager.getLiveData().observe(this, Observer {
-            mBinding.tvStatus.text = it?.status?.des
-        })
         mBinding.rv.layoutManager = WrapLinearLayoutManager(this)
         mBinding.rv.adapter = mAdapter
     }
 
     fun initBle(view: View) {
-        mBleManager.sendCommand(InitCommand())
+        mBleManager.sendCommand(
+            InitCommand({
+                mBinding.tvStatus.text = "蓝牙初始化成功"
+            }, {
+                mBinding.tvStatus.text = "蓝牙初始化失败"
+            })
+        )
     }
 
     fun startScan(view: View) {

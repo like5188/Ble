@@ -1,12 +1,12 @@
 package com.like.ble.state.concrete
 
-import android.bluetooth.*
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothGatt
+import android.bluetooth.BluetoothGattCallback
+import android.bluetooth.BluetoothGattCharacteristic
 import android.os.Build
-import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.concrete.*
-import com.like.ble.model.BleResult
-import com.like.ble.model.BleStatus
 import com.like.ble.state.StateAdapter
 import com.like.ble.utils.batch
 import com.like.ble.utils.findCharacteristic
@@ -15,6 +15,7 @@ import com.like.ble.utils.toByteArrayOrNull
 import kotlinx.coroutines.*
 import java.nio.ByteBuffer
 import java.util.concurrent.TimeoutException
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -22,8 +23,26 @@ import java.util.concurrent.atomic.AtomicInteger
  * 可以进行连接、操作数据等等操作
  */
 class ConnectState : StateAdapter() {
-    private val mConnectedBluetoothGattList = mutableListOf<BluetoothGatt>()
-    // 连接蓝牙设备的回调函数
+    private var mBluetoothGatt: BluetoothGatt? = null
+
+    private var mConnectCommand: ConnectCommand? = null
+    private var mDisconnectCommand: DisconnectCommand? = null
+    private var mReadCharacteristicCommand: ReadCharacteristicCommand? = null
+    private var mWriteCharacteristicCommand: WriteCharacteristicCommand? = null
+    private var mSetMtuCommand: SetMtuCommand? = null
+
+    private var mJob: Job? = null
+
+    // 记录写入所有的数据批次，在所有的数据都发送完成后，才调用onSuccess()
+    private val mWriteCharacteristicBatchCount: AtomicInteger = AtomicInteger(0)
+
+    // 读取特征数据是否完成
+    private val mIsReadCharacteristicCompleted = AtomicBoolean(false)
+    // 缓存读取特征数据时的返回数据，因为一帧有可能分为多次接收
+    private val mReadCharacteristicDataCache: ByteBuffer by lazy {
+        ByteBuffer.allocate(mReadCharacteristicCommand?.maxFrameTransferSize ?: 0)
+    }
+
     private val mGattCallback = object : BluetoothGattCallback() {
         // 当连接状态改变
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
@@ -33,8 +52,10 @@ class ConnectState : StateAdapter() {
                     gatt.discoverServices()
                 }
                 BluetoothGatt.STATE_DISCONNECTED -> {// 连接蓝牙设备失败
-                    mConnectedBluetoothGattList.remove(gatt)
-                    mLiveData.postValue(BleResult(BleStatus.DISCONNECTED, gatt.device.address))
+                    mBluetoothGatt = null
+                    mJob?.cancel()
+                    mConnectCommand?.onFailure?.invoke(RuntimeException("连接蓝牙设备失败"))
+                    mDisconnectCommand?.onSuccess?.invoke()
                 }
             }
         }
@@ -42,89 +63,54 @@ class ConnectState : StateAdapter() {
         // 发现蓝牙服务
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             if (status == BluetoothGatt.GATT_SUCCESS) {// 发现了蓝牙服务后，才算真正的连接成功。
-                mConnectedBluetoothGattList.add(gatt)
-                mLiveData.postValue(BleResult(BleStatus.CONNECTED, gatt.device.address))
+                mBluetoothGatt = gatt
+                mJob?.cancel()
+                mConnectCommand?.onSuccess?.invoke()
+                mDisconnectCommand?.onFailure?.invoke(RuntimeException("断开蓝牙连接失败"))
             } else {
                 gatt.disconnect()
-                mConnectedBluetoothGattList.remove(gatt)
-                mLiveData.postValue(BleResult(BleStatus.DISCONNECTED, gatt.device.address))
+                mBluetoothGatt = null
+                mJob?.cancel()
+                mConnectCommand?.onFailure?.invoke(RuntimeException("连接蓝牙设备失败"))
+                mDisconnectCommand?.onSuccess?.invoke()
             }
         }
 
-        // 外围设备调用 notifyCharacteristicChanged() 通知所有中心设备，数据改变了，此方法被触发。
-        override fun onCharacteristicChanged(
-            gatt: BluetoothGatt,
-            characteristic: BluetoothGattCharacteristic
-        ) {
-            mLiveData.postValue(BleResult(BleStatus.ON_CHARACTERISTIC_CHANGED, characteristic.value))
-        }
-
         // 谁进行读数据操作，然后外围设备才会被动的发出一个数据，而这个数据只能是读操作的对象才有资格获得到这个数据。
-        override fun onCharacteristicRead(
-            gatt: BluetoothGatt,
-            characteristic: BluetoothGattCharacteristic,
-            status: Int
-        ) {
+        override fun onCharacteristicRead(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                mLiveData.postValue(BleResult(BleStatus.ON_CHARACTERISTIC_READ_SUCCESS, characteristic.value))
+                if (mIsReadCharacteristicCompleted.get()) {// 说明超时了，避免超时后继续返回数据（此时没有发送下一条数据）
+                    return
+                }
+                mReadCharacteristicDataCache.put(characteristic.value)
+                if (mReadCharacteristicCommand?.isWholeFrame?.invoke(mReadCharacteristicDataCache) == true) {
+                    mIsReadCharacteristicCompleted.set(true)
+                    mReadCharacteristicCommand?.onSuccess?.invoke(mReadCharacteristicDataCache.toByteArrayOrNull())
+                }
             } else {
-                mLiveData.postValue(BleResult(BleStatus.ON_CHARACTERISTIC_READ_FAILURE, characteristic.value))
+                mIsReadCharacteristicCompleted.set(true)
+                mReadCharacteristicCommand?.onFailure?.invoke(RuntimeException("读取特征值失败：$characteristic"))
             }
         }
 
         // 写特征值
-        override fun onCharacteristicWrite(
-            gatt: BluetoothGatt,
-            characteristic: BluetoothGattCharacteristic,
-            status: Int
-        ) {
+        override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                mLiveData.postValue(BleResult(BleStatus.ON_CHARACTERISTIC_WRITE_SUCCESS, characteristic.value))
+                if (mWriteCharacteristicBatchCount.decrementAndGet() <= 0) {
+                    mWriteCharacteristicCommand?.onSuccess?.invoke()
+                }
             } else {
-                mLiveData.postValue(BleResult(BleStatus.ON_CHARACTERISTIC_WRITE_FAILURE, characteristic.value))
-            }
-        }
-
-        // 读描述值
-        override fun onDescriptorRead(
-            gatt: BluetoothGatt,
-            descriptor: BluetoothGattDescriptor,
-            status: Int
-        ) {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                mLiveData.postValue(BleResult(BleStatus.ON_DESCRIPTOR_READ_SUCCESS, descriptor.value))
-            } else {
-                mLiveData.postValue(BleResult(BleStatus.ON_DESCRIPTOR_READ_FAILURE, descriptor.value))
-            }
-        }
-
-        // 写描述值
-        override fun onDescriptorWrite(
-            gatt: BluetoothGatt,
-            descriptor: BluetoothGattDescriptor,
-            status: Int
-        ) {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                mLiveData.postValue(BleResult(BleStatus.ON_DESCRIPTOR_WRITE_SUCCESS, descriptor.value))
-            } else {
-                mLiveData.postValue(BleResult(BleStatus.ON_DESCRIPTOR_WRITE_FAILURE, descriptor.value))
-            }
-        }
-
-        // 读蓝牙信号值
-        override fun onReadRemoteRssi(gatt: BluetoothGatt, rssi: Int, status: Int) {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                mLiveData.postValue(BleResult(BleStatus.ON_READ_REMOTE_RSSI_SUCCESS, rssi))
-            } else {
-                mLiveData.postValue(BleResult(BleStatus.ON_READ_REMOTE_RSSI_FAILURE, rssi))
+                mJob?.cancel()
+                mWriteCharacteristicBatchCount.set(0)
+                mWriteCharacteristicCommand?.onFailure?.invoke(RuntimeException("写特征值失败：$characteristic"))
             }
         }
 
         override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                mLiveData.postValue(BleResult(BleStatus.ON_MTU_CHANGED_SUCCESS, mtu))
+                mSetMtuCommand?.onSuccess?.invoke(mtu)
             } else {
-                mLiveData.postValue(BleResult(BleStatus.ON_MTU_CHANGED_FAILURE, mtu))
+                mSetMtuCommand?.onFailure?.invoke(RuntimeException("failed to set mtu"))
             }
         }
 
@@ -132,8 +118,7 @@ class ConnectState : StateAdapter() {
 
     override fun connect(command: ConnectCommand) {
         super.connect(command)
-        val gatt = getGatt(command.address)
-        if (gatt != null) {
+        if (mBluetoothGatt != null) {
             command.onSuccess?.invoke()
             return
         }
@@ -151,25 +136,8 @@ class ConnectState : StateAdapter() {
                 return@launch
             }
 
-            // 在任何时刻都只能最多一个设备在尝试建立连接。如果同时对多个蓝牙设备发起建立 Gatt 连接请求。如果前面的设备连接失败了，后面的设备请求会被永远阻塞住，不会有任何连接回调。
-            // 对BLE设备连接，连接过程要尽量短，如果连接不上，不要盲目进行重连，否这你的电池会很快被消耗掉。
-            var job: Job? = null
-            var observer: Observer<BleResult>? = null
-            observer = Observer { bleResult ->
-                if (bleResult?.data != command.address) {
-                    return@Observer
-                }
-                if (bleResult.status == BleStatus.CONNECTED) {
-                    job?.cancel()
-                    command.onSuccess?.invoke()
-                } else if (bleResult.status == BleStatus.DISCONNECTED) {
-                    job?.cancel()
-                    removeObserver(observer)
-                    command.onFailure?.invoke(RuntimeException("连接蓝牙设备失败"))
-                }
-            }
-
-            observe(observer)
+            mConnectCommand = command
+            mDisconnectCommand = null// 避免回调相互影响
 
             launch(Dispatchers.IO) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -179,7 +147,7 @@ class ConnectState : StateAdapter() {
                 }
             }
 
-            job = launch(Dispatchers.IO) {
+            mJob = launch(Dispatchers.IO) {
                 delay(command.connectTimeout)
                 disconnect(DisconnectCommand(command.address))
             }
@@ -188,93 +156,52 @@ class ConnectState : StateAdapter() {
 
     override fun disconnect(command: DisconnectCommand) {
         super.disconnect(command)
-        val gatt = getGatt(command.address)
-        if (gatt == null) {
+        if (mBluetoothGatt == null) {
             command.onSuccess?.invoke()
             return
         }
         mActivity.lifecycleScope.launch(Dispatchers.IO) {
-            var observer: Observer<BleResult>? = null
-            observer = Observer { bleResult ->
-                if (bleResult?.data != command.address) {
-                    return@Observer
-                }
-                if (bleResult.status == BleStatus.CONNECTED) {
-                    command.onFailure?.invoke(RuntimeException("断开蓝牙连接失败"))
-                } else if (bleResult.status == BleStatus.DISCONNECTED) {
-                    removeObserver(observer)
-                    command.onSuccess?.invoke()
-                }
-            }
+            mConnectCommand = null// 避免回调相互影响
+            mDisconnectCommand = command
 
-            observe(observer)
-
-            gatt.disconnect()
+            mBluetoothGatt?.disconnect()
         }
     }
 
     override fun readCharacteristic(command: ReadCharacteristicCommand) {
         super.readCharacteristic(command)
-        val gatt = getGatt(command.address)
-        if (gatt == null) {
+        if (mBluetoothGatt == null) {
             command.onFailure?.invoke(IllegalArgumentException("设备未连接：${command.address}"))
             return
         }
 
-        // 缓存返回数据，因为一帧有可能分为多次接收
-        val resultCache: ByteBuffer = ByteBuffer.allocate(command.maxFrameTransferSize)
         // 过期时间
         val expired = command.readTimeout + System.currentTimeMillis()
 
         // 是否过期
         fun isExpired() = expired - System.currentTimeMillis() <= 0
 
-        /**
-         * 此条命令是否已经完成。成功或者失败
-         */
-        var isCompleted = false
-
-        val characteristic = gatt.findCharacteristic(command.characteristicUuidString)
+        val characteristic = mBluetoothGatt?.findCharacteristic(command.characteristicUuidString)
         if (characteristic == null) {
             command.onFailure?.invoke(IllegalArgumentException("特征值不存在：${command.characteristicUuidString}"))
             return
         }
 
+        mReadCharacteristicCommand = command
+        mIsReadCharacteristicCompleted.set(false)
+        mReadCharacteristicDataCache.clear()
+
         mActivity.lifecycleScope.launch(Dispatchers.IO) {
-            var readObserver: Observer<BleResult>? = null
-            readObserver = Observer { bleResult ->
-                if (bleResult?.status == BleStatus.ON_CHARACTERISTIC_READ_SUCCESS) {
-                    if (isCompleted) {// 说明超时了，避免超时后继续返回数据（此时没有发送下一条数据）
-                        return@Observer
-                    }
-                    resultCache.put(bleResult.data as ByteArray)
-                    if (command.isWholeFrame(resultCache)) {
-                        isCompleted = true
-                        removeObserver(readObserver)
-                        command.onSuccess?.invoke(resultCache.toByteArrayOrNull())
-                    }
-                } else if (bleResult?.status == BleStatus.ON_CHARACTERISTIC_READ_FAILURE) {
-                    isCompleted = true
-                    removeObserver(readObserver)
-                    command.onFailure?.invoke(RuntimeException("读取特征值失败：${command.characteristicUuidString}"))
-                }
-            }
+            mBluetoothGatt?.readCharacteristic(characteristic)
+        }
 
-            observe(readObserver)
-
-            launch(Dispatchers.IO) {
-                gatt.readCharacteristic(characteristic)
-            }
-
-            withContext(Dispatchers.IO) {
-                while (!isCompleted) {
-                    delay(100)
-                    if (isExpired()) {// 说明是超时了
-                        isCompleted = true
-                        removeObserver(readObserver)
-                        command.onFailure?.invoke(TimeoutException())
-                        return@withContext
-                    }
+        mActivity.lifecycleScope.launch(Dispatchers.IO) {
+            while (!mIsReadCharacteristicCompleted.get()) {
+                delay(100)
+                if (isExpired()) {// 说明是超时了
+                    mIsReadCharacteristicCompleted.set(true)
+                    command.onFailure?.invoke(TimeoutException())
+                    return@launch
                 }
             }
         }
@@ -282,31 +209,33 @@ class ConnectState : StateAdapter() {
 
     override fun writeCharacteristic(command: WriteCharacteristicCommand) {
         super.writeCharacteristic(command)
-        val gatt = getGatt(command.address)
-        if (gatt == null) {
+        if (mBluetoothGatt == null) {
             command.onFailure?.invoke(IllegalArgumentException("设备未连接：${command.address}"))
             return
         }
 
-        val mDataList: List<ByteArray> by lazy { command.data.batch(command.maxTransferSize) }
-        if (mDataList.isEmpty()) {
+        val dataList: List<ByteArray> by lazy { command.data.batch(command.maxTransferSize) }
+        if (dataList.isEmpty()) {
             command.onFailure?.invoke(IllegalArgumentException("没有数据，无法写入"))
             return
         }
-        // 记录所有的数据批次，在所有的数据都发送完成后，才调用onSuccess()
-        val mBatchCount: AtomicInteger by lazy { AtomicInteger(mDataList.size) }
+
         // 过期时间
         val expired = command.writeTimeout + System.currentTimeMillis()
 
         // 是否过期
         fun isExpired(): Boolean = expired - System.currentTimeMillis() <= 0
 
-        val characteristic = gatt.findCharacteristic(command.characteristicUuidString)
+        val characteristic = mBluetoothGatt?.findCharacteristic(command.characteristicUuidString)
         if (characteristic == null) {
             command.onFailure?.invoke(IllegalArgumentException("特征值不存在：${command.characteristicUuidString}"))
             return
         }
         mActivity.lifecycleScope.launch(Dispatchers.IO) {
+            mWriteCharacteristicCommand = command
+            // 记录所有的数据批次，在所有的数据都发送完成后，才调用onSuccess()
+            mWriteCharacteristicBatchCount.set(dataList.size)
+
             /*
             写特征值前可以设置写的类型setWriteType()，写类型有三种，如下：
             WRITE_TYPE_DEFAULT  默认类型，需要外围设备的确认，也就是需要外围设备的回应，这样才能继续发送写。
@@ -315,38 +244,19 @@ class ConnectState : StateAdapter() {
          */
             characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
 
-            var job: Job? = null
-            var writeObserver: Observer<BleResult>? = null
-            writeObserver = Observer { bleResult ->
-                if (bleResult?.status == BleStatus.ON_CHARACTERISTIC_WRITE_SUCCESS) {
-                    if (mBatchCount.decrementAndGet() <= 0) {
-                        removeObserver(writeObserver)
-                        command.onSuccess?.invoke()
-                    }
-                } else if (bleResult?.status == BleStatus.ON_CHARACTERISTIC_WRITE_FAILURE) {
-                    job?.cancel()
-                    removeObserver(writeObserver)
-                    mBatchCount.set(0)
-                    command.onFailure?.invoke(RuntimeException("写特征值失败：${command.characteristicUuidString}"))
-                }
-            }
-
-            observe(writeObserver)
-
-            job = launch(Dispatchers.IO) {
-                mDataList.forEach {
+            mJob = launch(Dispatchers.IO) {
+                dataList.forEach {
                     characteristic.value = it
-                    gatt.writeCharacteristic(characteristic)
+                    mBluetoothGatt?.writeCharacteristic(characteristic)
                     delay(1000)
                 }
             }
 
             withContext(Dispatchers.IO) {
-                while (mBatchCount.get() > 0) {
+                while (mWriteCharacteristicBatchCount.get() > 0) {
                     delay(100)
                     if (isExpired()) {// 说明是超时了
-                        job.cancel()
-                        removeObserver(writeObserver)
+                        mJob?.cancel()
                         command.onFailure?.invoke(TimeoutException())
                         return@withContext
                     }
@@ -357,60 +267,27 @@ class ConnectState : StateAdapter() {
 
     override fun setMtu(command: SetMtuCommand) {
         super.setMtu(command)
-        val gatt = getGatt(command.address)
-        if (gatt == null) {
+        if (mBluetoothGatt == null) {
             command.onFailure?.invoke(IllegalArgumentException("设备未连接：${command.address}"))
             return
         }
 
-        mActivity.lifecycleScope.launch(Dispatchers.IO) {
-            var setMtuObserver: Observer<BleResult>? = null
-            setMtuObserver = Observer { bleResult ->
-                if (bleResult?.status == BleStatus.ON_MTU_CHANGED_SUCCESS) {
-                    removeObserver(setMtuObserver)
-                    command.onSuccess?.invoke(command.mtu)
-                } else if (bleResult?.status == BleStatus.ON_MTU_CHANGED_FAILURE) {
-                    removeObserver(setMtuObserver)
-                    command.onFailure?.invoke(RuntimeException("设置MTU失败"))
-                }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mActivity.lifecycleScope.launch(Dispatchers.IO) {
+                mSetMtuCommand = command
+                mBluetoothGatt?.requestMtu(command.mtu)
             }
-
-            observe(setMtuObserver)
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                gatt.requestMtu(command.mtu)
-            } else {
-                command.onFailure?.invoke(RuntimeException("android 5.0 才支持 setMtu() 操作"))
-            }
+        } else {
+            command.onFailure?.invoke(RuntimeException("android 5.0 才支持 setMtu() 操作"))
         }
+
     }
 
     override fun close(command: CloseCommand) {
         super.close(command)
-        mConnectedBluetoothGattList.forEach {
-            it.disconnect()
-            it.close()
-        }
-        mConnectedBluetoothGattList.clear()
-    }
-
-    private fun observe(observer: Observer<BleResult>?) {
-        observer ?: return
-        mActivity.runOnUiThread {
-            mLiveData.value = null// 避免残留值影响下次命令
-            mLiveData.observe(mActivity, observer)
-        }
-    }
-
-    private fun removeObserver(observer: Observer<BleResult>?) {
-        observer ?: return
-        mActivity.runOnUiThread {
-            mLiveData.removeObserver(observer)
-        }
-    }
-
-    private fun getGatt(address: String): BluetoothGatt? {
-        return mConnectedBluetoothGattList.firstOrNull { it.device.address == address }
+        mBluetoothGatt?.disconnect()
+        mBluetoothGatt?.close()
+        mBluetoothGatt = null
     }
 
 }

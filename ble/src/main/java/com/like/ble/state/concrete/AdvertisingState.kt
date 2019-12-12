@@ -9,8 +9,6 @@ import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.concrete.CloseCommand
 import com.like.ble.command.concrete.StartAdvertisingCommand
 import com.like.ble.command.concrete.StopAdvertisingCommand
-import com.like.ble.model.BleResult
-import com.like.ble.model.BleStatus
 import com.like.ble.state.StateAdapter
 import com.like.ble.utils.getBluetoothAdapter
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class AdvertisingState : StateAdapter() {
     private val mIsRunning = AtomicBoolean(false)
     private var mBluetoothLeAdvertiser: BluetoothLeAdvertiser? = null
+    private var mStartAdvertisingCommand: StartAdvertisingCommand? = null
 
     private val mAdvertiseCallback: AdvertiseCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : AdvertiseCallback() {
         override fun onStartFailure(errorCode: Int) {
@@ -36,17 +35,12 @@ class AdvertisingState : StateAdapter() {
                 ADVERTISE_FAILED_FEATURE_UNSUPPORTED -> "This feature is not supported on this platform"
                 else -> "errorCode=$errorCode"
             }
-            mLiveData.postValue(
-                BleResult(
-                    BleStatus.START_ADVERTISING_FAILURE,
-                    errorMsg = errorMsg
-                )
-            )
+            mStartAdvertisingCommand?.onFailure?.invoke(Throwable(errorMsg))
         }
 
         override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
             super.onStartSuccess(settingsInEffect)
-            mLiveData.postValue(BleResult(BleStatus.START_ADVERTISING_SUCCESS))
+            mStartAdvertisingCommand?.onSuccess?.invoke()
         }
     }
 
@@ -54,27 +48,17 @@ class AdvertisingState : StateAdapter() {
         super.startAdvertising(command)
         if (mIsRunning.compareAndSet(false, true)) {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-                mLiveData.postValue(
-                    BleResult(
-                        BleStatus.START_ADVERTISING_FAILURE,
-                        errorMsg = "phone does not support Bluetooth Advertiser"
-                    )
-                )
+                command.onFailure?.invoke(Throwable("phone does not support Bluetooth Advertiser"))
                 return
             }
             if (mBluetoothLeAdvertiser == null) {
                 mBluetoothLeAdvertiser = mActivity.getBluetoothAdapter()?.bluetoothLeAdvertiser
                 if (mBluetoothLeAdvertiser == null) {
-                    mLiveData.postValue(
-                        BleResult(
-                            BleStatus.START_ADVERTISING_FAILURE,
-                            errorMsg = "phone does not support Bluetooth Advertiser"
-                        )
-                    )
+                    command.onFailure?.invoke(Throwable("phone does not support Bluetooth Advertiser"))
                     return
                 }
             }
-
+            mStartAdvertisingCommand = command
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
                 mBluetoothLeAdvertiser?.startAdvertising(
                     command.settings,
@@ -89,8 +73,6 @@ class AdvertisingState : StateAdapter() {
     override fun stopAdvertising(command: StopAdvertisingCommand) {
         super.stopAdvertising(command)
         if (mIsRunning.compareAndSet(true, false)) {
-            mLiveData.postValue(BleResult(BleStatus.STOP_ADVERTISING))
-
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     mBluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)

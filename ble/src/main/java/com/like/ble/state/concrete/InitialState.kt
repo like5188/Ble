@@ -5,8 +5,6 @@ import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import com.like.ble.command.concrete.InitCommand
-import com.like.ble.model.BleResult
-import com.like.ble.model.BleStatus
 import com.like.ble.state.StateAdapter
 import com.like.ble.utils.PermissionUtils
 import com.like.ble.utils.bindToLifecycleOwner
@@ -31,43 +29,43 @@ class InitialState : StateAdapter() {
             android.Manifest.permission.ACCESS_FINE_LOCATION,
             android.Manifest.permission.ACCESS_COARSE_LOCATION,
             onDenied = {
-                mLiveData.postValue(BleResult(BleStatus.INIT_FAILURE, errorMsg = "the permissions was denied."))
+                command.onFailure?.invoke(Throwable("the permissions was denied."))
             },
             onError = {
-                mLiveData.postValue(BleResult(BleStatus.INIT_FAILURE, errorMsg = it.message ?: "unknown error"))
+                command.onFailure?.invoke(it)
             },
             onGranted = {
                 if (mActivity.isBluetoothEnable()) {// 蓝牙已经初始化
-                    mLiveData.postValue(BleResult(BleStatus.INIT_SUCCESS))
+                    command.onSuccess?.invoke()
                     return@checkPermissions
                 }
 
                 val bluetoothManager = mActivity.getBluetoothManager()
                 if (bluetoothManager == null) {
-                    mLiveData.postValue(BleResult(BleStatus.INIT_FAILURE, errorMsg = "failed to get BluetoothManager"))
+                    command.onFailure?.invoke(Throwable("failed to get BluetoothManager"))
                     return@checkPermissions
                 }
 
                 if (bluetoothManager.adapter == null) {
-                    mLiveData.postValue(BleResult(BleStatus.INIT_FAILURE, errorMsg = "failed to get BluetoothAdapter"))
+                    command.onFailure?.invoke(Throwable("failed to get BluetoothAdapter"))
                     return@checkPermissions
                 }
 
                 if (mActivity.isBluetoothEnable()) {// 蓝牙初始化成功
-                    mLiveData.postValue(BleResult(BleStatus.INIT_SUCCESS))
+                    command.onSuccess?.invoke()
                 } else {// 蓝牙功能未打开
                     // 弹出开启蓝牙的对话框
                     mRxCallback.startActivityForResult(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
                         .subscribe(
                             {
                                 if (it.resultCode == Activity.RESULT_OK) {
-                                    mLiveData.postValue(BleResult(BleStatus.INIT_SUCCESS))
+                                    command.onSuccess?.invoke()
                                 } else {
-                                    mLiveData.postValue(BleResult(BleStatus.INIT_FAILURE, errorMsg = "failed to open Bluetooth"))
+                                    command.onFailure?.invoke(Throwable("failed to open Bluetooth"))
                                 }
                             },
                             {
-                                mLiveData.postValue(BleResult(BleStatus.INIT_FAILURE, errorMsg = it.message ?: "unknown error"))
+                                command.onFailure?.invoke(it)
                             }
                         ).bindToLifecycleOwner(mActivity)
                 }
