@@ -7,10 +7,13 @@ import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.os.ParcelUuid
+import android.text.Html
 import android.text.method.ScrollingMovementMethod
 import android.view.View
+import androidx.annotation.ColorRes
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.like.ble.BleManager
 import com.like.ble.command.concrete.InitCommand
@@ -49,12 +52,12 @@ class BlePeripheralActivity : AppCompatActivity() {
          * @param newState  连接状态，只能为[BluetoothProfile.STATE_CONNECTED]和[BluetoothProfile.STATE_DISCONNECTED]。
          */
         override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
-            appendText("--> onConnectionStateChange", false)
+            appendText("--> onConnectionStateChange", false, R.color.ble_text_blue)
             appendText("device=$device status=$status newState=$newState")
         }
 
         override fun onServiceAdded(status: Int, service: BluetoothGattService) {
-            appendText("--> onServiceAdded", false)
+            appendText("--> onServiceAdded", false, R.color.ble_text_blue)
             appendText("status=$status service=${service.uuid}")
         }
 
@@ -70,7 +73,7 @@ class BlePeripheralActivity : AppCompatActivity() {
             offset: Int,
             characteristic: BluetoothGattCharacteristic
         ) {
-            appendText("--> onCharacteristicReadRequest", false)
+            appendText("--> onCharacteristicReadRequest", false, R.color.ble_text_blue)
             appendText("device=$device requestId=$requestId offset=$offset characteristic=$characteristic value=${characteristic.value?.contentToString()}")
             val curWriteData = mCurWriteData
             if (curWriteData == null || curWriteData.isEmpty()) {
@@ -119,7 +122,7 @@ class BlePeripheralActivity : AppCompatActivity() {
             offset: Int,
             value: ByteArray
         ) {
-            appendText("--> onCharacteristicWriteRequest", false)
+            appendText("--> onCharacteristicWriteRequest", false, R.color.ble_text_blue)
             appendText("device=$device requestId=$requestId characteristic=$characteristic preparedWrite=$preparedWrite responseNeeded=$responseNeeded offset=$offset value=${value.contentToString()}")
             mCurWriteData = value
             // 如果 responseNeeded=true（此属性由中心设备的 characteristic.setWriteType() 方法设置），则必须调用 sendResponse()方法回复中心设备，这个方法会触发中心设备的 BluetoothGattCallback.onCharacteristicWrite() 方法，然后中心设备才能继续下次写数据，否则不能再次写入数据。
@@ -145,7 +148,7 @@ class BlePeripheralActivity : AppCompatActivity() {
             offset: Int,
             descriptor: BluetoothGattDescriptor
         ) {
-            appendText("--> onDescriptorReadRequest", false)
+            appendText("--> onDescriptorReadRequest", false, R.color.ble_text_blue)
             appendText("device=$device requestId=$requestId offset=$offset descriptor=$descriptor")
             mBluetoothGattServer?.sendResponse(
                 device,
@@ -165,7 +168,7 @@ class BlePeripheralActivity : AppCompatActivity() {
             offset: Int,
             value: ByteArray
         ) {
-            appendText("--> onDescriptorWriteRequest", false)
+            appendText("--> onDescriptorWriteRequest", false, R.color.ble_text_blue)
             appendText("device=$device requestId=$requestId descriptor=$descriptor preparedWrite=$preparedWrite responseNeeded=$responseNeeded offset=$offset value=${value.contentToString()}")
             mBluetoothGattServer?.sendResponse(
                 device,
@@ -177,17 +180,17 @@ class BlePeripheralActivity : AppCompatActivity() {
         }
 
         override fun onExecuteWrite(device: BluetoothDevice, requestId: Int, execute: Boolean) {
-            appendText("--> onExecuteWrite", false)
+            appendText("--> onExecuteWrite", false, R.color.ble_text_blue)
             appendText("device=$device requestId=$requestId execute=$execute")
         }
 
         override fun onNotificationSent(device: BluetoothDevice, status: Int) {
-            appendText("--> onNotificationSent", false)
+            appendText("--> onNotificationSent", false, R.color.ble_text_blue)
             appendText("device=$device status=$status")
         }
 
         override fun onMtuChanged(device: BluetoothDevice, mtu: Int) {
-            appendText("--> onMtuChanged", false)
+            appendText("--> onMtuChanged", false, R.color.ble_text_blue)
             appendText("device=$device mtu=$mtu")
         }
     }
@@ -200,9 +203,9 @@ class BlePeripheralActivity : AppCompatActivity() {
     fun init(view: View) {
         mBleManager.sendCommand(
             InitCommand({
-                appendText("初始化成功")
+                appendText("初始化成功", true, R.color.ble_text_blue)
             }, {
-                appendText("初始化失败：${it.message}")
+                appendText("初始化失败：${it.message}", true, R.color.ble_text_red)
             })
         )
     }
@@ -214,24 +217,27 @@ class BlePeripheralActivity : AppCompatActivity() {
                 createAdvertiseData(byteArrayOf(0x34, 0x56)),
                 createScanResponseAdvertiseData(),
                 {
-                    appendText("广播成功")
+                    appendText("广播成功", true, R.color.ble_text_blue)
                     initServices()//该方法是添加一个服务，在此处调用即将服务广播出去
                 },
                 {
-                    appendText("广播失败：${it.message}")
+                    appendText("广播失败：${it.message}", true, R.color.ble_text_red)
                 }
             )
         )
     }
 
     fun stopAdvertising(view: View) {
-        appendText("停止广播")
+        appendText("停止广播", true, R.color.ble_text_blue)
         mBleManager.sendCommand(StopAdvertisingCommand())
     }
 
-    private fun appendText(text: String, isBreak: Boolean = true) {
+    private fun appendText(text: String, isBreak: Boolean = true, @ColorRes textColorResId: Int = R.color.ble_text_black_1) {
         runOnUiThread {
-            mBinding.tvStatus.append(text)
+            val textColor = ContextCompat.getColor(this, textColorResId)
+            val textColorHexString = Integer.toHexString(textColor).substring(2)
+            val htmlText = String.format("""<font color="#$textColorHexString">$text</font>""")
+            mBinding.tvStatus.append(Html.fromHtml(htmlText))
             if (isBreak) {
                 mBinding.tvStatus.append("\n\n")
             } else {
