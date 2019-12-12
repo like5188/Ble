@@ -8,6 +8,7 @@
     <color name="ble_text_blue">#00a7ff</color>
     <color name="ble_text_black_0">#000000</color>
     <color name="ble_text_black_1">#5c5c5c</color>
+    <color name="ble_text_black_2">#bbbbbb</color>
     <color name="ble_text_white">#ffffff</color>
     <color name="ble_divider">#dbdbdb</color>
 

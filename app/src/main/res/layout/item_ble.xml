@@ -89,7 +89,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:text="@{Arrays.toString(bleInfo.scanRecord)}"
-            android:textColor="@color/ble_text_black_1"
+            android:textColor="@color/ble_text_black_2"
             android:textSize="14sp"
             tools:text="[1,2,3]" />
 

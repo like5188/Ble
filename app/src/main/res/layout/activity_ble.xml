@@ -27,6 +27,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:padding="10dp"
+                android:text="未初始化"
                 android:textColor="@color/ble_text_blue"
                 android:textSize="14sp" />
 
