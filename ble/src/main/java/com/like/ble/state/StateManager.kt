@@ -66,19 +66,19 @@ class StateManager(private val mActivity: FragmentActivity) {
         when (command) {
             is InitCommand -> {
                 if (mState !is InitialState) {
-                    mState?.close(CloseCommand())
+                    closeState(mState)
                     mState = mInitialState
                 }
             }
             is StartAdvertisingCommand, is StopAdvertisingCommand -> {
                 if (mState !is AdvertisingState) {
-                    mState?.close(CloseCommand())
+                    closeState(mState)
                     mState = mAdvertisingState
                 }
             }
             is StartScanCommand, is StopScanCommand -> {
                 if (mState !is ScanState) {
-                    mState?.close(CloseCommand())
+                    closeState(mState)
                     mState = mScanState
                 }
             }
@@ -104,12 +104,33 @@ class StateManager(private val mActivity: FragmentActivity) {
 
     private fun updateConnectStateByAddress(address: String) {
         if (mState !is ConnectState) {
-            mState?.close(CloseCommand())
+            closeState(mState)
         }
         if (!mConnectStateMap.containsKey(address)) {
             mConnectStateMap[address] = ConnectState().also { it.mActivity = mActivity }
         }
         mState = mConnectStateMap[address]
+    }
+
+    private fun closeState(state: State?) {
+        state ?: return
+        when (state) {
+            is InitialState -> {
+                state.close(CloseCommand())
+            }
+            is AdvertisingState -> {
+                state.close(CloseCommand())
+            }
+            is ScanState -> {
+                state.close(CloseCommand())
+            }
+            is ConnectState -> {
+                mConnectStateMap.forEach {
+                    it.value.close(CloseCommand())
+                }
+                mConnectStateMap.clear()
+            }
+        }
     }
 
 }
