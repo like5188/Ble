@@ -190,9 +190,9 @@ class BlePeripheralActivity : AppCompatActivity() {
     fun init(view: View) {
         mBleManager.sendCommand(
             InitCommand({
-                mBinding.tvStatus.text = "蓝牙初始化成功"
+                appendText("初始化成功")
             }, {
-                mBinding.tvStatus.text = "蓝牙初始化失败"
+                appendText("初始化失败")
             })
         )
     }
