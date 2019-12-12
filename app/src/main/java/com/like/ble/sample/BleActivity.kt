@@ -12,6 +12,7 @@ import com.like.ble.command.concrete.StopScanCommand
 import com.like.ble.sample.databinding.ActivityBleBinding
 import com.like.livedatarecyclerview.layoutmanager.WrapLinearLayoutManager
 
+
 /**
  * 蓝牙测试
  */

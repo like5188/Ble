@@ -26,6 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
@@ -33,26 +34,9 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@{bleInfo.name}"
-                android:textColor="@color/ble_text_black"
-                android:textSize="14sp"
+                android:textColor="@color/ble_text_black_0"
+                android:textSize="16sp"
                 tools:text="SJZG-TEST" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@{bleInfo.address}"
-                android:textColor="@color/ble_text_black"
-                android:textSize="14sp"
-                tools:text="XX:XX:XX:XX:XX:XX" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="20dp"
-                android:text="@{String.valueOf(bleInfo.rssi)}"
-                android:textColor="@color/ble_text_black"
-                android:textSize="14sp"
-                tools:text="-1" />
 
             <TextView
                 android:id="@+id/tv_connect_status"
@@ -60,18 +44,53 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="20dp"
                 android:text="@{bleInfo.isConnected?`已连接`:`未连接`}"
-                android:textColor="@{bleInfo.isConnected?@color/ble_text_blue:@color/ble_text_black}"
+                android:textColor="@{bleInfo.isConnected?@color/ble_text_blue:@color/ble_text_yellow}"
                 android:textSize="14sp"
                 tools:text="未连接" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@{bleInfo.address}"
+                android:textColor="@color/ble_text_black_1"
+                android:textSize="14sp"
+                tools:text="XX:XX:XX:XX:XX:XX" />
+
+            <TextView
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:gravity="center_horizontal"
+                android:text="@{String.valueOf(bleInfo.rssi)}"
+                android:textColor="@color/ble_text_black_1"
+                android:textSize="14sp"
+                tools:text="-100" />
+
+            <TextView
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:text="@{String.valueOf(bleInfo.distance)+`m`}"
+                android:textColor="@color/ble_text_black_1"
+                android:textSize="14sp"
+                tools:text="100m" />
         </LinearLayout>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:layout_marginBottom="10dp"
             android:text="@{Arrays.toString(bleInfo.scanRecord)}"
-            android:textColor="@color/ble_text_black"
+            android:textColor="@color/ble_text_black_1"
             android:textSize="14sp"
             tools:text="[1,2,3]" />
 
@@ -80,6 +99,7 @@
             android:id="@+id/flex_box_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:visibility="@{bleInfo.isConnected?View.VISIBLE:View.GONE}"
             app:alignContent="flex_start"
             app:alignItems="center"
@@ -91,6 +111,7 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
+            android:layout_marginTop="10dp"
             android:background="@color/ble_divider" />
     </LinearLayout>
 

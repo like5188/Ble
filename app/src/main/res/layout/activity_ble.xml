@@ -35,7 +35,7 @@
                 android:layout_height="wrap_content"
                 android:onClick="initBle"
                 android:text="初始化"
-                android:textColor="@color/ble_text_black"
+                android:textColor="@color/ble_text_black_1"
                 android:textSize="14sp" />
 
             <Button
@@ -43,7 +43,7 @@
                 android:layout_height="wrap_content"
                 android:onClick="startScan"
                 android:text="扫描设备"
-                android:textColor="@color/ble_text_black"
+                android:textColor="@color/ble_text_black_1"
                 android:textSize="14sp" />
 
             <Button
@@ -51,7 +51,7 @@
                 android:layout_height="wrap_content"
                 android:onClick="stopScan"
                 android:text="停止扫描"
-                android:textColor="@color/ble_text_black"
+                android:textColor="@color/ble_text_black_1"
                 android:textSize="14sp" />
         </LinearLayout>
 
