@@ -36,6 +36,7 @@ class BleActivity : AppCompatActivity() {
     }
 
     fun initBle(view: View) {
+        mAdapter.mAdapterDataManager.clear()
         mBleManager.sendCommand(
             InitCommand({
                 mBinding.tvStatus.text = "蓝牙初始化成功"
