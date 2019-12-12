@@ -11,12 +11,20 @@ import com.like.ble.command.Command
  */
 class DisconnectCommand(
     val address: String,
-    val onSuccess: (() -> Unit)? = null,
-    val onFailure: ((Throwable) -> Unit)? = null
+    private val onSuccess: (() -> Unit)? = null,
+    private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command() {
 
     override fun execute() {
         mReceiver?.disconnect(this)
+    }
+
+    override fun doOnSuccess(vararg args: Any?) {
+        onSuccess?.invoke()
+    }
+
+    override fun doOnFailure(throwable: Throwable) {
+        onFailure?.invoke(throwable)
     }
 
     override fun equals(other: Any?): Boolean {

@@ -39,27 +39,32 @@ class StateManager(private val mActivity: FragmentActivity) {
         when (command) {
             is InitCommand -> {
                 if (!mActivity.isSupportBluetooth()) {
+                    command.failure("手机不支持蓝牙")
                     mActivity.runOnUiThread {
-                        Toast.makeText(mActivity, "phone does not support Bluetooth", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(mActivity, "手机不支持蓝牙", Toast.LENGTH_SHORT).show()
                     }
                     return
                 }
             }
             else -> {
                 if (!mActivity.isBluetoothEnable()) {
+                    command.failure("蓝牙不可用")
                     mActivity.runOnUiThread {
-                        Toast.makeText(mActivity, "Bluetooth is not enable", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(mActivity, "蓝牙不可用", Toast.LENGTH_SHORT).show()
                     }
                     return
                 }
             }
         }
         updateStateByCommand(command)
-        mState?.let {
-            command.mReceiver = it
-            mCommandInvoker.addCommand(command)
-            mCommandInvoker.execute()
+        val state = mState
+        if (state == null) {
+            command.failure("更新蓝牙状态失败")
+            return
         }
+        command.mReceiver = state
+        mCommandInvoker.addCommand(command)
+        mCommandInvoker.execute()
     }
 
     private fun updateStateByCommand(command: Command) {

@@ -35,26 +35,25 @@ class AdvertisingState : State() {
                 ADVERTISE_FAILED_FEATURE_UNSUPPORTED -> "This feature is not supported on this platform"
                 else -> "errorCode=$errorCode"
             }
-            mStartAdvertisingCommand?.onFailure?.invoke(Throwable(errorMsg))
+            mStartAdvertisingCommand?.failure(errorMsg)
         }
 
         override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
             super.onStartSuccess(settingsInEffect)
-            mStartAdvertisingCommand?.onSuccess?.invoke()
+            mStartAdvertisingCommand?.success()
         }
     }
 
     override fun startAdvertising(command: StartAdvertisingCommand) {
-        super.startAdvertising(command)
         if (mIsRunning.compareAndSet(false, true)) {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-                command.onFailure?.invoke(Throwable("phone does not support Bluetooth Advertiser"))
+                command.failure("phone does not support Bluetooth Advertiser")
                 return
             }
             if (mBluetoothLeAdvertiser == null) {
                 mBluetoothLeAdvertiser = mActivity.getBluetoothAdapter()?.bluetoothLeAdvertiser
                 if (mBluetoothLeAdvertiser == null) {
-                    command.onFailure?.invoke(Throwable("phone does not support Bluetooth Advertiser"))
+                    command.failure("phone does not support Bluetooth Advertiser")
                     return
                 }
             }
@@ -67,22 +66,24 @@ class AdvertisingState : State() {
                     mAdvertiseCallback
                 )
             }
+        } else {
+            command.failure("正在广播中")
         }
     }
 
     override fun stopAdvertising(command: StopAdvertisingCommand) {
-        super.stopAdvertising(command)
         if (mIsRunning.compareAndSet(true, false)) {
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     mBluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)
                 }
             }
+        } else {
+            command.failure("广播已经停止")
         }
     }
 
     override fun close(command: CloseCommand) {
-        super.close(command)
         stopAdvertising(StopAdvertisingCommand())
         mBluetoothLeAdvertiser = null
     }

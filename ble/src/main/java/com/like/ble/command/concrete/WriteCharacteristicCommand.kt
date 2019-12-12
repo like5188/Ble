@@ -19,12 +19,20 @@ class WriteCharacteristicCommand(
     val characteristicUuidString: String,
     val writeTimeout: Long = 0L,
     val maxTransferSize: Int = 20,
-    val onSuccess: (() -> Unit)? = null,
-    val onFailure: ((Throwable) -> Unit)? = null
+    private val onSuccess: (() -> Unit)? = null,
+    private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command() {
 
     override fun execute() {
         mReceiver?.writeCharacteristic(this)
+    }
+
+    override fun doOnSuccess(vararg args: Any?) {
+        onSuccess?.invoke()
+    }
+
+    override fun doOnFailure(throwable: Throwable) {
+        onFailure?.invoke(throwable)
     }
 
     override fun equals(other: Any?): Boolean {

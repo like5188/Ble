@@ -1,5 +1,6 @@
 package com.like.ble.command.concrete
 
+import android.bluetooth.BluetoothDevice
 import com.like.ble.command.Command
 import java.nio.ByteBuffer
 
@@ -20,12 +21,25 @@ class ReadCharacteristicCommand(
     val readTimeout: Long = 0L,
     val maxFrameTransferSize: Int = 300,
     val isWholeFrame: (ByteBuffer) -> Boolean = { true },
-    val onSuccess: ((ByteArray?) -> Unit)? = null,
-    val onFailure: ((Throwable) -> Unit)? = null
+    private val onSuccess: ((ByteArray?) -> Unit)? = null,
+    private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command() {
 
     override fun execute() {
         mReceiver?.readCharacteristic(this)
+    }
+
+    override fun doOnSuccess(vararg args: Any?) {
+        if (args.isNotEmpty()) {
+            val arg0 = args[0]
+            if (arg0 is ByteArray?) {
+                onSuccess?.invoke(arg0)
+            }
+        }
+    }
+
+    override fun doOnFailure(throwable: Throwable) {
+        onFailure?.invoke(throwable)
     }
 
     override fun equals(other: Any?): Boolean {

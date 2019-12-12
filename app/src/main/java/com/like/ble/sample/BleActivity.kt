@@ -54,14 +54,13 @@ class BleActivity : AppCompatActivity() {
     fun startScan(view: View) {
         mAdapter.mAdapterDataManager.clear()
         mBleManager.sendCommand(
-            StartScanCommand(2000L) { device, rssi, scanRecord ->
-                Log.d(TAG, "scanRecord=$scanRecord")
+            StartScanCommand(2000L, { device, rssi, scanRecord ->
                 val address = device.address ?: ""
                 val name = device.name ?: "未知设备"
                 if (!mAdapter.mAdapterDataManager.getAll().any { (it as BleInfo).address == address }) {// 防止重复添加
                     mAdapter.mAdapterDataManager.addItemToEnd(BleInfo(name, address, rssi, scanRecord))
                 }
-            }
+            })
         )
     }
 

@@ -13,12 +13,20 @@ import com.like.ble.command.Command
 class ConnectCommand(
     val address: String,
     val connectTimeout: Long = 20000L,
-    val onSuccess: (() -> Unit)? = null,
-    val onFailure: ((Throwable) -> Unit)? = null
+    private val onSuccess: (() -> Unit)? = null,
+    private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command() {
 
     override fun execute() {
         mReceiver?.connect(this)
+    }
+
+    override fun doOnSuccess(vararg args: Any?) {
+        onSuccess?.invoke()
+    }
+
+    override fun doOnFailure(throwable: Throwable) {
+        onFailure?.invoke(throwable)
     }
 
     override fun equals(other: Any?): Boolean {

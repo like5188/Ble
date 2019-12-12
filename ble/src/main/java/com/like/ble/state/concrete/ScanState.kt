@@ -25,16 +25,18 @@ class ScanState : State() {
     private var mStartScanCommand: StartScanCommand? = null
     private val mScanCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
-            mStartScanCommand?.onSuccess?.invoke(result.device, result.rssi, result.scanRecord?.bytes)
-        }
-    }
-    private val mLeScanCallback: BluetoothAdapter.LeScanCallback =
-        BluetoothAdapter.LeScanCallback { device, rssi, scanRecord ->
-            mStartScanCommand?.onSuccess?.invoke(device, rssi, scanRecord)
+            mStartScanCommand?.success(result.device, result.rssi, result.scanRecord?.bytes)
         }
 
+        override fun onScanFailed(errorCode: Int) {
+            mStartScanCommand?.failure("错误码：$errorCode")
+        }
+    }
+    private val mLeScanCallback: BluetoothAdapter.LeScanCallback = BluetoothAdapter.LeScanCallback { device, rssi, scanRecord ->
+        mStartScanCommand?.success(device, rssi, scanRecord)
+    }
+
     override fun startScan(command: StartScanCommand) {
-        super.startScan(command)
         if (mScanning.compareAndSet(false, true)) {
             mStartScanCommand = command
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
@@ -54,11 +56,12 @@ class ScanState : State() {
                     }
                 }
             }
+        } else {
+            command.failure("正在扫描中")
         }
     }
 
     override fun stopScan(command: StopScanCommand) {
-        super.stopScan(command)
         if (mScanning.compareAndSet(true, false)) {
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -67,11 +70,12 @@ class ScanState : State() {
                     mActivity.getBluetoothAdapter()?.stopLeScan(mLeScanCallback)
                 }
             }
+        } else {
+            command.failure("扫描已经停止")
         }
     }
 
     override fun close(command: CloseCommand) {
-        super.close(command)
         stopScan(StopScanCommand())
     }
 

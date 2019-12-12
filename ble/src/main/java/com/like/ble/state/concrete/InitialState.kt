@@ -29,43 +29,43 @@ class InitialState : State() {
             android.Manifest.permission.ACCESS_FINE_LOCATION,
             android.Manifest.permission.ACCESS_COARSE_LOCATION,
             onDenied = {
-                command.onFailure?.invoke(Throwable("the permissions was denied."))
+                command.failure(Throwable("the permissions was denied."))
             },
             onError = {
-                command.onFailure?.invoke(it)
+                command.failure(it)
             },
             onGranted = {
                 if (mActivity.isBluetoothEnable()) {// 蓝牙已经初始化
-                    command.onSuccess?.invoke()
+                    command.success()
                     return@checkPermissions
                 }
 
                 val bluetoothManager = mActivity.getBluetoothManager()
                 if (bluetoothManager == null) {
-                    command.onFailure?.invoke(Throwable("failed to get BluetoothManager"))
+                    command.failure("failed to get BluetoothManager")
                     return@checkPermissions
                 }
 
                 if (bluetoothManager.adapter == null) {
-                    command.onFailure?.invoke(Throwable("failed to get BluetoothAdapter"))
+                    command.failure("failed to get BluetoothAdapter")
                     return@checkPermissions
                 }
 
                 if (mActivity.isBluetoothEnable()) {// 蓝牙初始化成功
-                    command.onSuccess?.invoke()
+                    command.success()
                 } else {// 蓝牙功能未打开
                     // 弹出开启蓝牙的对话框
                     mRxCallback.startActivityForResult(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
                         .subscribe(
                             {
                                 if (it.resultCode == Activity.RESULT_OK) {
-                                    command.onSuccess?.invoke()
+                                    command.success()
                                 } else {
-                                    command.onFailure?.invoke(Throwable("failed to open Bluetooth"))
+                                    command.failure(Throwable("failed to open Bluetooth"))
                                 }
                             },
                             {
-                                command.onFailure?.invoke(it)
+                                command.failure(it)
                             }
                         ).bindToLifecycleOwner(mActivity)
                 }
