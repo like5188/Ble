@@ -20,6 +20,7 @@ import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
 import com.like.ble.utils.getBluetoothManager
 import java.util.*
 
+
 /**
  * 蓝牙外围设备
  * 自安卓5.0后，谷歌加入了对安卓手机作为低功耗蓝牙外围设备，即服务端的支持。使得手机可以通过低功耗蓝牙进行相互通信。
@@ -48,11 +49,13 @@ class BlePeripheralActivity : AppCompatActivity() {
          * @param newState  连接状态，只能为[BluetoothProfile.STATE_CONNECTED]和[BluetoothProfile.STATE_DISCONNECTED]。
          */
         override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
-            appendText("onConnectionStateChange device=$device status=$status newState=$newState")
+            appendText("--> onConnectionStateChange", false)
+            appendText("device=$device status=$status newState=$newState")
         }
 
         override fun onServiceAdded(status: Int, service: BluetoothGattService) {
-            appendText("onServiceAdded status=$status service=${service.uuid}")
+            appendText("--> onServiceAdded", false)
+            appendText("status=$status service=${service.uuid}")
         }
 
         /**
@@ -67,7 +70,8 @@ class BlePeripheralActivity : AppCompatActivity() {
             offset: Int,
             characteristic: BluetoothGattCharacteristic
         ) {
-            appendText("onCharacteristicReadRequest device=$device requestId=$requestId offset=$offset characteristic=$characteristic value=${characteristic.value?.contentToString()}")
+            appendText("--> onCharacteristicReadRequest", false)
+            appendText("device=$device requestId=$requestId offset=$offset characteristic=$characteristic value=${characteristic.value?.contentToString()}")
             val curWriteData = mCurWriteData
             if (curWriteData == null || curWriteData.isEmpty()) {
                 // 此方法要求作出响应
@@ -115,7 +119,8 @@ class BlePeripheralActivity : AppCompatActivity() {
             offset: Int,
             value: ByteArray
         ) {
-            appendText("onCharacteristicWriteRequest device=$device requestId=$requestId characteristic=$characteristic preparedWrite=$preparedWrite responseNeeded=$responseNeeded offset=$offset value=${value.contentToString()}")
+            appendText("--> onCharacteristicWriteRequest", false)
+            appendText("device=$device requestId=$requestId characteristic=$characteristic preparedWrite=$preparedWrite responseNeeded=$responseNeeded offset=$offset value=${value.contentToString()}")
             mCurWriteData = value
             // 如果 responseNeeded=true（此属性由中心设备的 characteristic.setWriteType() 方法设置），则必须调用 sendResponse()方法回复中心设备，这个方法会触发中心设备的 BluetoothGattCallback.onCharacteristicWrite() 方法，然后中心设备才能继续下次写数据，否则不能再次写入数据。
             // 如果 responseNeeded=false，那么不需要 sendResponse() 方法，也会触发中心设备的 BluetoothGattCallback.onCharacteristicWrite() 方法
@@ -140,7 +145,8 @@ class BlePeripheralActivity : AppCompatActivity() {
             offset: Int,
             descriptor: BluetoothGattDescriptor
         ) {
-            appendText("onDescriptorReadRequest device=$device requestId=$requestId offset=$offset descriptor=$descriptor")
+            appendText("--> onDescriptorReadRequest", false)
+            appendText("device=$device requestId=$requestId offset=$offset descriptor=$descriptor")
             mBluetoothGattServer?.sendResponse(
                 device,
                 requestId,
@@ -159,7 +165,8 @@ class BlePeripheralActivity : AppCompatActivity() {
             offset: Int,
             value: ByteArray
         ) {
-            appendText("onDescriptorWriteRequest device=$device requestId=$requestId descriptor=$descriptor preparedWrite=$preparedWrite responseNeeded=$responseNeeded offset=$offset value=${value.contentToString()}")
+            appendText("--> onDescriptorWriteRequest", false)
+            appendText("device=$device requestId=$requestId descriptor=$descriptor preparedWrite=$preparedWrite responseNeeded=$responseNeeded offset=$offset value=${value.contentToString()}")
             mBluetoothGattServer?.sendResponse(
                 device,
                 requestId,
@@ -170,15 +177,18 @@ class BlePeripheralActivity : AppCompatActivity() {
         }
 
         override fun onExecuteWrite(device: BluetoothDevice, requestId: Int, execute: Boolean) {
-            appendText("onExecuteWrite device=$device requestId=$requestId execute=$execute")
+            appendText("--> onExecuteWrite", false)
+            appendText("device=$device requestId=$requestId execute=$execute")
         }
 
         override fun onNotificationSent(device: BluetoothDevice, status: Int) {
-            appendText("onNotificationSent device=$device status=$status")
+            appendText("--> onNotificationSent", false)
+            appendText("device=$device status=$status")
         }
 
         override fun onMtuChanged(device: BluetoothDevice, mtu: Int) {
-            appendText("onMtuChanged device=$device mtu=$mtu")
+            appendText("--> onMtuChanged", false)
+            appendText("device=$device mtu=$mtu")
         }
     }
 
@@ -219,16 +229,18 @@ class BlePeripheralActivity : AppCompatActivity() {
         mBleManager.sendCommand(StopAdvertisingCommand())
     }
 
-    private fun appendText(text: String) {
+    private fun appendText(text: String, isBreak: Boolean = true) {
         runOnUiThread {
-            val sb = StringBuilder(mBinding.tvStatus.text)
-            sb.append(text).append("\n\n")
-            mBinding.tvStatus.text = sb.toString()
+            mBinding.tvStatus.append(text)
+            if (isBreak) {
+                mBinding.tvStatus.append("\n\n")
+            } else {
+                mBinding.tvStatus.append("\n")
+            }
             val offset = mBinding.tvStatus.lineCount * mBinding.tvStatus.lineHeight
-            mBinding.tvStatus.scrollTo(
-                0,
-                offset - mBinding.tvStatus.height + mBinding.tvStatus.lineHeight
-            )
+            if (offset > mBinding.tvStatus.height) {
+                mBinding.tvStatus.scrollTo(0, offset - mBinding.tvStatus.height)
+            }
         }
     }
 

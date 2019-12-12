@@ -60,6 +60,7 @@
             android:id="@+id/tv_status"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:paddingLeft="10dp"
             android:scrollbars="vertical"
             android:textColor="@color/ble_text_blue"
             android:textSize="14sp" />
