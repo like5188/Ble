@@ -192,7 +192,7 @@ class BlePeripheralActivity : AppCompatActivity() {
             InitCommand({
                 appendText("初始化成功")
             }, {
-                appendText("初始化失败")
+                appendText("初始化失败：${it.message}")
             })
         )
     }
@@ -208,7 +208,7 @@ class BlePeripheralActivity : AppCompatActivity() {
                     initServices()//该方法是添加一个服务，在此处调用即将服务广播出去
                 },
                 {
-                    appendText("广播失败")
+                    appendText("广播失败：${it.message}")
                 }
             )
         )

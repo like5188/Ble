@@ -46,7 +46,7 @@ class BleActivity : AppCompatActivity() {
                 mBinding.tvStatus.text = "初始化成功"
             }, {
                 mBinding.tvStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
-                mBinding.tvStatus.text = "初始化失败"
+                mBinding.tvStatus.text = "初始化失败：${it.message}"
             })
         )
     }
