@@ -1,6 +1,5 @@
 package com.like.ble.sample
 
-import android.bluetooth.BluetoothDevice
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -39,9 +38,9 @@ class BleActivity : AppCompatActivity() {
         mAdapter.mAdapterDataManager.clear()
         mBleManager.sendCommand(
             InitCommand({
-                mBinding.tvStatus.text = "蓝牙初始化成功"
+                mBinding.tvStatus.text = "初始化成功"
             }, {
-                mBinding.tvStatus.text = "蓝牙初始化失败"
+                mBinding.tvStatus.text = "初始化失败"
             })
         )
     }
@@ -50,22 +49,18 @@ class BleActivity : AppCompatActivity() {
         mAdapter.mAdapterDataManager.clear()
         mBleManager.sendCommand(
             StartScanCommand(2000L) { device, rssi, scanRecord ->
-                Log.d(TAG, "device=$device rssi=$rssi scanRecord=$scanRecord")
-                addItem(device)
+                Log.d(TAG, "scanRecord=$scanRecord")
+                val address = device.address ?: ""
+                val name = device.name ?: "未知设备"
+                if (!mAdapter.mAdapterDataManager.getAll().any { (it as BleInfo).address == address }) {// 防止重复添加
+                    mAdapter.mAdapterDataManager.addItemToEnd(BleInfo(name, address, rssi, scanRecord))
+                }
             }
         )
     }
 
     fun stopScan(view: View) {
         mBleManager.sendCommand(StopScanCommand())
-    }
-
-    private fun addItem(device: BluetoothDevice?) {
-        val address = device?.address ?: ""
-        val name = device?.name ?: "未知设备"
-        if (!mAdapter.mAdapterDataManager.getAll().any { (it as BleInfo).address == address }) {
-            mAdapter.mAdapterDataManager.addItemToEnd(BleInfo(name, address))
-        }
     }
 
     override fun onDestroy() {

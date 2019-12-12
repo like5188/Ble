@@ -7,6 +7,8 @@
 
         <import type="android.view.View" />
 
+        <import type="java.util.Arrays" />
+
         <variable
             name="bleInfo"
             type="com.like.ble.sample.BleInfo" />
@@ -18,12 +20,12 @@
         android:background="@color/ble_text_white"
         android:orientation="vertical"
         android:paddingLeft="10dp"
-        android:paddingTop="20dp"
         android:paddingRight="10dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:orientation="horizontal">
 
             <TextView
@@ -44,6 +46,15 @@
                 tools:text="XX:XX:XX:XX:XX:XX" />
 
             <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:text="@{String.valueOf(bleInfo.rssi)}"
+                android:textColor="@color/ble_text_black"
+                android:textSize="14sp"
+                tools:text="-1" />
+
+            <TextView
                 android:id="@+id/tv_connect_status"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -53,6 +64,16 @@
                 android:textSize="14sp"
                 tools:text="未连接" />
         </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
+            android:text="@{Arrays.toString(bleInfo.scanRecord)}"
+            android:textColor="@color/ble_text_black"
+            android:textSize="14sp"
+            tools:text="[1,2,3]" />
 
         <!--android:clickable="true" android:focusable="true" 禁止点击穿透-->
         <com.google.android.flexbox.FlexboxLayout
@@ -70,7 +91,6 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginTop="5dp"
             android:background="@color/ble_divider" />
     </LinearLayout>
 
