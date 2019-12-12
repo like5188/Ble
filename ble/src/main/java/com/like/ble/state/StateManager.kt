@@ -33,11 +33,7 @@ class StateManager(private val mActivity: FragmentActivity) {
             it.mActivity = mActivity
         }
     }
-    private val mConnectState: ConnectState by lazy {
-        ConnectState().also {
-            it.mActivity = mActivity
-        }
-    }
+    private val mConnectStateMap = mutableMapOf<String, ConnectState>()
 
     fun execute(command: Command) {
         when (command) {
@@ -69,32 +65,51 @@ class StateManager(private val mActivity: FragmentActivity) {
     private fun updateStateByCommand(command: Command) {
         when (command) {
             is InitCommand -> {
-                if (mState != mInitialState) {
+                if (mState !is InitialState) {
                     mState?.close(CloseCommand())
                     mState = mInitialState
                 }
             }
             is StartAdvertisingCommand, is StopAdvertisingCommand -> {
-                if (mState != mAdvertisingState) {
+                if (mState !is AdvertisingState) {
                     mState?.close(CloseCommand())
                     mState = mAdvertisingState
                 }
             }
             is StartScanCommand, is StopScanCommand -> {
-                if (mState != mScanState) {
+                if (mState !is ScanState) {
                     mState?.close(CloseCommand())
                     mState = mScanState
                 }
             }
-            is ConnectCommand, is DisconnectCommand, is ReadCharacteristicCommand, is WriteCharacteristicCommand, is SetMtuCommand -> {
-                if (mState != mConnectState) {
-                    mState?.close(CloseCommand())
-                    mState = mConnectState
-                }
+            is ConnectCommand -> {
+                updateConnectStateByAddress(command.address)
+            }
+            is DisconnectCommand -> {
+                updateConnectStateByAddress(command.address)
+            }
+            is ReadCharacteristicCommand -> {
+                updateConnectStateByAddress(command.address)
+            }
+            is WriteCharacteristicCommand -> {
+                updateConnectStateByAddress(command.address)
+            }
+            is SetMtuCommand -> {
+                updateConnectStateByAddress(command.address)
             }
             is CloseCommand -> {
             }
         }
+    }
+
+    private fun updateConnectStateByAddress(address: String) {
+        if (mState !is ConnectState) {
+            mState?.close(CloseCommand())
+        }
+        if (!mConnectStateMap.containsKey(address)) {
+            mConnectStateMap[address] = ConnectState().also { it.mActivity = mActivity }
+        }
+        mState = mConnectStateMap[address]
     }
 
 }
