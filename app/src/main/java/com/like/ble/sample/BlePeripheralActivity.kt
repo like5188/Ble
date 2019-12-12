@@ -265,21 +265,6 @@ class BlePeripheralActivity : AppCompatActivity() {
         mBinding.tvStatus.text = ""
     }
 
-    private fun createAdvertiseData(data: ByteArray): AdvertiseData {
-        return AdvertiseData.Builder()
-            .addManufacturerData(0x01AC, data)
-            .setIncludeDeviceName(true)
-            .setIncludeTxPowerLevel(true)
-            .build()
-    }
-
-    private fun createScanResponseAdvertiseData(): AdvertiseData {
-        return AdvertiseData.Builder()
-            .addServiceData(ParcelUuid(UUID_SERVICE), byteArrayOf(1, 2, 3, 4, 5))
-            .setIncludeTxPowerLevel(true)
-            .build()
-    }
-
     private fun createAdvertiseSettings(): AdvertiseSettings {
         return AdvertiseSettings.Builder()
             // 设置广播的模式，低功耗，平衡和低延迟三种模式；
@@ -304,6 +289,24 @@ class BlePeripheralActivity : AppCompatActivity() {
             // ＊ AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM -66 dBm @ 1 meter with Nexus 5
             // ＊ AdvertiseSettings.ADVERTISE_TX_POWER_ULTRA_LOW not detected with Nexus 5
             .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+            .build()
+    }
+
+    private fun createAdvertiseData(data: ByteArray): AdvertiseData {
+        return AdvertiseData.Builder()
+            .addManufacturerData(0x01AC, data)
+            .setIncludeDeviceName(true)
+            .setIncludeTxPowerLevel(true)
+            .build()
+    }
+
+    private fun createScanResponseAdvertiseData(): AdvertiseData {
+        return AdvertiseData.Builder()
+            .addServiceData(
+                ParcelUuid(UUID_SERVICE),
+                byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24)// 长度最多24
+            )
+            .setIncludeTxPowerLevel(true)
             .build()
     }
 
