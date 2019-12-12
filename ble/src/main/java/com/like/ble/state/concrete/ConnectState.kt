@@ -37,14 +37,7 @@ class ConnectState : StateAdapter() {
     // 读取特征数据是否完成
     private val mIsReadCharacteristicCompleted = AtomicBoolean(false)
     // 缓存读取特征数据时的返回数据，因为一帧有可能分为多次接收
-    private val mReadCharacteristicDataCache: ByteBuffer by lazy {
-        val command = mCommand
-        if (command is ReadCharacteristicCommand) {
-            ByteBuffer.allocate(command.maxFrameTransferSize)
-        } else {
-            ByteBuffer.allocate(0)
-        }
-    }
+    private var mReadCharacteristicDataCache: ByteBuffer? = null
 
     private val mGattCallback = object : BluetoothGattCallback() {
         // 当连接状态改变
@@ -105,10 +98,12 @@ class ConnectState : StateAdapter() {
                 if (mIsReadCharacteristicCompleted.get()) {// 说明超时了，避免超时后继续返回数据（此时没有发送下一条数据）
                     return
                 }
-                mReadCharacteristicDataCache.put(characteristic.value)
-                if (command.isWholeFrame(mReadCharacteristicDataCache)) {
-                    mIsReadCharacteristicCompleted.set(true)
-                    command.onSuccess?.invoke(mReadCharacteristicDataCache.toByteArrayOrNull())
+                mReadCharacteristicDataCache?.let {
+                    it.put(characteristic.value)
+                    if (command.isWholeFrame(it)) {
+                        mIsReadCharacteristicCompleted.set(true)
+                        command.onSuccess?.invoke(it.toByteArrayOrNull())
+                    }
                 }
             } else {
                 mIsReadCharacteristicCompleted.set(true)
@@ -215,7 +210,7 @@ class ConnectState : StateAdapter() {
         }
 
         mIsReadCharacteristicCompleted.set(false)
-        mReadCharacteristicDataCache.clear()
+        mReadCharacteristicDataCache = ByteBuffer.allocate(command.maxFrameTransferSize)
 
         mActivity.lifecycleScope.launch(Dispatchers.IO) {
             mBluetoothGatt?.readCharacteristic(characteristic)
