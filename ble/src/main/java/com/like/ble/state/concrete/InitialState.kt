@@ -5,7 +5,7 @@ import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import com.like.ble.command.concrete.InitCommand
-import com.like.ble.state.StateAdapter
+import com.like.ble.state.State
 import com.like.ble.utils.PermissionUtils
 import com.like.ble.utils.bindToLifecycleOwner
 import com.like.ble.utils.callback.RxCallback
@@ -16,7 +16,7 @@ import com.like.ble.utils.isBluetoothEnable
  * 蓝牙初始状态
  * 可以进行初始化操作
  */
-class InitialState : StateAdapter() {
+class InitialState : State() {
     private val mPermissionUtils: PermissionUtils by lazy { PermissionUtils(mActivity) }
     private val mRxCallback: RxCallback by lazy { RxCallback(mActivity) }
 

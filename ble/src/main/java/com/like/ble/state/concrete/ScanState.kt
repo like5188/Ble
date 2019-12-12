@@ -9,7 +9,7 @@ import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.concrete.CloseCommand
 import com.like.ble.command.concrete.StartScanCommand
 import com.like.ble.command.concrete.StopScanCommand
-import com.like.ble.state.StateAdapter
+import com.like.ble.state.State
 import com.like.ble.utils.getBluetoothAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 蓝牙扫描状态
  * 可以进行扫描操作
  */
-class ScanState : StateAdapter() {
+class ScanState : State() {
     private val mScanning = AtomicBoolean(false)
     private var mStartScanCommand: StartScanCommand? = null
     private val mScanCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : ScanCallback() {

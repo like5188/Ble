@@ -9,7 +9,7 @@ import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.concrete.CloseCommand
 import com.like.ble.command.concrete.StartAdvertisingCommand
 import com.like.ble.command.concrete.StopAdvertisingCommand
-import com.like.ble.state.StateAdapter
+import com.like.ble.state.State
 import com.like.ble.utils.getBluetoothAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 蓝牙广播状态
  * 可以进行发送广播、停止广播操作
  */
-class AdvertisingState : StateAdapter() {
+class AdvertisingState : State() {
     private val mIsRunning = AtomicBoolean(false)
     private var mBluetoothLeAdvertiser: BluetoothLeAdvertiser? = null
     private var mStartAdvertisingCommand: StartAdvertisingCommand? = null

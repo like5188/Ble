@@ -9,15 +9,15 @@ import com.like.ble.command.concrete.*
 abstract class State {
     lateinit var mActivity: FragmentActivity
 
-    abstract fun init(command: InitCommand)
-    abstract fun startAdvertising(command: StartAdvertisingCommand)
-    abstract fun stopAdvertising(command: StopAdvertisingCommand)
-    abstract fun startScan(command: StartScanCommand)
-    abstract fun stopScan(command: StopScanCommand)
-    abstract fun connect(command: ConnectCommand)
-    abstract fun disconnect(command: DisconnectCommand)
-    abstract fun readCharacteristic(command: ReadCharacteristicCommand)
-    abstract fun writeCharacteristic(command: WriteCharacteristicCommand)
-    abstract fun setMtu(command: SetMtuCommand)
-    abstract fun close(command: CloseCommand)
+    open fun init(command: InitCommand) {}
+    open fun startAdvertising(command: StartAdvertisingCommand) {}
+    open fun stopAdvertising(command: StopAdvertisingCommand) {}
+    open fun startScan(command: StartScanCommand) {}
+    open fun stopScan(command: StopScanCommand) {}
+    open fun connect(command: ConnectCommand) {}
+    open fun disconnect(command: DisconnectCommand) {}
+    open fun readCharacteristic(command: ReadCharacteristicCommand) {}
+    open fun writeCharacteristic(command: WriteCharacteristicCommand) {}
+    open fun setMtu(command: SetMtuCommand) {}
+    open fun close(command: CloseCommand) {}
 }

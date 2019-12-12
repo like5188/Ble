@@ -8,7 +8,7 @@ import android.os.Build
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.Command
 import com.like.ble.command.concrete.*
-import com.like.ble.state.StateAdapter
+import com.like.ble.state.State
 import com.like.ble.utils.batch
 import com.like.ble.utils.findCharacteristic
 import com.like.ble.utils.getBluetoothAdapter
@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * 蓝牙连接状态
  * 可以进行连接、操作数据等等操作
  */
-class ConnectState : StateAdapter() {
+class ConnectState : State() {
     private var mBluetoothGatt: BluetoothGatt? = null
     private var mCommand: Command? = null
     private var mJob: Job? = null
