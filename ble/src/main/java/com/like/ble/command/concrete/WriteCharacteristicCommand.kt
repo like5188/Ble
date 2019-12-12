@@ -27,4 +27,22 @@ class WriteCharacteristicCommand(
         mReceiver.writeCharacteristic(this)
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is WriteCharacteristicCommand) return false
+
+        if (!data.contentEquals(other.data)) return false
+        if (address != other.address) return false
+        if (characteristicUuidString != other.characteristicUuidString) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = data.contentHashCode()
+        result = 31 * result + address.hashCode()
+        result = 31 * result + characteristicUuidString.hashCode()
+        return result
+    }
+
 }

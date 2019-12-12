@@ -21,4 +21,20 @@ class SetMtuCommand(
         mReceiver.setMtu(this)
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is SetMtuCommand) return false
+
+        if (address != other.address) return false
+        if (mtu != other.mtu) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = address.hashCode()
+        result = 31 * result + mtu
+        return result
+    }
+
 }

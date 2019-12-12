@@ -19,13 +19,29 @@ class ReadCharacteristicCommand(
     val characteristicUuidString: String,
     val readTimeout: Long = 0L,
     val maxFrameTransferSize: Int = 300,
-    val isWholeFrame: (ByteBuffer) -> Boolean,
+    val isWholeFrame: (ByteBuffer) -> Boolean = { true },
     val onSuccess: ((ByteArray?) -> Unit)? = null,
     val onFailure: ((Throwable) -> Unit)? = null
 ) : Command() {
 
     override fun execute() {
         mReceiver.readCharacteristic(this)
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is ReadCharacteristicCommand) return false
+
+        if (address != other.address) return false
+        if (characteristicUuidString != other.characteristicUuidString) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = address.hashCode()
+        result = 31 * result + characteristicUuidString.hashCode()
+        return result
     }
 
 }

@@ -21,4 +21,17 @@ class ConnectCommand(
         mReceiver.connect(this)
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is ConnectCommand) return false
+
+        if (address != other.address) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return address.hashCode()
+    }
+
 }
