@@ -14,7 +14,7 @@ class InitCommand(
 ) : Command() {
 
     override fun execute() {
-        mReceiver.init(this)
+        mReceiver?.init(this)
     }
 
 }

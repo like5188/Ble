@@ -22,7 +22,7 @@ class StartAdvertisingCommand(
 ) : Command() {
 
     override fun execute() {
-        mReceiver.startAdvertising(this)
+        mReceiver?.startAdvertising(this)
     }
 
 }

@@ -18,7 +18,7 @@ class ConnectCommand(
 ) : Command() {
 
     override fun execute() {
-        mReceiver.connect(this)
+        mReceiver?.connect(this)
     }
 
     override fun equals(other: Any?): Boolean {

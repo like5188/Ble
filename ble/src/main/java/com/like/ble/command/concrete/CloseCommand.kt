@@ -8,7 +8,7 @@ import com.like.ble.command.Command
 class CloseCommand : Command() {
 
     override fun execute() {
-        mReceiver.close(this)
+        mReceiver?.close(this)
     }
 
 }

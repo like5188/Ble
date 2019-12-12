@@ -24,7 +24,7 @@ class WriteCharacteristicCommand(
 ) : Command() {
 
     override fun execute() {
-        mReceiver.writeCharacteristic(this)
+        mReceiver?.writeCharacteristic(this)
     }
 
     override fun equals(other: Any?): Boolean {

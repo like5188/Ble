@@ -25,7 +25,7 @@ class ReadCharacteristicCommand(
 ) : Command() {
 
     override fun execute() {
-        mReceiver.readCharacteristic(this)
+        mReceiver?.readCharacteristic(this)
     }
 
     override fun equals(other: Any?): Boolean {

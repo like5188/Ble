@@ -8,7 +8,7 @@ import com.like.ble.command.Command
 class StopScanCommand : Command() {
 
     override fun execute() {
-        mReceiver.stopScan(this)
+        mReceiver?.stopScan(this)
     }
 
 }
