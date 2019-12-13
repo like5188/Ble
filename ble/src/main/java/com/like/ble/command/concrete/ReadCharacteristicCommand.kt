@@ -1,6 +1,5 @@
 package com.like.ble.command.concrete
 
-import android.bluetooth.BluetoothDevice
 import com.like.ble.command.Command
 import java.nio.ByteBuffer
 
