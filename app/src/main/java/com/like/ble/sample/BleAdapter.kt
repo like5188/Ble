@@ -29,7 +29,6 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: BleMa
         binding.tvConnectStatus.setOnClickListener {
             binding.tvConnectStatus.setTextColor(ContextCompat.getColor(mActivity, R.color.ble_text_black_1))
             if (item.isConnected.get()) {
-                binding.tvConnectStatus.text = "断开连接中……"
                 mBleManager.sendCommand(
                     DisconnectCommand(
                         address,
