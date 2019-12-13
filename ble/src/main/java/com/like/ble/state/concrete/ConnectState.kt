@@ -256,7 +256,7 @@ class ConnectState : State() {
         mBluetoothGatt?.disconnect()
         mBluetoothGatt?.close()
         mBluetoothGatt = null
-        mCommand?.failureAndComplete("主动关闭连接")
+        mCommand?.failureAndComplete("主动断开连接")
         mCommand = null
         super.close(command)
     }
