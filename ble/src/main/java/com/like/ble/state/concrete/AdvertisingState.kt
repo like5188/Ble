@@ -77,8 +77,8 @@ class AdvertisingState : State() {
                 command.failureAndComplete("phone does not support Bluetooth Advertiser")
                 return
             }
+            mStartAdvertisingCommand?.failureAndComplete("主动关闭了广播")
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
-                mStartAdvertisingCommand?.failureAndComplete("主动关闭了广播")
                 mBluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)
                 command.successAndComplete()
             }
