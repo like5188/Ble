@@ -19,7 +19,7 @@ class ReadCharacteristicCommand(
     val address: String,
     val characteristicUuidString: String,
     val readTimeout: Long = 0L,
-    val maxFrameTransferSize: Int = 300,
+    private val maxFrameTransferSize: Int = 300,
     val isWholeFrame: (ByteBuffer) -> Boolean = { true },
     private val onSuccess: ((ByteArray?) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
