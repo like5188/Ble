@@ -36,4 +36,8 @@ class CommandInvoker(private val mActivity: FragmentActivity) {
         }
     }
 
+    fun close() {
+        mCommands.close()
+    }
+
 }

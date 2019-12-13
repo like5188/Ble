@@ -84,6 +84,7 @@ class BleManager(private val mActivity: FragmentActivity) {
      */
     fun close() {
         sendCommand(CloseCommand())
+        mStateManager.close()
         try {
             mActivity.unregisterReceiver(mReceiver)
         } catch (e: Exception) {// 避免 java.lang.IllegalArgumentException: Receiver not registered

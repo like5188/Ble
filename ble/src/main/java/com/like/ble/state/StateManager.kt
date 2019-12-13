@@ -137,4 +137,9 @@ class StateManager(private val mActivity: FragmentActivity) {
         }
     }
 
+    fun close() {
+        closeState(mScanState)
+        mCommandInvoker.close()
+    }
+
 }
