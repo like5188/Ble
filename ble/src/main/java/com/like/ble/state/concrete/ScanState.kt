@@ -53,8 +53,8 @@ class ScanState : State() {
                     // 在指定超时时间时取消扫描
                     delay(command.scanTimeout)
                     if (mScanning.get()) {
-                        command.failure(TimeoutException())
                         stopScan(StopScanCommand())
+                        command.failure(TimeoutException())
                     }
                 }
             }
