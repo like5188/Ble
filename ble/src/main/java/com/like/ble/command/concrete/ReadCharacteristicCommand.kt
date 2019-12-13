@@ -25,7 +25,7 @@ class ReadCharacteristicCommand(
     private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command("读特征值命令") {
     // 缓存读取特征数据时的返回数据，因为一帧有可能分为多次接收
-    private val mDataCache: ByteBuffer = ByteBuffer.allocate(maxFrameTransferSize)
+    private val mDataCache: ByteBuffer by lazy { ByteBuffer.allocate(maxFrameTransferSize) }
 
     fun addDataToCache(data: ByteArray) {
         if (isCompleted()) return

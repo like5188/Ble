@@ -1,6 +1,8 @@
 package com.like.ble.command.concrete
 
 import com.like.ble.command.Command
+import com.like.ble.utils.batch
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * 写特征值命令
@@ -22,6 +24,14 @@ class WriteCharacteristicCommand(
     private val onSuccess: (() -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command("写特征值命令") {
+    // 把数据分包
+    private val mBatchDataList: List<ByteArray> by lazy { data.batch(maxTransferSize) }
+    // 记录写入所有的数据批次，在所有的数据都发送完成后，才调用onSuccess()
+    private val mWriteCharacteristicBatchCount: AtomicInteger by lazy { AtomicInteger(mBatchDataList.size) }
+
+    fun getBatchDataList() = mBatchDataList
+
+    fun isAllWrite() = mWriteCharacteristicBatchCount.decrementAndGet() <= 0
 
     override fun execute() {
         mReceiver?.writeCharacteristic(this)

@@ -9,14 +9,12 @@ import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.Command
 import com.like.ble.command.concrete.*
 import com.like.ble.state.State
-import com.like.ble.utils.batch
 import com.like.ble.utils.findCharacteristic
 import com.like.ble.utils.getBluetoothAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * 蓝牙连接状态
@@ -27,9 +25,6 @@ class ConnectState : State() {
     private var mCommand: Command? = null
     private var mWriteJob: Job? = null
     private var mDelayJob: Job? = null
-
-    // 记录写入所有的数据批次，在所有的数据都发送完成后，才调用onSuccess()
-    private val mWriteCharacteristicBatchCount: AtomicInteger = AtomicInteger(0)
 
     private val mGattCallback = object : BluetoothGattCallback() {
         // 当连接状态改变
@@ -102,14 +97,13 @@ class ConnectState : State() {
             val command = mCommand
             if (command !is WriteCharacteristicCommand) return
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                if (mWriteCharacteristicBatchCount.decrementAndGet() <= 0) {
+                if (command.isAllWrite()) {
                     mDelayJob?.cancel()
                     command.successAndComplete()
                 }
             } else {
                 mWriteJob?.cancel()
                 mDelayJob?.cancel()
-                mWriteCharacteristicBatchCount.set(0)
                 command.failureAndComplete("写特征值失败：$characteristic")
             }
         }
@@ -205,8 +199,7 @@ class ConnectState : State() {
             return
         }
 
-        val dataList: List<ByteArray> by lazy { command.data.batch(command.maxTransferSize) }
-        if (dataList.isEmpty()) {
+        if (command.getBatchDataList().isEmpty()) {
             command.failureAndComplete("没有数据，无法写入")
             return
         }
@@ -216,9 +209,6 @@ class ConnectState : State() {
             command.failureAndComplete("特征值不存在：${command.characteristicUuidString}")
             return
         }
-
-        // 记录所有的数据批次，在所有的数据都发送完成后，才调用onSuccess()
-        mWriteCharacteristicBatchCount.set(dataList.size)
 
         /*
         写特征值前可以设置写的类型setWriteType()，写类型有三种，如下：
@@ -230,7 +220,7 @@ class ConnectState : State() {
 
         mWriteJob = mActivity.lifecycleScope.launch(Dispatchers.IO) {
             mCommand = command
-            dataList.forEach {
+            command.getBatchDataList().forEach {
                 characteristic.value = it
                 mBluetoothGatt?.writeCharacteristic(characteristic)
                 delay(100)
@@ -266,7 +256,6 @@ class ConnectState : State() {
         mBluetoothGatt?.disconnect()
         mBluetoothGatt?.close()
         mBluetoothGatt = null
-        mWriteCharacteristicBatchCount.set(0)
         mCommand?.failureAndComplete("主动关闭连接")
         mCommand = null
         super.close(command)
