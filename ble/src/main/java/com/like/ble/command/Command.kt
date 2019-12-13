@@ -23,13 +23,20 @@ abstract class Command(val des: String) {
      */
     internal fun success(vararg args: Any?) {
         doOnSuccess(*args)
+    }
+
+    /**
+     * 命令执行成功时调用
+     */
+    internal fun successAndComplete(vararg args: Any?) {
+        doOnSuccess(*args)
         mIsCompleted.set(true)
     }
 
     /**
      * 命令执行失败时调用
      */
-    internal fun failure(throwable: Throwable) {
+    internal fun failureAndComplete(throwable: Throwable) {
         doOnFailure(throwable)
         mIsCompleted.set(true)
     }
@@ -37,7 +44,7 @@ abstract class Command(val des: String) {
     /**
      * 命令执行失败时调用
      */
-    internal fun failure(errorMsg: String) {
+    internal fun failureAndComplete(errorMsg: String) {
         doOnFailure(Throwable(errorMsg))
         mIsCompleted.set(true)
     }
