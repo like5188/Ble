@@ -21,7 +21,7 @@ class WriteCharacteristicCommand(
     val maxTransferSize: Int = 20,
     private val onSuccess: (() -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
-) : Command() {
+) : Command("写特征值命令") {
 
     override fun execute() {
         mReceiver?.writeCharacteristic(this)

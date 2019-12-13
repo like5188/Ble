@@ -11,7 +11,7 @@ import com.like.ble.command.Command
 class InitCommand(
     private val onSuccess: (() -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
-) : Command() {
+) : Command("初始化蓝牙命令") {
 
     override fun execute() {
         mReceiver?.init(this)

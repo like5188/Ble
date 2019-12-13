@@ -19,7 +19,7 @@ class StartAdvertisingCommand(
     val scanResponse: AdvertiseData,
     private val onSuccess: (() -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
-) : Command() {
+) : Command("开始广播命令") {
 
     override fun execute() {
         mReceiver?.startAdvertising(this)

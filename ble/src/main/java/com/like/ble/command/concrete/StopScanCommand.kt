@@ -3,9 +3,9 @@ package com.like.ble.command.concrete
 import com.like.ble.command.Command
 
 /**
- * 停止扫描命令
+ * 停止扫描蓝牙设备命令
  */
-class StopScanCommand : Command() {
+class StopScanCommand : Command("停止扫描蓝牙设备命令") {
 
     override fun execute() {
         mReceiver?.stopScan(this)

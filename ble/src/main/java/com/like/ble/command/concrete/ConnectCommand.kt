@@ -15,7 +15,7 @@ class ConnectCommand(
     val connectTimeout: Long = 20000L,
     private val onSuccess: (() -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
-) : Command() {
+) : Command("连接蓝牙命令") {
 
     override fun execute() {
         mReceiver?.connect(this)

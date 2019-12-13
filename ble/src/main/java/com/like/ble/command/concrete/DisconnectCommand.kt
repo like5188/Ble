@@ -13,7 +13,7 @@ class DisconnectCommand(
     val address: String,
     private val onSuccess: (() -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
-) : Command() {
+) : Command("断开蓝牙连接命令") {
 
     override fun execute() {
         mReceiver?.disconnect(this)

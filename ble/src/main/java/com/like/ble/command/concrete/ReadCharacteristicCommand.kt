@@ -23,7 +23,7 @@ class ReadCharacteristicCommand(
     val isWholeFrame: (ByteBuffer) -> Boolean = { true },
     private val onSuccess: ((ByteArray?) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
-) : Command() {
+) : Command("读特征值命令") {
 
     override fun execute() {
         mReceiver?.readCharacteristic(this)

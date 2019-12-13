@@ -1,5 +1,7 @@
 package com.like.ble.command
 
+import android.util.Log
+
 /**
  * 命令请求者。todo 队列
  */
@@ -16,6 +18,7 @@ class CommandInvoker {
         while (listIterator.hasNext()) {
             val command = listIterator.next()
             command.execute()
+            Log.d("CommandInvoker", "正在执行：$command")
             listIterator.remove()
         }
     }

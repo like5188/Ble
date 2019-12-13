@@ -15,7 +15,7 @@ class SetMtuCommand(
     val mtu: Int,
     private val onSuccess: ((Int) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
-) : Command() {
+) : Command("设置MTU命令") {
 
     override fun execute() {
         mReceiver?.setMtu(this)

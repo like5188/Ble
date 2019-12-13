@@ -5,8 +5,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * 蓝牙相关命令的接口
+ *
+ * @param des   命令功能描述
  */
-abstract class Command {
+abstract class Command(val des: String) {
     /**
      * 命令实际执行者
      */
@@ -56,4 +58,9 @@ abstract class Command {
      */
     protected open fun doOnFailure(throwable: Throwable) {
     }
+
+    override fun toString(): String {
+        return "Command(des='$des')"
+    }
+
 }
