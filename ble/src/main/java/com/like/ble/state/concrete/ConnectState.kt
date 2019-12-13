@@ -48,11 +48,11 @@ class ConnectState : State() {
                     mBluetoothGatt = null
                     mJob?.cancel()
                     when (val command = mCommand) {
-                        is ConnectCommand -> {
-                            command.failure("连接蓝牙设备失败")
-                        }
                         is DisconnectCommand -> {
                             command.success()
+                        }
+                        else -> {
+                            command?.failure("连接蓝牙设备失败")
                         }
                     }
                 }
@@ -77,11 +77,11 @@ class ConnectState : State() {
                 mBluetoothGatt = null
                 mJob?.cancel()
                 when (val command = mCommand) {
-                    is ConnectCommand -> {
-                        command.failure("连接蓝牙设备失败")
-                    }
                     is DisconnectCommand -> {
                         command.success()
+                    }
+                    else -> {
+                        command?.failure("连接蓝牙设备失败")
                     }
                 }
             }
@@ -111,6 +111,9 @@ class ConnectState : State() {
             val command = mCommand
             if (command !is WriteCharacteristicCommand) return
             if (status == BluetoothGatt.GATT_SUCCESS) {
+                if (command.mIsCompleted.get()) {// 说明超时了，避免超时后继续返回数据（此时没有发送下一条数据）
+                    return
+                }
                 if (mWriteCharacteristicBatchCount.decrementAndGet() <= 0) {
                     command.success()
                 }
