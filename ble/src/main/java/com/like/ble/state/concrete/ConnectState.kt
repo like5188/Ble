@@ -12,12 +12,10 @@ import com.like.ble.state.State
 import com.like.ble.utils.batch
 import com.like.ble.utils.findCharacteristic
 import com.like.ble.utils.getBluetoothAdapter
-import com.like.ble.utils.toByteArrayOrNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -32,9 +30,6 @@ class ConnectState : State() {
 
     // 记录写入所有的数据批次，在所有的数据都发送完成后，才调用onSuccess()
     private val mWriteCharacteristicBatchCount: AtomicInteger = AtomicInteger(0)
-
-    // 缓存读取特征数据时的返回数据，因为一帧有可能分为多次接收
-    private var mReadCharacteristicDataCache: ByteBuffer? = null
 
     private val mGattCallback = object : BluetoothGattCallback() {
         // 当连接状态改变
@@ -91,12 +86,10 @@ class ConnectState : State() {
             val command = mCommand
             if (command !is ReadCharacteristicCommand) return
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                mReadCharacteristicDataCache?.let {
-                    it.put(characteristic.value)
-                    if (command.isWholeFrame(it)) {
-                        mDelayJob?.cancel()
-                        command.successAndComplete(it.toByteArrayOrNull())
-                    }
+                command.addDataToCache(characteristic.value)
+                if (command.isWholeFrame()) {
+                    mDelayJob?.cancel()
+                    command.successAndComplete()
                 }
             } else {
                 mDelayJob?.cancel()
@@ -195,8 +188,6 @@ class ConnectState : State() {
             return
         }
 
-        mReadCharacteristicDataCache = ByteBuffer.allocate(command.maxFrameTransferSize)
-
         mActivity.lifecycleScope.launch(Dispatchers.IO) {
             mCommand = command
             mBluetoothGatt?.readCharacteristic(characteristic)
@@ -275,7 +266,6 @@ class ConnectState : State() {
         mBluetoothGatt?.disconnect()
         mBluetoothGatt?.close()
         mBluetoothGatt = null
-        mReadCharacteristicDataCache = null
         mWriteCharacteristicBatchCount.set(0)
         mCommand?.failureAndComplete("主动关闭连接")
         mCommand = null
