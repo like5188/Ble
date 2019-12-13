@@ -22,17 +22,19 @@ abstract class Command(val des: String) {
      */
     private var mHowCompleted: String = "未完成"
 
+    internal fun isCompleted() = mIsCompleted.get()
+
     internal fun complete(howCompleted: String) {
+        if (isCompleted()) return
         mIsCompleted.set(true)
         mHowCompleted = howCompleted
     }
-
-    internal fun isCompleted() = mIsCompleted.get()
 
     /**
      * 命令执行成功时调用，实用于扫描蓝牙设备那种多个返回值的情况，最后完成的时候调用[complete]。
      */
     internal fun success(vararg args: Any?) {
+        if (isCompleted()) return
         doOnSuccess(*args)
     }
 
@@ -40,6 +42,7 @@ abstract class Command(val des: String) {
      * 命令执行成功时调用
      */
     internal fun successAndComplete(vararg args: Any?) {
+        if (isCompleted()) return
         doOnSuccess(*args)
         complete("成功完成")
     }
@@ -48,6 +51,7 @@ abstract class Command(val des: String) {
      * 命令执行失败时调用
      */
     internal fun failureAndComplete(throwable: Throwable) {
+        if (isCompleted()) return
         doOnFailure(throwable)
         complete("失败完成：${throwable.message}")
     }
@@ -56,6 +60,7 @@ abstract class Command(val des: String) {
      * 命令执行失败时调用
      */
     internal fun failureAndComplete(errorMsg: String) {
+        if (isCompleted()) return
         doOnFailure(Throwable(errorMsg))
         complete("失败完成：$errorMsg")
     }
