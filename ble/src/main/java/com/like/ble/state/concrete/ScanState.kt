@@ -68,7 +68,6 @@ class ScanState : State() {
     override fun stopScan(command: StopScanCommand) {
         if (mScanning.compareAndSet(true, false)) {
             mDelayJob?.cancel()
-            mStartScanCommand?.complete("主动停止扫描")
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.stopScan(mScanCallback)
@@ -85,6 +84,7 @@ class ScanState : State() {
     override fun close(command: CloseCommand) {
         mDelayJob?.cancel()
         stopScan(StopScanCommand())
+        mStartScanCommand?.complete("主动停止扫描")
         mStartScanCommand = null
         super.close(command)
     }

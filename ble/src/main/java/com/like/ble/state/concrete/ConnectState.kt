@@ -284,6 +284,7 @@ class ConnectState : State() {
         mBluetoothGatt = null
         mReadCharacteristicDataCache = null
         mWriteCharacteristicBatchCount.set(0)
+        mCommand?.failureAndComplete("主动关闭连接")
         mCommand = null
         super.close(command)
     }
