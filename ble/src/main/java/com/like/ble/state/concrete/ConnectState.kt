@@ -91,7 +91,7 @@ class ConnectState : State() {
         override fun onCharacteristicRead(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
             val command = mCommand
             if (command !is ReadCharacteristicCommand) return
-            if (command.mIsCompleted.get()) {// 说明超时了，避免超时后继续返回数据（此时没有发送下一条数据）
+            if (command.isCompleted()) {// 说明超时了，避免超时后继续返回数据（此时没有发送下一条数据）
                 return
             }
             if (status == BluetoothGatt.GATT_SUCCESS) {
@@ -112,7 +112,7 @@ class ConnectState : State() {
         override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
             val command = mCommand
             if (command !is WriteCharacteristicCommand) return
-            if (command.mIsCompleted.get()) {// 说明超时了，避免超时后继续返回数据（此时没有发送下一条数据）
+            if (command.isCompleted()) {// 说明超时了，避免超时后继续返回数据（此时没有发送下一条数据）
                 return
             }
             if (status == BluetoothGatt.GATT_SUCCESS) {

@@ -16,10 +16,21 @@ abstract class Command(val des: String) {
     /**
      * 命令是否已经完成
      */
-    internal val mIsCompleted: AtomicBoolean = AtomicBoolean(false)
+    private val mIsCompleted: AtomicBoolean = AtomicBoolean(false)
+    /**
+     * 命令怎么完成的
+     */
+    private var mHowCompleted: String = "未完成"
+
+    internal fun complete(howCompleted: String) {
+        mIsCompleted.set(true)
+        mHowCompleted = howCompleted
+    }
+
+    internal fun isCompleted() = mIsCompleted.get()
 
     /**
-     * 命令执行成功时调用
+     * 命令执行成功时调用，实用于扫描蓝牙设备那种多个返回值的情况，最后完成的时候调用[complete]。
      */
     internal fun success(vararg args: Any?) {
         doOnSuccess(*args)
@@ -30,7 +41,7 @@ abstract class Command(val des: String) {
      */
     internal fun successAndComplete(vararg args: Any?) {
         doOnSuccess(*args)
-        mIsCompleted.set(true)
+        complete("成功完成")
     }
 
     /**
@@ -38,7 +49,7 @@ abstract class Command(val des: String) {
      */
     internal fun failureAndComplete(throwable: Throwable) {
         doOnFailure(throwable)
-        mIsCompleted.set(true)
+        complete("失败完成：${throwable.message}")
     }
 
     /**
@@ -46,7 +57,7 @@ abstract class Command(val des: String) {
      */
     internal fun failureAndComplete(errorMsg: String) {
         doOnFailure(Throwable(errorMsg))
-        mIsCompleted.set(true)
+        complete("失败完成：$errorMsg")
     }
 
     /**
@@ -67,7 +78,7 @@ abstract class Command(val des: String) {
     }
 
     override fun toString(): String {
-        return "Command(des='$des')"
+        return "Command(des='$des', mHowCompleted='$mHowCompleted')"
     }
 
 }

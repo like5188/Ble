@@ -22,7 +22,7 @@ class CommandInvoker(private val mActivity: FragmentActivity) {
             for (command in mCommands) {
                 Log.i(TAG, "开始执行命令：$command")
                 command.execute()
-                while (!command.mIsCompleted.get()) {
+                while (!command.isCompleted()) {
                     delay(20)
                 }
                 Log.w(TAG, "命令执行完成：$command")

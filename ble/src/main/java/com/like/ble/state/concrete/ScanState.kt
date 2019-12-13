@@ -57,7 +57,7 @@ class ScanState : State() {
                     if (mScanning.get()) {
                         stopScan(StopScanCommand())
                     }
-                    command.mIsCompleted.set(true)
+                    command.complete("扫描超时时间到了")
                 }
             }
         } else {
