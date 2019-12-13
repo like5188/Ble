@@ -29,6 +29,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: BleMa
         binding.tvConnectStatus.setOnClickListener {
             binding.tvConnectStatus.setTextColor(ContextCompat.getColor(mActivity, R.color.ble_text_black_1))
             if (item.isConnected.get()) {
+                binding.tvConnectStatus.text = "断开连接中……"
                 mBleManager.sendCommand(
                     DisconnectCommand(
                         address,
@@ -37,6 +38,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: BleMa
                         },
                         {
                             item.isConnected.set(true)
+                            item.isConnected.notifyChange()// 必须调用，否则不能触发更新界面，因为本来就是true
                         })
                 )
             } else {
@@ -50,6 +52,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: BleMa
                         },
                         {
                             item.isConnected.set(false)
+                            item.isConnected.notifyChange()// 必须调用，否则不能触发更新界面，因为本来就是false
                         })
                 )
             }
