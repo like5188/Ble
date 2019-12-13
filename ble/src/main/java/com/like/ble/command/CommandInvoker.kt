@@ -36,10 +36,9 @@ class CommandInvoker(private val mActivity: FragmentActivity) {
     fun addCommand(command: Command) {
         val curCommand = mCurCommand
         // 判断需要抛弃
-        if (curCommand != null) {
-            if (isSameCommand(command, curCommand)) {
-                return
-            }
+        if (curCommand != null && !curCommand.isCompleted() && isSameCommand(command, curCommand)) {
+            Log.w(TAG, "命令正在执行，直接抛弃：$command")
+            return
         }
         // 判断排队
 
