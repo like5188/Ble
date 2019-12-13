@@ -22,7 +22,6 @@ class InitialState : State() {
 
     @SuppressLint("CheckResult")
     override fun init(command: InitCommand) {
-        super.init(command)
         mPermissionUtils.checkPermissions(
             android.Manifest.permission.BLUETOOTH_ADMIN,
             android.Manifest.permission.BLUETOOTH,
