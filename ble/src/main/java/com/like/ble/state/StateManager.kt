@@ -16,7 +16,7 @@ import com.like.ble.utils.isSupportBluetooth
  * 蓝牙状态管理，并用[CommandInvoker]来执行对应的命令。
  */
 class StateManager(private val mActivity: FragmentActivity) {
-    private val mCommandInvoker: CommandInvoker by lazy { CommandInvoker() }
+    private val mCommandInvoker: CommandInvoker by lazy { CommandInvoker(mActivity) }
     private var mState: State? = null
     private val mInitialState: InitialState by lazy {
         InitialState().also {
@@ -64,7 +64,6 @@ class StateManager(private val mActivity: FragmentActivity) {
         }
         command.mReceiver = state
         mCommandInvoker.addCommand(command)
-        mCommandInvoker.execute()
     }
 
     private fun updateStateByCommand(command: Command) {

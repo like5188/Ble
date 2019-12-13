@@ -1,25 +1,29 @@
 package com.like.ble.command
 
 import android.util.Log
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
 
 /**
- * 命令请求者。todo 队列
+ * 命令请求者。
  */
-class CommandInvoker {
-    private val mCommands = mutableListOf<Command>()
+class CommandInvoker(private val mActivity: FragmentActivity) {
+    private val mCommands = Channel<Command>()
 
-    fun addCommand(command: Command) {
-        mCommands.add(command)
+    init {
+        mActivity.lifecycleScope.launch {
+            for (command in mCommands) {
+                Log.d("CommandInvoker", "开始执行：$command")
+                command.execute()
+            }
+        }
     }
 
-    fun execute() {
-        if (mCommands.isEmpty()) return
-        val listIterator = mCommands.listIterator()
-        while (listIterator.hasNext()) {
-            val command = listIterator.next()
-            command.execute()
-            Log.d("CommandInvoker", "正在执行：$command")
-            listIterator.remove()
+    fun addCommand(command: Command) {
+        mActivity.lifecycleScope.launch {
+            mCommands.send(command)
         }
     }
 
