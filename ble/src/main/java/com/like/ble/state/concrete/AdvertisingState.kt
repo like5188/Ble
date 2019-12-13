@@ -73,10 +73,13 @@ class AdvertisingState : State() {
 
     override fun stopAdvertising(command: StopAdvertisingCommand) {
         if (mIsRunning.compareAndSet(true, false)) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                command.failure("phone does not support Bluetooth Advertiser")
+                return
+            }
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    mBluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)
-                }
+                mBluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)
+                command.success()
             }
         } else {
             command.failure("广播已经停止")
