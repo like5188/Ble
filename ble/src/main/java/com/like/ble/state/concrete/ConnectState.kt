@@ -18,7 +18,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.nio.ByteBuffer
-import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -171,7 +170,7 @@ class ConnectState : State() {
             mDelayJob = launch(Dispatchers.IO) {
                 delay(command.connectTimeout)
                 disconnect(DisconnectCommand(command.address))
-                command.failureAndComplete(TimeoutException())
+                command.failureAndComplete("连接超时")
             }
         }
     }
@@ -211,7 +210,7 @@ class ConnectState : State() {
 
         mDelayJob = mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.readTimeout)
-            command.failureAndComplete(TimeoutException())
+            command.failureAndComplete("读取特征值超时")
         }
     }
 
@@ -256,7 +255,7 @@ class ConnectState : State() {
         mDelayJob = mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.writeTimeout)
             mWriteJob?.cancel()
-            command.failureAndComplete(TimeoutException())
+            command.failureAndComplete("写特征值超时")
         }
     }
 
