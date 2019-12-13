@@ -43,22 +43,35 @@ class CommandInvoker(private val mActivity: FragmentActivity) {
             Log.w(TAG, "命令正在执行，直接抛弃：$command")
             return
         }
-        // 判断排队
-        if (curCommand == null || needLineUp(curCommand, command)) {
+        // 判断立即执行
+        if (curCommand != null && needExecuteImmediately(curCommand, command)) {
+            mCancel.set(true)
             sendCommand(command)
             return
         }
-        // 立即执行
-        mCancel.set(true)
+        // 排队等候
         sendCommand(command)
     }
 
     /**
-     * 需要排队
+     * 是否需要立即执行
      */
-    private fun needLineUp(curCommand: Command, command: Command): Boolean {
-        when (curCommand) {
-            is InitCommand -> {
+    private fun needExecuteImmediately(curCommand: Command, command: Command): Boolean {
+        if (command is InitCommand || command is CloseCommand) {
+            return true
+        }
+        if (curCommand is StartAdvertisingCommand && command is StopAdvertisingCommand) {
+            return true
+        }
+        if (curCommand is StartScanCommand && command is StopScanCommand) {
+            return true
+        }
+        if (curCommand is ConnectCommand ||
+            curCommand is ReadCharacteristicCommand ||
+            curCommand is WriteCharacteristicCommand ||
+            curCommand is SetMtuCommand
+        ) {
+            if (command is DisconnectCommand) {
                 return true
             }
         }
