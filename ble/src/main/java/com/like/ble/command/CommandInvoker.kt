@@ -7,6 +7,7 @@ import com.like.ble.command.concrete.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * 命令请求者。
@@ -18,6 +19,7 @@ class CommandInvoker(private val mActivity: FragmentActivity) {
 
     private val mCommands = Channel<Command>()
     private var mCurCommand: Command? = null
+    private var mCancel = AtomicBoolean(false)
 
     init {
         mActivity.lifecycleScope.launch {
@@ -25,7 +27,8 @@ class CommandInvoker(private val mActivity: FragmentActivity) {
                 Log.i(TAG, "开始执行命令：$command")
                 mCurCommand = command
                 command.execute()
-                while (!command.isCompleted()) {
+                mCancel.set(false)
+                while (!command.isCompleted() && !mCancel.get()) {
                     delay(20)
                 }
                 Log.w(TAG, "命令执行完成：$command")
@@ -36,15 +39,30 @@ class CommandInvoker(private val mActivity: FragmentActivity) {
     fun addCommand(command: Command) {
         val curCommand = mCurCommand
         // 判断需要抛弃
-        if (curCommand != null && !curCommand.isCompleted() && isSameCommand(command, curCommand)) {
+        if (curCommand != null && !curCommand.isCompleted() && isSameCommand(curCommand, command)) {
             Log.w(TAG, "命令正在执行，直接抛弃：$command")
             return
         }
         // 判断排队
-
-        // 判断立即执行
-
+        if (curCommand == null || needLineUp(curCommand, command)) {
+            sendCommand(command)
+            return
+        }
+        // 立即执行
+        mCancel.set(true)
         sendCommand(command)
+    }
+
+    /**
+     * 需要排队
+     */
+    private fun needLineUp(curCommand: Command, command: Command): Boolean {
+        when (curCommand) {
+            is InitCommand -> {
+                return true
+            }
+        }
+        return false
     }
 
     /**
@@ -53,11 +71,11 @@ class CommandInvoker(private val mActivity: FragmentActivity) {
      * 其中[InitCommand]、[StartAdvertisingCommand]、[StopAdvertisingCommand]、[StartScanCommand]、[StopScanCommand]、[CloseCommand]是同一类型，则判断为同一命令
      * 其中[ConnectCommand]、[DisconnectCommand]、[ReadCharacteristicCommand]、[WriteCharacteristicCommand]、[SetMtuCommand]是同一类型，并且内容相同，才判断为同一命令
      */
-    private fun isSameCommand(command1: Command, command2: Command): Boolean {
-        if (command1::class.java == command2::class.java) {
-            when (command1) {
+    private fun isSameCommand(curCommand: Command, command: Command): Boolean {
+        if (curCommand::class.java == command::class.java) {
+            when (curCommand) {
                 is ConnectCommand, is DisconnectCommand, is ReadCharacteristicCommand, is WriteCharacteristicCommand, is SetMtuCommand -> {
-                    if (command1 == command2) {// 必须比较内容
+                    if (curCommand == command) {// 必须比较内容
                         return true
                     }
                 }
