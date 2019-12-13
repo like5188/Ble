@@ -19,5 +19,7 @@ abstract class State {
     open fun readCharacteristic(command: ReadCharacteristicCommand) {}
     open fun writeCharacteristic(command: WriteCharacteristicCommand) {}
     open fun setMtu(command: SetMtuCommand) {}
-    open fun close(command: CloseCommand) {}
+    open fun close(command: CloseCommand) {
+        command.success()
+    }
 }

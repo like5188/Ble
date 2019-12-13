@@ -86,6 +86,7 @@ class AdvertisingState : State() {
     override fun close(command: CloseCommand) {
         stopAdvertising(StopAdvertisingCommand())
         mBluetoothLeAdvertiser = null
+        super.close(command)
     }
 
 }

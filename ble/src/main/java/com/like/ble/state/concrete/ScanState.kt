@@ -14,6 +14,7 @@ import com.like.ble.utils.getBluetoothAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -52,6 +53,7 @@ class ScanState : State() {
                     // 在指定超时时间时取消扫描
                     delay(command.scanTimeout)
                     if (mScanning.get()) {
+                        command.failure(TimeoutException())
                         stopScan(StopScanCommand())
                     }
                 }
@@ -77,6 +79,7 @@ class ScanState : State() {
 
     override fun close(command: CloseCommand) {
         stopScan(StopScanCommand())
+        super.close(command)
     }
 
 }

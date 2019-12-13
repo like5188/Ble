@@ -296,10 +296,10 @@ class ConnectState : State() {
     }
 
     override fun close(command: CloseCommand) {
-        super.close(command)
         mBluetoothGatt?.disconnect()
         mBluetoothGatt?.close()
         mBluetoothGatt = null
+        super.close(command)
     }
 
 }
