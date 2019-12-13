@@ -141,8 +141,6 @@ class ConnectState : State() {
     }
 
     override fun connect(command: ConnectCommand) {
-        mCommand = command
-
         if (mBluetoothGatt != null) {
             command.successAndComplete()
             return
@@ -162,6 +160,7 @@ class ConnectState : State() {
             }
 
             launch(Dispatchers.IO) {
+                mCommand = command
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     bluetoothDevice.connectGatt(mActivity, false, mGattCallback, BluetoothDevice.TRANSPORT_LE)// 第二个参数表示是否自动重连
                 } else {
@@ -178,7 +177,7 @@ class ConnectState : State() {
     }
 
     override fun disconnect(command: DisconnectCommand) {
-        mCommand = command
+        mCommand?.failureAndComplete("主动断开连接")
         mDelayJob?.cancel()
 
         if (mBluetoothGatt == null) {
@@ -186,13 +185,12 @@ class ConnectState : State() {
             return
         }
         mActivity.lifecycleScope.launch(Dispatchers.IO) {
+            mCommand = command
             mBluetoothGatt?.disconnect()
         }
     }
 
     override fun readCharacteristic(command: ReadCharacteristicCommand) {
-        mCommand = command
-
         if (mBluetoothGatt == null) {
             command.failureAndComplete("设备未连接：${command.address}")
             return
@@ -207,6 +205,7 @@ class ConnectState : State() {
         mReadCharacteristicDataCache = ByteBuffer.allocate(command.maxFrameTransferSize)
 
         mActivity.lifecycleScope.launch(Dispatchers.IO) {
+            mCommand = command
             mBluetoothGatt?.readCharacteristic(characteristic)
         }
 
@@ -217,8 +216,6 @@ class ConnectState : State() {
     }
 
     override fun writeCharacteristic(command: WriteCharacteristicCommand) {
-        mCommand = command
-
         if (mBluetoothGatt == null) {
             command.failureAndComplete("设备未连接：${command.address}")
             return
@@ -248,6 +245,7 @@ class ConnectState : State() {
         characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
 
         mWriteJob = mActivity.lifecycleScope.launch(Dispatchers.IO) {
+            mCommand = command
             dataList.forEach {
                 characteristic.value = it
                 mBluetoothGatt?.writeCharacteristic(characteristic)
@@ -263,8 +261,6 @@ class ConnectState : State() {
     }
 
     override fun setMtu(command: SetMtuCommand) {
-        mCommand = command
-
         if (mBluetoothGatt == null) {
             command.failureAndComplete("设备未连接：${command.address}")
             return
@@ -272,6 +268,7 @@ class ConnectState : State() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
+                mCommand = command
                 mBluetoothGatt?.requestMtu(command.mtu)
             }
         } else {

@@ -69,6 +69,7 @@ class ScanState : State() {
         if (mScanning.compareAndSet(true, false)) {
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
                 mDelayJob?.cancel()
+                mStartScanCommand?.complete("主动停止扫描")
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.stopScan(mScanCallback)
                 } else {

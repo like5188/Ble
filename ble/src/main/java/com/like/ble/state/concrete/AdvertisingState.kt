@@ -78,6 +78,7 @@ class AdvertisingState : State() {
                 return
             }
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
+                mStartAdvertisingCommand?.failureAndComplete("主动关闭了广播")
                 mBluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)
                 command.successAndComplete()
             }
