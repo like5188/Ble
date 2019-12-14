@@ -88,7 +88,7 @@ class ConnectState : State() {
                 }
             } else {
                 mDelayJob?.cancel()
-                command.failureAndComplete("读取特征值失败：$characteristic")
+                command.failureAndComplete("读取特征值失败：${characteristic.uuid}")
             }
         }
 
@@ -104,7 +104,7 @@ class ConnectState : State() {
             } else {
                 mWriteJob?.cancel()
                 mDelayJob?.cancel()
-                command.failureAndComplete("写特征值失败：$characteristic")
+                command.failureAndComplete("写特征值失败：${characteristic.uuid}")
             }
         }
 
@@ -258,7 +258,7 @@ class ConnectState : State() {
         mBluetoothGatt = null
         mCommand?.failureAndComplete("主动断开连接")
         mCommand = null
-        super.close(command)
+        command.successAndComplete()
     }
 
 }

@@ -16,7 +16,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.like.ble.BleManager
-import com.like.ble.command.concrete.InitCommand
 import com.like.ble.command.concrete.StartAdvertisingCommand
 import com.like.ble.command.concrete.StopAdvertisingCommand
 import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
@@ -198,16 +197,6 @@ class BlePeripheralActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mBinding.tvStatus.movementMethod = ScrollingMovementMethod()
-    }
-
-    fun init(view: View) {
-        mBleManager.sendCommand(
-            InitCommand({
-                appendText("初始化成功", true, R.color.ble_text_blue)
-            }, {
-                appendText("初始化失败：${it.message}", true, R.color.ble_text_red)
-            })
-        )
     }
 
     fun startAdvertising(view: View) {

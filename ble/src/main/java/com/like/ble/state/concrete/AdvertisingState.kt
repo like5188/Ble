@@ -91,7 +91,7 @@ class AdvertisingState : State() {
         mBluetoothLeAdvertiser = null
         mStartAdvertisingCommand?.failureAndComplete("主动关闭了广播")
         mStartAdvertisingCommand = null
-        super.close(command)
+        command.successAndComplete()
     }
 
 }

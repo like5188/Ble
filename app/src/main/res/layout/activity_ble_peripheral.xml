@@ -20,36 +20,24 @@
             android:layout_height="wrap_content">
 
             <Button
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="init"
-                android:text="初始化"
-                android:textColor="@color/ble_text_black_1"
-                android:textSize="14sp" />
-
-            <Button
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:onClick="startAdvertising"
                 android:text="开启广播"
                 android:textColor="@color/ble_text_black_1"
                 android:textSize="14sp" />
 
             <Button
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:onClick="stopAdvertising"
                 android:text="停止广播"
                 android:textColor="@color/ble_text_black_1"
                 android:textSize="14sp" />
 
             <Button
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:onClick="clearLog"
                 android:text="清空日志"
                 android:textColor="@color/ble_text_black_1"

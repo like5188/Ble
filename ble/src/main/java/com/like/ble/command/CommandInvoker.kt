@@ -31,7 +31,11 @@ class CommandInvoker(private val mActivity: FragmentActivity) {
                 while (!command.isCompleted() && !mCancel.get()) {
                     delay(20)
                 }
-                Log.w(TAG, "命令执行完成：$command")
+                if (mCancel.get()) {
+                    Log.w(TAG, "取消等待命令完成：$command")
+                } else {
+                    Log.w(TAG, "命令执行完成：$command")
+                }
             }
         }
     }
@@ -57,7 +61,7 @@ class CommandInvoker(private val mActivity: FragmentActivity) {
      * 是否需要立即执行
      */
     private fun needExecuteImmediately(curCommand: Command, command: Command): Boolean {
-        if (command is InitCommand || command is CloseCommand) {
+        if (command is CloseCommand) {
             return true
         }
         if (curCommand is StartAdvertisingCommand && command is StopAdvertisingCommand) {
@@ -81,7 +85,7 @@ class CommandInvoker(private val mActivity: FragmentActivity) {
     /**
      * 判断是否是同一命令。
      *
-     * 其中[InitCommand]、[StartAdvertisingCommand]、[StopAdvertisingCommand]、[StartScanCommand]、[StopScanCommand]、[CloseCommand]是同一类型，则判断为同一命令
+     * 其中[StartAdvertisingCommand]、[StopAdvertisingCommand]、[StartScanCommand]、[StopScanCommand]、[CloseCommand]是同一类型，则判断为同一命令
      * 其中[ConnectCommand]、[DisconnectCommand]、[ReadCharacteristicCommand]、[WriteCharacteristicCommand]、[SetMtuCommand]是同一类型，并且内容相同，才判断为同一命令
      */
     private fun isSameCommand(curCommand: Command, command: Command): Boolean {

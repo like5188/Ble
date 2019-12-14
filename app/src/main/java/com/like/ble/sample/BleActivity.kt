@@ -1,13 +1,10 @@
 package com.like.ble.sample
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.like.ble.BleManager
-import com.like.ble.command.concrete.InitCommand
 import com.like.ble.command.concrete.StartScanCommand
 import com.like.ble.command.concrete.StopScanCommand
 import com.like.ble.sample.databinding.ActivityBleBinding
@@ -34,21 +31,6 @@ class BleActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         mBinding.rv.layoutManager = WrapLinearLayoutManager(this)
         mBinding.rv.adapter = mAdapter
-    }
-
-    fun initBle(view: View) {
-        mAdapter.mAdapterDataManager.clear()
-        mBinding.tvStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_black_1))
-        mBinding.tvStatus.text = "初始化中……"
-        mBleManager.sendCommand(
-            InitCommand({
-                mBinding.tvStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_blue))
-                mBinding.tvStatus.text = "初始化成功"
-            }, {
-                mBinding.tvStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
-                mBinding.tvStatus.text = "初始化失败：${it.message}"
-            })
-        )
     }
 
     fun startScan(view: View) {

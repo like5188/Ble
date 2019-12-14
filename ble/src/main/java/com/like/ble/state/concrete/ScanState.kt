@@ -86,7 +86,7 @@ class ScanState : State() {
         stopScan(StopScanCommand())
         mStartScanCommand?.complete("主动停止扫描")
         mStartScanCommand = null
-        super.close(command)
+        command.successAndComplete()
     }
 
 }

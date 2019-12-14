@@ -9,7 +9,6 @@ import com.like.ble.command.concrete.*
 abstract class State {
     lateinit var mActivity: FragmentActivity
 
-    open fun init(command: InitCommand) {}
     open fun startAdvertising(command: StartAdvertisingCommand) {}
     open fun stopAdvertising(command: StopAdvertisingCommand) {}
     open fun startScan(command: StartScanCommand) {}
@@ -19,7 +18,5 @@ abstract class State {
     open fun readCharacteristic(command: ReadCharacteristicCommand) {}
     open fun writeCharacteristic(command: WriteCharacteristicCommand) {}
     open fun setMtu(command: SetMtuCommand) {}
-    open fun close(command: CloseCommand) {
-        command.successAndComplete()
-    }
+    open fun close(command: CloseCommand) {}
 }

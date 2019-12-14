@@ -1,15 +1,10 @@
 package com.like.ble
 
-import android.bluetooth.BluetoothAdapter
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.Command
-import com.like.ble.command.concrete.CloseCommand
-import com.like.ble.command.concrete.InitCommand
 import com.like.ble.state.StateManager
+import kotlinx.coroutines.launch
 
 /**
  * 蓝牙是一种近距离无线通信技术。它的特性就是近距离通信，典型距离是 10 米以内，传输速度最高可达 24 Mbps，支持多连接，安全性高，非常适合用智能设备上。
@@ -52,44 +47,17 @@ import com.like.ble.state.StateManager
 class BleManager(private val mActivity: FragmentActivity) {
     private val mStateManager: StateManager by lazy { StateManager(mActivity) }
 
-    // 蓝牙打开关闭监听器
-    private val mReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            when (intent.action) {
-                BluetoothAdapter.ACTION_STATE_CHANGED -> {
-                    when (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, 0)) {
-                        BluetoothAdapter.STATE_ON -> {// 蓝牙已打开
-                            sendCommand(InitCommand())
-                        }
-                        BluetoothAdapter.STATE_OFF -> {// 蓝牙已关闭
-                            sendCommand(CloseCommand())
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    init {
-        // 注册蓝牙打开关闭监听
-        mActivity.registerReceiver(mReceiver, IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
-    }
-
     fun sendCommand(command: Command) {
-        mStateManager.execute(command)
+        mActivity.lifecycleScope.launch {
+            mStateManager.execute(command)
+        }
     }
 
     /**
      * 关闭所有蓝牙连接
      */
     fun close() {
-        sendCommand(CloseCommand())
         mStateManager.close()
-        try {
-            mActivity.unregisterReceiver(mReceiver)
-        } catch (e: Exception) {// 避免 java.lang.IllegalArgumentException: Receiver not registered
-            e.printStackTrace()
-        }
     }
 
 }
