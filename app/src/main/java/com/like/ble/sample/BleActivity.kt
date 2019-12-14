@@ -5,6 +5,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import com.like.ble.CentralManager
+import com.like.ble.IBleManager
 import com.like.ble.command.concrete.StartScanCommand
 import com.like.ble.command.concrete.StopScanCommand
 import com.like.ble.sample.databinding.ActivityBleBinding
@@ -22,9 +23,7 @@ class BleActivity : AppCompatActivity() {
     private val mBinding: ActivityBleBinding by lazy {
         DataBindingUtil.setContentView<ActivityBleBinding>(this, R.layout.activity_ble)
     }
-    private val mBleManager: CentralManager by lazy {
-        CentralManager(this)
-    }
+    private val mBleManager: IBleManager by lazy { CentralManager(this) }
     private val mAdapter: BleAdapter by lazy { BleAdapter(this, mBleManager) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,13 +35,18 @@ class BleActivity : AppCompatActivity() {
     fun startScan(view: View) {
         mAdapter.mAdapterDataManager.clear()
         mBleManager.sendCommand(
-            StartScanCommand(2000L, { device, rssi, scanRecord ->
-                val address = device.address ?: ""
-                val name = device.name ?: "未知设备"
-                if (!mAdapter.mAdapterDataManager.getAll().any { (it as BleInfo).address == address }) {// 防止重复添加
-                    mAdapter.mAdapterDataManager.addItemToEnd(BleInfo(name, address, rssi, scanRecord))
-                }
-            })
+            StartScanCommand(
+                2000L,
+                { device, rssi, scanRecord ->
+                    val address = device.address ?: ""
+                    val name = device.name ?: "未知设备"
+                    if (!mAdapter.mAdapterDataManager.getAll().any { (it as BleInfo).address == address }) {// 防止重复添加
+                        mAdapter.mAdapterDataManager.addItemToEnd(BleInfo(name, address, rssi, scanRecord))
+                    }
+                },
+                {
+                    shortToastCenter(it.message)
+                })
         )
     }
 

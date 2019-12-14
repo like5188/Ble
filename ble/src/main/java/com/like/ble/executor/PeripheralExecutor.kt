@@ -1,30 +1,27 @@
-package com.like.ble.state
+package com.like.ble.executor
 
 import androidx.fragment.app.FragmentActivity
 import com.like.ble.command.Command
 import com.like.ble.invoker.PeripheralInvoker
 import com.like.ble.command.concrete.CloseCommand
+import com.like.ble.invoker.Invoker
 import com.like.ble.state.concrete.AdvertisingState
 
 /**
- * 蓝牙外围设备状态管理，并用[com.like.ble.command.PeripheralInvoker]来执行对应的命令。
+ * 蓝牙外围设备相关命令的执行者。
  */
-class PeripheralStateManager(private val mActivity: FragmentActivity) {
-    private val mInvoker: PeripheralInvoker by lazy {
-        PeripheralInvoker(
-            mActivity
-        )
-    }
+class PeripheralExecutor(private val mActivity: FragmentActivity) : IExecutor {
+    private val mInvoker: Invoker by lazy { PeripheralInvoker(mActivity) }
     private val mState: AdvertisingState by lazy {
         AdvertisingState().also { it.mActivity = mActivity }
     }
 
-    suspend fun execute(command: Command) {
+    override suspend fun execute(command: Command) {
         command.mReceiver = mState
         mInvoker.addCommand(command)
     }
 
-    fun close() {
+    override fun close() {
         mInvoker.close()
         mState.close(CloseCommand())
     }

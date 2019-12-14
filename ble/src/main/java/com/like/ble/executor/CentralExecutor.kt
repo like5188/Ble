@@ -1,28 +1,26 @@
-package com.like.ble.state
+package com.like.ble.executor
 
 import androidx.fragment.app.FragmentActivity
 import com.like.ble.invoker.CentralInvoker
 import com.like.ble.command.Command
 import com.like.ble.command.concrete.*
+import com.like.ble.invoker.Invoker
+import com.like.ble.state.State
 import com.like.ble.state.concrete.ConnectState
 import com.like.ble.state.concrete.ScanState
 
 /**
- * 蓝牙中心设备状态管理，并用[CentralInvoker]来执行对应的命令。
+ * 蓝牙中心设备相关命令的执行者。
  */
-class CentralStateManager(private val mActivity: FragmentActivity) {
-    private val mInvoker: CentralInvoker by lazy {
-        CentralInvoker(
-            mActivity
-        )
-    }
+class CentralExecutor(private val mActivity: FragmentActivity) : IExecutor {
+    private val mInvoker: Invoker by lazy { CentralInvoker(mActivity) }
     private var mCurState: State? = null
     private val mScanState: ScanState by lazy {
         ScanState().also { it.mActivity = mActivity }
     }
     private val mConnectStateMap = mutableMapOf<String, ConnectState>()
 
-    suspend fun execute(command: Command) {
+    override suspend fun execute(command: Command) {
         val state = getStateByCommand(command)
         if (state == null) {
             command.failureAndComplete("更新蓝牙状态失败")
@@ -67,7 +65,7 @@ class CentralStateManager(private val mActivity: FragmentActivity) {
         return mConnectStateMap[address]
     }
 
-    fun close() {
+    override fun close() {
         mInvoker.close()
         mScanState.close(CloseCommand())
         mConnectStateMap.forEach {

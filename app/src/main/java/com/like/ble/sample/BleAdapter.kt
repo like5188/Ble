@@ -5,14 +5,14 @@ import android.view.Gravity
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.google.android.flexbox.FlexboxLayout
-import com.like.ble.CentralManager
+import com.like.ble.IBleManager
 import com.like.ble.command.concrete.*
 import com.like.ble.sample.databinding.ItemBleBinding
 import com.like.livedatarecyclerview.adapter.BaseAdapter
 import com.like.livedatarecyclerview.model.IRecyclerViewItem
 import com.like.livedatarecyclerview.viewholder.CommonViewHolder
 
-class BleAdapter(private val mActivity: Activity, private val mBleManager: CentralManager) :
+class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleManager) :
     BaseAdapter() {
     private val mCommandArray = arrayOf("读特征", "写特征", "设置MTU")
 
@@ -91,7 +91,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: Centr
                             mActivity.shortToastCenter("读特征成功 ${it?.contentToString()}")
                         },
                         {
-                            mActivity.shortToastCenter("${it.message}")
+                            mActivity.shortToastCenter(it.message)
                         }
                     )
                     1 -> WriteCharacteristicCommand(
@@ -104,7 +104,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: Centr
                             mActivity.shortToastCenter("写特征成功")
                         },
                         {
-                            mActivity.shortToastCenter("${it.message}")
+                            mActivity.shortToastCenter(it.message)
                         }
                     )
                     2 -> SetMtuCommand(
@@ -114,7 +114,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: Centr
                             mActivity.shortToastCenter("设置MTU成功 $it")
                         },
                         {
-                            mActivity.shortToastCenter("${it.message}")
+                            mActivity.shortToastCenter(it.message)
                         }
                     )
                     else -> null

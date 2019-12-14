@@ -4,7 +4,7 @@ import com.like.ble.state.State
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * 蓝牙相关命令的接口
+ * 蓝牙命令基类
  *
  * @param des   命令功能描述
  */

@@ -15,6 +15,9 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
+/**
+ * 命令请求者
+ */
 abstract class Invoker(private val mActivity: FragmentActivity) {
     private val mPermissionUtils: PermissionUtils by lazy { PermissionUtils(mActivity) }
     private val mRxCallback: RxCallback by lazy { RxCallback(mActivity) }
