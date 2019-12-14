@@ -5,14 +5,14 @@ import android.view.Gravity
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.google.android.flexbox.FlexboxLayout
-import com.like.ble.BleManager
+import com.like.ble.CentralManager
 import com.like.ble.command.concrete.*
 import com.like.ble.sample.databinding.ItemBleBinding
 import com.like.livedatarecyclerview.adapter.BaseAdapter
 import com.like.livedatarecyclerview.model.IRecyclerViewItem
 import com.like.livedatarecyclerview.viewholder.CommonViewHolder
 
-class BleAdapter(private val mActivity: Activity, private val mBleManager: BleManager) :
+class BleAdapter(private val mActivity: Activity, private val mBleManager: CentralManager) :
     BaseAdapter() {
     private val mCommandArray = arrayOf("读特征", "写特征", "设置MTU")
 

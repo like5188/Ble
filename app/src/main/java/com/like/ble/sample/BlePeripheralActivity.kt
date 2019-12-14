@@ -15,7 +15,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
-import com.like.ble.BleManager
+import com.like.ble.PeripheralManager
 import com.like.ble.command.concrete.StartAdvertisingCommand
 import com.like.ble.command.concrete.StopAdvertisingCommand
 import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
@@ -40,8 +40,8 @@ class BlePeripheralActivity : AppCompatActivity() {
     private val mBinding: ActivityBlePeripheralBinding by lazy {
         DataBindingUtil.setContentView<ActivityBlePeripheralBinding>(this, R.layout.activity_ble_peripheral)
     }
-    private val mBleManager: BleManager by lazy {
-        BleManager(this)
+    private val mBleManager: PeripheralManager by lazy {
+        PeripheralManager(this)
     }
     private var mBluetoothGattServer: BluetoothGattServer? = null
     private val mBluetoothGattServerCallback = object : BluetoothGattServerCallback() {

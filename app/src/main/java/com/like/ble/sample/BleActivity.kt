@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
-import com.like.ble.BleManager
+import com.like.ble.CentralManager
 import com.like.ble.command.concrete.StartScanCommand
 import com.like.ble.command.concrete.StopScanCommand
 import com.like.ble.sample.databinding.ActivityBleBinding
@@ -22,8 +22,8 @@ class BleActivity : AppCompatActivity() {
     private val mBinding: ActivityBleBinding by lazy {
         DataBindingUtil.setContentView<ActivityBleBinding>(this, R.layout.activity_ble)
     }
-    private val mBleManager: BleManager by lazy {
-        BleManager(this)
+    private val mBleManager: CentralManager by lazy {
+        CentralManager(this)
     }
     private val mAdapter: BleAdapter by lazy { BleAdapter(this, mBleManager) }
 

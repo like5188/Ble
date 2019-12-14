@@ -1,8 +1,9 @@
-package com.like.ble.command
+package com.like.ble.invoker
 
 import android.util.Log
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
+import com.like.ble.command.Command
 import com.like.ble.command.concrete.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -10,11 +11,11 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * 命令请求者。
+ * 蓝牙中心设备命令请求者。
  */
-class CommandInvoker(private val mActivity: FragmentActivity) {
+class CentralInvoker(private val mActivity: FragmentActivity) : Invoker(mActivity) {
     companion object {
-        private val TAG = CommandInvoker::class.java.simpleName
+        private val TAG = CentralInvoker::class.java.simpleName
     }
 
     private val mCommands = Channel<Command>()
@@ -40,7 +41,7 @@ class CommandInvoker(private val mActivity: FragmentActivity) {
         }
     }
 
-    fun addCommand(command: Command) {
+    override suspend fun execute(command: Command) {
         val curCommand = mCurCommand
         // 判断需要抛弃
         if (curCommand != null && !curCommand.isCompleted() && isSameCommand(curCommand, command)) {
@@ -64,9 +65,6 @@ class CommandInvoker(private val mActivity: FragmentActivity) {
         if (command is CloseCommand) {
             return true
         }
-        if (curCommand is StartAdvertisingCommand && command is StopAdvertisingCommand) {
-            return true
-        }
         if (curCommand is StartScanCommand && command is StopScanCommand) {
             return true
         }
@@ -85,7 +83,7 @@ class CommandInvoker(private val mActivity: FragmentActivity) {
     /**
      * 判断是否是同一命令。
      *
-     * 其中[StartAdvertisingCommand]、[StopAdvertisingCommand]、[StartScanCommand]、[StopScanCommand]、[CloseCommand]是同一类型，则判断为同一命令
+     * 其中[StartScanCommand]、[StopScanCommand]、[CloseCommand]是同一类型，则判断为同一命令
      * 其中[ConnectCommand]、[DisconnectCommand]、[ReadCharacteristicCommand]、[WriteCharacteristicCommand]、[SetMtuCommand]是同一类型，并且内容相同，才判断为同一命令
      */
     private fun isSameCommand(curCommand: Command, command: Command): Boolean {
@@ -110,8 +108,9 @@ class CommandInvoker(private val mActivity: FragmentActivity) {
         }
     }
 
-    fun close() {
+    override fun close() {
         mCommands.close()
+        mCurCommand = null
     }
 
 }

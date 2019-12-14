@@ -1,9 +1,11 @@
 package com.like.ble
 
+import android.util.Log
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.Command
-import com.like.ble.state.StateManager
+import com.like.ble.command.concrete.*
+import com.like.ble.state.CentralStateManager
 import kotlinx.coroutines.launch
 
 /**
@@ -44,17 +46,29 @@ import kotlinx.coroutines.launch
  * @version 1.0
  * created on 2017/4/14 11:52
  */
-class BleManager(private val mActivity: FragmentActivity) {
-    private val mStateManager: StateManager by lazy { StateManager(mActivity) }
+class CentralManager(private val mActivity: FragmentActivity) {
+    private val mStateManager: CentralStateManager by lazy { CentralStateManager(mActivity) }
 
     fun sendCommand(command: Command) {
-        mActivity.lifecycleScope.launch {
-            mStateManager.execute(command)
+        if (command is StartScanCommand ||
+            command is StopScanCommand ||
+            command is ConnectCommand ||
+            command is DisconnectCommand ||
+            command is ReadCharacteristicCommand ||
+            command is WriteCharacteristicCommand ||
+            command is SetMtuCommand ||
+            command is CloseCommand
+        ) {
+            mActivity.lifecycleScope.launch {
+                mStateManager.execute(command)
+            }
+        } else {
+            Log.e("CentralManager", "蓝牙中心设备不支持该命令：$command")
         }
     }
 
     /**
-     * 关闭所有蓝牙连接
+     * 关闭所有资源
      */
     fun close() {
         mStateManager.close()
