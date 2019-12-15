@@ -46,7 +46,10 @@ class ScanState : State() {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(mScanCallback)
                     } else {
-                        mActivity.getBluetoothAdapter()?.startLeScan(mLeScanCallback)
+                        if (mActivity.getBluetoothAdapter()?.startLeScan(mLeScanCallback) != true) {
+                            mDelayJob?.cancel()
+                            command.failureAndComplete("扫描失败")
+                        }
                     }
                 }
 
