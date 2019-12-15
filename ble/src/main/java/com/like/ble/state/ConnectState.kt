@@ -68,7 +68,7 @@ class ConnectState : State() {
                         command.successAndComplete()
                     }
                     else -> {
-                        command?.failureAndComplete("连接蓝牙设备失败")
+                        command?.failureAndComplete("连接蓝牙设备失败，发现服务失败")
                     }
                 }
             }
