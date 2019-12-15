@@ -81,7 +81,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                 val command = when (index) {
                     0 -> ReadCharacteristicCommand(
                         address,
-                        "0000fff2-0000-1000-8000-00805f9b34fb",
+                        "0000fff1-0000-1000-8000-00805f9b34fb",
                         5000,
                         300,
                         {
