@@ -70,7 +70,11 @@ class CentralInvoker(private val mActivity: FragmentActivity) : Invoker(mActivit
         if (curCommand is ConnectCommand ||
             curCommand is ReadCharacteristicCommand ||
             curCommand is WriteCharacteristicCommand ||
-            curCommand is SetMtuCommand
+            curCommand is SetMtuCommand ||
+            curCommand is EnableCharacteristicNotifyCommand ||
+            curCommand is DisableCharacteristicNotifyCommand ||
+            curCommand is EnableCharacteristicIndicateCommand ||
+            curCommand is DisableCharacteristicIndicateCommand
         ) {
             if (command is DisconnectCommand) {
                 return true
@@ -82,19 +86,34 @@ class CentralInvoker(private val mActivity: FragmentActivity) : Invoker(mActivit
     /**
      * 判断是否是同一命令。
      *
-     * 其中[StartScanCommand]、[StopScanCommand]、[CloseCommand]是同一类型，则判断为同一命令
-     * 其中[ConnectCommand]、[DisconnectCommand]、[ReadCharacteristicCommand]、[WriteCharacteristicCommand]、[SetMtuCommand]是同一类型，并且内容相同，才判断为同一命令
+     * 其中
+     * [StartScanCommand]、
+     * [StopScanCommand]、
+     * [CloseCommand]
+     * 是同一类型，则判断为同一命令
+     *
+     * 其中
+     * [ConnectCommand]、
+     * [DisconnectCommand]、
+     * [ReadCharacteristicCommand]、
+     * [WriteCharacteristicCommand]、
+     * [SetMtuCommand]、
+     * [EnableCharacteristicNotifyCommand]、
+     * [DisableCharacteristicNotifyCommand]、
+     * [EnableCharacteristicIndicateCommand]、
+     * [DisableCharacteristicIndicateCommand]
+     * 是同一类型，并且内容相同，才判断为同一命令
      */
     private fun isSameCommand(curCommand: Command, command: Command): Boolean {
         if (curCommand::class.java == command::class.java) {
             when (curCommand) {
-                is ConnectCommand, is DisconnectCommand, is ReadCharacteristicCommand, is WriteCharacteristicCommand, is SetMtuCommand -> {
+                is StartScanCommand, is StopScanCommand, is CloseCommand -> {
+                    return true
+                }
+                else -> {
                     if (curCommand == command) {// 必须比较内容
                         return true
                     }
-                }
-                else -> {
-                    return true
                 }
             }
         }

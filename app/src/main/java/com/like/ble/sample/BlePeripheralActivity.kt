@@ -134,10 +134,15 @@ class BlePeripheralActivity : AppCompatActivity() {
                     byteArrayOf(0x03, 0x04)
                 )
             }
-            // 外围设备向中心设备不能发送数据，必须通过notify 或者indicate的方式，andorid只发现notify接口。
-            // 调用 notifyCharacteristicChanged() 方法向中心设备发送数据，会触发 onNotificationSent() 方法和中心设备的 BluetoothGattCallback.onCharacteristicChanged() 方法。
-//            characteristic.value = byteArrayOf(0x05, 0x06)
-//            mBluetoothGattServer?.notifyCharacteristicChanged(device, characteristic, false)// 最后一个参数表示是否需要客户端确认
+
+            when (value[0]) {
+                0x2.toByte() -> {
+                    // 外围设备向中心设备不能发送数据，必须通过notify 或者indicate的方式，andorid只发现notify接口。
+                    // 调用 notifyCharacteristicChanged() 方法向中心设备发送数据，会触发 onNotificationSent() 方法和中心设备的 BluetoothGattCallback.onCharacteristicChanged() 方法。
+                    characteristic.value = byteArrayOf(0x05, 0x06)
+                    mBluetoothGattServer?.notifyCharacteristicChanged(device, characteristic, false)// 最后一个参数表示是否需要客户端确认
+                }
+            }
         }
 
         override fun onDescriptorReadRequest(
@@ -309,18 +314,18 @@ class BlePeripheralActivity : AppCompatActivity() {
             BluetoothGattCharacteristic.PROPERTY_READ,
             BluetoothGattCharacteristic.PERMISSION_READ
         )
-        val descriptor = BluetoothGattDescriptor(
-            UUID_DESCRIPTOR,
-            BluetoothGattCharacteristic.PERMISSION_WRITE
-        )
-        characteristicRead.addDescriptor(descriptor)
         service.addCharacteristic(characteristicRead)
 
         val characteristicWrite = BluetoothGattCharacteristic(
             UUID_CHARACTERISTIC_WRITE,
-            BluetoothGattCharacteristic.PROPERTY_READ or BluetoothGattCharacteristic.PROPERTY_WRITE or BluetoothGattCharacteristic.PROPERTY_NOTIFY,
-            BluetoothGattCharacteristic.PERMISSION_READ or BluetoothGattCharacteristic.PERMISSION_WRITE
+            BluetoothGattCharacteristic.PROPERTY_WRITE or BluetoothGattCharacteristic.PROPERTY_NOTIFY or BluetoothGattCharacteristic.PROPERTY_INDICATE,
+            BluetoothGattCharacteristic.PERMISSION_WRITE
         )
+        val descriptor = BluetoothGattDescriptor(
+            UUID_DESCRIPTOR,
+            BluetoothGattCharacteristic.PERMISSION_WRITE
+        )
+        characteristicWrite.addDescriptor(descriptor)
         service.addCharacteristic(characteristicWrite)
 
         bluetoothGattServer.addService(service)

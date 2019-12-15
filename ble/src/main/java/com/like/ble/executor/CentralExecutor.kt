@@ -50,6 +50,18 @@ class CentralExecutor(private val mActivity: FragmentActivity) : IExecutor {
             is SetMtuCommand -> {
                 getConnectStateByAddress(command.address)
             }
+            is EnableCharacteristicNotifyCommand -> {
+                getConnectStateByAddress(command.address)
+            }
+            is DisableCharacteristicNotifyCommand -> {
+                getConnectStateByAddress(command.address)
+            }
+            is EnableCharacteristicIndicateCommand -> {
+                getConnectStateByAddress(command.address)
+            }
+            is DisableCharacteristicIndicateCommand -> {
+                getConnectStateByAddress(command.address)
+            }
             is CloseCommand -> {
                 mCurState
             }

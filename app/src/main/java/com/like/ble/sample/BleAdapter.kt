@@ -14,7 +14,7 @@ import com.like.livedatarecyclerview.viewholder.CommonViewHolder
 
 class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleManager) :
     BaseAdapter() {
-    private val mCommandArray = arrayOf("读特征", "写特征", "设置MTU")
+    private val mCommandArray = arrayOf("读特征", "写特征", "设置MTU", "开启通知", "关闭通知", "开启标志", "关闭标志", "写特征并接收通知")
 
     override fun bindOtherVariable(
         holder: CommonViewHolder,
@@ -112,6 +112,63 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                         50,
                         {
                             mActivity.shortToastCenter("设置MTU成功 $it")
+                        },
+                        {
+                            mActivity.shortToastCenter(it.message)
+                        }
+                    )
+                    3 -> EnableCharacteristicNotifyCommand(
+                        address,
+                        "0000fff2-0000-1000-8000-00805f9b34fb",
+                        "00002902-0000-1000-8000-00805f9b34fb",
+                        {
+                            mActivity.shortToastCenter("开启通知成功")
+                        },
+                        {
+                            mActivity.shortToastCenter(it.message)
+                        }
+                    )
+                    4 -> DisableCharacteristicNotifyCommand(
+                        address,
+                        "0000fff2-0000-1000-8000-00805f9b34fb",
+                        "00002902-0000-1000-8000-00805f9b34fb",
+                        {
+                            mActivity.shortToastCenter("关闭通知成功")
+                        },
+                        {
+                            mActivity.shortToastCenter(it.message)
+                        }
+                    )
+                    5 -> EnableCharacteristicIndicateCommand(
+                        address,
+                        "0000fff2-0000-1000-8000-00805f9b34fb",
+                        "00002902-0000-1000-8000-00805f9b34fb",
+                        {
+                            mActivity.shortToastCenter("开启标志成功")
+                        },
+                        {
+                            mActivity.shortToastCenter(it.message)
+                        }
+                    )
+                    6 -> DisableCharacteristicIndicateCommand(
+                        address,
+                        "0000fff2-0000-1000-8000-00805f9b34fb",
+                        "00002902-0000-1000-8000-00805f9b34fb",
+                        {
+                            mActivity.shortToastCenter("关闭标志成功")
+                        },
+                        {
+                            mActivity.shortToastCenter(it.message)
+                        }
+                    )
+                    7 -> WriteCharacteristicCommand(
+                        byteArrayOf(0x2),
+                        address,
+                        "0000fff2-0000-1000-8000-00805f9b34fb",
+                        5000,
+                        20,
+                        {
+                            mActivity.shortToastCenter("写特征成功，等待通知……")
                         },
                         {
                             mActivity.shortToastCenter(it.message)

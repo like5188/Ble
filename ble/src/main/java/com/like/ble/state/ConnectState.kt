@@ -1,10 +1,8 @@
 package com.like.ble.state
 
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCallback
-import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.*
 import android.os.Build
+import android.util.Log
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.*
 import com.like.ble.utils.findCharacteristic
@@ -13,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.*
 
 
 /**
@@ -117,6 +116,26 @@ class ConnectState : State() {
             }
         }
 
+        override fun onDescriptorWrite(gatt: BluetoothGatt?, descriptor: BluetoothGattDescriptor?, status: Int) {
+            val command = mCommand
+            if (command !is EnableCharacteristicNotifyCommand &&
+                command !is DisableCharacteristicNotifyCommand &&
+                command !is EnableCharacteristicIndicateCommand &&
+                command !is DisableCharacteristicIndicateCommand
+            ) {
+                return
+            }
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                command.successAndComplete()
+            } else {
+                command.failureAndComplete("writeDescriptor fail")
+            }
+        }
+
+        override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
+            Log.w("ConnectState", Arrays.toString(characteristic?.value))
+        }
+
     }
 
     override fun connect(command: ConnectCommand) {
@@ -192,11 +211,10 @@ class ConnectState : State() {
             return
         }
 
-        mActivity.lifecycleScope.launch(Dispatchers.IO) {
-            mCommand = command
-            if (!bluetoothGatt.readCharacteristic(characteristic)) {
-                command.failureAndComplete("读取特征值失败：${command.characteristicUuidString}")
-            }
+        mCommand = command
+        if (!bluetoothGatt.readCharacteristic(characteristic)) {
+            command.failureAndComplete("读取特征值失败：${command.characteristicUuidString}")
+            return
         }
 
         mDelayJob = mActivity.lifecycleScope.launch(Dispatchers.IO) {
@@ -263,15 +281,123 @@ class ConnectState : State() {
             return
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mActivity.lifecycleScope.launch(Dispatchers.IO) {
-                mCommand = command
-                if (!bluetoothGatt.requestMtu(command.mtu)) {
-                    command.failureAndComplete("设置MTU失败：${command.address}")
-                }
-            }
-        } else {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             command.failureAndComplete("android 5.0及其以上才支持设置MTU：${command.address}")
+            return
+        }
+
+        mCommand = command
+        if (!bluetoothGatt.requestMtu(command.mtu)) {
+            command.failureAndComplete("设置MTU失败：${command.address}")
+            return
+        }
+    }
+
+    override fun enableCharacteristicNotify(command: EnableCharacteristicNotifyCommand) {
+        setCharacteristicNotification(command.characteristicUuidString, command.descriptorUuidString, true, command)
+    }
+
+    override fun disableCharacteristicNotify(command: DisableCharacteristicNotifyCommand) {
+        setCharacteristicNotification(command.characteristicUuidString, command.descriptorUuidString, false, command)
+    }
+
+    override fun enableCharacteristicIndicate(command: EnableCharacteristicIndicateCommand) {
+        setCharacteristicIndicate(command.characteristicUuidString, command.descriptorUuidString, true, command)
+    }
+
+    override fun disableCharacteristicIndicate(command: DisableCharacteristicIndicateCommand) {
+        setCharacteristicIndicate(command.characteristicUuidString, command.descriptorUuidString, false, command)
+    }
+
+    private fun setCharacteristicNotification(
+        characteristicUuidString: String,
+        descriptorUuidString: String,
+        enable: Boolean,
+        command: Command
+    ) {
+        val bluetoothGatt = mBluetoothGatt
+        if (bluetoothGatt == null) {
+            command.failureAndComplete("设备未连接")
+            return
+        }
+
+        val characteristic = bluetoothGatt.findCharacteristic(characteristicUuidString)
+        if (characteristic == null) {
+            command.failureAndComplete("特征值不存在：${characteristicUuidString}")
+            return
+        }
+
+        if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY == 0) {
+            command.failureAndComplete("this characteristic not support notify!")
+            return
+        }
+
+        if (!bluetoothGatt.setCharacteristicNotification(characteristic, enable)) {
+            command.failureAndComplete("setCharacteristicNotification fail")
+            return
+        }
+
+        val descriptor = characteristic.getDescriptor(UUID.fromString(descriptorUuidString))
+        if (descriptor == null) {
+            command.failureAndComplete("descriptor equals null")
+            return
+        }
+
+        mCommand = command
+        descriptor.value = if (enable) {
+            BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+        } else {
+            BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
+        }
+        if (!bluetoothGatt.writeDescriptor(descriptor)) {
+            command.failureAndComplete("gatt writeDescriptor fail")
+            return
+        }
+    }
+
+    private fun setCharacteristicIndicate(
+        characteristicUuidString: String,
+        descriptorUuidString: String,
+        enable: Boolean,
+        command: Command
+    ) {
+        val bluetoothGatt = mBluetoothGatt
+        if (bluetoothGatt == null) {
+            command.failureAndComplete("设备未连接")
+            return
+        }
+
+        val characteristic = bluetoothGatt.findCharacteristic(characteristicUuidString)
+        if (characteristic == null) {
+            command.failureAndComplete("特征值不存在：${characteristicUuidString}")
+            return
+        }
+
+        if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_INDICATE == 0) {
+            command.failureAndComplete("this characteristic not support indicate!")
+            return
+        }
+
+        if (!bluetoothGatt.setCharacteristicNotification(characteristic, enable)) {
+            command.failureAndComplete("setCharacteristicNotification fail")
+            return
+        }
+
+        val descriptor = characteristic.getDescriptor(UUID.fromString(descriptorUuidString))
+        if (descriptor == null) {
+            command.failureAndComplete("descriptor equals null")
+            return
+        }
+
+        mCommand = command
+        descriptor.value = if (enable) {
+            BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
+        } else {
+            BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
+        }
+        if (!bluetoothGatt.writeDescriptor(descriptor)) {
+            command.failureAndComplete("gatt writeDescriptor fail")
+            return
         }
     }
 
