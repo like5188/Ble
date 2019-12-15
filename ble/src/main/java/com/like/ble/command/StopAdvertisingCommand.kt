@@ -1,4 +1,4 @@
-package com.like.ble.command.concrete
+package com.like.ble.command
 
 import com.like.ble.command.Command
 

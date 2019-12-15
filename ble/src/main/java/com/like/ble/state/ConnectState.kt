@@ -1,4 +1,4 @@
-package com.like.ble.state.concrete
+package com.like.ble.state
 
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
@@ -6,9 +6,7 @@ import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.os.Build
 import androidx.lifecycle.lifecycleScope
-import com.like.ble.command.Command
-import com.like.ble.command.concrete.*
-import com.like.ble.state.State
+import com.like.ble.command.*
 import com.like.ble.utils.findCharacteristic
 import com.like.ble.utils.getBluetoothAdapter
 import kotlinx.coroutines.Dispatchers

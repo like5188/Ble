@@ -1,4 +1,4 @@
-package com.like.ble.command.concrete
+package com.like.ble.command
 
 import android.bluetooth.BluetoothDevice
 import com.like.ble.command.Command

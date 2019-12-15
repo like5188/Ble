@@ -3,9 +3,9 @@ package com.like.ble.executor
 import androidx.fragment.app.FragmentActivity
 import com.like.ble.command.Command
 import com.like.ble.invoker.PeripheralInvoker
-import com.like.ble.command.concrete.CloseCommand
+import com.like.ble.command.CloseCommand
 import com.like.ble.invoker.Invoker
-import com.like.ble.state.concrete.AdvertisingState
+import com.like.ble.state.AdvertisingState
 
 /**
  * 蓝牙外围设备相关命令的执行者。

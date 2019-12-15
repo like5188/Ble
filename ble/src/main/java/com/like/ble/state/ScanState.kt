@@ -1,4 +1,4 @@
-package com.like.ble.state.concrete
+package com.like.ble.state
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.le.ScanCallback
@@ -6,10 +6,9 @@ import android.bluetooth.le.ScanResult
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.lifecycleScope
-import com.like.ble.command.concrete.CloseCommand
-import com.like.ble.command.concrete.StartScanCommand
-import com.like.ble.command.concrete.StopScanCommand
-import com.like.ble.state.State
+import com.like.ble.command.CloseCommand
+import com.like.ble.command.StartScanCommand
+import com.like.ble.command.StopScanCommand
 import com.like.ble.utils.getBluetoothAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

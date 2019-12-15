@@ -17,8 +17,8 @@ import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.like.ble.IBleManager
 import com.like.ble.PeripheralManager
-import com.like.ble.command.concrete.StartAdvertisingCommand
-import com.like.ble.command.concrete.StopAdvertisingCommand
+import com.like.ble.command.StartAdvertisingCommand
+import com.like.ble.command.StopAdvertisingCommand
 import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
 import com.like.ble.utils.getBluetoothManager
 import java.util.*

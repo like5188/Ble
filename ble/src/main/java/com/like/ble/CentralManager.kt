@@ -3,8 +3,7 @@ package com.like.ble
 import android.util.Log
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
-import com.like.ble.command.Command
-import com.like.ble.command.concrete.*
+import com.like.ble.command.*
 import com.like.ble.executor.CentralExecutor
 import com.like.ble.executor.IExecutor
 import kotlinx.coroutines.launch

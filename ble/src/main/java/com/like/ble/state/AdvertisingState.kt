@@ -1,4 +1,4 @@
-package com.like.ble.state.concrete
+package com.like.ble.state
 
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseSettings
@@ -6,10 +6,9 @@ import android.bluetooth.le.BluetoothLeAdvertiser
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.lifecycleScope
-import com.like.ble.command.concrete.CloseCommand
-import com.like.ble.command.concrete.StartAdvertisingCommand
-import com.like.ble.command.concrete.StopAdvertisingCommand
-import com.like.ble.state.State
+import com.like.ble.command.CloseCommand
+import com.like.ble.command.StartAdvertisingCommand
+import com.like.ble.command.StopAdvertisingCommand
 import com.like.ble.utils.getBluetoothAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

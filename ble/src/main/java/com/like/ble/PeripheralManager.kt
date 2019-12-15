@@ -4,9 +4,9 @@ import android.util.Log
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.Command
-import com.like.ble.command.concrete.CloseCommand
-import com.like.ble.command.concrete.StartAdvertisingCommand
-import com.like.ble.command.concrete.StopAdvertisingCommand
+import com.like.ble.command.CloseCommand
+import com.like.ble.command.StartAdvertisingCommand
+import com.like.ble.command.StopAdvertisingCommand
 import com.like.ble.executor.IExecutor
 import com.like.ble.executor.PeripheralExecutor
 import kotlinx.coroutines.launch

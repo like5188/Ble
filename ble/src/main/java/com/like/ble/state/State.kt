@@ -1,7 +1,7 @@
 package com.like.ble.state
 
 import androidx.fragment.app.FragmentActivity
-import com.like.ble.command.concrete.*
+import com.like.ble.command.*
 
 /**
  * 蓝牙状态基类。
