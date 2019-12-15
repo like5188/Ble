@@ -162,23 +162,25 @@ class ConnectState : State() {
         mCommand?.failureAndComplete("主动断开连接：${command.address}")
         mDelayJob?.cancel()
 
-        if (mBluetoothGatt == null) {
+        val bluetoothGatt = mBluetoothGatt
+        if (bluetoothGatt == null) {
             command.successAndComplete()
             return
         }
         mActivity.lifecycleScope.launch(Dispatchers.IO) {
             mCommand = command
-            mBluetoothGatt?.disconnect()
+            bluetoothGatt.disconnect()
         }
     }
 
     override fun readCharacteristic(command: ReadCharacteristicCommand) {
-        if (mBluetoothGatt == null) {
+        val bluetoothGatt = mBluetoothGatt
+        if (bluetoothGatt == null) {
             command.failureAndComplete("设备未连接：${command.address}")
             return
         }
 
-        val characteristic = mBluetoothGatt?.findCharacteristic(command.characteristicUuidString)
+        val characteristic = bluetoothGatt.findCharacteristic(command.characteristicUuidString)
         if (characteristic == null) {
             command.failureAndComplete("特征值不存在：${command.characteristicUuidString}")
             return
@@ -186,7 +188,7 @@ class ConnectState : State() {
 
         mActivity.lifecycleScope.launch(Dispatchers.IO) {
             mCommand = command
-            if (mBluetoothGatt?.readCharacteristic(characteristic) != true) {
+            if (!bluetoothGatt.readCharacteristic(characteristic)) {
                 command.failureAndComplete("读取特征值失败：${command.characteristicUuidString}")
             }
         }
@@ -198,7 +200,8 @@ class ConnectState : State() {
     }
 
     override fun writeCharacteristic(command: WriteCharacteristicCommand) {
-        if (mBluetoothGatt == null) {
+        val bluetoothGatt = mBluetoothGatt
+        if (bluetoothGatt == null) {
             command.failureAndComplete("设备未连接：${command.address}")
             return
         }
@@ -208,7 +211,7 @@ class ConnectState : State() {
             return
         }
 
-        val characteristic = mBluetoothGatt?.findCharacteristic(command.characteristicUuidString)
+        val characteristic = bluetoothGatt.findCharacteristic(command.characteristicUuidString)
         if (characteristic == null) {
             command.failureAndComplete("特征值不存在：${command.characteristicUuidString}")
             return
@@ -226,7 +229,7 @@ class ConnectState : State() {
             mCommand = command
             command.getBatchDataList().forEach {
                 characteristic.value = it
-                if (mBluetoothGatt?.writeCharacteristic(characteristic) != true) {
+                if (!bluetoothGatt.writeCharacteristic(characteristic)) {
                     mDelayJob?.cancel()
                     command.failureAndComplete("写特征值失败：${command.characteristicUuidString}")
                     return@launch
@@ -243,7 +246,8 @@ class ConnectState : State() {
     }
 
     override fun setMtu(command: SetMtuCommand) {
-        if (mBluetoothGatt == null) {
+        val bluetoothGatt = mBluetoothGatt
+        if (bluetoothGatt == null) {
             command.failureAndComplete("设备未连接：${command.address}")
             return
         }
@@ -251,7 +255,7 @@ class ConnectState : State() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
                 mCommand = command
-                if (mBluetoothGatt?.requestMtu(command.mtu) != true) {
+                if (!bluetoothGatt.requestMtu(command.mtu)) {
                     command.failureAndComplete("设置MTU失败：${command.address}")
                 }
             }
