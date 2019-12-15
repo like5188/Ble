@@ -14,6 +14,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+
 /**
  * 蓝牙连接状态
  * 可以进行连接、操作数据等等操作
@@ -186,6 +187,11 @@ class ConnectState : State() {
             return
         }
 
+        if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_READ == 0) {
+            command.failureAndComplete("this characteristic not support read!")
+            return
+        }
+
         mActivity.lifecycleScope.launch(Dispatchers.IO) {
             mCommand = command
             if (!bluetoothGatt.readCharacteristic(characteristic)) {
@@ -214,6 +220,11 @@ class ConnectState : State() {
         val characteristic = bluetoothGatt.findCharacteristic(command.characteristicUuidString)
         if (characteristic == null) {
             command.failureAndComplete("特征值不存在：${command.characteristicUuidString}")
+            return
+        }
+
+        if (characteristic.properties and (BluetoothGattCharacteristic.PROPERTY_WRITE or BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) == 0) {
+            command.failureAndComplete("this characteristic not support write!")
             return
         }
 
