@@ -139,23 +139,27 @@ class ConnectState : State() {
 
             launch(Dispatchers.IO) {
                 mCommand = command
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val bluetoothGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     bluetoothDevice.connectGatt(mActivity, false, mGattCallback, BluetoothDevice.TRANSPORT_LE)// 第二个参数表示是否自动重连
                 } else {
                     bluetoothDevice.connectGatt(mActivity, false, mGattCallback)// 第二个参数表示是否自动重连
+                }
+                if (bluetoothGatt == null) {
+                    mDelayJob?.cancel()
+                    command.failureAndComplete("连接蓝牙设备失败：${command.address}")
                 }
             }
 
             mDelayJob = launch(Dispatchers.IO) {
                 delay(command.connectTimeout)
                 disconnect(DisconnectCommand(command.address))
-                command.failureAndComplete("连接超时")
+                command.failureAndComplete("连接超时：${command.address}")
             }
         }
     }
 
     override fun disconnect(command: DisconnectCommand) {
-        mCommand?.failureAndComplete("主动断开连接")
+        mCommand?.failureAndComplete("主动断开连接：${command.address}")
         mDelayJob?.cancel()
 
         if (mBluetoothGatt == null) {
@@ -182,12 +186,14 @@ class ConnectState : State() {
 
         mActivity.lifecycleScope.launch(Dispatchers.IO) {
             mCommand = command
-            mBluetoothGatt?.readCharacteristic(characteristic)
+            if (mBluetoothGatt?.readCharacteristic(characteristic) != true) {
+                command.failureAndComplete("读取特征值失败：${command.characteristicUuidString}")
+            }
         }
 
         mDelayJob = mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.readTimeout)
-            command.failureAndComplete("读取特征值超时")
+            command.failureAndComplete("读取特征值超时：${command.characteristicUuidString}")
         }
     }
 
@@ -198,7 +204,7 @@ class ConnectState : State() {
         }
 
         if (command.getBatchDataList().isEmpty()) {
-            command.failureAndComplete("没有数据，无法写入")
+            command.failureAndComplete("没有数据，无法写入：${command.characteristicUuidString}")
             return
         }
 
@@ -220,7 +226,11 @@ class ConnectState : State() {
             mCommand = command
             command.getBatchDataList().forEach {
                 characteristic.value = it
-                mBluetoothGatt?.writeCharacteristic(characteristic)
+                if (mBluetoothGatt?.writeCharacteristic(characteristic) != true) {
+                    mDelayJob?.cancel()
+                    command.failureAndComplete("写特征值失败：${command.characteristicUuidString}")
+                    return@launch
+                }
                 delay(100)
             }
         }
@@ -228,7 +238,7 @@ class ConnectState : State() {
         mDelayJob = mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.writeTimeout)
             mWriteJob?.cancel()
-            command.failureAndComplete("写特征值超时")
+            command.failureAndComplete("写特征值超时：${command.characteristicUuidString}")
         }
     }
 
@@ -241,10 +251,12 @@ class ConnectState : State() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
                 mCommand = command
-                mBluetoothGatt?.requestMtu(command.mtu)
+                if (mBluetoothGatt?.requestMtu(command.mtu) != true) {
+                    command.failureAndComplete("设置MTU失败：${command.address}")
+                }
             }
         } else {
-            command.failureAndComplete("android 5.0 才支持 setMtu() 操作")
+            command.failureAndComplete("android 5.0及其以上才支持设置MTU：${command.address}")
         }
     }
 
