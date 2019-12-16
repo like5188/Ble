@@ -234,17 +234,6 @@ class BlePeripheralActivity : AppCompatActivity() {
         }
     }
 
-    override fun onDestroy() {
-        getBluetoothManager()?.getConnectedDevices(BluetoothProfile.GATT)?.forEach {
-            mBluetoothGattServer?.cancelConnection(it)
-        }
-        mBluetoothGattServer?.clearServices()
-        mBluetoothGattServer?.close()
-        mBluetoothGattServer = null
-        mBleManager.close()
-        super.onDestroy()
-    }
-
     fun clearLog(view: View) {
         mBinding.tvStatus.text = ""
     }
@@ -324,5 +313,16 @@ class BlePeripheralActivity : AppCompatActivity() {
 
         bluetoothGattServer.addService(service)
         mBluetoothGattServer = bluetoothGattServer
+    }
+
+    override fun onDestroy() {
+        getBluetoothManager()?.getConnectedDevices(BluetoothProfile.GATT)?.forEach {
+            mBluetoothGattServer?.cancelConnection(it)
+        }
+        mBluetoothGattServer?.clearServices()
+        mBluetoothGattServer?.close()
+        mBluetoothGattServer = null
+        mBleManager.close()
+        super.onDestroy()
     }
 }
