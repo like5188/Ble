@@ -165,13 +165,15 @@ class BlePeripheralActivity : AppCompatActivity() {
         ) {
             appendText("--> onDescriptorWriteRequest", false, R.color.ble_text_blue)
             appendText("device=$device requestId=$requestId descriptor=$descriptor preparedWrite=$preparedWrite responseNeeded=$responseNeeded offset=$offset value=${value.contentToString()}")
-            mBluetoothGattServer?.sendResponse(
-                device,
-                requestId,
-                BluetoothGatt.GATT_SUCCESS,
-                offset,
-                byteArrayOf(19, 18, 17, 16, 15, 14, 13, 12, 11, 10)
-            )
+            if (responseNeeded) {
+                mBluetoothGattServer?.sendResponse(
+                    device,
+                    requestId,
+                    BluetoothGatt.GATT_SUCCESS,
+                    offset,
+                    byteArrayOf(19, 18, 17, 16, 15, 14, 13, 12, 11, 10)
+                )
+            }
         }
 
         override fun onExecuteWrite(device: BluetoothDevice, requestId: Int, execute: Boolean) {
