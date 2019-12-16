@@ -95,6 +95,15 @@ class BlePeripheralActivity : AppCompatActivity() {
                             byteArrayOf(0x02)
                         )
                     }
+                    0x2.toByte() -> {
+                        mBluetoothGattServer?.sendResponse(
+                            device,
+                            requestId,
+                            BluetoothGatt.GATT_SUCCESS,
+                            offset,
+                            byteArrayOf(0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x20,0x21,0x22,0x23,0x24,0x25,0x26,0x27,0x28,0x29,0x30)
+                        )
+                    }
                 }
             }
         }
@@ -128,10 +137,10 @@ class BlePeripheralActivity : AppCompatActivity() {
             }
 
             when (value[0]) {
-                0x2.toByte() -> {
+                0x3.toByte() -> {
                     // 外围设备向中心设备不能发送数据，必须通过notify 或者indicate的方式，andorid只发现notify接口。
                     // 调用 notifyCharacteristicChanged() 方法向中心设备发送数据，会触发 onNotificationSent() 方法和中心设备的 BluetoothGattCallback.onCharacteristicChanged() 方法。
-                    characteristic.value = byteArrayOf(0x05, 0x06)
+                    characteristic.value = byteArrayOf(0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x20,0x21,0x22,0x23,0x24,0x25)
                     mBluetoothGattServer?.notifyCharacteristicChanged(device, characteristic, false)// 最后一个参数表示是否需要客户端确认
                 }
             }

@@ -110,7 +110,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                     )
                     1 -> WriteCharacteristicCommand(
                         address,
-                        byteArrayOf(0x1),
+                        byteArrayOf(0x2),
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         5000,
                         200,
@@ -199,7 +199,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                     )
                     9 -> WriteAndWaitForDataCommand(
                         address,
-                        byteArrayOf(0x2),
+                        byteArrayOf(0x3),
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         5000,
                         200,
