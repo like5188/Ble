@@ -46,7 +46,7 @@ class WriteAndWaitForDataCommand(
     fun getBatchDataList() = mBatchDataList
 
     override fun execute() {
-        mReceiver?.writeNotify(this)
+        mReceiver?.writeAndWaitForData(this)
     }
 
     override fun doOnSuccess(vararg args: Any?) {

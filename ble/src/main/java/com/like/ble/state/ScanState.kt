@@ -22,25 +22,33 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 class ScanState : State() {
     private val mScanning = AtomicBoolean(false)
-    private var mStartScanCommand: StartScanCommand? = null
     private var mDelayJob: Job? = null
     private val mScanCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
-            mStartScanCommand?.success(result.device, result.rssi, result.scanRecord?.bytes)
+            val curCommand = mCurCommand
+            if (curCommand is StartScanCommand) {
+                curCommand.success(result.device, result.rssi, result.scanRecord?.bytes)
+            }
         }
 
         override fun onScanFailed(errorCode: Int) {
             mDelayJob?.cancel()
-            mStartScanCommand?.failureAndComplete("错误码：$errorCode")
+            val curCommand = mCurCommand
+            if (curCommand is StartScanCommand) {
+                curCommand.failureAndComplete("错误码：$errorCode")
+            }
         }
     }
     private val mLeScanCallback: BluetoothAdapter.LeScanCallback = BluetoothAdapter.LeScanCallback { device, rssi, scanRecord ->
-        mStartScanCommand?.success(device, rssi, scanRecord)
+        val curCommand = mCurCommand
+        if (curCommand is StartScanCommand) {
+            curCommand.success(device, rssi, scanRecord)
+        }
     }
 
     override fun startScan(command: StartScanCommand) {
+        super.startScan(command)
         if (mScanning.compareAndSet(false, true)) {
-            mStartScanCommand = command
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
                 launch(Dispatchers.IO) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -68,6 +76,7 @@ class ScanState : State() {
     }
 
     override fun stopScan(command: StopScanCommand) {
+        super.stopScan(command)
         if (mScanning.compareAndSet(true, false)) {
             mDelayJob?.cancel()
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
@@ -84,10 +93,14 @@ class ScanState : State() {
     }
 
     override fun close(command: CloseCommand) {
+        super.close(command)
         mDelayJob?.cancel()
         stopScan(StopScanCommand())
-        mStartScanCommand?.complete("主动停止扫描")
-        mStartScanCommand = null
+        val curCommand = mCurCommand
+        if (curCommand is StartScanCommand) {
+            curCommand.complete("主动停止扫描")
+        }
+        mCurCommand = null
         command.successAndComplete()
     }
 
