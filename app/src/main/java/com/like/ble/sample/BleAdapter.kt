@@ -17,7 +17,7 @@ import java.util.*
 class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleManager) :
     BaseAdapter() {
     private val mCommandArray =
-        arrayOf("读特征", "写特征", "设置MTU", "读RSSI", "RequestConnectionPriority", "开启通知", "关闭通知", "开启标志", "关闭标志", "写特征并接收通知")
+        arrayOf("读特征", "写特征", "设置MTU", "读RSSI", "RequestConnectionPriority", "开启notify", "关闭notify", "开启indicate", "关闭indicate", "写特征并接收notify")
 
     override fun bindOtherVariable(
         holder: CommonViewHolder,
