@@ -27,6 +27,7 @@ class CentralManager(private val mActivity: FragmentActivity) : IBleManager {
             command is EnableCharacteristicIndicateCommand ||
             command is DisableCharacteristicIndicateCommand ||
             command is WriteNotifyCommand ||
+            command is ReadRemoteRssiCommand ||
             command is CloseCommand
         ) {
             mActivity.lifecycleScope.launch {

@@ -10,7 +10,7 @@ package com.like.ble.command
  */
 class ConnectCommand(
     val address: String,
-    val timeout: Long = 20000L,
+    val timeout: Long = 3000L,
     private val onSuccess: (() -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command("连接蓝牙命令") {

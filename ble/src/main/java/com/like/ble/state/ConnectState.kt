@@ -135,9 +135,23 @@ class ConnectState : State() {
             val command = mCommand
             if (command !is SetMtuCommand) return
             if (status == BluetoothGatt.GATT_SUCCESS) {
+                mDelayJob?.cancel()
                 command.successAndComplete(mtu)
             } else {
+                mDelayJob?.cancel()
                 command.failureAndComplete("failed to set mtu")
+            }
+        }
+
+        override fun onReadRemoteRssi(gatt: BluetoothGatt?, rssi: Int, status: Int) {
+            val command = mCommand
+            if (command !is ReadRemoteRssiCommand) return
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                mDelayJob?.cancel()
+                command.successAndComplete(rssi)
+            } else {
+                mDelayJob?.cancel()
+                command.failureAndComplete("failed to read remote rssi")
             }
         }
 
@@ -346,6 +360,30 @@ class ConnectState : State() {
         if (!bluetoothGatt.requestMtu(command.mtu)) {
             command.failureAndComplete("设置MTU失败：${command.address}")
             return
+        }
+
+        mDelayJob = mActivity.lifecycleScope.launch(Dispatchers.IO) {
+            delay(command.timeout)
+            command.failureAndComplete("设置MTU超时：${command.address}")
+        }
+    }
+
+    override fun readRemoteRssi(command: ReadRemoteRssiCommand) {
+        val bluetoothGatt = mBluetoothGatt
+        if (bluetoothGatt == null) {
+            command.failureAndComplete("设备未连接：${command.address}")
+            return
+        }
+
+        mCommand = command
+        if (!bluetoothGatt.readRemoteRssi()) {
+            command.failureAndComplete("读RSSI失败：${command.address}")
+            return
+        }
+
+        mDelayJob = mActivity.lifecycleScope.launch(Dispatchers.IO) {
+            delay(command.timeout)
+            command.failureAndComplete("读RSSI超时：${command.address}")
         }
     }
 

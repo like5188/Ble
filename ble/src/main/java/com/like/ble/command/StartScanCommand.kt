@@ -10,7 +10,7 @@ import android.bluetooth.BluetoothDevice
  * @param onFailure                 命令执行失败回调
  */
 class StartScanCommand(
-    val timeout: Long = 2000L,
+    val timeout: Long = 3000L,
     private val onSuccess: ((BluetoothDevice, Int, ByteArray?) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command("开始扫描蓝牙设备命令") {

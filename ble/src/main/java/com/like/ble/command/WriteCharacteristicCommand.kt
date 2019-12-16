@@ -18,7 +18,7 @@ class WriteCharacteristicCommand(
     val data: ByteArray,
     val address: String,
     val characteristicUuidString: String,
-    val timeout: Long = 0L,
+    val timeout: Long = 3000L,
     private val maxTransferSize: Int = 20,
     private val onSuccess: (() -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null

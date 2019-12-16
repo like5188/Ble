@@ -23,5 +23,6 @@ abstract class State {
     open fun enableCharacteristicIndicate(command: EnableCharacteristicIndicateCommand) {}
     open fun disableCharacteristicIndicate(command: DisableCharacteristicIndicateCommand) {}
     open fun writeNotify(command: WriteNotifyCommand) {}
+    open fun readRemoteRssi(command: ReadRemoteRssiCommand) {}
     open fun close(command: CloseCommand) {}
 }

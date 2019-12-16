@@ -15,7 +15,7 @@ import java.util.*
 
 class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleManager) :
     BaseAdapter() {
-    private val mCommandArray = arrayOf("读特征", "写特征", "设置MTU", "开启通知", "关闭通知", "开启标志", "关闭标志", "写特征并接收通知")
+    private val mCommandArray = arrayOf("读特征", "写特征", "设置MTU", "读RSSI", "开启通知", "关闭通知", "开启标志", "关闭标志", "写特征并接收通知")
 
     override fun bindOtherVariable(
         holder: CommonViewHolder,
@@ -111,6 +111,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                     2 -> SetMtuCommand(
                         address,
                         50,
+                        3000,
                         {
                             mActivity.shortToastCenter("设置MTU成功 $it")
                         },
@@ -118,7 +119,17 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                             mActivity.shortToastCenter(it.message)
                         }
                     )
-                    3 -> EnableCharacteristicNotifyCommand(
+                    3 -> ReadRemoteRssiCommand(
+                        address,
+                        3000,
+                        {
+                            mActivity.shortToastCenter("读RSSI成功 $it")
+                        },
+                        {
+                            mActivity.shortToastCenter(it.message)
+                        }
+                    )
+                    4 -> EnableCharacteristicNotifyCommand(
                         address,
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         "00002902-0000-1000-8000-00805f9b34fb",
@@ -129,7 +140,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                             mActivity.shortToastCenter(it.message)
                         }
                     )
-                    4 -> DisableCharacteristicNotifyCommand(
+                    5 -> DisableCharacteristicNotifyCommand(
                         address,
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         "00002902-0000-1000-8000-00805f9b34fb",
@@ -140,7 +151,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                             mActivity.shortToastCenter(it.message)
                         }
                     )
-                    5 -> EnableCharacteristicIndicateCommand(
+                    6 -> EnableCharacteristicIndicateCommand(
                         address,
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         "00002902-0000-1000-8000-00805f9b34fb",
@@ -151,7 +162,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                             mActivity.shortToastCenter(it.message)
                         }
                     )
-                    6 -> DisableCharacteristicIndicateCommand(
+                    7 -> DisableCharacteristicIndicateCommand(
                         address,
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         "00002902-0000-1000-8000-00805f9b34fb",
@@ -162,7 +173,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                             mActivity.shortToastCenter(it.message)
                         }
                     )
-                    7 -> WriteNotifyCommand(
+                    8 -> WriteNotifyCommand(
                         byteArrayOf(0x2),
                         address,
                         "0000fff2-0000-1000-8000-00805f9b34fb",

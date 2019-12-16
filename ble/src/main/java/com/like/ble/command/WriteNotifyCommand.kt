@@ -21,7 +21,7 @@ class WriteNotifyCommand(
     val data: ByteArray,
     val address: String,
     val characteristicUuidString: String,
-    val timeout: Long = 0L,
+    val timeout: Long = 3000L,
     private val maxTransferSize: Int = 20,
     private val maxFrameTransferSize: Int = 300,
     private val isWholeFrame: (ByteBuffer) -> Boolean = { true },

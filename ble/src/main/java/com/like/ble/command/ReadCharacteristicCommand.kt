@@ -17,7 +17,7 @@ import java.nio.ByteBuffer
 class ReadCharacteristicCommand(
     val address: String,
     val characteristicUuidString: String,
-    val timeout: Long = 0L,
+    val timeout: Long = 3000L,
     private val maxFrameTransferSize: Int = 300,
     val isWholeFrame: (ByteBuffer) -> Boolean = { true },
     private val onSuccess: ((ByteArray?) -> Unit)? = null,
