@@ -21,6 +21,11 @@ class StartScanCommand(
         mDelayJob = job
     }
 
+    override fun doOnCompleted(howCompleted: String) {
+        mDelayJob?.cancel()
+        mDelayJob = null
+    }
+
     override fun execute() {
         mReceiver?.startScan(this)
     }
@@ -38,11 +43,6 @@ class StartScanCommand(
 
     override fun doOnFailure(throwable: Throwable) {
         onFailure?.invoke(throwable)
-    }
-
-    override fun doOnCompleted(howCompleted: String) {
-        mDelayJob?.cancel()
-        mDelayJob = null
     }
 
 }
