@@ -48,7 +48,7 @@ class AdvertisingState : State() {
     }
 
     override fun startAdvertising(command: StartAdvertisingCommand) {
-        super.startAdvertising(command)
+        mCurCommand = command
         if (mIsRunning.compareAndSet(false, true)) {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
                 command.failureAndComplete("phone does not support Bluetooth Advertiser")
@@ -75,12 +75,19 @@ class AdvertisingState : State() {
     }
 
     override fun stopAdvertising(command: StopAdvertisingCommand) {
-        super.stopAdvertising(command)
         if (mIsRunning.compareAndSet(true, false)) {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
                 command.failureAndComplete("phone does not support Bluetooth Advertiser")
                 return
             }
+
+            val curCommand = mCurCommand
+            if (curCommand is StartAdvertisingCommand) {
+                curCommand.failureAndComplete("主动关闭了广播")
+            }
+
+            mCurCommand = command
+
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
                 mBluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)
                 command.successAndComplete()
@@ -91,13 +98,8 @@ class AdvertisingState : State() {
     }
 
     override fun close(command: CloseCommand) {
-        super.close(command)
         stopAdvertising(StopAdvertisingCommand())
         mBluetoothLeAdvertiser = null
-        val curCommand = mCurCommand
-        if (curCommand is StartAdvertisingCommand) {
-            curCommand.failureAndComplete("主动关闭了广播")
-        }
         mCurCommand = null
         command.successAndComplete()
     }
