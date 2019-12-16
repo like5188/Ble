@@ -32,7 +32,6 @@ class ScanState : State() {
         override fun onScanFailed(errorCode: Int) {
             val curCommand = mCurCommand
             if (curCommand is StartScanCommand) {
-                curCommand.mDelayJob?.cancel()
                 curCommand.failureAndComplete("错误码：$errorCode")
             }
         }
@@ -53,20 +52,19 @@ class ScanState : State() {
                         mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(mScanCallback)
                     } else {
                         if (mActivity.getBluetoothAdapter()?.startLeScan(mLeScanCallback) != true) {
-                            command.mDelayJob?.cancel()
                             command.failureAndComplete("扫描失败")
                         }
                     }
                 }
 
-                command.mDelayJob = launch(Dispatchers.IO) {
+                command.setDelayJob(launch(Dispatchers.IO) {
                     // 在指定超时时间时取消扫描，然后一次扫描就完成了。
                     delay(command.timeout)
                     if (mScanning.get()) {
                         stopScan(StopScanCommand())
                     }
                     command.complete("扫描超时时间到了")
-                }
+                })
             }
         } else {
             command.failureAndComplete("正在扫描中")
@@ -77,7 +75,6 @@ class ScanState : State() {
         if (mScanning.compareAndSet(true, false)) {
             val curCommand = mCurCommand
             if (curCommand is StartScanCommand) {
-                curCommand.mDelayJob?.cancel()
                 curCommand.complete("主动停止扫描")
             }
 

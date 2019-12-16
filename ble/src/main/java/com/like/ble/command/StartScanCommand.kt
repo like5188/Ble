@@ -15,7 +15,11 @@ class StartScanCommand(
     private val onSuccess: ((BluetoothDevice, Int, ByteArray?) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command("开始扫描蓝牙设备命令") {
-    var mDelayJob: Job? = null
+    private var mDelayJob: Job? = null
+
+    fun setDelayJob(job: Job) {
+        mDelayJob = job
+    }
 
     override fun execute() {
         mReceiver?.startScan(this)
@@ -35,4 +39,10 @@ class StartScanCommand(
     override fun doOnFailure(throwable: Throwable) {
         onFailure?.invoke(throwable)
     }
+
+    override fun doOnCompleted(howCompleted: String) {
+        mDelayJob?.cancel()
+        mDelayJob = null
+    }
+
 }

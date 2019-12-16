@@ -28,6 +28,7 @@ abstract class Command(val des: String) {
         if (isCompleted()) return
         mIsCompleted.set(true)
         mHowCompleted = howCompleted
+        doOnCompleted(howCompleted)
     }
 
     /**
@@ -80,6 +81,9 @@ abstract class Command(val des: String) {
      * 如果命令传入了失败回调方法，则需要重写此方法，在其中回调失败回调方法。
      */
     protected open fun doOnFailure(throwable: Throwable) {
+    }
+
+    protected open fun doOnCompleted(howCompleted: String) {
     }
 
     override fun toString(): String {
