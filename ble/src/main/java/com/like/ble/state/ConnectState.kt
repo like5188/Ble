@@ -20,7 +20,6 @@ class ConnectState : State() {
     private var mBluetoothGatt: BluetoothGatt? = null
     private var mWriteJob: Job? = null
     private var mDelayJob: Job? = null
-
     private val mGattCallback = object : BluetoothGattCallback() {
         // 当连接状态改变
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
