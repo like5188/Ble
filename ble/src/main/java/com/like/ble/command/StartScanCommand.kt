@@ -1,17 +1,16 @@
 package com.like.ble.command
 
 import android.bluetooth.BluetoothDevice
-import com.like.ble.command.Command
 
 /**
  * 开始扫描蓝牙设备命令
  *
- * @param scanTimeout               扫描超时时间（毫秒）
+ * @param timeout                   命令执行超时时间（毫秒）
  * @param onSuccess                 命令执行成功回调
  * @param onFailure                 命令执行失败回调
  */
 class StartScanCommand(
-    val scanTimeout: Long = 2000L,
+    val timeout: Long = 2000L,
     private val onSuccess: ((BluetoothDevice, Int, ByteArray?) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command("开始扫描蓝牙设备命令") {

@@ -55,7 +55,7 @@ class ScanState : State() {
 
                 mDelayJob = launch(Dispatchers.IO) {
                     // 在指定超时时间时取消扫描，然后一次扫描就完成了。
-                    delay(command.scanTimeout)
+                    delay(command.timeout)
                     if (mScanning.get()) {
                         stopScan(StopScanCommand())
                     }

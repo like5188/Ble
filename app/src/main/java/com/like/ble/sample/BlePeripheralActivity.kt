@@ -94,15 +94,6 @@ class BlePeripheralActivity : AppCompatActivity() {
                             byteArrayOf(0x02)
                         )
                     }
-                    0x2.toByte() -> {
-                        mBluetoothGattServer?.sendResponse(
-                            device,
-                            requestId,
-                            BluetoothGatt.GATT_SUCCESS,
-                            offset,
-                            byteArrayOf(0x03)
-                        )
-                    }
                 }
             }
         }
@@ -318,7 +309,10 @@ class BlePeripheralActivity : AppCompatActivity() {
 
         val characteristicWrite = BluetoothGattCharacteristic(
             UUID_CHARACTERISTIC_WRITE,
-            BluetoothGattCharacteristic.PROPERTY_WRITE or BluetoothGattCharacteristic.PROPERTY_NOTIFY or BluetoothGattCharacteristic.PROPERTY_INDICATE,
+            BluetoothGattCharacteristic.PROPERTY_WRITE or
+                    BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE or
+                    BluetoothGattCharacteristic.PROPERTY_NOTIFY or
+                    BluetoothGattCharacteristic.PROPERTY_INDICATE,
             BluetoothGattCharacteristic.PERMISSION_WRITE
         )
         val descriptor = BluetoothGattDescriptor(

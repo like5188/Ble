@@ -4,9 +4,9 @@ import androidx.fragment.app.FragmentActivity
 import com.like.ble.command.*
 import com.like.ble.invoker.CentralInvoker
 import com.like.ble.invoker.Invoker
-import com.like.ble.state.State
 import com.like.ble.state.ConnectState
 import com.like.ble.state.ScanState
+import com.like.ble.state.State
 
 /**
  * 蓝牙中心设备相关命令的执行者。
@@ -60,6 +60,9 @@ class CentralExecutor(private val mActivity: FragmentActivity) : IExecutor {
                 getConnectStateByAddress(command.address)
             }
             is DisableCharacteristicIndicateCommand -> {
+                getConnectStateByAddress(command.address)
+            }
+            is WriteNotifyCommand -> {
                 getConnectStateByAddress(command.address)
             }
             is CloseCommand -> {

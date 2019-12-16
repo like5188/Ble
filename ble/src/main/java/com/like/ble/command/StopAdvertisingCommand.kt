@@ -1,7 +1,5 @@
 package com.like.ble.command
 
-import com.like.ble.command.Command
-
 /**
  * 停止广播命令
  */

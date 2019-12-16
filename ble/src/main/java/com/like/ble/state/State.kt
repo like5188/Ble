@@ -22,5 +22,6 @@ abstract class State {
     open fun disableCharacteristicNotify(command: DisableCharacteristicNotifyCommand) {}
     open fun enableCharacteristicIndicate(command: EnableCharacteristicIndicateCommand) {}
     open fun disableCharacteristicIndicate(command: DisableCharacteristicIndicateCommand) {}
+    open fun writeNotify(command: WriteNotifyCommand) {}
     open fun close(command: CloseCommand) {}
 }

@@ -1,7 +1,5 @@
 package com.like.ble.command
 
-import com.like.ble.command.Command
-
 /**
  * 关闭蓝牙命令
  */

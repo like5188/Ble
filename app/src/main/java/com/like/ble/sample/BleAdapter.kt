@@ -11,6 +11,7 @@ import com.like.ble.sample.databinding.ItemBleBinding
 import com.like.livedatarecyclerview.adapter.BaseAdapter
 import com.like.livedatarecyclerview.model.IRecyclerViewItem
 import com.like.livedatarecyclerview.viewholder.CommonViewHolder
+import java.util.*
 
 class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleManager) :
     BaseAdapter() {
@@ -161,14 +162,18 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                             mActivity.shortToastCenter(it.message)
                         }
                     )
-                    7 -> WriteCharacteristicCommand(
+                    7 -> WriteNotifyCommand(
                         byteArrayOf(0x2),
                         address,
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         5000,
                         20,
+                        300,
                         {
-                            mActivity.shortToastCenter("写特征成功，等待通知……")
+                            true
+                        },
+                        {
+                            mActivity.shortToastCenter("写数据并获取通知数据成功：${Arrays.toString(it)}")
                         },
                         {
                             mActivity.shortToastCenter(it.message)

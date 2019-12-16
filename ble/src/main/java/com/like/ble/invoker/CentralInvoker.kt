@@ -74,7 +74,8 @@ class CentralInvoker(private val mActivity: FragmentActivity) : Invoker(mActivit
             curCommand is EnableCharacteristicNotifyCommand ||
             curCommand is DisableCharacteristicNotifyCommand ||
             curCommand is EnableCharacteristicIndicateCommand ||
-            curCommand is DisableCharacteristicIndicateCommand
+            curCommand is DisableCharacteristicIndicateCommand ||
+            curCommand is WriteNotifyCommand
         ) {
             if (command is DisconnectCommand) {
                 return true

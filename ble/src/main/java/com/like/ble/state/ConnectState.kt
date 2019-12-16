@@ -2,7 +2,6 @@ package com.like.ble.state
 
 import android.bluetooth.*
 import android.os.Build
-import android.util.Log
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.*
 import com.like.ble.utils.findCharacteristic
@@ -74,6 +73,16 @@ class ConnectState : State() {
             }
         }
 
+        override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
+            val command = mCommand
+            if (command !is WriteNotifyCommand) return
+            command.addDataToCache(characteristic.value)
+            if (command.isWholeFrame()) {
+                mDelayJob?.cancel()
+                command.successAndComplete()
+            }
+        }
+
         // 谁进行读数据操作，然后外围设备才会被动的发出一个数据，而这个数据只能是读操作的对象才有资格获得到这个数据。
         override fun onCharacteristicRead(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
             val command = mCommand
@@ -106,16 +115,6 @@ class ConnectState : State() {
             }
         }
 
-        override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
-            val command = mCommand
-            if (command !is SetMtuCommand) return
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                command.successAndComplete(mtu)
-            } else {
-                command.failureAndComplete("failed to set mtu")
-            }
-        }
-
         override fun onDescriptorWrite(gatt: BluetoothGatt?, descriptor: BluetoothGattDescriptor?, status: Int) {
             val command = mCommand
             if (command !is EnableCharacteristicNotifyCommand &&
@@ -132,8 +131,14 @@ class ConnectState : State() {
             }
         }
 
-        override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
-            Log.w("ConnectState", Arrays.toString(characteristic?.value))
+        override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
+            val command = mCommand
+            if (command !is SetMtuCommand) return
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                command.successAndComplete(mtu)
+            } else {
+                command.failureAndComplete("failed to set mtu")
+            }
         }
 
     }
@@ -171,7 +176,7 @@ class ConnectState : State() {
             }
 
             mDelayJob = launch(Dispatchers.IO) {
-                delay(command.connectTimeout)
+                delay(command.timeout)
                 disconnect(DisconnectCommand(command.address))
                 command.failureAndComplete("连接超时：${command.address}")
             }
@@ -190,6 +195,57 @@ class ConnectState : State() {
         mActivity.lifecycleScope.launch(Dispatchers.IO) {
             mCommand = command
             bluetoothGatt.disconnect()
+        }
+    }
+
+    override fun writeNotify(command: WriteNotifyCommand) {
+        val bluetoothGatt = mBluetoothGatt
+        if (bluetoothGatt == null) {
+            command.failureAndComplete("设备未连接：${command.address}")
+            return
+        }
+
+        if (command.getBatchDataList().isEmpty()) {
+            command.failureAndComplete("没有数据，无法写入：${command.characteristicUuidString}")
+            return
+        }
+
+        val characteristic = bluetoothGatt.findCharacteristic(command.characteristicUuidString)
+        if (characteristic == null) {
+            command.failureAndComplete("特征值不存在：${command.characteristicUuidString}")
+            return
+        }
+
+        if (characteristic.properties and (BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE or BluetoothGattCharacteristic.PROPERTY_NOTIFY) == 0) {
+            command.failureAndComplete("this characteristic not support write and notify")
+            return
+        }
+
+        /*
+        写特征值前可以设置写的类型setWriteType()，写类型有三种，如下：
+        WRITE_TYPE_DEFAULT  默认类型，需要外围设备的确认，也就是需要外围设备的回应，这样才能继续发送写。
+        WRITE_TYPE_NO_RESPONSE 设置该类型不需要外围设备的回应，可以继续写数据。加快传输速率。
+        WRITE_TYPE_SIGNED  写特征携带认证签名，具体作用不太清楚。
+        */
+        characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
+
+        mWriteJob = mActivity.lifecycleScope.launch(Dispatchers.IO) {
+            mCommand = command
+            command.getBatchDataList().forEach {
+                characteristic.value = it
+                if (!bluetoothGatt.writeCharacteristic(characteristic)) {
+                    mDelayJob?.cancel()
+                    command.failureAndComplete("写特征值失败：${command.characteristicUuidString}")
+                    return@launch
+                }
+                delay(100)
+            }
+        }
+
+        mDelayJob = mActivity.lifecycleScope.launch(Dispatchers.IO) {
+            delay(command.timeout)
+            mWriteJob?.cancel()
+            command.failureAndComplete("写数据并获取通知数据超时：${command.characteristicUuidString}")
         }
     }
 
@@ -218,7 +274,7 @@ class ConnectState : State() {
         }
 
         mDelayJob = mActivity.lifecycleScope.launch(Dispatchers.IO) {
-            delay(command.readTimeout)
+            delay(command.timeout)
             command.failureAndComplete("读取特征值超时：${command.characteristicUuidString}")
         }
     }
@@ -241,7 +297,7 @@ class ConnectState : State() {
             return
         }
 
-        if (characteristic.properties and (BluetoothGattCharacteristic.PROPERTY_WRITE or BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) == 0) {
+        if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_WRITE == 0) {
             command.failureAndComplete("this characteristic not support write!")
             return
         }
@@ -268,7 +324,7 @@ class ConnectState : State() {
         }
 
         mDelayJob = mActivity.lifecycleScope.launch(Dispatchers.IO) {
-            delay(command.writeTimeout)
+            delay(command.timeout)
             mWriteJob?.cancel()
             command.failureAndComplete("写特征值超时：${command.characteristicUuidString}")
         }
