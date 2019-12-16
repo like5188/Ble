@@ -32,6 +32,7 @@ import java.util.*
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class BlePeripheralActivity : AppCompatActivity() {
     companion object {
+        // 0000????-0000-1000-8000-00805f9b34fb ????就表示4个可以自定义16进制数
         private val UUID_SERVICE: UUID = UUID.fromString("0000fff0-0000-1000-8000-00805f9b34fb")
         private val UUID_CHARACTERISTIC_READ: UUID = UUID.fromString("0000fff1-0000-1000-8000-00805f9b34fb")
         private val UUID_CHARACTERISTIC_WRITE: UUID = UUID.fromString("0000fff2-0000-1000-8000-00805f9b34fb")
