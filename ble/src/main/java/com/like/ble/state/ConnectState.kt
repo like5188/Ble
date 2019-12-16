@@ -12,7 +12,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
 
-
 /**
  * 蓝牙连接状态
  * 可以进行连接、操作数据等等操作
@@ -252,7 +251,7 @@ class ConnectState : State() {
                     command.failureAndComplete("写特征值失败：${command.characteristicUuidString}")
                     return@launch
                 }
-                delay(100)
+                delay(command.writeInterval)
             }
         }
 
@@ -333,7 +332,7 @@ class ConnectState : State() {
                     command.failureAndComplete("写特征值失败：${command.characteristicUuidString}")
                     return@launch
                 }
-                delay(100)
+                delay(command.writeInterval)
             }
         }
 

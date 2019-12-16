@@ -100,6 +100,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                         address,
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         5000,
+                        200,
                         20,
                         {
                             mActivity.shortToastCenter("写特征成功")
@@ -178,6 +179,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                         address,
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         5000,
+                        200,
                         20,
                         300,
                         {

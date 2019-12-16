@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * @param address                   蓝牙设备地址
  * @param characteristicUuidString  特征UUID
  * @param timeout                   命令执行超时时间（毫秒）
+ * @param writeInterval             分包时，每次写入数据间隔超时时间（毫秒）
  * @param maxTransferSize           每次传输的最大字节数，用于分包，BLE默认单次传输长度为20字节。如果不分包的话，可以设置更大的MTU（(最大为512字节）。
  * @param onSuccess                 命令执行成功回调
  * @param onFailure                 命令执行失败回调
@@ -19,6 +20,7 @@ class WriteCharacteristicCommand(
     val address: String,
     val characteristicUuidString: String,
     val timeout: Long = 3000L,
+    val writeInterval: Long = 200L,
     private val maxTransferSize: Int = 20,
     private val onSuccess: (() -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
