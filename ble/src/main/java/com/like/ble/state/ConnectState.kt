@@ -396,11 +396,11 @@ class ConnectState : State() {
     }
 
     override fun enableCharacteristicIndicate(command: EnableCharacteristicIndicateCommand) {
-        setCharacteristicIndicate(command.characteristicUuidString, command.descriptorUuidString, true, command)
+        setCharacteristicIndication(command.characteristicUuidString, command.descriptorUuidString, true, command)
     }
 
     override fun disableCharacteristicIndicate(command: DisableCharacteristicIndicateCommand) {
-        setCharacteristicIndicate(command.characteristicUuidString, command.descriptorUuidString, false, command)
+        setCharacteristicIndication(command.characteristicUuidString, command.descriptorUuidString, false, command)
     }
 
     private fun setCharacteristicNotification(
@@ -449,7 +449,7 @@ class ConnectState : State() {
         }
     }
 
-    private fun setCharacteristicIndicate(
+    private fun setCharacteristicIndication(
         characteristicUuidString: String,
         descriptorUuidString: String,
         enable: Boolean,
