@@ -102,10 +102,10 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                             true
                         },
                         {
-                            mActivity.shortToastCenter("读特征成功 ${it?.contentToString()}")
+                            mActivity.longToastBottom("读特征成功 ${it?.contentToString()}")
                         },
                         {
-                            mActivity.shortToastCenter(it.message)
+                            mActivity.longToastBottom(it.message)
                         }
                     )
                     1 -> WriteCharacteristicCommand(
@@ -116,10 +116,10 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                         200,
                         20,
                         {
-                            mActivity.shortToastCenter("写特征成功")
+                            mActivity.longToastBottom("写特征成功")
                         },
                         {
-                            mActivity.shortToastCenter(it.message)
+                            mActivity.longToastBottom(it.message)
                         }
                     )
                     2 -> SetMtuCommand(
@@ -127,30 +127,30 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                         50,
                         3000,
                         {
-                            mActivity.shortToastCenter("设置MTU成功 $it")
+                            mActivity.longToastBottom("设置MTU成功 $it")
                         },
                         {
-                            mActivity.shortToastCenter(it.message)
+                            mActivity.longToastBottom(it.message)
                         }
                     )
                     3 -> ReadRemoteRssiCommand(
                         address,
                         3000,
                         {
-                            mActivity.shortToastCenter("读RSSI成功 $it")
+                            mActivity.longToastBottom("读RSSI成功 $it")
                         },
                         {
-                            mActivity.shortToastCenter(it.message)
+                            mActivity.longToastBottom(it.message)
                         }
                     )
                     4 -> RequestConnectionPriorityCommand(
                         address,
                         BluetoothGatt.CONNECTION_PRIORITY_HIGH,
                         {
-                            mActivity.shortToastCenter("requestConnectionPriorityCommand成功")
+                            mActivity.longToastBottom("requestConnectionPriorityCommand成功")
                         },
                         {
-                            mActivity.shortToastCenter(it.message)
+                            mActivity.longToastBottom(it.message)
                         }
                     )
                     5 -> EnableCharacteristicNotifyCommand(
@@ -158,10 +158,10 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         "00002902-0000-1000-8000-00805f9b34fb",
                         {
-                            mActivity.shortToastCenter("开启notify成功")
+                            mActivity.longToastBottom("开启notify成功")
                         },
                         {
-                            mActivity.shortToastCenter(it.message)
+                            mActivity.longToastBottom(it.message)
                         }
                     )
                     6 -> DisableCharacteristicNotifyCommand(
@@ -169,10 +169,10 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         "00002902-0000-1000-8000-00805f9b34fb",
                         {
-                            mActivity.shortToastCenter("关闭notify成功")
+                            mActivity.longToastBottom("关闭notify成功")
                         },
                         {
-                            mActivity.shortToastCenter(it.message)
+                            mActivity.longToastBottom(it.message)
                         }
                     )
                     7 -> EnableCharacteristicIndicateCommand(
@@ -180,10 +180,10 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         "00002902-0000-1000-8000-00805f9b34fb",
                         {
-                            mActivity.shortToastCenter("开启indicate成功")
+                            mActivity.longToastBottom("开启indicate成功")
                         },
                         {
-                            mActivity.shortToastCenter(it.message)
+                            mActivity.longToastBottom(it.message)
                         }
                     )
                     8 -> DisableCharacteristicIndicateCommand(
@@ -191,10 +191,10 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         "00002902-0000-1000-8000-00805f9b34fb",
                         {
-                            mActivity.shortToastCenter("关闭indicate成功")
+                            mActivity.longToastBottom("关闭indicate成功")
                         },
                         {
-                            mActivity.shortToastCenter(it.message)
+                            mActivity.longToastBottom(it.message)
                         }
                     )
                     9 -> WriteAndWaitForDataCommand(
@@ -209,10 +209,10 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                             true
                         },
                         {
-                            mActivity.shortToastCenter("写数据并等待获取数据成功：${Arrays.toString(it)}")
+                            mActivity.longToastBottom("写数据并等待获取数据成功：${Arrays.toString(it)}")
                         },
                         {
-                            mActivity.shortToastCenter(it.message)
+                            mActivity.longToastBottom(it.message)
                         }
                     )
                     else -> null
