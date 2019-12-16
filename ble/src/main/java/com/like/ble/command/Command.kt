@@ -23,9 +23,10 @@ abstract class Command(val des: String) {
      */
     private var mHowCompleted: String = "未完成"
     /**
-     * 异步任务
+     * 异步任务。比如延迟关闭命令、执行命令等任务。
+     * 在[complete]方法中被关闭。所以逻辑中必须要调用[complete]、[successAndComplete]、[failureAndComplete]、[failureAndComplete]这四个方法之一来关闭任务。
      */
-    private var mJobs = mutableListOf<Job>()
+    private val mJobs = mutableListOf<Job>()
 
     fun addJob(job: Job) {
         mJobs.add(job)
@@ -46,7 +47,7 @@ abstract class Command(val des: String) {
     }
 
     /**
-     * 命令执行成功时调用，实用于扫描蓝牙设备那种多个返回值的情况，最后完成的时候调用[complete]。
+     * 命令执行成功时调用，用于扫描蓝牙设备那种多个返回值的情况，最后完成的时候调用[complete]。
      */
     internal fun success(vararg args: Any?) {
         if (isCompleted()) return
