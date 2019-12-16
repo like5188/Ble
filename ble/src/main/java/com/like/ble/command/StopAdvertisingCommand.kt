@@ -9,4 +9,6 @@ class StopAdvertisingCommand : Command("停止广播命令") {
         mReceiver?.stopAdvertising(this)
     }
 
+    override fun getGroups(): Int = GROUP_PERIPHERAL or GROUP_PERIPHERAL_ADVERTISING
+
 }

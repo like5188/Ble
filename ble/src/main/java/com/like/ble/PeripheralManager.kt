@@ -4,9 +4,6 @@ import android.util.Log
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.Command
-import com.like.ble.command.CloseCommand
-import com.like.ble.command.StartAdvertisingCommand
-import com.like.ble.command.StopAdvertisingCommand
 import com.like.ble.executor.IExecutor
 import com.like.ble.executor.PeripheralExecutor
 import kotlinx.coroutines.launch
@@ -18,10 +15,7 @@ class PeripheralManager(private val mActivity: FragmentActivity) : IBleManager {
     private val mExecutor: IExecutor by lazy { PeripheralExecutor(mActivity) }
 
     override fun sendCommand(command: Command) {
-        if (command is StartAdvertisingCommand ||
-            command is StopAdvertisingCommand ||
-            command is CloseCommand
-        ) {
+        if (command.hasGroup(Command.GROUP_PERIPHERAL) || command.hasGroup(Command.GROUP_CLOSE)) {
             mActivity.lifecycleScope.launch {
                 mExecutor.execute(command)
             }

@@ -38,6 +38,8 @@ import com.like.ble.command.Command
  *
  * 蓝牙管理，使用者直接使用此接口进行相关操作。
  *
+ * 如果要增加命令，只需要添加[com.like.ble.command.Command]，并在[com.like.ble.state.State]中添加实际执行命令的方法即可。
+ *
  * @author like
  * @version 1.0
  * created on 2017/4/14 11:52

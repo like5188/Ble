@@ -9,4 +9,6 @@ class StopScanCommand : Command("停止扫描蓝牙设备命令") {
         mReceiver?.stopScan(this)
     }
 
+    override fun getGroups(): Int = GROUP_CENTRAL or GROUP_CENTRAL_SCAN
+
 }

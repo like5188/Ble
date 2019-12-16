@@ -9,4 +9,5 @@ class CloseCommand : Command("关闭蓝牙命令") {
         mReceiver?.close(this)
     }
 
+    override fun getGroups(): Int = GROUP_CLOSE
 }

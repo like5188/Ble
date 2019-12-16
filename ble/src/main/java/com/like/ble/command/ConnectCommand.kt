@@ -9,11 +9,11 @@ package com.like.ble.command
  * @param onFailure         命令执行失败回调
  */
 class ConnectCommand(
-    val address: String,
+    address: String,
     val timeout: Long = 3000L,
     private val onSuccess: (() -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
-) : Command("连接蓝牙命令") {
+) : Command("连接蓝牙命令", address) {
 
     override fun execute() {
         mReceiver?.connect(this)
@@ -26,6 +26,8 @@ class ConnectCommand(
     override fun doOnFailure(throwable: Throwable) {
         onFailure?.invoke(throwable)
     }
+
+    override fun getGroups(): Int = GROUP_CENTRAL or GROUP_CENTRAL_DEVICE
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

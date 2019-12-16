@@ -10,12 +10,12 @@ package com.like.ble.command
  * @param onFailure                     命令执行失败回调
  */
 class EnableCharacteristicNotifyCommand(
-    val address: String,
+    address: String,
     val characteristicUuidString: String,
     val descriptorUuidString: String = characteristicUuidString,
     private val onSuccess: (() -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
-) : Command("设置通知特征值命令") {
+) : Command("设置通知特征值命令", address) {
 
     override fun execute() {
         mReceiver?.enableCharacteristicNotify(this)
@@ -28,6 +28,8 @@ class EnableCharacteristicNotifyCommand(
     override fun doOnFailure(throwable: Throwable) {
         onFailure?.invoke(throwable)
     }
+
+    override fun getGroups(): Int = GROUP_CENTRAL or GROUP_CENTRAL_DEVICE
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

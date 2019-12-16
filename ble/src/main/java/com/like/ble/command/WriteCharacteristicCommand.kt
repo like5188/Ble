@@ -6,8 +6,8 @@ import java.util.concurrent.atomic.AtomicInteger
 /**
  * 写特征值命令
  *
- * @param data                      需要写入的数据
  * @param address                   蓝牙设备地址
+ * @param data                      需要写入的数据
  * @param characteristicUuidString  特征UUID
  * @param timeout                   命令执行超时时间（毫秒）
  * @param writeInterval             分包时，每次写入数据间隔超时时间（毫秒）
@@ -16,15 +16,15 @@ import java.util.concurrent.atomic.AtomicInteger
  * @param onFailure                 命令执行失败回调
  */
 class WriteCharacteristicCommand(
+    address: String,
     val data: ByteArray,
-    val address: String,
     val characteristicUuidString: String,
     val timeout: Long = 3000L,
     val writeInterval: Long = 200L,
     private val maxTransferSize: Int = 20,
     private val onSuccess: (() -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
-) : Command("写特征值命令") {
+) : Command("写特征值命令", address) {
     // 把数据分包
     private val mBatchDataList: List<ByteArray> by lazy { data.batch(maxTransferSize) }
     // 记录写入所有的数据批次，在所有的数据都发送完成后，才调用onSuccess()
@@ -45,6 +45,8 @@ class WriteCharacteristicCommand(
     override fun doOnFailure(throwable: Throwable) {
         onFailure?.invoke(throwable)
     }
+
+    override fun getGroups(): Int = GROUP_CENTRAL or GROUP_CENTRAL_DEVICE
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

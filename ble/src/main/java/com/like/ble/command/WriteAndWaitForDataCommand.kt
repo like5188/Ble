@@ -7,8 +7,8 @@ import java.nio.ByteBuffer
 /**
  * 写数据并等待获取数据命令（通过notify或者indicate的方式）
  *
- * @param data                      需要写入的数据
  * @param address                   蓝牙设备地址
+ * @param data                      需要写入的数据
  * @param characteristicUuidString  特征UUID
  * @param timeout                   命令执行超时时间（毫秒）
  * @param writeInterval             分包时，每次写入数据间隔超时时间（毫秒）
@@ -19,8 +19,8 @@ import java.nio.ByteBuffer
  * @param onFailure                 命令执行失败回调
  */
 class WriteAndWaitForDataCommand(
+    address: String,
     val data: ByteArray,
-    val address: String,
     val characteristicUuidString: String,
     val timeout: Long = 3000L,
     val writeInterval: Long = 200L,
@@ -29,7 +29,7 @@ class WriteAndWaitForDataCommand(
     private val isWholeFrame: (ByteBuffer) -> Boolean = { true },
     private val onSuccess: ((ByteArray?) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
-) : Command("写数据并等待获取数据命令") {
+) : Command("写数据并等待获取数据命令", address) {
     // 缓存读取特征数据时的返回数据，因为一帧有可能分为多次接收
     private val mDataCache: ByteBuffer by lazy { ByteBuffer.allocate(maxFrameTransferSize) }
 
@@ -56,6 +56,8 @@ class WriteAndWaitForDataCommand(
     override fun doOnFailure(throwable: Throwable) {
         onFailure?.invoke(throwable)
     }
+
+    override fun getGroups(): Int = GROUP_CENTRAL or GROUP_CENTRAL_DEVICE
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

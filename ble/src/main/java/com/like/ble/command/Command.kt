@@ -9,7 +9,34 @@ import java.util.concurrent.atomic.AtomicBoolean
  *
  * @param des   命令功能描述
  */
-abstract class Command(val des: String) {
+abstract class Command(val des: String, val address: String = "") {
+    companion object {
+        /**
+         * 关闭命令
+         */
+        internal const val GROUP_CLOSE = 1 shl 0
+        /**
+         * 与外围设备相关的命令
+         */
+        internal const val GROUP_PERIPHERAL = 1 shl 1
+        /**
+         * 与外围设备广播相关的命令
+         */
+        internal const val GROUP_PERIPHERAL_ADVERTISING = 1 shl 2
+        /**
+         * 与中心设备相关的命令
+         */
+        internal const val GROUP_CENTRAL = 1 shl 3
+        /**
+         * 与中心设备扫描相关的命令
+         */
+        internal const val GROUP_CENTRAL_SCAN = 1 shl 4
+        /**
+         * 与具体中心设备相关的命令。即含有address字段的命令。
+         */
+        internal const val GROUP_CENTRAL_DEVICE = 1 shl 5
+    }
+
     /**
      * 命令实际执行者
      */
@@ -82,11 +109,6 @@ abstract class Command(val des: String) {
     }
 
     /**
-     * 执行命令
-     */
-    internal abstract fun execute()
-
-    /**
      * 如果命令传入了成功回调方法，则需要重写此方法，在其中回调成功回调方法。
      */
     protected open fun doOnSuccess(vararg args: Any?) {
@@ -96,6 +118,24 @@ abstract class Command(val des: String) {
      * 如果命令传入了失败回调方法，则需要重写此方法，在其中回调失败回调方法。
      */
     protected open fun doOnFailure(throwable: Throwable) {
+    }
+
+    /**
+     * 执行命令
+     */
+    internal abstract fun execute()
+
+    /**
+     * @return 命令所属分组[GROUP_CLOSE]、[GROUP_PERIPHERAL]、[GROUP_PERIPHERAL_ADVERTISING]、[GROUP_CENTRAL]、[GROUP_CENTRAL_SCAN]、[GROUP_CENTRAL_DEVICE]
+     */
+    protected abstract fun getGroups(): Int
+
+    /**
+     * @param group  需要判断的分组值
+     * @return 是否存在
+     */
+    fun hasGroup(group: Int): Boolean {
+        return getGroups() and group != 0
     }
 
     override fun toString(): String {

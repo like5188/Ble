@@ -3,7 +3,7 @@ package com.like.ble
 import android.util.Log
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
-import com.like.ble.command.*
+import com.like.ble.command.Command
 import com.like.ble.executor.CentralExecutor
 import com.like.ble.executor.IExecutor
 import kotlinx.coroutines.launch
@@ -15,22 +15,7 @@ class CentralManager(private val mActivity: FragmentActivity) : IBleManager {
     private val mExecutor: IExecutor by lazy { CentralExecutor(mActivity) }
 
     override fun sendCommand(command: Command) {
-        if (command is StartScanCommand ||
-            command is StopScanCommand ||
-            command is ConnectCommand ||
-            command is DisconnectCommand ||
-            command is ReadCharacteristicCommand ||
-            command is WriteCharacteristicCommand ||
-            command is SetMtuCommand ||
-            command is EnableCharacteristicNotifyCommand ||
-            command is DisableCharacteristicNotifyCommand ||
-            command is EnableCharacteristicIndicateCommand ||
-            command is DisableCharacteristicIndicateCommand ||
-            command is WriteAndWaitForDataCommand ||
-            command is ReadRemoteRssiCommand ||
-            command is RequestConnectionPriorityCommand ||
-            command is CloseCommand
-        ) {
+        if (command.hasGroup(Command.GROUP_CENTRAL) || command.hasGroup(Command.GROUP_CLOSE)) {
             mActivity.lifecycleScope.launch {
                 mExecutor.execute(command)
             }

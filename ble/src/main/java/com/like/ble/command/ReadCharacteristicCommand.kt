@@ -15,14 +15,14 @@ import java.nio.ByteBuffer
  * @param onFailure                 命令执行失败回调
  */
 class ReadCharacteristicCommand(
-    val address: String,
+    address: String,
     val characteristicUuidString: String,
     val timeout: Long = 3000L,
     private val maxFrameTransferSize: Int = 300,
     val isWholeFrame: (ByteBuffer) -> Boolean = { true },
     private val onSuccess: ((ByteArray?) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
-) : Command("读特征值命令") {
+) : Command("读特征值命令", address) {
     // 缓存读取特征数据时的返回数据，因为一帧有可能分为多次接收
     private val mDataCache: ByteBuffer by lazy { ByteBuffer.allocate(maxFrameTransferSize) }
 
@@ -44,6 +44,8 @@ class ReadCharacteristicCommand(
     override fun doOnFailure(throwable: Throwable) {
         onFailure?.invoke(throwable)
     }
+
+    override fun getGroups(): Int = GROUP_CENTRAL or GROUP_CENTRAL_DEVICE
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

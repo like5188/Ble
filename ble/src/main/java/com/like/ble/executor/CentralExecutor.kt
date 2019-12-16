@@ -1,7 +1,8 @@
 package com.like.ble.executor
 
 import androidx.fragment.app.FragmentActivity
-import com.like.ble.command.*
+import com.like.ble.command.CloseCommand
+import com.like.ble.command.Command
 import com.like.ble.invoker.CentralInvoker
 import com.like.ble.invoker.Invoker
 import com.like.ble.state.ConnectState
@@ -31,58 +32,21 @@ class CentralExecutor(private val mActivity: FragmentActivity) : IExecutor {
     }
 
     private fun getStateByCommand(command: Command): State? {
-        return when (command) {
-            is StartScanCommand, is StopScanCommand -> {
+        return when {
+            command.hasGroup(Command.GROUP_CENTRAL_SCAN) -> {
                 mScanState
             }
-            is ConnectCommand -> {
-                getConnectStateByAddress(command.address)
+            command.hasGroup(Command.GROUP_CENTRAL_DEVICE) -> {
+                if (!mConnectStateMap.containsKey(command.address)) {
+                    mConnectStateMap[command.address] = ConnectState().also { it.mActivity = mActivity }
+                }
+                mConnectStateMap[command.address]
             }
-            is DisconnectCommand -> {
-                getConnectStateByAddress(command.address)
-            }
-            is ReadCharacteristicCommand -> {
-                getConnectStateByAddress(command.address)
-            }
-            is WriteCharacteristicCommand -> {
-                getConnectStateByAddress(command.address)
-            }
-            is SetMtuCommand -> {
-                getConnectStateByAddress(command.address)
-            }
-            is EnableCharacteristicNotifyCommand -> {
-                getConnectStateByAddress(command.address)
-            }
-            is DisableCharacteristicNotifyCommand -> {
-                getConnectStateByAddress(command.address)
-            }
-            is EnableCharacteristicIndicateCommand -> {
-                getConnectStateByAddress(command.address)
-            }
-            is DisableCharacteristicIndicateCommand -> {
-                getConnectStateByAddress(command.address)
-            }
-            is WriteAndWaitForDataCommand -> {
-                getConnectStateByAddress(command.address)
-            }
-            is ReadRemoteRssiCommand -> {
-                getConnectStateByAddress(command.address)
-            }
-            is RequestConnectionPriorityCommand -> {
-                getConnectStateByAddress(command.address)
-            }
-            is CloseCommand -> {
+            command.hasGroup(Command.GROUP_CLOSE) -> {
                 mCurState
             }
             else -> null
         }
-    }
-
-    private fun getConnectStateByAddress(address: String): ConnectState? {
-        if (!mConnectStateMap.containsKey(address)) {
-            mConnectStateMap[address] = ConnectState().also { it.mActivity = mActivity }
-        }
-        return mConnectStateMap[address]
     }
 
     override fun close() {

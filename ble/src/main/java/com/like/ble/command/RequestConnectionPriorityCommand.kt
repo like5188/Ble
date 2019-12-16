@@ -11,11 +11,11 @@ package com.like.ble.command
  * @param onFailure             命令执行失败回调
  */
 class RequestConnectionPriorityCommand(
-    val address: String,
+    address: String,
     val connectionPriority: Int,
     private val onSuccess: (() -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
-) : Command("requestConnectionPriority命令") {
+) : Command("requestConnectionPriority命令", address) {
 
     override fun execute() {
         mReceiver?.requestConnectionPriority(this)
@@ -28,6 +28,8 @@ class RequestConnectionPriorityCommand(
     override fun doOnFailure(throwable: Throwable) {
         onFailure?.invoke(throwable)
     }
+
+    override fun getGroups(): Int = GROUP_CENTRAL or GROUP_CENTRAL_DEVICE
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

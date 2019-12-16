@@ -32,4 +32,7 @@ class StartAdvertisingCommand(
     override fun doOnFailure(throwable: Throwable) {
         onFailure?.invoke(throwable)
     }
+
+    override fun getGroups(): Int = GROUP_PERIPHERAL or GROUP_PERIPHERAL_ADVERTISING
+
 }

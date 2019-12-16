@@ -61,27 +61,14 @@ class CentralInvoker(private val mActivity: FragmentActivity) : Invoker(mActivit
      * 是否需要立即执行
      */
     private fun needExecuteImmediately(curCommand: Command, command: Command): Boolean {
-        if (command is CloseCommand) {
+        if (command.hasGroup(Command.GROUP_CLOSE)) {
             return true
         }
-        if (curCommand is StartScanCommand && command is StopScanCommand) {
+        if (curCommand.hasGroup(Command.GROUP_CENTRAL_SCAN) && command is StopScanCommand) {
             return true
         }
-        if (curCommand is ConnectCommand ||
-            curCommand is ReadCharacteristicCommand ||
-            curCommand is WriteCharacteristicCommand ||
-            curCommand is SetMtuCommand ||
-            curCommand is EnableCharacteristicNotifyCommand ||
-            curCommand is DisableCharacteristicNotifyCommand ||
-            curCommand is EnableCharacteristicIndicateCommand ||
-            curCommand is DisableCharacteristicIndicateCommand ||
-            curCommand is WriteAndWaitForDataCommand ||
-            curCommand is ReadRemoteRssiCommand ||
-            curCommand is RequestConnectionPriorityCommand
-        ) {
-            if (command is DisconnectCommand) {
-                return true
-            }
+        if (curCommand.hasGroup(Command.GROUP_CENTRAL_DEVICE) && command is DisconnectCommand) {
+            return true
         }
         return false
     }
@@ -89,28 +76,18 @@ class CentralInvoker(private val mActivity: FragmentActivity) : Invoker(mActivit
     /**
      * 判断是否是同一命令。
      *
-     * 其中
+     * 其中与指定设备无关的命令
      * [StartScanCommand]、
      * [StopScanCommand]、
      * [CloseCommand]
-     * 是同一类型，则判断为同一命令
+     * 判断是同一类型，则为同一命令
      *
-     * 其中
-     * [ConnectCommand]、
-     * [DisconnectCommand]、
-     * [ReadCharacteristicCommand]、
-     * [WriteCharacteristicCommand]、
-     * [SetMtuCommand]、
-     * [EnableCharacteristicNotifyCommand]、
-     * [DisableCharacteristicNotifyCommand]、
-     * [EnableCharacteristicIndicateCommand]、
-     * [DisableCharacteristicIndicateCommand]
-     * 是同一类型，并且内容相同，才判断为同一命令
+     * 其中与指定设备有关的命令，必须判断同一类型，并且内容相同，才为同一命令
      */
     private fun isSameCommand(curCommand: Command, command: Command): Boolean {
         if (curCommand::class.java == command::class.java) {
-            when (curCommand) {
-                is StartScanCommand, is StopScanCommand, is CloseCommand -> {
+            when {
+                curCommand.hasGroup(Command.GROUP_CENTRAL_SCAN) || command.hasGroup(Command.GROUP_CLOSE) -> {
                     return true
                 }
                 else -> {

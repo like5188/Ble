@@ -17,7 +17,18 @@ import java.util.*
 class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleManager) :
     BaseAdapter() {
     private val mCommandArray =
-        arrayOf("读特征", "写特征", "设置MTU", "读RSSI", "RequestConnectionPriority", "开启notify", "关闭notify", "开启indicate", "关闭indicate", "写数据并等待获取数据")
+        arrayOf(
+            "读特征",
+            "写特征",
+            "设置MTU",
+            "读RSSI",
+            "RequestConnectionPriority",
+            "开启notify",
+            "关闭notify",
+            "开启indicate",
+            "关闭indicate",
+            "写数据并等待获取数据"
+        )
 
     override fun bindOtherVariable(
         holder: CommonViewHolder,
@@ -98,8 +109,8 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                         }
                     )
                     1 -> WriteCharacteristicCommand(
-                        byteArrayOf(0x1),
                         address,
+                        byteArrayOf(0x1),
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         5000,
                         200,
@@ -187,8 +198,8 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                         }
                     )
                     9 -> WriteAndWaitForDataCommand(
-                        byteArrayOf(0x2),
                         address,
+                        byteArrayOf(0x2),
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         5000,
                         200,

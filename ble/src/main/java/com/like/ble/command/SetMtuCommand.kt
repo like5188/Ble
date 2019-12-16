@@ -10,12 +10,12 @@ package com.like.ble.command
  * @param onFailure         命令执行失败回调
  */
 class SetMtuCommand(
-    val address: String,
+    address: String,
     val mtu: Int,
     val timeout: Long = 3000L,
     private val onSuccess: ((Int) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
-) : Command("设置MTU命令") {
+) : Command("设置MTU命令", address) {
 
     override fun execute() {
         mReceiver?.setMtu(this)
@@ -33,6 +33,8 @@ class SetMtuCommand(
     override fun doOnFailure(throwable: Throwable) {
         onFailure?.invoke(throwable)
     }
+
+    override fun getGroups(): Int = GROUP_CENTRAL or GROUP_CENTRAL_DEVICE
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
