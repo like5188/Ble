@@ -1,6 +1,7 @@
 package com.like.ble.sample
 
 import android.app.Activity
+import android.bluetooth.BluetoothGatt
 import android.view.Gravity
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -15,7 +16,8 @@ import java.util.*
 
 class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleManager) :
     BaseAdapter() {
-    private val mCommandArray = arrayOf("读特征", "写特征", "设置MTU", "读RSSI", "开启通知", "关闭通知", "开启标志", "关闭标志", "写特征并接收通知")
+    private val mCommandArray =
+        arrayOf("读特征", "写特征", "设置MTU", "读RSSI", "RequestConnectionPriority", "开启通知", "关闭通知", "开启标志", "关闭标志", "写特征并接收通知")
 
     override fun bindOtherVariable(
         holder: CommonViewHolder,
@@ -130,7 +132,17 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                             mActivity.shortToastCenter(it.message)
                         }
                     )
-                    4 -> EnableCharacteristicNotifyCommand(
+                    4 -> RequestConnectionPriorityCommand(
+                        address,
+                        BluetoothGatt.CONNECTION_PRIORITY_HIGH,
+                        {
+                            mActivity.shortToastCenter("requestConnectionPriorityCommand成功")
+                        },
+                        {
+                            mActivity.shortToastCenter(it.message)
+                        }
+                    )
+                    5 -> EnableCharacteristicNotifyCommand(
                         address,
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         "00002902-0000-1000-8000-00805f9b34fb",
@@ -141,7 +153,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                             mActivity.shortToastCenter(it.message)
                         }
                     )
-                    5 -> DisableCharacteristicNotifyCommand(
+                    6 -> DisableCharacteristicNotifyCommand(
                         address,
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         "00002902-0000-1000-8000-00805f9b34fb",
@@ -152,7 +164,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                             mActivity.shortToastCenter(it.message)
                         }
                     )
-                    6 -> EnableCharacteristicIndicateCommand(
+                    7 -> EnableCharacteristicIndicateCommand(
                         address,
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         "00002902-0000-1000-8000-00805f9b34fb",
@@ -163,7 +175,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                             mActivity.shortToastCenter(it.message)
                         }
                     )
-                    7 -> DisableCharacteristicIndicateCommand(
+                    8 -> DisableCharacteristicIndicateCommand(
                         address,
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         "00002902-0000-1000-8000-00805f9b34fb",
@@ -174,7 +186,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                             mActivity.shortToastCenter(it.message)
                         }
                     )
-                    8 -> WriteNotifyCommand(
+                    9 -> WriteNotifyCommand(
                         byteArrayOf(0x2),
                         address,
                         "0000fff2-0000-1000-8000-00805f9b34fb",

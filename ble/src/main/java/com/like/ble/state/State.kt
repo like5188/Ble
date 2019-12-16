@@ -24,5 +24,6 @@ abstract class State {
     open fun disableCharacteristicIndicate(command: DisableCharacteristicIndicateCommand) {}
     open fun writeNotify(command: WriteNotifyCommand) {}
     open fun readRemoteRssi(command: ReadRemoteRssiCommand) {}
+    open fun requestConnectionPriority(command: RequestConnectionPriorityCommand) {}
     open fun close(command: CloseCommand) {}
 }

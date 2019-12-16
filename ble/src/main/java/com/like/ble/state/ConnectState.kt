@@ -386,6 +386,26 @@ class ConnectState : State() {
         }
     }
 
+    override fun requestConnectionPriority(command: RequestConnectionPriorityCommand) {
+        val bluetoothGatt = mBluetoothGatt
+        if (bluetoothGatt == null) {
+            command.failureAndComplete("设备未连接：${command.address}")
+            return
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            command.failureAndComplete("android 5.0及其以上才支持requestConnectionPriority：${command.address}")
+            return
+        }
+
+        mCommand = command
+        if (!bluetoothGatt.requestConnectionPriority(command.connectionPriority)) {
+            command.failureAndComplete("requestConnectionPriority失败：${command.address}")
+        } else {
+            command.successAndComplete()
+        }
+    }
+
     override fun enableCharacteristicNotify(command: EnableCharacteristicNotifyCommand) {
         setCharacteristicNotification(command.characteristicUuidString, command.descriptorUuidString, true, command)
     }

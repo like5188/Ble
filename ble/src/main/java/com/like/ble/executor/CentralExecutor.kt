@@ -68,6 +68,9 @@ class CentralExecutor(private val mActivity: FragmentActivity) : IExecutor {
             is ReadRemoteRssiCommand -> {
                 getConnectStateByAddress(command.address)
             }
+            is RequestConnectionPriorityCommand -> {
+                getConnectStateByAddress(command.address)
+            }
             is CloseCommand -> {
                 mCurState
             }
