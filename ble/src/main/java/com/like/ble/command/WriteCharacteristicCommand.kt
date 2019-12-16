@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * @param characteristicUuidString  特征UUID
  * @param timeout                   命令执行超时时间（毫秒）
  * @param writeInterval             分包时，每次写入数据间隔超时时间（毫秒）
- * @param maxTransferSize           每次传输的最大字节数，用于分包，BLE默认单次传输长度为20字节。如果不分包的话，可以设置更大的MTU（(最大为512字节）。
+ * @param maxTransferSize           每次传输的最大字节数，用于分包，BLE默认单次传输长度为20字节（core spec里面定义了ATT的默认MTU为23个bytes，除去ATT的opcode一个字节以及ATT的handle2个字节之后，剩下的20个字节便是留给GATT的了。）。如果不分包的话，可以设置更大的MTU（(最大为512字节）。
  * @param onSuccess                 命令执行成功回调
  * @param onFailure                 命令执行失败回调
  */
