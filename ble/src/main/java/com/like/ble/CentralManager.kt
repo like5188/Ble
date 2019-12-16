@@ -26,7 +26,7 @@ class CentralManager(private val mActivity: FragmentActivity) : IBleManager {
             command is DisableCharacteristicNotifyCommand ||
             command is EnableCharacteristicIndicateCommand ||
             command is DisableCharacteristicIndicateCommand ||
-            command is WriteNotifyCommand ||
+            command is WriteAndWaitForDataCommand ||
             command is ReadRemoteRssiCommand ||
             command is RequestConnectionPriorityCommand ||
             command is CloseCommand

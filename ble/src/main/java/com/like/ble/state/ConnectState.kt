@@ -74,7 +74,7 @@ class ConnectState : State() {
 
         override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
             val command = mCommand
-            if (command !is WriteNotifyCommand) return
+            if (command !is WriteAndWaitForDataCommand) return
             command.addDataToCache(characteristic.value)
             if (command.isWholeFrame()) {
                 mDelayJob?.cancel()
@@ -211,7 +211,7 @@ class ConnectState : State() {
         }
     }
 
-    override fun writeNotify(command: WriteNotifyCommand) {
+    override fun writeNotify(command: WriteAndWaitForDataCommand) {
         val bluetoothGatt = mBluetoothGatt
         if (bluetoothGatt == null) {
             command.failureAndComplete("设备未连接：${command.address}")

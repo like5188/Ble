@@ -5,7 +5,7 @@ import com.like.ble.utils.toByteArrayOrNull
 import java.nio.ByteBuffer
 
 /**
- * 写数据并获取通知数据命令
+ * 写数据并等待获取数据命令（通过notify或者indicate的方式）
  *
  * @param data                      需要写入的数据
  * @param address                   蓝牙设备地址
@@ -18,7 +18,7 @@ import java.nio.ByteBuffer
  * @param onSuccess                 命令执行成功回调
  * @param onFailure                 命令执行失败回调
  */
-class WriteNotifyCommand(
+class WriteAndWaitForDataCommand(
     val data: ByteArray,
     val address: String,
     val characteristicUuidString: String,
@@ -29,7 +29,7 @@ class WriteNotifyCommand(
     private val isWholeFrame: (ByteBuffer) -> Boolean = { true },
     private val onSuccess: ((ByteArray?) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
-) : Command("写数据并获取通知数据命令") {
+) : Command("写数据并等待获取数据命令") {
     // 缓存读取特征数据时的返回数据，因为一帧有可能分为多次接收
     private val mDataCache: ByteBuffer by lazy { ByteBuffer.allocate(maxFrameTransferSize) }
 
@@ -59,7 +59,7 @@ class WriteNotifyCommand(
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is WriteNotifyCommand) return false
+        if (other !is WriteAndWaitForDataCommand) return false
 
         if (!data.contentEquals(other.data)) return false
         if (address != other.address) return false

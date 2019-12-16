@@ -75,7 +75,7 @@ class CentralInvoker(private val mActivity: FragmentActivity) : Invoker(mActivit
             curCommand is DisableCharacteristicNotifyCommand ||
             curCommand is EnableCharacteristicIndicateCommand ||
             curCommand is DisableCharacteristicIndicateCommand ||
-            curCommand is WriteNotifyCommand ||
+            curCommand is WriteAndWaitForDataCommand ||
             curCommand is ReadRemoteRssiCommand ||
             curCommand is RequestConnectionPriorityCommand
         ) {

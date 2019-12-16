@@ -17,7 +17,7 @@ import java.util.*
 class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleManager) :
     BaseAdapter() {
     private val mCommandArray =
-        arrayOf("读特征", "写特征", "设置MTU", "读RSSI", "RequestConnectionPriority", "开启notify", "关闭notify", "开启indicate", "关闭indicate", "写特征并接收notify")
+        arrayOf("读特征", "写特征", "设置MTU", "读RSSI", "RequestConnectionPriority", "开启notify", "关闭notify", "开启indicate", "关闭indicate", "写数据并等待获取数据")
 
     override fun bindOtherVariable(
         holder: CommonViewHolder,
@@ -147,7 +147,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         "00002902-0000-1000-8000-00805f9b34fb",
                         {
-                            mActivity.shortToastCenter("开启通知成功")
+                            mActivity.shortToastCenter("开启notify成功")
                         },
                         {
                             mActivity.shortToastCenter(it.message)
@@ -158,7 +158,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         "00002902-0000-1000-8000-00805f9b34fb",
                         {
-                            mActivity.shortToastCenter("关闭通知成功")
+                            mActivity.shortToastCenter("关闭notify成功")
                         },
                         {
                             mActivity.shortToastCenter(it.message)
@@ -169,7 +169,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         "00002902-0000-1000-8000-00805f9b34fb",
                         {
-                            mActivity.shortToastCenter("开启标志成功")
+                            mActivity.shortToastCenter("开启indicate成功")
                         },
                         {
                             mActivity.shortToastCenter(it.message)
@@ -180,13 +180,13 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         "00002902-0000-1000-8000-00805f9b34fb",
                         {
-                            mActivity.shortToastCenter("关闭标志成功")
+                            mActivity.shortToastCenter("关闭indicate成功")
                         },
                         {
                             mActivity.shortToastCenter(it.message)
                         }
                     )
-                    9 -> WriteNotifyCommand(
+                    9 -> WriteAndWaitForDataCommand(
                         byteArrayOf(0x2),
                         address,
                         "0000fff2-0000-1000-8000-00805f9b34fb",
@@ -198,7 +198,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                             true
                         },
                         {
-                            mActivity.shortToastCenter("写数据并获取通知数据成功：${Arrays.toString(it)}")
+                            mActivity.shortToastCenter("写数据并等待获取数据成功：${Arrays.toString(it)}")
                         },
                         {
                             mActivity.shortToastCenter(it.message)

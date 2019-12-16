@@ -62,7 +62,7 @@ class CentralExecutor(private val mActivity: FragmentActivity) : IExecutor {
             is DisableCharacteristicIndicateCommand -> {
                 getConnectStateByAddress(command.address)
             }
-            is WriteNotifyCommand -> {
+            is WriteAndWaitForDataCommand -> {
                 getConnectStateByAddress(command.address)
             }
             is ReadRemoteRssiCommand -> {
