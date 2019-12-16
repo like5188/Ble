@@ -188,6 +188,17 @@ class BlePeripheralActivity : AppCompatActivity() {
             appendText("--> onMtuChanged", false, R.color.ble_text_blue)
             appendText("device=$device mtu=$mtu")
         }
+
+        override fun onPhyRead(device: BluetoothDevice?, txPhy: Int, rxPhy: Int, status: Int) {
+            appendText("--> onPhyRead", false, R.color.ble_text_blue)
+            appendText("device=$device txPhy=$txPhy rxPhy=$rxPhy status=$status")
+        }
+
+        override fun onPhyUpdate(device: BluetoothDevice?, txPhy: Int, rxPhy: Int, status: Int) {
+            appendText("--> onPhyUpdate", false, R.color.ble_text_blue)
+            appendText("device=$device txPhy=$txPhy rxPhy=$rxPhy status=$status")
+        }
+
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
