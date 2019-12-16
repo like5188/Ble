@@ -1,6 +1,7 @@
 package com.like.ble.command
 
 import com.like.ble.state.State
+import kotlinx.coroutines.Job
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -21,6 +22,14 @@ abstract class Command(val des: String) {
      * 命令怎么完成的
      */
     private var mHowCompleted: String = "未完成"
+    /**
+     * 异步任务
+     */
+    private var mJobs = mutableListOf<Job>()
+
+    fun addJob(job: Job) {
+        mJobs.add(job)
+    }
 
     internal fun isCompleted() = mIsCompleted.get()
 
@@ -28,7 +37,10 @@ abstract class Command(val des: String) {
         if (isCompleted()) return
         mIsCompleted.set(true)
         mHowCompleted = howCompleted
-        doOnCompleted(howCompleted)
+        mJobs.forEach {
+            it.cancel()
+        }
+        mJobs.clear()
     }
 
     /**
@@ -81,9 +93,6 @@ abstract class Command(val des: String) {
      * 如果命令传入了失败回调方法，则需要重写此方法，在其中回调失败回调方法。
      */
     protected open fun doOnFailure(throwable: Throwable) {
-    }
-
-    protected open fun doOnCompleted(howCompleted: String) {
     }
 
     override fun toString(): String {

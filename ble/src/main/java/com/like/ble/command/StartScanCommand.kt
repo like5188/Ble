@@ -1,7 +1,6 @@
 package com.like.ble.command
 
 import android.bluetooth.BluetoothDevice
-import kotlinx.coroutines.Job
 
 /**
  * 开始扫描蓝牙设备命令
@@ -15,16 +14,6 @@ class StartScanCommand(
     private val onSuccess: ((BluetoothDevice, Int, ByteArray?) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command("开始扫描蓝牙设备命令") {
-    private var mDelayJob: Job? = null
-
-    fun setDelayJob(job: Job) {
-        mDelayJob = job
-    }
-
-    override fun doOnCompleted(howCompleted: String) {
-        mDelayJob?.cancel()
-        mDelayJob = null
-    }
 
     override fun execute() {
         mReceiver?.startScan(this)

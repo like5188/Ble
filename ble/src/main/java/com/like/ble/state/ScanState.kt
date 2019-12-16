@@ -57,7 +57,7 @@ class ScanState : State() {
                     }
                 }
 
-                command.setDelayJob(launch(Dispatchers.IO) {
+                command.addJob(launch(Dispatchers.IO) {
                     // 在指定超时时间时取消扫描，然后一次扫描就完成了。
                     delay(command.timeout)
                     if (mScanning.get()) {
