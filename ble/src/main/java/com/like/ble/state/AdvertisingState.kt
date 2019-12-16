@@ -23,7 +23,6 @@ class AdvertisingState : State() {
     private var mBluetoothLeAdvertiser: BluetoothLeAdvertiser? = null
     private val mAdvertiseCallback: AdvertiseCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : AdvertiseCallback() {
         override fun onStartFailure(errorCode: Int) {
-            super.onStartFailure(errorCode)
             val curCommand = mCurCommand
             if (curCommand is StartAdvertisingCommand) {
                 val errorMsg = when (errorCode) {
@@ -39,7 +38,6 @@ class AdvertisingState : State() {
         }
 
         override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
-            super.onStartSuccess(settingsInEffect)
             val curCommand = mCurCommand
             if (curCommand is StartAdvertisingCommand) {
                 curCommand.successAndComplete()
