@@ -37,10 +37,12 @@ abstract class Command(val des: String) {
         if (isCompleted()) return
         mIsCompleted.set(true)
         mHowCompleted = howCompleted
-        mJobs.forEach {
-            it.cancel()
+        if (mJobs.isNotEmpty()) {
+            mJobs.forEach {
+                it.cancel()
+            }
+            mJobs.clear()
         }
-        mJobs.clear()
     }
 
     /**
