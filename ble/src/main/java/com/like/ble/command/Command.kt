@@ -99,7 +99,7 @@ abstract class Command(val des: String) {
     }
 
     override fun toString(): String {
-        return "Command(des='$des', mIsCompleted='${mIsCompleted.get()}', mHowCompleted='$mHowCompleted')"
+        return "Command(des='$des', mIsCompleted='${mIsCompleted.get()}', mHowCompleted='$mHowCompleted', mJobs.size='${mJobs.size}')"
     }
 
 }
