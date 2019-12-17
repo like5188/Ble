@@ -99,14 +99,14 @@ class ConnectState : State() {
         // 写特征值，注意，这里的characteristic.value中的数据是你写入的数据，而不是外围设备sendResponse返回的。
         override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
             Log.e("ConnectState", "onCharacteristicRead value=${Arrays.toString(characteristic.value)}")
-            val curCmmand = mCurCommand
-            if (curCmmand !is WriteCharacteristicCommand) return
+            val curCommand = mCurCommand
+            if (curCommand !is WriteCharacteristicCommand) return
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                if (curCmmand.isAllWrite()) {
-                    curCmmand.successAndComplete()
+                if (curCommand.isAllWrite()) {
+                    curCommand.successAndComplete()
                 }
             } else {
-                curCmmand.failureAndComplete("写特征值失败：${characteristic.uuid.getValidString()}")
+                curCommand.failureAndComplete("写特征值失败：${characteristic.uuid.getValidString()}")
             }
         }
 
@@ -149,7 +149,7 @@ class ConnectState : State() {
     }
 
     override fun connect(command: ConnectCommand) {
-        mCurCommand = command
+        mCurCommand = command// todo 连接命令要一直保存。这样在断开时才会触发回调更新界面
 
         if (mBluetoothGatt != null) {
             command.successAndComplete()
@@ -319,7 +319,7 @@ class ConnectState : State() {
                     command.failureAndComplete("写特征值失败：${getUuidValidString(command.characteristicUuidString)}")
                     return@launch
                 }
-                delay(command.writeInterval)
+                delay(command.writeInterval)// todo 不用延时，用onCharacteristicWrite()方法来触发下一次写。可以考虑宏命令。
             }
         })
 
