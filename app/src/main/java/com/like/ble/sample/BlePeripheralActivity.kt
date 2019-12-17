@@ -131,7 +131,7 @@ class BlePeripheralActivity : AppCompatActivity() {
                     requestId,
                     BluetoothGatt.GATT_SUCCESS,
                     offset,
-                    byteArrayOf()// 最后一个参数是传的数据。
+                    byteArrayOf(Byte.MAX_VALUE)// 最后一个参数是传的数据。
                 )
             } else {
                 when (curWriteData[0]) {
@@ -141,7 +141,7 @@ class BlePeripheralActivity : AppCompatActivity() {
                             requestId,
                             BluetoothGatt.GATT_SUCCESS,
                             offset,
-                            byteArrayOf(0x2)
+                            byteArrayOf(0x02, Byte.MAX_VALUE)
                         )
                     }
                 }
