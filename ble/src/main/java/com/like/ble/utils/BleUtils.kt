@@ -50,6 +50,8 @@ fun getBluetoothGattStatusString(status: Int) = when (status) {
     else -> ""
 }
 
+fun getUuidValidString(uuid: String) = "0x${uuid.substring(4, 8)}"
+
 fun UUID.getValidString(): String = "0x${toString().substring(4, 8)}"
 
 fun BluetoothGattService.getTypeString() = when (type) {

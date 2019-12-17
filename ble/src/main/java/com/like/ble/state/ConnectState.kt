@@ -6,6 +6,8 @@ import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.*
 import com.like.ble.utils.findCharacteristic
 import com.like.ble.utils.getBluetoothAdapter
+import com.like.ble.utils.getUuidValidString
+import com.like.ble.utils.getValidString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -88,7 +90,7 @@ class ConnectState : State() {
                     curCommand.successAndComplete()
                 }
             } else {
-                curCommand.failureAndComplete("读取特征值失败：${characteristic.uuid}")
+                curCommand.failureAndComplete("读取特征值失败：${characteristic.uuid.getValidString()}")
             }
         }
 
@@ -101,7 +103,7 @@ class ConnectState : State() {
                     curCmmand.successAndComplete()
                 }
             } else {
-                curCmmand.failureAndComplete("写特征值失败：${characteristic.uuid}")
+                curCmmand.failureAndComplete("写特征值失败：${characteristic.uuid.getValidString()}")
             }
         }
 
@@ -210,13 +212,13 @@ class ConnectState : State() {
         }
 
         if (command.getBatchDataList().isEmpty()) {
-            command.failureAndComplete("没有数据，无法写入：${command.characteristicUuidString}")
+            command.failureAndComplete("没有数据，无法写入：${getUuidValidString(command.characteristicUuidString)}")
             return
         }
 
         val characteristic = bluetoothGatt.findCharacteristic(command.characteristicUuidString)
         if (characteristic == null) {
-            command.failureAndComplete("特征值不存在：${command.characteristicUuidString}")
+            command.failureAndComplete("特征值不存在：${getUuidValidString(command.characteristicUuidString)}")
             return
         }
 
@@ -237,7 +239,7 @@ class ConnectState : State() {
             command.getBatchDataList().forEach {
                 characteristic.value = it
                 if (!bluetoothGatt.writeCharacteristic(characteristic)) {
-                    command.failureAndComplete("写特征值失败：${command.characteristicUuidString}")
+                    command.failureAndComplete("写特征值失败：${getUuidValidString(command.characteristicUuidString)}")
                     return@launch
                 }
                 delay(command.writeInterval)
@@ -246,7 +248,7 @@ class ConnectState : State() {
 
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
-            command.failureAndComplete("写数据并获取通知数据超时：${command.characteristicUuidString}")
+            command.failureAndComplete("写数据并获取通知数据超时：${getUuidValidString(command.characteristicUuidString)}")
         })
     }
 
@@ -260,7 +262,7 @@ class ConnectState : State() {
 
         val characteristic = bluetoothGatt.findCharacteristic(command.characteristicUuidString)
         if (characteristic == null) {
-            command.failureAndComplete("特征值不存在：${command.characteristicUuidString}")
+            command.failureAndComplete("特征值不存在：${getUuidValidString(command.characteristicUuidString)}")
             return
         }
 
@@ -270,13 +272,13 @@ class ConnectState : State() {
         }
 
         if (!bluetoothGatt.readCharacteristic(characteristic)) {
-            command.failureAndComplete("读取特征值失败：${command.characteristicUuidString}")
+            command.failureAndComplete("读取特征值失败：${getUuidValidString(command.characteristicUuidString)}")
             return
         }
 
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
-            command.failureAndComplete("读取特征值超时：${command.characteristicUuidString}")
+            command.failureAndComplete("读取特征值超时：${getUuidValidString(command.characteristicUuidString)}")
         })
     }
 
@@ -289,13 +291,13 @@ class ConnectState : State() {
         }
 
         if (command.getBatchDataList().isEmpty()) {
-            command.failureAndComplete("没有数据，无法写入：${command.characteristicUuidString}")
+            command.failureAndComplete("没有数据，无法写入：${getUuidValidString(command.characteristicUuidString)}")
             return
         }
 
         val characteristic = bluetoothGatt.findCharacteristic(command.characteristicUuidString)
         if (characteristic == null) {
-            command.failureAndComplete("特征值不存在：${command.characteristicUuidString}")
+            command.failureAndComplete("特征值不存在：${getUuidValidString(command.characteristicUuidString)}")
             return
         }
 
@@ -316,7 +318,7 @@ class ConnectState : State() {
             command.getBatchDataList().forEach {
                 characteristic.value = it
                 if (!bluetoothGatt.writeCharacteristic(characteristic)) {
-                    command.failureAndComplete("写特征值失败：${command.characteristicUuidString}")
+                    command.failureAndComplete("写特征值失败：${getUuidValidString(command.characteristicUuidString)}")
                     return@launch
                 }
                 delay(command.writeInterval)
@@ -325,7 +327,7 @@ class ConnectState : State() {
 
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
-            command.failureAndComplete("写特征值超时：${command.characteristicUuidString}")
+            command.failureAndComplete("写特征值超时：${getUuidValidString(command.characteristicUuidString)}")
         })
     }
 
@@ -426,7 +428,7 @@ class ConnectState : State() {
 
         val characteristic = bluetoothGatt.findCharacteristic(characteristicUuidString)
         if (characteristic == null) {
-            command.failureAndComplete("特征值不存在：${characteristicUuidString}")
+            command.failureAndComplete("特征值不存在：${getUuidValidString(characteristicUuidString)}")
             return
         }
 
@@ -471,7 +473,7 @@ class ConnectState : State() {
 
         val characteristic = bluetoothGatt.findCharacteristic(characteristicUuidString)
         if (characteristic == null) {
-            command.failureAndComplete("特征值不存在：${characteristicUuidString}")
+            command.failureAndComplete("特征值不存在：${getUuidValidString(characteristicUuidString)}")
             return
         }
 
