@@ -78,7 +78,8 @@ class BlePeripheralActivity : AppCompatActivity() {
             0x1c,
             0x1d,
             0x1e,
-            0x1f
+            0x1f,
+            Byte.MAX_VALUE
         )
 
         /**

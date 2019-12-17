@@ -96,10 +96,10 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                     0 -> ReadCharacteristicCommand(
                         address,
                         "0000fff1-0000-1000-8000-00805f9b34fb",
-                        5000,
-                        300,
+                        10000,
+                        40,
                         {
-                            true
+                            it.get(it.position() - 1) == Byte.MAX_VALUE
                         },
                         {
                             mActivity.longToastBottom("读特征成功 ${it?.contentToString()}")
@@ -206,7 +206,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                         20,
                         40,
                         {
-                            it.get(it.position() - 1) == 0x1f.toByte()
+                            it.get(it.position() - 1) == Byte.MAX_VALUE
                         },
                         {
                             mActivity.longToastBottom("写数据并等待获取数据成功：${Arrays.toString(it)}")
