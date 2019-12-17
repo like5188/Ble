@@ -45,7 +45,6 @@ class BlePeripheralActivity : AppCompatActivity() {
     private val mBleManager: IBleManager by lazy { PeripheralManager(this) }
     private var mBluetoothGattServer: BluetoothGattServer? = null
     private val mBluetoothGattServerCallback = object : BluetoothGattServerCallback() {
-        private var mCurWriteData: ByteArray? = null
         private val mResponseData = byteArrayOf(
             0x00,
             0x01,
@@ -123,29 +122,14 @@ class BlePeripheralActivity : AppCompatActivity() {
         ) {
             appendText("--> onCharacteristicReadRequest", false, R.color.ble_text_blue)
             appendText("device=${device.address} requestId=$requestId offset=$offset characteristic=${characteristic.uuid.getValidString()} value=${characteristic.value?.contentToString()}")
-            val curWriteData = mCurWriteData
-            if (curWriteData == null || curWriteData.isEmpty()) {
-                // 此方法要求作出响应
-                mBluetoothGattServer?.sendResponse(
-                    device,
-                    requestId,
-                    BluetoothGatt.GATT_SUCCESS,
-                    offset,
-                    byteArrayOf(Byte.MAX_VALUE)// 最后一个参数是传的数据。
-                )
-            } else {
-                when (curWriteData[0]) {
-                    0x1.toByte() -> {
-                        mBluetoothGattServer?.sendResponse(
-                            device,
-                            requestId,
-                            BluetoothGatt.GATT_SUCCESS,
-                            offset,
-                            byteArrayOf(0x02, Byte.MAX_VALUE)
-                        )
-                    }
-                }
-            }
+            // 此方法要求作出响应
+            mBluetoothGattServer?.sendResponse(
+                device,
+                requestId,
+                BluetoothGatt.GATT_SUCCESS,
+                offset,
+                byteArrayOf(0x02, Byte.MAX_VALUE)
+            )
         }
 
         /**
@@ -163,7 +147,6 @@ class BlePeripheralActivity : AppCompatActivity() {
         ) {
             appendText("--> onCharacteristicWriteRequest", false, R.color.ble_text_blue)
             appendText("device=${device.address} requestId=$requestId characteristic=${characteristic.uuid.getValidString()} preparedWrite=$preparedWrite responseNeeded=$responseNeeded offset=$offset value=${value.contentToString()}")
-            mCurWriteData = value
             // 如果 responseNeeded=true（此属性由中心设备的 characteristic.setWriteType() 方法设置），则必须调用 sendResponse()方法回复中心设备，这个方法会触发中心设备的 BluetoothGattCallback.onCharacteristicWrite() 方法，然后中心设备才能继续下次写数据，否则不能再次写入数据。
             // 如果 responseNeeded=false，那么不需要 sendResponse() 方法，也会触发中心设备的 BluetoothGattCallback.onCharacteristicWrite() 方法
             if (responseNeeded) {
