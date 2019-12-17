@@ -153,11 +153,6 @@ class ConnectState : State() {
             return
         }
 
-        if (command.address.isEmpty()) {
-            command.failureAndComplete("连接蓝牙设备失败：地址不能为空")
-            return
-        }
-
         mActivity.lifecycleScope.launch(Dispatchers.IO) {
             // 获取远端的蓝牙设备
             val bluetoothDevice = mActivity.getBluetoothAdapter()?.getRemoteDevice(command.address)

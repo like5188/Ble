@@ -45,6 +45,10 @@ abstract class Invoker(private val mActivity: FragmentActivity) {
             command.failureAndComplete("打开蓝牙失败")
             return
         }
+        if (command.hasGroup(Command.GROUP_CENTRAL_DEVICE) && !BluetoothAdapter.checkBluetoothAddress(command.address)) {
+            command.failureAndComplete("命令地址无效：$command")
+            return
+        }
         execute(command)
     }
 

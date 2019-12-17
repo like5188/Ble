@@ -23,7 +23,7 @@ class CentralExecutor(private val mActivity: FragmentActivity) : IExecutor {
     override suspend fun execute(command: Command) {
         val state = getStateByCommand(command)
         if (state == null) {
-            command.failureAndComplete("更新蓝牙状态失败")
+            command.failureAndComplete("更新蓝牙状态失败，无法执行命令：$command")
             return
         }
         mCurState = state
