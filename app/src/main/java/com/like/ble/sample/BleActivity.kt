@@ -36,6 +36,9 @@ class BleActivity : AppCompatActivity() {
         mAdapter.mAdapterDataManager.clear()
         mBleManager.sendCommand(
             StartScanCommand(
+                "MEIZU",
+                true,
+                "",
                 2000L,
                 { device, rssi, scanRecord ->
                     val address = device.address ?: ""

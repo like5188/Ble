@@ -1,6 +1,7 @@
 package com.like.ble.state
 
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.os.Build
@@ -23,10 +24,7 @@ class ScanState : State() {
     private val mScanning = AtomicBoolean(false)
     private val mScanCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
-            val curCommand = mCurCommand
-            if (curCommand is StartScanCommand) {
-                curCommand.success(result.device, result.rssi, result.scanRecord?.bytes)
-            }
+            filterScanResult(result.device, result.rssi, result.scanRecord?.bytes)
         }
 
         override fun onScanFailed(errorCode: Int) {
@@ -37,8 +35,30 @@ class ScanState : State() {
         }
     }
     private val mLeScanCallback: BluetoothAdapter.LeScanCallback = BluetoothAdapter.LeScanCallback { device, rssi, scanRecord ->
+        filterScanResult(device, rssi, scanRecord)
+    }
+
+    @Synchronized
+    private fun filterScanResult(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
         val curCommand = mCurCommand
         if (curCommand is StartScanCommand) {
+            // 设备名字匹配
+            if (curCommand.deviceName.isNotEmpty()) {
+                val deviceName = device.name ?: ""
+                if (curCommand.fuzzyMatchingDeviceName) {// 模糊匹配
+                    if (!deviceName.contains(curCommand.deviceName)) {
+                        return
+                    }
+                } else {
+                    if (deviceName != curCommand.deviceName) {
+                        return
+                    }
+                }
+            }
+            // 设备地址匹配
+            if (curCommand.deviceAddress.isNotEmpty() && device.address != curCommand.deviceAddress) {
+                return
+            }
             curCommand.success(device, rssi, scanRecord)
         }
     }
