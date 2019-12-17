@@ -20,7 +20,7 @@ import com.like.ble.PeripheralManager
 import com.like.ble.command.StartAdvertisingCommand
 import com.like.ble.command.StopAdvertisingCommand
 import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
-import com.like.ble.utils.getBluetoothManager
+import com.like.ble.utils.*
 import java.util.*
 
 
@@ -46,26 +46,66 @@ class BlePeripheralActivity : AppCompatActivity() {
     private var mBluetoothGattServer: BluetoothGattServer? = null
     private val mBluetoothGattServerCallback = object : BluetoothGattServerCallback() {
         private var mCurWriteData: ByteArray? = null
+        private val mResponseData = byteArrayOf(
+            0x00,
+            0x01,
+            0x02,
+            0x03,
+            0x04,
+            0x05,
+            0x06,
+            0x07,
+            0x08,
+            0x09,
+            0x0a,
+            0x0b,
+            0x0c,
+            0x0d,
+            0x0e,
+            0x0f,
+            0x10,
+            0x11,
+            0x12,
+            0x13,
+            0x14,
+            0x15,
+            0x16,
+            0x17,
+            0x18,
+            0x19,
+            0x1a,
+            0x1b,
+            0x1c,
+            0x1d,
+            0x1e,
+            0x1f
+        )
 
         /**
          * @param newState  连接状态，只能为[BluetoothProfile.STATE_CONNECTED]和[BluetoothProfile.STATE_DISCONNECTED]。
          */
         override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
             appendText("--> onConnectionStateChange", false, R.color.ble_text_blue)
-            appendText("device=$device status=$status newState=$newState")
+            appendText(
+                "device=${device.address} status=${getBluetoothGattStatusString(status)} newState=${getBluetoothGattStatusString(
+                    newState
+                )}"
+            )
         }
 
         override fun onServiceAdded(status: Int, service: BluetoothGattService) {
             appendText("--> onServiceAdded", false, R.color.ble_text_blue)
-            appendText("status=$status", false)
-            appendText("service=${service.uuid}", false)
+            appendText("status=${getBluetoothGattStatusString(status)}", false)
+            appendText("service：${service.uuid.getValidString()}", false)
+            appendText("type=${service.getTypeString()}", false, R.color.ble_text_black_2)
             service.characteristics.forEach { characteristic ->
-                appendText("characteristic=${characteristic.uuid}", false)
+                appendText("characteristic：${characteristic.uuid.getValidString()}", false)
+                appendText("Properties=${characteristic.getPropertiesString()}", false, R.color.ble_text_black_2)
                 characteristic.descriptors.forEach { descriptor ->
-                    appendText("descriptor=${descriptor.uuid}", false)
+                    appendText("descriptor：${descriptor.uuid.getValidString()}", false)
                 }
             }
-            appendText("")
+            appendText("", false)
         }
 
         /**
@@ -81,7 +121,7 @@ class BlePeripheralActivity : AppCompatActivity() {
             characteristic: BluetoothGattCharacteristic
         ) {
             appendText("--> onCharacteristicReadRequest", false, R.color.ble_text_blue)
-            appendText("device=$device requestId=$requestId offset=$offset characteristic=$characteristic value=${characteristic.value?.contentToString()}")
+            appendText("device=${device.address} requestId=$requestId offset=$offset characteristic=${characteristic.uuid.getValidString()} value=${characteristic.value?.contentToString()}")
             val curWriteData = mCurWriteData
             if (curWriteData == null || curWriteData.isEmpty()) {
                 // 此方法要求作出响应
@@ -100,49 +140,7 @@ class BlePeripheralActivity : AppCompatActivity() {
                             requestId,
                             BluetoothGatt.GATT_SUCCESS,
                             offset,
-                            byteArrayOf(0x02)
-                        )
-                    }
-                    0x2.toByte() -> {
-                        mBluetoothGattServer?.sendResponse(
-                            device,
-                            requestId,
-                            BluetoothGatt.GATT_SUCCESS,
-                            offset,
-                            byteArrayOf(
-                                0x0,
-                                0x1,
-                                0x2,
-                                0x3,
-                                0x4,
-                                0x5,
-                                0x6,
-                                0x7,
-                                0x8,
-                                0x9,
-                                0xa,
-                                0xb,
-                                0xc,
-                                0xd,
-                                0xe,
-                                0xf,
-                                0x0,
-                                0x1,
-                                0x2,
-                                0x3,
-                                0x4,
-                                0x5,
-                                0x6,
-                                0x7,
-                                0x8,
-                                0x9,
-                                0xa,
-                                0xb,
-                                0xc,
-                                0xd,
-                                0xe,
-                                0xf
-                            )
+                            mResponseData
                         )
                     }
                 }
@@ -163,7 +161,7 @@ class BlePeripheralActivity : AppCompatActivity() {
             value: ByteArray
         ) {
             appendText("--> onCharacteristicWriteRequest", false, R.color.ble_text_blue)
-            appendText("device=$device requestId=$requestId characteristic=$characteristic preparedWrite=$preparedWrite responseNeeded=$responseNeeded offset=$offset value=${value.contentToString()}")
+            appendText("device=${device.address} requestId=$requestId characteristic=${characteristic.uuid.getValidString()} preparedWrite=$preparedWrite responseNeeded=$responseNeeded offset=$offset value=${value.contentToString()}")
             mCurWriteData = value
             // 如果 responseNeeded=true（此属性由中心设备的 characteristic.setWriteType() 方法设置），则必须调用 sendResponse()方法回复中心设备，这个方法会触发中心设备的 BluetoothGattCallback.onCharacteristicWrite() 方法，然后中心设备才能继续下次写数据，否则不能再次写入数据。
             // 如果 responseNeeded=false，那么不需要 sendResponse() 方法，也会触发中心设备的 BluetoothGattCallback.onCharacteristicWrite() 方法
@@ -178,45 +176,14 @@ class BlePeripheralActivity : AppCompatActivity() {
             }
 
             when (value[0]) {
-                0x3.toByte() -> {
+                0x2.toByte() -> {
                     // 外围设备向中心设备不能发送数据，必须通过notify 或者indicate的方式，andorid只发现notify接口。
                     // 调用 notifyCharacteristicChanged() 方法向中心设备发送数据，会触发 onNotificationSent() 方法和中心设备的 BluetoothGattCallback.onCharacteristicChanged() 方法。
                     // 注意：默认mtu下一次只能传递20字节。
-                    characteristic.value = byteArrayOf(
-                        0x0,
-                        0x1,
-                        0x2,
-                        0x3,
-                        0x4,
-                        0x5,
-                        0x6,
-                        0x7,
-                        0x8,
-                        0x9,
-                        0xa,
-                        0xb,
-                        0xc,
-                        0xd,
-                        0xe,
-                        0xf,
-                        0x10,
-                        0x11,
-                        0x12,
-                        0x13,
-                        0x14,
-                        0x15,
-                        0x16,
-                        0x17,
-                        0x18,
-                        0x19,
-                        0x1a,
-                        0x1b,
-                        0x1c,
-                        0x1d,
-                        0x1e,
-                        0x1f
-                    )
-                    mBluetoothGattServer?.notifyCharacteristicChanged(device, characteristic, false)// 最后一个参数表示是否需要客户端确认
+                    mResponseData.batch(20).forEach {
+                        characteristic.value = it
+                        mBluetoothGattServer?.notifyCharacteristicChanged(device, characteristic, false)// 最后一个参数表示是否需要客户端确认
+                    }
                 }
             }
         }
@@ -228,7 +195,7 @@ class BlePeripheralActivity : AppCompatActivity() {
             descriptor: BluetoothGattDescriptor
         ) {
             appendText("--> onDescriptorReadRequest", false, R.color.ble_text_blue)
-            appendText("device=$device requestId=$requestId offset=$offset descriptor=$descriptor")
+            appendText("device=${device.address} requestId=$requestId offset=$offset descriptor=${descriptor.uuid.getValidString()}")
             mBluetoothGattServer?.sendResponse(
                 device,
                 requestId,
@@ -248,7 +215,7 @@ class BlePeripheralActivity : AppCompatActivity() {
             value: ByteArray
         ) {
             appendText("--> onDescriptorWriteRequest", false, R.color.ble_text_blue)
-            appendText("device=$device requestId=$requestId descriptor=$descriptor preparedWrite=$preparedWrite responseNeeded=$responseNeeded offset=$offset value=${value.contentToString()}")
+            appendText("device=${device.address} requestId=$requestId descriptor=${descriptor.uuid.getValidString()} preparedWrite=$preparedWrite responseNeeded=$responseNeeded offset=$offset value=${value.contentToString()}")
             if (responseNeeded) {
                 mBluetoothGattServer?.sendResponse(
                     device,
@@ -262,27 +229,27 @@ class BlePeripheralActivity : AppCompatActivity() {
 
         override fun onExecuteWrite(device: BluetoothDevice, requestId: Int, execute: Boolean) {
             appendText("--> onExecuteWrite", false, R.color.ble_text_blue)
-            appendText("device=$device requestId=$requestId execute=$execute")
+            appendText("device=${device.address} requestId=$requestId execute=$execute")
         }
 
         override fun onNotificationSent(device: BluetoothDevice, status: Int) {
             appendText("--> onNotificationSent", false, R.color.ble_text_blue)
-            appendText("device=$device status=$status")
+            appendText("device=${device.address} status=${getBluetoothGattStatusString(status)}")
         }
 
         override fun onMtuChanged(device: BluetoothDevice, mtu: Int) {
             appendText("--> onMtuChanged", false, R.color.ble_text_blue)
-            appendText("device=$device mtu=$mtu")
+            appendText("device=${device.address} mtu=$mtu")
         }
 
-        override fun onPhyRead(device: BluetoothDevice?, txPhy: Int, rxPhy: Int, status: Int) {
+        override fun onPhyRead(device: BluetoothDevice, txPhy: Int, rxPhy: Int, status: Int) {
             appendText("--> onPhyRead", false, R.color.ble_text_blue)
-            appendText("device=$device txPhy=$txPhy rxPhy=$rxPhy status=$status")
+            appendText("device=${device.address} txPhy=$txPhy rxPhy=$rxPhy status=${getBluetoothGattStatusString(status)}")
         }
 
-        override fun onPhyUpdate(device: BluetoothDevice?, txPhy: Int, rxPhy: Int, status: Int) {
+        override fun onPhyUpdate(device: BluetoothDevice, txPhy: Int, rxPhy: Int, status: Int) {
             appendText("--> onPhyUpdate", false, R.color.ble_text_blue)
-            appendText("device=$device txPhy=$txPhy rxPhy=$rxPhy status=$status")
+            appendText("device=${device.address} txPhy=$txPhy rxPhy=$rxPhy status=${getBluetoothGattStatusString(status)}")
         }
 
     }

@@ -1,9 +1,6 @@
 package com.like.ble.utils
 
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.BluetoothManager
+import android.bluetooth.*
 import android.content.Context
 import android.content.pm.PackageManager
 import java.nio.ByteBuffer
@@ -39,10 +36,65 @@ internal fun BluetoothGatt.findCharacteristic(characteristicUuidString: String):
     return null
 }
 
+fun getBluetoothGattStatusString(status: Int) = when (status) {
+    0 -> "SUCCESS"
+    0x2 -> "READ_NOT_PERMITTED"
+    0x3 -> "WRITE_NOT_PERMITTED"
+    0x5 -> "INSUFFICIENT_AUTHENTICATION"
+    0x6 -> "REQUEST_NOT_SUPPORTED"
+    0xf -> "INSUFFICIENT_ENCRYPTION"
+    0x7 -> "INVALID_OFFSET"
+    0xd -> "INVALID_ATTRIBUTE_LENGTH"
+    0x8f -> "CONNECTION_CONGESTED"
+    0x101 -> "FAILURE"
+    else -> ""
+}
+
+fun UUID.getValidString(): String = "0x${toString().substring(4, 8)}"
+
+fun BluetoothGattService.getTypeString() = when (type) {
+    0 -> "PRIMARY"
+    1 -> "SECONDARY"
+    else -> ""
+}
+
+fun BluetoothGattCharacteristic.getPropertiesString(): String {
+    val result = StringBuilder()
+    if (properties and 0x01 != 0) {
+        result.append("BROADCAST；")
+    }
+    if (properties and 0x02 != 0) {
+        result.append("READ；")
+    }
+    if (properties and 0x04 != 0) {
+        result.append("WRITE_NO_RESPONSE；")
+    }
+    if (properties and 0x08 != 0) {
+        result.append("WRITE；")
+    }
+    if (properties and 0x10 != 0) {
+        result.append("NOTIFY；")
+    }
+    if (properties and 0x20 != 0) {
+        result.append("INDICATE；")
+    }
+    if (properties and 0x40 != 0) {
+        result.append("SIGNED_WRITE；")
+    }
+    if (properties and 0x80 != 0) {
+        result.append("EXTENDED_PROPS；")
+    }
+    return if (result.isEmpty()) {
+        ""
+    } else {
+        result.substring(0, result.lastIndex)
+    }
+}
+
 /**
  * 把 ByteArray 按照指定的 chunkSize 进行分批处理
  */
-internal fun ByteArray.batch(chunkSize: Int): List<ByteArray> {
+fun ByteArray.batch(chunkSize: Int): List<ByteArray> {
     val result = ArrayList<ByteArray>()
     val packetSize = ceil(size / chunkSize.toDouble()).toInt()
     for (i in 0 until packetSize) {
