@@ -141,7 +141,7 @@ class BlePeripheralActivity : AppCompatActivity() {
                             requestId,
                             BluetoothGatt.GATT_SUCCESS,
                             offset,
-                            mResponseData
+                            byteArrayOf(0x2)
                         )
                     }
                 }
