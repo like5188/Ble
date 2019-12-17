@@ -98,7 +98,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                         address,
                         "0000fff1-0000-1000-8000-00805f9b34fb",
                         10000,
-                        40,
+                        1024,
                         {
                             it.get(it.position() - 1) == Byte.MAX_VALUE
                         },

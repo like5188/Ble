@@ -25,7 +25,7 @@ class WriteAndWaitForDataCommand(
     val timeout: Long = 3000L,
     val writeInterval: Long = 200L,
     private val maxTransferSize: Int = 20,
-    private val maxFrameTransferSize: Int = 300,
+    private val maxFrameTransferSize: Int = 1024,
     private val isWholeFrame: (ByteBuffer) -> Boolean = { true },
     private val onSuccess: ((ByteArray?) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null

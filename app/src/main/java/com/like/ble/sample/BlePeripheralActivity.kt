@@ -44,41 +44,14 @@ class BlePeripheralActivity : AppCompatActivity() {
     private val mBleManager: IBleManager by lazy { PeripheralManager(this) }
     private var mBluetoothGattServer: BluetoothGattServer? = null
     private val mBluetoothGattServerCallback = object : BluetoothGattServerCallback() {
-        private val mResponseData1 = byteArrayOf(
-            0x00,
-            0x01,
-            0x02,
-            0x03,
-            0x04,
-            0x05,
-            0x06,
-            0x07,
-            0x08,
-            0x09,
-            0x0a,
-            0x0b,
-            0x0c,
-            0x0d,
-            0x0e,
-            0x0f,
-            0x10,
-            0x11,
-            0x12,
-            0x13,
-            0x14,
-            0x15,
-            0x16,
-            0x17,
-            0x18,
-            0x19,
-            0x1a,
-            0x1b,
-            0x1c,
-            0x1d,
-            0x1e,
-            0x1f,
-            Byte.MAX_VALUE
-        )
+        private val mResponseData1: ByteArray by lazy {
+            val arr = ByteArray(600)// 大于600就失败……原因未知
+            for (i in 0 until arr.size - 1) {
+                arr[i] = i.toByte()
+            }
+            arr[arr.size - 1] = Byte.MAX_VALUE// 一帧结束的标志
+            arr
+        }
         private val mResponseData2 = byteArrayOf(0x02, Byte.MAX_VALUE)
         private val mResponseData = mResponseData1
 
@@ -125,7 +98,7 @@ class BlePeripheralActivity : AppCompatActivity() {
                 response[i - offset] = mResponseData[i]
             }
 
-            // 注意：如果response的数据长度超过了offset的步进（22），就会再次触发onCharacteristicReadRequest()方法。
+            // 注意：如果所传数据长度超过了offset的步进（22），就会自动再次触发onCharacteristicReadRequest()方法。
             mBluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, response)
         }
 
@@ -147,7 +120,7 @@ class BlePeripheralActivity : AppCompatActivity() {
             // 如果 responseNeeded=true（此属性由中心设备的 characteristic.setWriteType() 方法设置），则必须调用 sendResponse()方法回复中心设备，这个方法会触发中心设备的 BluetoothGattCallback.onCharacteristicWrite() 方法，然后中心设备才能继续下次写数据，否则不能再次写入数据。
             // 如果 responseNeeded=false，那么不需要 sendResponse() 方法，也会触发中心设备的 BluetoothGattCallback.onCharacteristicWrite() 方法
             if (responseNeeded) {
-                mBluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, mResponseData)
+                mBluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, byteArrayOf())
             }
 
             when (value[0]) {
@@ -171,7 +144,13 @@ class BlePeripheralActivity : AppCompatActivity() {
         ) {
             appendText("--> onDescriptorReadRequest", false, R.color.ble_text_blue)
             appendText("device=${device.address} requestId=$requestId offset=$offset descriptor=${descriptor.uuid.getValidString()}")
-            mBluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, mResponseData)
+
+            val response = ByteArray(mResponseData.size - offset)
+            for (i in offset until mResponseData.size) {
+                response[i - offset] = mResponseData[i]
+            }
+
+            mBluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, response)
         }
 
         override fun onDescriptorWriteRequest(
@@ -186,7 +165,7 @@ class BlePeripheralActivity : AppCompatActivity() {
             appendText("--> onDescriptorWriteRequest", false, R.color.ble_text_blue)
             appendText("device=${device.address} requestId=$requestId descriptor=${descriptor.uuid.getValidString()} preparedWrite=$preparedWrite responseNeeded=$responseNeeded offset=$offset value=${value.contentToString()}")
             if (responseNeeded) {
-                mBluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, mResponseData)
+                mBluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, byteArrayOf())
             }
         }
 

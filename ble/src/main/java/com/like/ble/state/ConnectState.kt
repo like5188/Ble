@@ -2,6 +2,7 @@ package com.like.ble.state
 
 import android.bluetooth.*
 import android.os.Build
+import android.util.Log
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.*
 import com.like.ble.utils.findCharacteristic
@@ -82,6 +83,7 @@ class ConnectState : State() {
 
         // 谁进行读数据操作，然后外围设备才会被动的发出一个数据，而这个数据只能是读操作的对象才有资格获得到这个数据。
         override fun onCharacteristicRead(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
+            Log.e("ConnectState", "onCharacteristicRead value=${Arrays.toString(characteristic.value)}")
             val curCommand = mCurCommand
             if (curCommand !is ReadCharacteristicCommand) return
             if (status == BluetoothGatt.GATT_SUCCESS) {
@@ -94,8 +96,9 @@ class ConnectState : State() {
             }
         }
 
-        // 写特征值
+        // 写特征值，注意，这里的characteristic.value中的数据是你写入的数据，而不是外围设备sendResponse返回的。
         override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
+            Log.e("ConnectState", "onCharacteristicRead value=${Arrays.toString(characteristic.value)}")
             val curCmmand = mCurCommand
             if (curCmmand !is WriteCharacteristicCommand) return
             if (status == BluetoothGatt.GATT_SUCCESS) {

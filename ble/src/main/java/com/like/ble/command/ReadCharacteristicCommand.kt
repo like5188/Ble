@@ -18,7 +18,7 @@ class ReadCharacteristicCommand(
     address: String,
     val characteristicUuidString: String,
     val timeout: Long = 3000L,
-    private val maxFrameTransferSize: Int = 300,
+    private val maxFrameTransferSize: Int = 1024,
     val isWholeFrame: (ByteBuffer) -> Boolean = { true },
     private val onSuccess: ((ByteArray?) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
@@ -28,7 +28,11 @@ class ReadCharacteristicCommand(
 
     fun addDataToCache(data: ByteArray) {
         if (isCompleted()) return
-        mDataCache.put(data)
+        try {
+            mDataCache.put(data)
+        } catch (e: Exception) {
+            failureAndComplete(IllegalArgumentException("maxFrameTransferSize 设置太小"))
+        }
     }
 
     fun isWholeFrame() = isWholeFrame(mDataCache)
