@@ -319,7 +319,7 @@ class ConnectState : State() {
                     command.failureAndComplete("写特征值失败：${getUuidValidString(command.characteristicUuidString)}")
                     return@launch
                 }
-                delay(command.writeInterval)// todo 不用延时，用onCharacteristicWrite()方法来触发下一次写。可以考虑宏命令。
+                delay(command.writeInterval)// todo 不用延时，用onCharacteristicWrite()方法来触发下一次写。可以考虑宏命令，把分包变成多个写命令。
             }
         })
 
