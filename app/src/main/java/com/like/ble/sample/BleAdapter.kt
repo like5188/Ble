@@ -2,6 +2,7 @@ package com.like.ble.sample
 
 import android.app.Activity
 import android.bluetooth.BluetoothGatt
+import android.os.Build
 import android.view.Gravity
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -143,16 +144,20 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                             mActivity.longToastBottom(it.message)
                         }
                     )
-                    4 -> RequestConnectionPriorityCommand(
-                        address,
-                        BluetoothGatt.CONNECTION_PRIORITY_HIGH,
-                        {
-                            mActivity.longToastBottom("requestConnectionPriorityCommand成功")
-                        },
-                        {
-                            mActivity.longToastBottom(it.message)
-                        }
-                    )
+                    4 -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        RequestConnectionPriorityCommand(
+                            address,
+                            BluetoothGatt.CONNECTION_PRIORITY_HIGH,
+                            {
+                                mActivity.longToastBottom("requestConnectionPriorityCommand成功")
+                            },
+                            {
+                                mActivity.longToastBottom(it.message)
+                            }
+                        )
+                    } else {
+                        null
+                    }
                     5 -> EnableCharacteristicNotifyCommand(
                         address,
                         "0000fff2-0000-1000-8000-00805f9b34fb",
