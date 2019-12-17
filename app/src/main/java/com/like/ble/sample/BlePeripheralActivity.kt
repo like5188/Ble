@@ -87,7 +87,7 @@ class BlePeripheralActivity : AppCompatActivity() {
         override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
             appendText("--> onConnectionStateChange", false, R.color.ble_text_blue)
             appendText(
-                "device=${device.address} status=${getBluetoothGattStatusString(status)} newState=${getBluetoothGattStatusString(
+                "device=${device.address} status=${getConnectionStateString(status)} newState=${getConnectionStateString(
                     newState
                 )}"
             )

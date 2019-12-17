@@ -204,9 +204,9 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                         5000,
                         200,
                         20,
-                        300,
+                        40,
                         {
-                            true
+                            it.get(it.position() - 1) == 0x1f.toByte()
                         },
                         {
                             mActivity.longToastBottom("写数据并等待获取数据成功：${Arrays.toString(it)}")

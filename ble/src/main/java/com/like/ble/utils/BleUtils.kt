@@ -36,6 +36,14 @@ internal fun BluetoothGatt.findCharacteristic(characteristicUuidString: String):
     return null
 }
 
+fun getConnectionStateString(status: Int) = when (status) {
+    0 -> "DISCONNECTED"
+    1 -> "CONNECTING"
+    2 -> "CONNECTED"
+    3 -> "DISCONNECTING"
+    else -> ""
+}
+
 fun getBluetoothGattStatusString(status: Int) = when (status) {
     0 -> "SUCCESS"
     0x2 -> "READ_NOT_PERMITTED"
