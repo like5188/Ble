@@ -23,7 +23,6 @@ import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
 import com.like.ble.utils.*
 import java.util.*
 
-
 /**
  * 蓝牙外围设备
  * 自安卓5.0后，谷歌加入了对安卓手机作为低功耗蓝牙外围设备，即服务端的支持。使得手机可以通过低功耗蓝牙进行相互通信。
@@ -45,7 +44,41 @@ class BlePeripheralActivity : AppCompatActivity() {
     private val mBleManager: IBleManager by lazy { PeripheralManager(this) }
     private var mBluetoothGattServer: BluetoothGattServer? = null
     private val mBluetoothGattServerCallback = object : BluetoothGattServerCallback() {
-        private val mResponseData1 = byteArrayOf(0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, Byte.MAX_VALUE)
+        private val mResponseData1 = byteArrayOf(
+            0x00,
+            0x01,
+            0x02,
+            0x03,
+            0x04,
+            0x05,
+            0x06,
+            0x07,
+            0x08,
+            0x09,
+            0x0a,
+            0x0b,
+            0x0c,
+            0x0d,
+            0x0e,
+            0x0f,
+            0x10,
+            0x11,
+            0x12,
+            0x13,
+            0x14,
+            0x15,
+            0x16,
+            0x17,
+            0x18,
+            0x19,
+            0x1a,
+            0x1b,
+            0x1c,
+            0x1d,
+            0x1e,
+            0x1f,
+            Byte.MAX_VALUE
+        )
         private val mResponseData2 = byteArrayOf(0x02, Byte.MAX_VALUE)
         private val mResponseData = mResponseData1
 
@@ -86,14 +119,14 @@ class BlePeripheralActivity : AppCompatActivity() {
         ) {
             appendText("--> onCharacteristicReadRequest", false, R.color.ble_text_blue)
             appendText("device=${device.address} requestId=$requestId offset=$offset characteristic=${characteristic.uuid.getValidString()} value=${characteristic.value?.contentToString()}")
-            // 此方法要求作出响应
-            mBluetoothGattServer?.sendResponse(
-                device,
-                requestId,
-                BluetoothGatt.GATT_SUCCESS,
-                offset,
-                mResponseData
-            )
+
+            val response = ByteArray(mResponseData.size - offset)
+            for (i in offset until mResponseData.size) {
+                response[i - offset] = mResponseData[i]
+            }
+
+            // 注意：如果response的数据长度超过了offset的步进（22），就会再次触发onCharacteristicReadRequest()方法。
+            mBluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, response)
         }
 
         /**
@@ -114,13 +147,7 @@ class BlePeripheralActivity : AppCompatActivity() {
             // 如果 responseNeeded=true（此属性由中心设备的 characteristic.setWriteType() 方法设置），则必须调用 sendResponse()方法回复中心设备，这个方法会触发中心设备的 BluetoothGattCallback.onCharacteristicWrite() 方法，然后中心设备才能继续下次写数据，否则不能再次写入数据。
             // 如果 responseNeeded=false，那么不需要 sendResponse() 方法，也会触发中心设备的 BluetoothGattCallback.onCharacteristicWrite() 方法
             if (responseNeeded) {
-                mBluetoothGattServer?.sendResponse(
-                    device,
-                    requestId,
-                    BluetoothGatt.GATT_SUCCESS,
-                    offset,
-                    mResponseData
-                )
+                mBluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, mResponseData)
             }
 
             when (value[0]) {
@@ -144,13 +171,7 @@ class BlePeripheralActivity : AppCompatActivity() {
         ) {
             appendText("--> onDescriptorReadRequest", false, R.color.ble_text_blue)
             appendText("device=${device.address} requestId=$requestId offset=$offset descriptor=${descriptor.uuid.getValidString()}")
-            mBluetoothGattServer?.sendResponse(
-                device,
-                requestId,
-                BluetoothGatt.GATT_SUCCESS,
-                offset,
-                mResponseData
-            )
+            mBluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, mResponseData)
         }
 
         override fun onDescriptorWriteRequest(
@@ -165,13 +186,7 @@ class BlePeripheralActivity : AppCompatActivity() {
             appendText("--> onDescriptorWriteRequest", false, R.color.ble_text_blue)
             appendText("device=${device.address} requestId=$requestId descriptor=${descriptor.uuid.getValidString()} preparedWrite=$preparedWrite responseNeeded=$responseNeeded offset=$offset value=${value.contentToString()}")
             if (responseNeeded) {
-                mBluetoothGattServer?.sendResponse(
-                    device,
-                    requestId,
-                    BluetoothGatt.GATT_SUCCESS,
-                    offset,
-                    mResponseData
-                )
+                mBluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, mResponseData)
             }
         }
 
