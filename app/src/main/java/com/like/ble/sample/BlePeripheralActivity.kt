@@ -273,7 +273,8 @@ class BlePeripheralActivity : AppCompatActivity() {
     }
 
     /**
-     * 注意：一个 AdvertiseData 中数据最多31个子节，多了会广播失败，错误码如下：
+     * 一个 AdvertiseData 中数据的长度必须是31个字节，如果不到31个字节 ，则剩下的全用0补全，这部分的数据是无效的，
+     * 如果多了会广播失败，错误码如下：
      * [android.bluetooth.le.AdvertiseCallback.ADVERTISE_FAILED_DATA_TOO_LARGE]
      * 所以，这里设置了 setIncludeDeviceName(true)，就不能设置 addServiceUuid(ParcelUuid(UUID_SERVICE)) 了，会超出大小的限制。
      */
