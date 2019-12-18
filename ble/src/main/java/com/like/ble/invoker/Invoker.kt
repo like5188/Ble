@@ -60,7 +60,7 @@ abstract class Invoker(private val mActivity: FragmentActivity) {
         mPermissionUtils.checkPermissions(
             Manifest.permission.BLUETOOTH_ADMIN,
             Manifest.permission.BLUETOOTH,
-            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION,// android 6.0 以上需要获取到定位权限
             Manifest.permission.ACCESS_COARSE_LOCATION,
             onDenied = {
                 continuation.resume(false)

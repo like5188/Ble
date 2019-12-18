@@ -7,17 +7,34 @@ import com.like.ble.command.Command
  * Android 4.3 开始，开始支持BLE功能，但只支持Central Mode（中心模式）
  * Android 5.0开始，开始支持Peripheral Mode（外设模式）
  *
+ * GAP是通用访问配置文件的首字母缩写，主要控制蓝牙连接和广播。GAP使蓝牙设备对外界可见，并决定设备是否可以或者怎样与其他设备进行交互。</br>
+ * GAP定义了多种角色，但主要的两个是：中心设备 和 外围设备。
+ *
+ * GATT使用了 ATT（Attribute Protocol）协议，ATT 协议把 Service, Characteristic对应的数据保存在一个查询表中，次查找表使用 16 bit ID 作为每一项的索引。</br>
+ * GATT 连接是独占的。也就是一个 BLE 外设同时只能被一个中心设备连接。一旦外设被连接，它就会马上停止广播，这样它就对其他设备不可见了。当外设与中心设备断开，外设又开始广播，让其他中心设备感知该外设的存在。而中心设备可同时与多个外设进行连接。
+ *
  * GATT，属性配置文件，定义数据的交互方式和含义。
  * GATT 连接是独占的。也就是一个 BLE 外设同时只能被一个中心设备连接。一旦外设被连接，它就会马上停止广播，这样它就对其他设备不可见了。当设备断开，它又开始广播。中心设备和外设需要双向通信的话，唯一的方式就是建立 GATT 连接。
  *
  * GATT 定义了4个概念：配置文件（Profile）、服务（Service）、特征（Characteristic）和描述（Descriptor）。他们的关系是这样的：Profile 就是定义了一个实际的应用场景，一个 Profile包含若干个 Service，一个 Service 包含若干个 Characteristic，一个 Characteristic 可以包含若干 Descriptor。
  * Profile 并不是实际存在于 BLE 外设上的，它只是一个被 Bluetooth SIG 或者外设设计者预先定义的 Service 的集合。例如心率Profile（Heart Rate Profile）就是结合了 Heart Rate Service 和 Device Information Service。
  * Service 是把数据分成一个个的独立逻辑项，它包含一个或者多个 Characteristic。每个 Service 有一个 UUID 唯一标识。 UUID 有 16 bit 的，或者 128 bit 的。16 bit 的 UUID 是官方通过认证的，需要花钱购买，128 bit 是自定义的，这个就可以自己随便设置。官方通过了一些标准 Service，完整列表在这里。以 Heart Rate Service为例，可以看到它的官方通过 16 bit UUID 是  0x180D，包含 3 个 Characteristic：Heart Rate Measurement, Body Sensor Location 和 Heart Rate Control Point，并且定义了只有第一个是必须的，它是可选实现的。
- * Characteristic， 它定义了数值和操作，包含一个Characteristic声明、Characteristic属性、值、值的描述(Optional)。通常我们讲的 BLE 通信，其实就是对 Characteristic 的读写或者订阅通知。比如在实际操作过程中，我对某一个Characteristic进行读，就是获取这个Characteristic的value。
+ * Characteristic， 是最小的逻辑数据单元。一个Characteristic包括一个单一value变量和0-n个用来描述characteristic变量的Descriptor。包含一个Characteristic声明、Characteristic属性、值、值的描述(Optional)。通常我们讲的 BLE 通信，其实就是对 Characteristic 的读写或者订阅通知。比如在实际操作过程中，我对某一个Characteristic进行读，就是获取这个Characteristic的value。
+ * 实际开发中，和 BLE 外设打交道，主要是通过 Characteristic。可以从 Characteristic 读取数据，也可以往 Characteristic 写数据，从而实现双向的通信。
  *
  * Service、Characteristic 还有 Descriptor 都是使用 UUID 唯一标示的。
  * UUID 是全局唯一标识，它是 128bit 的值，为了便于识别和阅读，一般以 “8位-4位-4位-4位-12位”的16进制标示，比如“12345678-abcd-1000-8000-123456000000”。
  * 但是，128bit的UUID 太长，考虑到在低功耗蓝牙中，数据长度非常受限的情况，蓝牙又使用了所谓的 16 bit 或者 32 bit 的 UUID，形式如下：“0000XXXX-0000-1000-8000-00805F9B34FB”。除了 “XXXX” 那几位以外，其他都是固定，所以说，其实 16 bit UUID 是对应了一个 128 bit 的 UUID。这样一来，UUID 就大幅减少了，例如 16 bit UUID只有有限的 65536（16的四次方） 个。与此同时，因为数量有限，所以 16 bit UUID 并不能随便使用。蓝牙技术联盟已经预先定义了一些 UUID，我们可以直接使用，比如“00001011-0000-1000-8000-00805F9B34FB”就一个是常见于BLE设备中的UUID。当然也可以花钱定制自定义的UUID。
+ * 若16 bit UUID为xxxx，转换为128 bit UUID为0000xxxx-0000-1000-8000-00805F9B34FB </br>
+ * 若32 bit UUID为xxxxxxxx，转换为128 bit UUID为xxxxxxxx-0000-1000-8000-00805F9B34FB </br>
+ *
+ * BLE开发当中各种主要类和其作用：
+ * BluetoothDeivce：蓝牙设备，代表一个具体的蓝牙外设。</br>
+ * BluetoothGatt：通用属性协议，定义了BLE通讯的基本规则和操作</br>
+ * BluetoothGattCallback：GATT通信回调类，用于回调的各种状态和结果。</br>
+ * BluetoothGattService：服务，由零或多个特征组构成。</br>
+ * BluetoothGattCharacteristic：特征，里面包含了一组或多组数据，是GATT通信中的最小数据单元。</br>
+ * BluetoothGattDescriptor：特征描述符，对特征的额外描述，包括但不仅限于特征的单位，属性等。</br>
  *
  * 应用在使用蓝牙设备的时候必须要声明蓝牙权限 BLUETOOTH 需要这个权限才可以进行蓝牙通信，例如：请求连接、接受连接、和传输数据。
  * <uses-permission android:name="android.permission.BLUETOOTH" />

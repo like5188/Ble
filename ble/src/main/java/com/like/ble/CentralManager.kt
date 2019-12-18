@@ -10,6 +10,8 @@ import kotlinx.coroutines.launch
 
 /**
  * 蓝牙中心设备管理，使用者直接使用此接口进行相关操作。
+ *
+ * 可以扫描并连接多个外围设备,从外设中获取信息。
  */
 class CentralManager(private val mActivity: FragmentActivity) : IBleManager {
     private val mExecutor: IExecutor by lazy { CentralExecutor(mActivity) }
