@@ -250,7 +250,7 @@ class BlePeripheralActivity : AppCompatActivity() {
             // 设置广播的模式，低功耗，平衡和低延迟三种模式；
             // 对应  AdvertiseSettings.ADVERTISE_MODE_LOW_POWER  ,ADVERTISE_MODE_BALANCED ,ADVERTISE_MODE_LOW_LATENCY
             // 从左右到右，广播的间隔会越来越短
-            .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
+            .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
             // 设置是否可以连接。
             // 广播分为可连接广播和不可连接广播，一般不可连接广播应用在iBeacon设备上，这样APP无法连接上iBeacon设备
             .setConnectable(true)
