@@ -272,6 +272,11 @@ class BlePeripheralActivity : AppCompatActivity() {
             .build()
     }
 
+    /**
+     * 注意：一个 AdvertiseData 中数据最多31个子节，多了会广播失败，错误码如下：
+     * [android.bluetooth.le.AdvertiseCallback.ADVERTISE_FAILED_DATA_TOO_LARGE]
+     * 所以，这里设置了 setIncludeDeviceName(true)，就不能设置 addServiceUuid(ParcelUuid(UUID_SERVICE)) 了，会超出大小的限制。
+     */
     private fun createAdvertiseData(data: ByteArray): AdvertiseData {
         return AdvertiseData.Builder()
             .addManufacturerData(0x01AC, data)
@@ -280,12 +285,14 @@ class BlePeripheralActivity : AppCompatActivity() {
             .build()
     }
 
+    /**
+     * 这里调用 addServiceUuid(ParcelUuid(UUID_SERVICE))
+     * 是为了让使用者调用[android.bluetooth.BluetoothAdapter.startLeScan]能过滤 serviceUuids
+     */
     private fun createScanResponseAdvertiseData(): AdvertiseData {
         return AdvertiseData.Builder()
-            .addServiceData(
-                ParcelUuid(UUID_SERVICE),
-                byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24)// 长度最多24
-            )
+            .addServiceUuid(ParcelUuid(UUID_SERVICE))// 添加是为了让使用者扫描到
+            .addServiceData(ParcelUuid(UUID_SERVICE), byteArrayOf(Byte.MAX_VALUE))// 长度最多24
             .setIncludeTxPowerLevel(true)
             .build()
     }
