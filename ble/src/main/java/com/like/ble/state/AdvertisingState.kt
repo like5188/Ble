@@ -34,6 +34,7 @@ class AdvertisingState : State() {
                     else -> "errorCode=$errorCode"
                 }
                 curCommand.failureAndComplete(errorMsg)
+                mIsRunning.set(false)
             }
         }
 
