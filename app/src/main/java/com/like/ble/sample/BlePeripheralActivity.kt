@@ -45,9 +45,9 @@ class BlePeripheralActivity : AppCompatActivity() {
     private var mBluetoothGattServer: BluetoothGattServer? = null
     private val mBluetoothGattServerCallback = object : BluetoothGattServerCallback() {
         private val mResponseData1: ByteArray by lazy {
-            val arr = ByteArray(600)// 大于600就失败……原因未知
-            for (i in 0 until arr.size - 1) {
-                arr[i] = i.toByte()
+            val arr = ByteArray(255)// 大于600就失败……原因未知
+            for (i in 1 until arr.size) {
+                arr[i - 1] = i.toByte()
             }
             arr[arr.size - 1] = Byte.MAX_VALUE// 一帧结束的标志
             arr
@@ -91,14 +91,23 @@ class BlePeripheralActivity : AppCompatActivity() {
             characteristic: BluetoothGattCharacteristic
         ) {
             appendText("--> onCharacteristicReadRequest", false, R.color.ble_text_blue)
-            appendText("device=${device.address} requestId=$requestId offset=$offset characteristic=${characteristic.uuid.getValidString()} value=${characteristic.value?.contentToString()}")
+            appendText(
+                "device=${device.address} requestId=$requestId offset=$offset characteristic=${characteristic.uuid.getValidString()} value=${characteristic.value?.contentToString()}",
+                false
+            )
 
-            val response = ByteArray(mResponseData.size - offset)
-            for (i in offset until mResponseData.size) {
+            val responseSize = if (mResponseData.size - offset > 22) {
+                22
+            } else {
+                mResponseData.size - offset
+            }
+            val response = ByteArray(responseSize)
+            for (i in offset until offset + responseSize) {
                 response[i - offset] = mResponseData[i]
             }
+            appendText("sendResponse：responseSize=$responseSize response=${response.contentToString()}")
 
-            // 注意：如果所传数据长度超过了offset的步进（22），就会自动再次触发onCharacteristicReadRequest()方法。
+            // 注意：如果所传数据长度>=offset的步进（22），就会自动再次触发onCharacteristicReadRequest()方法。
             mBluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, response)
         }
 
