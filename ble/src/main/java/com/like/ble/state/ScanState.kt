@@ -3,8 +3,11 @@ package com.like.ble.state
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
+import android.bluetooth.le.ScanSettings
 import android.os.Build
+import android.os.ParcelUuid
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.lifecycleScope
@@ -46,20 +49,20 @@ class ScanState : State() {
         if (curCommand is StartScanCommand) {
             Log.e("ScanState", "deviceName=${device.name} deviceAddress=${device.address} serviceUuids=${Arrays.toString(device.uuids)}")
             // 设备名字匹配
-            if (curCommand.deviceName.isNotEmpty()) {
+            if (curCommand.filterDeviceName.isNotEmpty()) {
                 val deviceName = device.name ?: ""
                 if (curCommand.fuzzyMatchingDeviceName) {// 模糊匹配
-                    if (!deviceName.contains(curCommand.deviceName)) {
+                    if (!deviceName.contains(curCommand.filterDeviceName)) {
                         return
                     }
                 } else {
-                    if (deviceName != curCommand.deviceName) {
+                    if (deviceName != curCommand.filterDeviceName) {
                         return
                     }
                 }
             }
             // 设备地址匹配
-            if (curCommand.deviceAddress.isNotEmpty() && device.address != curCommand.deviceAddress) {
+            if (curCommand.filterDeviceAddress.isNotEmpty() && device.address != curCommand.filterDeviceAddress) {
                 return
             }
             curCommand.success(device, rssi, scanRecord)
@@ -72,10 +75,24 @@ class ScanState : State() {
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
                 launch(Dispatchers.IO) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(mScanCallback)
+                        if (command.filterServiceUuid == null) {
+                            mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(mScanCallback)
+                        } else {
+                            mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(
+                                listOf(ScanFilter.Builder().setServiceUuid(ParcelUuid(command.filterServiceUuid)).build()),
+                                ScanSettings.Builder().build(),
+                                mScanCallback
+                            )
+                        }
                     } else {
-                        if (mActivity.getBluetoothAdapter()?.startLeScan(mLeScanCallback) != true) {
-                            command.failureAndComplete("扫描失败")
+                        if (command.filterServiceUuid == null) {
+                            if (mActivity.getBluetoothAdapter()?.startLeScan(mLeScanCallback) != true) {
+                                command.failureAndComplete("扫描失败")
+                            }
+                        } else {
+                            if (mActivity.getBluetoothAdapter()?.startLeScan(arrayOf(command.filterServiceUuid), mLeScanCallback) != true) {
+                                command.failureAndComplete("扫描失败")
+                            }
                         }
                     }
                 }

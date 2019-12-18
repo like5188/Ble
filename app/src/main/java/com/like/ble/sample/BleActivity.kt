@@ -10,6 +10,7 @@ import com.like.ble.command.StartScanCommand
 import com.like.ble.command.StopScanCommand
 import com.like.ble.sample.databinding.ActivityBleBinding
 import com.like.livedatarecyclerview.layoutmanager.WrapLinearLayoutManager
+import java.util.*
 
 
 /**
@@ -36,9 +37,10 @@ class BleActivity : AppCompatActivity() {
         mAdapter.mAdapterDataManager.clear()
         mBleManager.sendCommand(
             StartScanCommand(
-                "MEIZU",
+                "",
                 true,
                 "",
+                UUID.fromString("0000fff0-0000-1000-8000-00805f9b34fb"),
                 2000L,
                 { device, rssi, scanRecord ->
                     val address = device.address ?: ""
