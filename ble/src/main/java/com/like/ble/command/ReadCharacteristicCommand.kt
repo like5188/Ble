@@ -18,7 +18,7 @@ class ReadCharacteristicCommand(
     address: String,
     val characteristicUuidString: String,
     val timeout: Long = 3000L,
-    private val maxFrameTransferSize: Int = 1024,
+    private val maxFrameTransferSize: Int = 616,// onCharacteristicReadRequest()方法中最大只能返回616字节。
     val isWholeFrame: (ByteBuffer) -> Boolean = { true },
     private val onSuccess: ((ByteArray?) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
