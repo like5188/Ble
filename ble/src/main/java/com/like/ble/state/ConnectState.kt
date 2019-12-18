@@ -148,6 +148,7 @@ class ConnectState : State() {
 
     }
 
+    @Synchronized
     override fun connect(command: ConnectCommand) {
         mCurCommand = command// todo 连接命令要一直保存。这样在断开时才会触发回调更新界面
 
@@ -156,33 +157,30 @@ class ConnectState : State() {
             return
         }
 
-        mActivity.lifecycleScope.launch(Dispatchers.IO) {
-            // 获取远端的蓝牙设备
-            val bluetoothDevice = mActivity.getBluetoothAdapter()?.getRemoteDevice(command.address)
-            if (bluetoothDevice == null) {
-                command.failureAndComplete("连接蓝牙设备失败：设备 ${command.address} 未找到")
-                return@launch
-            }
-
-            launch(Dispatchers.IO) {
-                val bluetoothGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    bluetoothDevice.connectGatt(mActivity, false, mGattCallback, BluetoothDevice.TRANSPORT_LE)// 第二个参数表示是否自动重连
-                } else {
-                    bluetoothDevice.connectGatt(mActivity, false, mGattCallback)// 第二个参数表示是否自动重连
-                }
-                if (bluetoothGatt == null) {
-                    command.failureAndComplete("连接蓝牙设备失败：${command.address}")
-                }
-            }
-
-            command.addJob(launch(Dispatchers.IO) {
-                delay(command.timeout)
-                disconnect(DisconnectCommand(command.address))
-                command.failureAndComplete("连接超时：${command.address}")
-            })
+        // 获取远端的蓝牙设备
+        val bluetoothDevice = mActivity.getBluetoothAdapter()?.getRemoteDevice(command.address)
+        if (bluetoothDevice == null) {
+            command.failureAndComplete("连接蓝牙设备失败：设备 ${command.address} 未找到")
+            return
         }
+
+        val bluetoothGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            bluetoothDevice.connectGatt(mActivity, false, mGattCallback, BluetoothDevice.TRANSPORT_LE)// 第二个参数表示是否自动重连
+        } else {
+            bluetoothDevice.connectGatt(mActivity, false, mGattCallback)// 第二个参数表示是否自动重连
+        }
+        if (bluetoothGatt == null) {
+            command.failureAndComplete("连接蓝牙设备失败：${command.address}")
+            return
+        }
+        command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
+            delay(command.timeout)
+            disconnect(DisconnectCommand(command.address))
+            command.failureAndComplete("连接超时：${command.address}")
+        })
     }
 
+    @Synchronized
     override fun disconnect(command: DisconnectCommand) {
         val curCommand = mCurCommand
         if (curCommand != null && curCommand !is DisconnectCommand) {
@@ -196,9 +194,7 @@ class ConnectState : State() {
             command.successAndComplete()
             return
         }
-        mActivity.lifecycleScope.launch(Dispatchers.IO) {
-            bluetoothGatt.disconnect()
-        }
+        bluetoothGatt.disconnect()
     }
 
     override fun writeAndWaitForData(command: WriteAndWaitForDataCommand) {
@@ -502,6 +498,7 @@ class ConnectState : State() {
         }
     }
 
+    @Synchronized
     override fun close(command: CloseCommand) {
         mBluetoothGatt?.device?.address?.let {
             disconnect(DisconnectCommand(it))

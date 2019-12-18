@@ -5,13 +5,10 @@ import android.bluetooth.le.AdvertiseSettings
 import android.bluetooth.le.BluetoothLeAdvertiser
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.CloseCommand
 import com.like.ble.command.StartAdvertisingCommand
 import com.like.ble.command.StopAdvertisingCommand
 import com.like.ble.utils.getBluetoothAdapter
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -46,6 +43,7 @@ class AdvertisingState : State() {
         }
     }
 
+    @Synchronized
     override fun startAdvertising(command: StartAdvertisingCommand) {
         mCurCommand = command
         if (mIsRunning.compareAndSet(false, true)) {
@@ -61,23 +59,18 @@ class AdvertisingState : State() {
                 }
             }
 
+            // 设置设备名字
             if (command.deviceName.isNotEmpty()) {
                 mActivity.getBluetoothAdapter()?.name = command.deviceName
             }
 
-            mActivity.lifecycleScope.launch(Dispatchers.IO) {
-                mBluetoothLeAdvertiser?.startAdvertising(
-                    command.settings,
-                    command.advertiseData,
-                    command.scanResponse,
-                    mAdvertiseCallback
-                )
-            }
+            mBluetoothLeAdvertiser?.startAdvertising(command.settings, command.advertiseData, command.scanResponse, mAdvertiseCallback)
         } else {
             command.failureAndComplete("正在广播中")
         }
     }
 
+    @Synchronized
     override fun stopAdvertising(command: StopAdvertisingCommand) {
         if (mIsRunning.compareAndSet(true, false)) {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
@@ -92,15 +85,14 @@ class AdvertisingState : State() {
 
             mCurCommand = command
 
-            mActivity.lifecycleScope.launch(Dispatchers.IO) {
-                mBluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)
-                command.successAndComplete()
-            }
+            mBluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)
+            command.successAndComplete()
         } else {
             command.failureAndComplete("广播已经停止")
         }
     }
 
+    @Synchronized
     override fun close(command: CloseCommand) {
         stopAdvertising(StopAdvertisingCommand())
         mBluetoothLeAdvertiser = null

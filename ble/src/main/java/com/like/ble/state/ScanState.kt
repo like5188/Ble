@@ -69,49 +69,49 @@ class ScanState : State() {
         }
     }
 
+    @Synchronized
     override fun startScan(command: StartScanCommand) {
         mCurCommand = command
         if (mScanning.compareAndSet(false, true)) {
-            mActivity.lifecycleScope.launch(Dispatchers.IO) {
-                launch(Dispatchers.IO) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        if (command.filterServiceUuid == null) {
-                            mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(mScanCallback)
-                        } else {
-                            // serviceUuid 只能在这里过滤，不能放到 filterScanResult() 方法中去，因为只有 gatt.discoverServices() 过后，device.getUuids() 方法才不会返回 null。
-                            mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(
-                                listOf(ScanFilter.Builder().setServiceUuid(ParcelUuid(command.filterServiceUuid)).build()),
-                                ScanSettings.Builder().build(),
-                                mScanCallback
-                            )
-                        }
-                    } else {
-                        if (command.filterServiceUuid == null) {
-                            if (mActivity.getBluetoothAdapter()?.startLeScan(mLeScanCallback) != true) {
-                                command.failureAndComplete("扫描失败")
-                            }
-                        } else {
-                            if (mActivity.getBluetoothAdapter()?.startLeScan(arrayOf(command.filterServiceUuid), mLeScanCallback) != true) {
-                                command.failureAndComplete("扫描失败")
-                            }
-                        }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                if (command.filterServiceUuid == null) {
+                    mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(mScanCallback)
+                } else {
+                    // serviceUuid 只能在这里过滤，不能放到 filterScanResult() 方法中去，因为只有 gatt.discoverServices() 过后，device.getUuids() 方法才不会返回 null。
+                    mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(
+                        listOf(ScanFilter.Builder().setServiceUuid(ParcelUuid(command.filterServiceUuid)).build()),
+                        ScanSettings.Builder().build(),
+                        mScanCallback
+                    )
+                }
+            } else {
+                if (command.filterServiceUuid == null) {
+                    if (mActivity.getBluetoothAdapter()?.startLeScan(mLeScanCallback) != true) {
+                        command.failureAndComplete("扫描失败")
+                        return
+                    }
+                } else {
+                    if (mActivity.getBluetoothAdapter()?.startLeScan(arrayOf(command.filterServiceUuid), mLeScanCallback) != true) {
+                        command.failureAndComplete("扫描失败")
+                        return
                     }
                 }
-
-                command.addJob(launch(Dispatchers.IO) {
-                    // 在指定超时时间时取消扫描，然后一次扫描就完成了。
-                    delay(command.timeout)
-                    if (mScanning.get()) {
-                        stopScan(StopScanCommand())
-                    }
-                    command.complete("扫描超时时间到了")
-                })
             }
+
+            command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
+                // 在指定超时时间时取消扫描，然后一次扫描就完成了。
+                delay(command.timeout)
+                if (mScanning.get()) {
+                    stopScan(StopScanCommand())
+                }
+                command.complete("扫描超时时间到了")
+            })
         } else {
             command.failureAndComplete("正在扫描中")
         }
     }
 
+    @Synchronized
     override fun stopScan(command: StopScanCommand) {
         if (mScanning.compareAndSet(true, false)) {
             val curCommand = mCurCommand
@@ -121,20 +121,19 @@ class ScanState : State() {
 
             mCurCommand = command
 
-            mActivity.lifecycleScope.launch(Dispatchers.IO) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.stopScan(mScanCallback)
-                } else {
-                    mActivity.getBluetoothAdapter()?.stopLeScan(mLeScanCallback)
-                }
-                command.successAndComplete()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.stopScan(mScanCallback)
+            } else {
+                mActivity.getBluetoothAdapter()?.stopLeScan(mLeScanCallback)
             }
+            command.successAndComplete()
         } else {
             mCurCommand = command
             command.failureAndComplete("扫描已经停止")
         }
     }
 
+    @Synchronized
     override fun close(command: CloseCommand) {
         stopScan(StopScanCommand())
         mCurCommand = null
