@@ -126,6 +126,25 @@ fun ByteArray.batch(chunkSize: Int): List<ByteArray> {
 }
 
 /**
+ * 复制一部分数据。如果数据不够，返回的数组长度会小于length
+ *
+ * @param fromIndex     开始位置索引
+ * @param length        截取的长度
+ */
+fun ByteArray.copyOfRangeByLength(fromIndex: Int, length: Int): ByteArray {
+    val responseSize = if (size - fromIndex > length) {
+        length
+    } else {
+        size - fromIndex
+    }
+    val response = ByteArray(responseSize)
+    for (i in fromIndex until fromIndex + responseSize) {
+        response[i - fromIndex] = this[i]
+    }
+    return response
+}
+
+/**
  * ByteBuffer 转换成 ByteArray
  */
 internal fun ByteBuffer.toByteArrayOrNull(): ByteArray? {
