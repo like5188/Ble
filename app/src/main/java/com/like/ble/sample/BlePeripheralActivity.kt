@@ -101,6 +101,7 @@ class BlePeripheralActivity : AppCompatActivity() {
 
             // 注意：如果所传数据长度>=offset的步进（22），就会自动再次触发onCharacteristicReadRequest()方法。
             // offset最大为594，所以传递的数据最大为594+22=616子节。
+            // sendResponse()中的参数offset可以随便传，不会影响onCharacteristicReadRequest()方法返回的offset。
             mBluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, response)
         }
 
