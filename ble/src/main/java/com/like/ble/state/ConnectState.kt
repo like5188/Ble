@@ -24,20 +24,32 @@ class ConnectState : State() {
     private val mGattCallback = object : BluetoothGattCallback() {
         // 当连接状态改变
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-            when (newState) {
-                BluetoothGatt.STATE_CONNECTED -> {// 连接蓝牙设备成功
-                    // 连接成功后，发现设备所有的 GATT Service
-                    gatt.discoverServices()
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                when (newState) {
+                    BluetoothGatt.STATE_CONNECTED -> {// 连接蓝牙设备成功
+                        // 连接成功后，发现设备所有的 GATT Service
+                        gatt.discoverServices()
+                    }
+                    BluetoothGatt.STATE_DISCONNECTED -> {// 连接蓝牙设备失败
+                        mBluetoothGatt = null
+                        when (val curCommand = mCurCommand) {
+                            is DisconnectCommand -> {
+                                curCommand.successAndComplete()
+                            }
+                            else -> {
+                                curCommand?.failureAndComplete("连接蓝牙设备失败")
+                            }
+                        }
+                    }
                 }
-                BluetoothGatt.STATE_DISCONNECTED -> {// 连接蓝牙设备失败
-                    mBluetoothGatt = null
-                    when (val curCommand = mCurCommand) {
-                        is DisconnectCommand -> {
-                            curCommand.successAndComplete()
-                        }
-                        else -> {
-                            curCommand?.failureAndComplete("连接蓝牙设备失败")
-                        }
+            } else {
+                mBluetoothGatt = null
+                when (val curCommand = mCurCommand) {
+                    is DisconnectCommand -> {
+                        curCommand.failureAndComplete("断开连接失败")
+                    }
+                    else -> {
+                        curCommand?.failureAndComplete("连接蓝牙设备失败")
                     }
                 }
             }
