@@ -37,7 +37,7 @@ class ConnectState : State() {
                                 curCommand.successAndComplete()
                             }
                             else -> {
-                                curCommand?.failureAndComplete("连接蓝牙设备失败")
+                                curCommand?.failureAndComplete("蓝牙设备已断开")
                             }
                         }
                     }
@@ -46,10 +46,10 @@ class ConnectState : State() {
                 mBluetoothGatt = null
                 when (val curCommand = mCurCommand) {
                     is DisconnectCommand -> {
-                        curCommand.failureAndComplete("断开连接失败")
+                        curCommand.failureAndComplete("断开连接失败：$status")
                     }
                     else -> {
-                        curCommand?.failureAndComplete("连接蓝牙设备失败")
+                        curCommand?.failureAndComplete("连接蓝牙设备失败：$status")
                     }
                 }
             }
