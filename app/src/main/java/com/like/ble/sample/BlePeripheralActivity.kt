@@ -199,14 +199,15 @@ class BlePeripheralActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mBinding.tvStatus.movementMethod = ScrollingMovementMethod()
+        getBluetoothAdapter()?.name = "BLE测试设备"
     }
 
     fun startAdvertising(view: View) {
         mBleManager.sendCommand(
             StartAdvertisingCommand(
                 createAdvertiseSettings(),
-                createAdvertiseData(byteArrayOf(0x34, 0x56)),
-                createScanResponseAdvertiseData(),
+                createAdvertiseData(),
+                createScanResponseAdvertiseData(byteArrayOf(0x34, 0x56)),// 外设必须广播广播包，扫描包是可选。但添加扫描包也意味着广播更多得数据，即可广播62个字节。
                 {
                     appendText("广播成功", true, R.color.ble_text_blue)
                     initServices()//该方法是添加一个服务，在此处调用即将服务广播出去
@@ -255,7 +256,7 @@ class BlePeripheralActivity : AppCompatActivity() {
             // 广播分为可连接广播和不可连接广播，一般不可连接广播应用在iBeacon设备上，这样APP无法连接上iBeacon设备
             .setConnectable(true)
             // 设置广播的最长时间，最大值为常量AdvertiseSettings.LIMITED_ADVERTISING_MAX_MILLIS = 180 * 1000;  180秒
-            // 设为0时，代表无时间限制会一直广播
+            // 设为0时，代表无时间限制会一直广播，除非调用BluetoothLeAdvertiser#stopAdvertising()。
             .setTimeout(0)
             // 设置广播的信号强度
             // 常量有AdvertiseSettings.ADVERTISE_TX_POWER_ULTRA_LOW, ADVERTISE_TX_POWER_LOW, ADVERTISE_TX_POWER_MEDIUM, ADVERTISE_TX_POWER_HIGH
@@ -278,11 +279,10 @@ class BlePeripheralActivity : AppCompatActivity() {
      * [android.bluetooth.le.AdvertiseCallback.ADVERTISE_FAILED_DATA_TOO_LARGE]
      * 所以，这里设置了 setIncludeDeviceName(true)，就不能设置 addServiceUuid(ParcelUuid(UUID_SERVICE)) 了，会超出大小的限制。
      */
-    private fun createAdvertiseData(data: ByteArray): AdvertiseData {
+    private fun createAdvertiseData(): AdvertiseData {
         return AdvertiseData.Builder()
-            .addManufacturerData(0x01AC, data)
-            .setIncludeDeviceName(true)
-            .setIncludeTxPowerLevel(true)
+            .setIncludeDeviceName(true)// 设置广播包中是否包含蓝牙的名称。
+            .setIncludeTxPowerLevel(true)// 设置广播包中是否包含蓝牙的发射功率。 数值范围：±127 dBm。
             .build()
     }
 
@@ -290,11 +290,14 @@ class BlePeripheralActivity : AppCompatActivity() {
      * 这里调用 addServiceUuid(ParcelUuid(UUID_SERVICE))
      * 是为了让使用者调用[android.bluetooth.BluetoothAdapter.startLeScan]能过滤 serviceUuids
      */
-    private fun createScanResponseAdvertiseData(): AdvertiseData {
+    private fun createScanResponseAdvertiseData(data: ByteArray): AdvertiseData {
         return AdvertiseData.Builder()
-            .addServiceUuid(ParcelUuid(UUID_SERVICE))// 添加是为了让使用者扫描到
-            .addServiceData(ParcelUuid(UUID_SERVICE), byteArrayOf(Byte.MAX_VALUE))// 长度最多24
-            .setIncludeTxPowerLevel(true)
+            .setIncludeDeviceName(false)
+            .setIncludeTxPowerLevel(false)
+            .addServiceUuid(ParcelUuid(UUID_SERVICE))// 添加是为了让使用者扫描时候过滤
+            // 如果一个外设需要在不连接的情况下对外广播数据，其数据可以存储在UUID对应的数据中，也可以存储在厂商数据中。但由于厂商ID是需要由Bluetooth SIG进行分配的，厂商间一般都将数据设置在厂商数据。
+            .addServiceData(ParcelUuid(UUID_SERVICE), byteArrayOf(Byte.MAX_VALUE))// 设置特定的UUID和其数据在广播包中
+            .addManufacturerData(0x01AC, data)// 设置特定厂商Id和其数据在广播包中。前两个字节表示厂商ID,剩下的是厂商自定义的数据。
             .build()
     }
 
