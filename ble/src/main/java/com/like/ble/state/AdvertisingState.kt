@@ -28,7 +28,6 @@ class AdvertisingState : State() {
         override fun onStartFailure(errorCode: Int) {
             val curCommand = mCurCommand
             if (curCommand is StartAdvertisingCommand) {
-                // 扫描太频繁会返回ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED，表示app无法注册，无法开始扫描。
                 val errorMsg = when (errorCode) {
                     ADVERTISE_FAILED_DATA_TOO_LARGE -> "Failed to start advertising as the advertise data to be broadcasted is larger than 31 bytes."
                     ADVERTISE_FAILED_TOO_MANY_ADVERTISERS -> "Failed to start advertising because no advertising instance is available."

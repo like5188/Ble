@@ -31,6 +31,7 @@ class ConnectState : State() {
                         gatt.discoverServices()
                     }
                     BluetoothGatt.STATE_DISCONNECTED -> {// 连接蓝牙设备失败
+                        mBluetoothGatt?.close()
                         mBluetoothGatt = null
                         when (val curCommand = mCurCommand) {
                             is DisconnectCommand -> {
@@ -43,6 +44,7 @@ class ConnectState : State() {
                     }
                 }
             } else {
+                mBluetoothGatt?.close()
                 mBluetoothGatt = null
                 when (val curCommand = mCurCommand) {
                     is DisconnectCommand -> {
