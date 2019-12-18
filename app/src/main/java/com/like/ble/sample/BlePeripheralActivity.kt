@@ -199,7 +199,6 @@ class BlePeripheralActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mBinding.tvStatus.movementMethod = ScrollingMovementMethod()
-        getBluetoothAdapter()?.name = "BLE测试设备"
     }
 
     fun startAdvertising(view: View) {
@@ -208,6 +207,7 @@ class BlePeripheralActivity : AppCompatActivity() {
                 createAdvertiseSettings(),
                 createAdvertiseData(),
                 createScanResponseAdvertiseData(byteArrayOf(0x34, 0x56)),// 外设必须广播广播包，扫描包是可选。但添加扫描包也意味着广播更多得数据，即可广播62个字节。
+                "BLE测试设备",
                 {
                     appendText("广播成功", true, R.color.ble_text_blue)
                     initServices()//该方法是添加一个服务，在此处调用即将服务广播出去

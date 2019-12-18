@@ -60,6 +60,11 @@ class AdvertisingState : State() {
                     return
                 }
             }
+
+            if (command.deviceName.isNotEmpty()) {
+                mActivity.getBluetoothAdapter()?.name = command.deviceName
+            }
+
             mActivity.lifecycleScope.launch(Dispatchers.IO) {
                 mBluetoothLeAdvertiser?.startAdvertising(
                     command.settings,
