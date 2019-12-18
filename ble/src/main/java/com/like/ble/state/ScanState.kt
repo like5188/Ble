@@ -78,6 +78,7 @@ class ScanState : State() {
                         if (command.filterServiceUuid == null) {
                             mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(mScanCallback)
                         } else {
+                            // serviceUuid 只能在这里过滤，不能放到 filterScanResult() 方法中去，因为只有 gatt.discoverServices() 过后，device.getUuids() 方法才不会返回 null。
                             mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(
                                 listOf(ScanFilter.Builder().setServiceUuid(ParcelUuid(command.filterServiceUuid)).build()),
                                 ScanSettings.Builder().build(),
