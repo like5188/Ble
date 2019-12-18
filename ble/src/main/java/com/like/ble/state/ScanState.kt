@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.CloseCommand
@@ -14,6 +15,7 @@ import com.like.ble.utils.getBluetoothAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -42,6 +44,7 @@ class ScanState : State() {
     private fun filterScanResult(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
         val curCommand = mCurCommand
         if (curCommand is StartScanCommand) {
+            Log.e("ScanState", "deviceName=${device.name} deviceAddress=${device.address} serviceUuids=${Arrays.toString(device.uuids)}")
             // 设备名字匹配
             if (curCommand.deviceName.isNotEmpty()) {
                 val deviceName = device.name ?: ""
