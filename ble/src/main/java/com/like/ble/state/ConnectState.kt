@@ -197,19 +197,21 @@ class ConnectState : State() {
 
     @Synchronized
     override fun disconnect(command: DisconnectCommand) {
-        val curCommand = mCurCommand
-        if (curCommand != null && curCommand !is DisconnectCommand) {
-            curCommand.failureAndComplete("主动断开连接：${command.address}")
-        }
-
-        mCurCommand = command
-
         val bluetoothGatt = mBluetoothGatt
-        if (bluetoothGatt == null) {
+        if (bluetoothGatt != null) {
+            val curCommand = mCurCommand
+            if (curCommand != null && curCommand !is DisconnectCommand) {
+                curCommand.failureAndComplete("主动断开连接：${command.address}")
+            }
+
+            mCurCommand = command
+
+            bluetoothGatt.disconnect()
             command.successAndComplete()
-            return
+        } else {
+            mCurCommand = command
+            command.failureAndComplete("蓝牙连接已经断开")
         }
-        bluetoothGatt.disconnect()
     }
 
     override fun writeAndWaitForData(command: WriteAndWaitForDataCommand) {

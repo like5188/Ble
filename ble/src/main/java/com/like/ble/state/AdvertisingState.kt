@@ -94,6 +94,7 @@ class AdvertisingState : State() {
             mBluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)
             command.successAndComplete()
         } else {
+            mCurCommand = command
             command.failureAndComplete("广播已经停止")
         }
     }

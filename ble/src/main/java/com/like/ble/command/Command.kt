@@ -61,7 +61,7 @@ abstract class Command(val des: String, val address: String = "") {
 
     internal fun isCompleted() = mIsCompleted.get()
 
-    internal fun complete(howCompleted: String) {
+    internal fun complete(howCompleted: String = "") {
         if (isCompleted()) return
         mIsCompleted.set(true)
         mHowCompleted = howCompleted
