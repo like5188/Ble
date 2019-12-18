@@ -27,16 +27,14 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 class ScanState : State() {
     private val mScanning = AtomicBoolean(false)
+    private var mStartScanCommand: StartScanCommand? = null
     private val mScanCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             filterScanResult(result.device, result.rssi, result.scanRecord?.bytes)
         }
 
         override fun onScanFailed(errorCode: Int) {
-            val curCommand = mCurCommand
-            if (curCommand is StartScanCommand) {
-                curCommand.failureAndComplete("错误码：$errorCode")
-            }
+            mStartScanCommand?.failureAndComplete("错误码：$errorCode")
         }
 
         // Bluetoothadapter.isOffloadedScanBatchingSupported()</br>
@@ -56,34 +54,33 @@ class ScanState : State() {
 
     @Synchronized
     private fun filterScanResult(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
-        val curCommand = mCurCommand
-        if (curCommand is StartScanCommand) {
+        mStartScanCommand?.let {
             Log.e("ScanState", "deviceName=${device.name} deviceAddress=${device.address} serviceUuids=${Arrays.toString(device.uuids)}")
             // 设备名字匹配
-            if (curCommand.filterDeviceName.isNotEmpty()) {
+            if (it.filterDeviceName.isNotEmpty()) {
                 val deviceName = device.name ?: ""
-                if (curCommand.fuzzyMatchingDeviceName) {// 模糊匹配
-                    if (!deviceName.contains(curCommand.filterDeviceName)) {
+                if (it.fuzzyMatchingDeviceName) {// 模糊匹配
+                    if (!deviceName.contains(it.filterDeviceName)) {
                         return
                     }
                 } else {
-                    if (deviceName != curCommand.filterDeviceName) {
+                    if (deviceName != it.filterDeviceName) {
                         return
                     }
                 }
             }
             // 设备地址匹配
-            if (curCommand.filterDeviceAddress.isNotEmpty() && device.address != curCommand.filterDeviceAddress) {
+            if (it.filterDeviceAddress.isNotEmpty() && device.address != it.filterDeviceAddress) {
                 return
             }
-            curCommand.success(device, rssi, scanRecord)
+            it.success(device, rssi, scanRecord)
         }
     }
 
     @Synchronized
     override fun startScan(command: StartScanCommand) {
-        mCurCommand = command
         if (mScanning.compareAndSet(false, true)) {
+            mStartScanCommand = command
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 if (command.filterServiceUuid == null) {
                     mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(mScanCallback)
@@ -136,12 +133,8 @@ class ScanState : State() {
     @Synchronized
     override fun stopScan(command: StopScanCommand) {
         if (mScanning.compareAndSet(true, false)) {
-            val curCommand = mCurCommand
-            if (curCommand is StartScanCommand) {
-                curCommand.complete("主动停止扫描")
-            }
-
-            mCurCommand = command
+            mStartScanCommand?.complete("主动停止扫描")
+            mStartScanCommand = null
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.stopScan(mScanCallback)
@@ -150,7 +143,6 @@ class ScanState : State() {
             }
             command.successAndComplete()
         } else {
-            mCurCommand = command
             command.failureAndComplete("扫描已经停止")
         }
     }
@@ -158,7 +150,6 @@ class ScanState : State() {
     @Synchronized
     override fun close(command: CloseCommand) {
         stopScan(StopScanCommand())
-        mCurCommand = null
         command.successAndComplete()
     }
 
