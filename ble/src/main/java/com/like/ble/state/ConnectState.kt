@@ -30,15 +30,11 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
                         gatt.discoverServices()
                     }
                     BluetoothGatt.STATE_DISCONNECTED -> {// 连接蓝牙设备失败
-                        notifyDisconnectedAndClearCache()
-                        mBluetoothGatt?.close()
-                        mBluetoothGatt = null
+                        disconnect(DisconnectCommand(gatt.device.address))
                     }
                 }
             } else {
-                notifyDisconnectedAndClearCache()
-                mBluetoothGatt?.close()
-                mBluetoothGatt = null
+                disconnect(DisconnectCommand(gatt.device.address))
             }
         }
 
@@ -160,8 +156,8 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
     override fun disconnect(command: DisconnectCommand) {
         if (isConnected()) {
             mBluetoothGatt?.disconnect()
-            mBluetoothGatt?.close()
         }
+        mBluetoothGatt?.close()
         mBluetoothGatt = null
         notifyDisconnectedAndClearCache()
         command.completeIfIncomplete()
