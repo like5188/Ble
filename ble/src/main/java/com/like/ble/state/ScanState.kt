@@ -132,16 +132,14 @@ class ScanState(private val mActivity: FragmentActivity) : State() {
     @Synchronized
     override fun stopScan(command: StopScanCommand) {
         if (mScanning.compareAndSet(true, false)) {
-            mStartScanCommand?.completeIfIncomplete()
-            mStartScanCommand = null
-
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.stopScan(mScanCallback)
             } else {
                 mActivity.getBluetoothAdapter()?.stopLeScan(mLeScanCallback)
             }
-
         }
+        mStartScanCommand?.completeIfIncomplete()
+        mStartScanCommand = null
         command.completeIfIncomplete()
     }
 

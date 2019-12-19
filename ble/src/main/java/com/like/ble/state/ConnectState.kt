@@ -30,17 +30,15 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
                         gatt.discoverServices()
                     }
                     BluetoothGatt.STATE_DISCONNECTED -> {// 连接蓝牙设备失败
-                        mBluetoothGatt?.let {
-                            notifyDisconnectedAndClearCache()
-                            closeGatt()
-                        }
+                        notifyDisconnectedAndClearCache()
+                        mBluetoothGatt?.close()
+                        mBluetoothGatt = null
                     }
                 }
             } else {
-                mBluetoothGatt?.let {
-                    notifyDisconnectedAndClearCache()
-                    closeGatt()
-                }
+                notifyDisconnectedAndClearCache()
+                mBluetoothGatt?.close()
+                mBluetoothGatt = null
             }
         }
 
@@ -154,17 +152,18 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
 
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
-            getCache<ConnectCommand>()?.failureAndCompleteIfIncomplete("连接超时：${command.address}")
-            closeGatt()
+            disconnect(DisconnectCommand(command.address))
         })
     }
 
     @Synchronized
     override fun disconnect(command: DisconnectCommand) {
         if (isConnected()) {
-            notifyDisconnectedAndClearCache()
-            closeGatt()
+            mBluetoothGatt?.disconnect()
+            mBluetoothGatt?.close()
         }
+        mBluetoothGatt = null
+        notifyDisconnectedAndClearCache()
         command.completeIfIncomplete()
     }
 
@@ -466,8 +465,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
 
     @Synchronized
     override fun close(command: CloseCommand) {
-        notifyDisconnectedAndClearCache()
-        closeGatt()
+        disconnect(DisconnectCommand(command.address))
         command.completeIfIncomplete()
     }
 
@@ -500,12 +498,6 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
         return mActivity.getBluetoothManager()?.getConnectedDevices(BluetoothProfile.GATT)?.any {
             it == device
         } ?: false
-    }
-
-    private fun closeGatt() {
-        mBluetoothGatt?.disconnect()
-        mBluetoothGatt?.close()
-        mBluetoothGatt = null
     }
 
 }

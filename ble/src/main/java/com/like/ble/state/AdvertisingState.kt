@@ -79,13 +79,10 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
                 command.completeIfIncomplete()
                 return
             }
-
-            mStartAdvertisingCommand?.failureAndCompleteIfIncomplete("停止广播")
-            mStartAdvertisingCommand = null
-
             mBluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)
-
         }
+        mStartAdvertisingCommand?.failureAndCompleteIfIncomplete("停止广播")
+        mStartAdvertisingCommand = null
         command.completeIfIncomplete()
     }
 
