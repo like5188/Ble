@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.ParcelUuid
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.CloseCommand
 import com.like.ble.command.StartScanCommand
@@ -25,7 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 蓝牙扫描状态
  * 可以进行扫描操作
  */
-class ScanState : State() {
+class ScanState(private val mActivity: FragmentActivity) : State() {
     private val mScanning = AtomicBoolean(false)
     private var mStartScanCommand: StartScanCommand? = null
     private val mScanCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : ScanCallback() {
@@ -34,7 +35,8 @@ class ScanState : State() {
         }
 
         override fun onScanFailed(errorCode: Int) {
-            mStartScanCommand?.failureAndComplete("错误码：$errorCode")
+            mStartScanCommand?.failureAndCompleteIfIncomplete("错误码：$errorCode")
+            mScanning.set(false)
         }
 
         // Bluetoothadapter.isOffloadedScanBatchingSupported()</br>
@@ -73,7 +75,7 @@ class ScanState : State() {
             if (it.filterDeviceAddress.isNotEmpty() && device.address != it.filterDeviceAddress) {
                 return
             }
-            it.success(device, rssi, scanRecord)
+            it.successIfIncomplete(device, rssi, scanRecord)
         }
     }
 
@@ -106,12 +108,12 @@ class ScanState : State() {
             } else {
                 if (command.filterServiceUuid == null) {
                     if (mActivity.getBluetoothAdapter()?.startLeScan(mLeScanCallback) != true) {
-                        command.failureAndComplete("扫描失败")
+                        command.failureAndCompleteIfIncomplete("扫描失败")
                         return
                     }
                 } else {
                     if (mActivity.getBluetoothAdapter()?.startLeScan(arrayOf(command.filterServiceUuid), mLeScanCallback) != true) {
-                        command.failureAndComplete("扫描失败")
+                        command.failureAndCompleteIfIncomplete("扫描失败")
                         return
                     }
                 }
@@ -120,20 +122,17 @@ class ScanState : State() {
             command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
                 // 在指定超时时间时取消扫描，然后一次扫描就完成了。
                 delay(command.timeout)
-                if (mScanning.get()) {
-                    stopScan(StopScanCommand())
-                }
-                command.complete("扫描超时时间到了")
+                stopScan(StopScanCommand())
             })
         } else {
-            command.failureAndComplete("正在扫描中")
+            command.failureAndCompleteIfIncomplete("正在扫描中")
         }
     }
 
     @Synchronized
     override fun stopScan(command: StopScanCommand) {
         if (mScanning.compareAndSet(true, false)) {
-            mStartScanCommand?.complete("主动停止扫描")
+            mStartScanCommand?.completeIfIncomplete()
             mStartScanCommand = null
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -141,16 +140,15 @@ class ScanState : State() {
             } else {
                 mActivity.getBluetoothAdapter()?.stopLeScan(mLeScanCallback)
             }
-            command.successAndComplete()
-        } else {
-            command.failureAndComplete("扫描已经停止")
+
         }
+        command.completeIfIncomplete()
     }
 
     @Synchronized
     override fun close(command: CloseCommand) {
         stopScan(StopScanCommand())
-        command.successAndComplete()
+        command.completeIfIncomplete()
     }
 
 }

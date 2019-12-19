@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 abstract class Command(val des: String, val address: String = "") {
     companion object {
+        // 命令分组，用于过滤判断条件等
         /**
          * 关闭命令
          */
@@ -46,25 +47,15 @@ abstract class Command(val des: String, val address: String = "") {
      */
     private val mIsCompleted: AtomicBoolean = AtomicBoolean(false)
     /**
-     * 命令怎么完成的
-     */
-    private var mHowCompleted: String = "未完成"
-    /**
-     * 异步任务。比如延迟关闭命令、执行命令等任务。
-     * 在[complete]方法中被关闭。所以逻辑中必须要调用[complete]、[successAndComplete]、[failureAndComplete]、[failureAndComplete]这四个方法之一来关闭任务。
+     * 异步任务。比如延迟关闭任务、执行任务等。
+     * 在[complete]方法中被关闭。所以逻辑中最终必须要直接或者间接调用[complete]方法来关闭任务。
      */
     private val mJobs = mutableListOf<Job>()
 
-    fun addJob(job: Job) {
-        mJobs.add(job)
-    }
-
     internal fun isCompleted() = mIsCompleted.get()
 
-    internal fun complete(howCompleted: String = "") {
-        if (isCompleted()) return
+    private fun complete() {
         mIsCompleted.set(true)
-        mHowCompleted = howCompleted
         if (mJobs.isNotEmpty()) {
             mJobs.forEach {
                 it.cancel()
@@ -73,10 +64,19 @@ abstract class Command(val des: String, val address: String = "") {
         }
     }
 
+    fun addJob(job: Job) {
+        mJobs.add(job)
+    }
+
+    internal fun completeIfIncomplete() {
+        if (isCompleted()) return
+        complete()
+    }
+
     /**
-     * 命令执行成功时调用，用于扫描蓝牙设备那种多个返回值的情况，最后完成的时候调用[complete]。
+     * 命令执行成功时调用，不会设置完成标志，用于[StartScanCommand]，因为需要多次返回值，最后完成的时候调用[completeIfIncomplete]。
      */
-    internal fun success(vararg args: Any?) {
+    internal fun successIfIncomplete(vararg args: Any?) {
         if (isCompleted()) return
         doOnSuccess(*args)
     }
@@ -84,28 +84,36 @@ abstract class Command(val des: String, val address: String = "") {
     /**
      * 命令执行成功时调用
      */
-    internal fun successAndComplete(vararg args: Any?) {
+    internal fun successAndCompleteIfIncomplete(vararg args: Any?) {
         if (isCompleted()) return
         doOnSuccess(*args)
-        complete("成功完成")
+        complete()
     }
 
     /**
      * 命令执行失败时调用
      */
-    internal fun failureAndComplete(throwable: Throwable) {
+    internal fun failureAndCompleteIfIncomplete(throwable: Throwable) {
         if (isCompleted()) return
         doOnFailure(throwable)
-        complete("失败完成：${throwable.message}")
+        complete()
     }
 
     /**
      * 命令执行失败时调用
      */
-    internal fun failureAndComplete(errorMsg: String) {
+    internal fun failureAndCompleteIfIncomplete(errorMsg: String) {
         if (isCompleted()) return
         doOnFailure(Throwable(errorMsg))
-        complete("失败完成：$errorMsg")
+        complete()
+    }
+
+    /**
+     * 这个方法可以多次触发[doOnFailure]回调，不会判断是否完成。用于[ConnectCommand]，在连接成功后，连接断开时通知更新界面。
+     */
+    internal fun failureAndComplete(errorMsg: String) {
+        doOnFailure(Throwable(errorMsg))
+        complete()
     }
 
     /**
@@ -139,7 +147,7 @@ abstract class Command(val des: String, val address: String = "") {
     }
 
     override fun toString(): String {
-        return "Command(des='$des', address='$address', mIsCompleted='${mIsCompleted.get()}', mHowCompleted='$mHowCompleted')"
+        return "Command(des='$des', address='$address', mIsCompleted='${mIsCompleted.get()}')"
     }
 
 }

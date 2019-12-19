@@ -1,15 +1,11 @@
 package com.like.ble.state
 
-import androidx.fragment.app.FragmentActivity
 import com.like.ble.command.*
 
 /**
  * 蓝牙状态基类。
  */
 abstract class State {
-    lateinit var mActivity: FragmentActivity
-    protected var mCurCommand: Command? = null
-
     open fun startAdvertising(command: StartAdvertisingCommand) {}
     open fun stopAdvertising(command: StopAdvertisingCommand) {}
     open fun startScan(command: StartScanCommand) {}
