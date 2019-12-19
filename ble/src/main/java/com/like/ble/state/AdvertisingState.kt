@@ -74,6 +74,8 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
 
     @Synchronized
     override fun stopAdvertising(command: StopAdvertisingCommand) {
+        mStartAdvertisingCommand?.failureAndCompleteIfIncomplete("停止广播")
+        mStartAdvertisingCommand = null
         if (mIsRunning.compareAndSet(true, false)) {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
                 command.completeIfIncomplete()
@@ -81,8 +83,6 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
             }
             mBluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)
         }
-        mStartAdvertisingCommand?.failureAndCompleteIfIncomplete("停止广播")
-        mStartAdvertisingCommand = null
         command.completeIfIncomplete()
     }
 
