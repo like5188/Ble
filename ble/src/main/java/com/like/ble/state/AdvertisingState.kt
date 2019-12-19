@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 广播数据是必需的，因为外设必需不停的向外广播，让中心设备知道它的存在。</br>
  * 扫描回复是可选的，中心设备可以向外设请求扫描回复，这里包含一些设备额外的信息。
  */
+@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class AdvertisingState(private val mActivity: FragmentActivity) : State() {
     private val mIsRunning = AtomicBoolean(false)
     private var mBluetoothLeAdvertiser: BluetoothLeAdvertiser? = null
@@ -48,10 +49,6 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
     @Synchronized
     override fun startAdvertising(command: StartAdvertisingCommand) {
         if (mIsRunning.compareAndSet(false, true)) {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-                command.failureAndCompleteIfIncomplete("phone does not support Bluetooth Advertiser")
-                return
-            }
             if (mBluetoothLeAdvertiser == null) {
                 mBluetoothLeAdvertiser = mActivity.getBluetoothAdapter()?.bluetoothLeAdvertiser
                 if (mBluetoothLeAdvertiser == null) {
@@ -77,10 +74,6 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
         mStartAdvertisingCommand?.failureAndCompleteIfIncomplete("停止广播")
         mStartAdvertisingCommand = null
         if (mIsRunning.compareAndSet(true, false)) {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-                command.completeIfIncomplete()
-                return
-            }
             mBluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)
         }
         command.completeIfIncomplete()

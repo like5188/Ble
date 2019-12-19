@@ -1,5 +1,7 @@
 package com.like.ble.executor
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.fragment.app.FragmentActivity
 import com.like.ble.command.CloseCommand
 import com.like.ble.command.Command
@@ -10,6 +12,7 @@ import com.like.ble.state.AdvertisingState
 /**
  * 蓝牙外围设备相关命令的执行者。
  */
+@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class PeripheralExecutor(private val mActivity: FragmentActivity) : IExecutor {
     private val mInvoker: Invoker by lazy { PeripheralInvoker(mActivity) }
     private val mState: AdvertisingState by lazy { AdvertisingState(mActivity) }
