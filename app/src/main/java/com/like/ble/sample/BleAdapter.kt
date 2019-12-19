@@ -52,12 +52,19 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                         address,
                         5000L,
                         {
-                            item.isConnected.set(true)
-                            item.isConnected.notifyChange()// 必须调用，否则如果本来就是true，就不能触发更新界面
+                            if (item.isConnected.get()) {
+                                item.isConnected.notifyChange()// 必须调用，否则如果本来就是true，就不能触发更新界面
+                            } else {
+                                item.isConnected.set(true)
+                            }
+
                         },
                         {
-                            item.isConnected.set(false)
-                            item.isConnected.notifyChange()// 必须调用，否则如果本来就是false，就不能触发更新界面
+                            if (item.isConnected.get()) {
+                                item.isConnected.set(false)
+                            } else {
+                                item.isConnected.notifyChange()// 必须调用，否则如果本来就是false，就不能触发更新界面
+                            }
                         })
                 )
             }
