@@ -43,7 +43,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
             if (status == BluetoothGatt.GATT_SUCCESS) {// 发现了蓝牙服务后，才算真正的连接成功。
                 mConnectCommand?.successAndCompleteIfIncomplete()
             } else {
-                gatt.disconnect()
+                disconnect(DisconnectCommand(gatt.device.address))
             }
         }
 
