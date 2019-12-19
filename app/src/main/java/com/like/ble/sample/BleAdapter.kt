@@ -50,7 +50,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                 mBleManager.sendCommand(
                     ConnectCommand(
                         address,
-                        5000L,
+                        10000L,
                         {
                             if (item.isConnected.get()) {
                                 item.isConnected.notifyChange()// 必须调用，否则如果本来就是true，就不能触发更新界面
