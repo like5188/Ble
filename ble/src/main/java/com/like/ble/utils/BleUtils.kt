@@ -7,8 +7,14 @@ import java.nio.ByteBuffer
 import java.util.*
 import kotlin.math.ceil
 
+/**
+ * Context生命周期内不会改变
+ */
 fun Context.getBluetoothManager(): BluetoothManager? = getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
 
+/**
+ * app生命周期内不会改变
+ */
 fun Context.getBluetoothAdapter(): BluetoothAdapter? = getBluetoothManager()?.adapter
 
 /**
