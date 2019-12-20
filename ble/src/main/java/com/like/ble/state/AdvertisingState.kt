@@ -46,7 +46,7 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
                 ADVERTISE_FAILED_FEATURE_UNSUPPORTED -> "This feature is not supported on this platform"
                 else -> "errorCode=$errorCode"
             }
-            mStartAdvertisingCommand?.failureAndCompleteIfIncomplete(errorMsg)
+            mStartAdvertisingCommand?.failureAndComplete(errorMsg)
             mIsSending.set(false)
         }
 
@@ -64,7 +64,7 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
         if (mIsSending.compareAndSet(false, true)) {
             val bluetoothLeAdvertiser = mActivity.getBluetoothAdapter()?.bluetoothLeAdvertiser
             if (bluetoothLeAdvertiser == null) {
-                command.failureAndCompleteIfIncomplete("phone does not support Bluetooth Advertiser")
+                command.failureAndComplete("phone does not support Bluetooth Advertiser")
                 return
             }
 
@@ -81,7 +81,7 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
                 mAdvertiseCallback
             )
         } else {
-            command.failureAndCompleteIfIncomplete("正在广播中")
+            command.failureAndComplete("正在广播中")
         }
     }
 
