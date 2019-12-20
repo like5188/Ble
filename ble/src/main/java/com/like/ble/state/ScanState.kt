@@ -8,18 +8,13 @@ import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.os.Build
 import android.os.ParcelUuid
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.CloseCommand
 import com.like.ble.command.StartScanCommand
 import com.like.ble.command.StopScanCommand
+import com.like.ble.utils.BleBroadcastReceiverHelper
 import com.like.ble.utils.getBluetoothAdapter
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -29,13 +24,22 @@ import java.util.concurrent.atomic.AtomicBoolean
 class ScanState(private val mActivity: FragmentActivity) : State() {
     private val mScanning = AtomicBoolean(false)
     private var mStartScanCommand: StartScanCommand? = null
+    private val mBleBroadcastReceiverHelper: BleBroadcastReceiverHelper by lazy {
+        BleBroadcastReceiverHelper(mActivity,
+            onBleOff = {
+                if (mScanning.compareAndSet(true, false)) {
+                    mStartScanCommand?.failureAndComplete("蓝牙被关闭，扫描停止了")
+                }
+            }
+        )
+    }
     private val mScanCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             filterScanResult(result.device, result.rssi, result.scanRecord?.bytes)
         }
 
         override fun onScanFailed(errorCode: Int) {
-            mStartScanCommand?.failureAndCompleteIfIncomplete("错误码：$errorCode")
+            mStartScanCommand?.failureAndComplete("错误码：$errorCode")
             mScanning.set(false)
         }
 
@@ -54,29 +58,31 @@ class ScanState(private val mActivity: FragmentActivity) : State() {
         filterScanResult(device, rssi, scanRecord)
     }
 
+    init {
+        mBleBroadcastReceiverHelper.register()
+    }
+
     @Synchronized
     private fun filterScanResult(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
-        mStartScanCommand?.let {
-            Log.e("ScanState", "deviceName=${device.name} deviceAddress=${device.address} serviceUuids=${Arrays.toString(device.uuids)}")
-            // 设备名字匹配
-            if (it.filterDeviceName.isNotEmpty()) {
-                val deviceName = device.name ?: ""
-                if (it.fuzzyMatchingDeviceName) {// 模糊匹配
-                    if (!deviceName.contains(it.filterDeviceName)) {
-                        return
-                    }
-                } else {
-                    if (deviceName != it.filterDeviceName) {
-                        return
-                    }
+        val startScanCommand = mStartScanCommand ?: return
+        // 设备名字匹配
+        if (startScanCommand.filterDeviceName.isNotEmpty()) {
+            val deviceName = device.name ?: ""
+            if (startScanCommand.fuzzyMatchingDeviceName) {// 模糊匹配
+                if (!deviceName.contains(startScanCommand.filterDeviceName)) {
+                    return
+                }
+            } else {
+                if (deviceName != startScanCommand.filterDeviceName) {
+                    return
                 }
             }
-            // 设备地址匹配
-            if (it.filterDeviceAddress.isNotEmpty() && device.address != it.filterDeviceAddress) {
-                return
-            }
-            it.successIfIncomplete(device, rssi, scanRecord)
         }
+        // 设备地址匹配
+        if (startScanCommand.filterDeviceAddress.isNotEmpty() && device.address != startScanCommand.filterDeviceAddress) {
+            return
+        }
+        startScanCommand.successAndComplete(device, rssi, scanRecord)
     }
 
     @Synchronized
@@ -108,45 +114,44 @@ class ScanState(private val mActivity: FragmentActivity) : State() {
             } else {
                 if (command.filterServiceUuid == null) {
                     if (mActivity.getBluetoothAdapter()?.startLeScan(mLeScanCallback) != true) {
-                        command.failureAndCompleteIfIncomplete("扫描失败")
+                        command.failureAndComplete("扫描失败")
                         return
                     }
                 } else {
                     if (mActivity.getBluetoothAdapter()?.startLeScan(arrayOf(command.filterServiceUuid), mLeScanCallback) != true) {
-                        command.failureAndCompleteIfIncomplete("扫描失败")
+                        command.failureAndComplete("扫描失败")
                         return
                     }
                 }
             }
-
-            command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
-                // 在指定超时时间时取消扫描，然后一次扫描就完成了。
-                delay(command.timeout)
-                stopScan(StopScanCommand())
-            })
+            command.complete()// 这里直接完成命令，避免扫描不到需要的设备时，无法触发 startScanCommand.successAndComplete(device, rssi, scanRecord)
         } else {
-            command.failureAndCompleteIfIncomplete("正在扫描中")
+            command.failureAndComplete("正在扫描中")
         }
     }
 
     @Synchronized
     override fun stopScan(command: StopScanCommand) {
-        mStartScanCommand?.completeIfIncomplete()
-        mStartScanCommand = null
         if (mScanning.compareAndSet(true, false)) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.stopScan(mScanCallback)
             } else {
                 mActivity.getBluetoothAdapter()?.stopLeScan(mLeScanCallback)
             }
+            mStartScanCommand?.failureAndComplete("扫描停止了")
+            command.successAndCompleteIfIncomplete()
+        } else {
+            mStartScanCommand?.failureAndComplete("扫描未开启")
+            command.failureAndCompleteIfIncomplete("扫描未开启")
         }
-        command.completeIfIncomplete()
     }
 
     @Synchronized
     override fun close(command: CloseCommand) {
         stopScan(StopScanCommand())
-        command.completeIfIncomplete()
+        mStartScanCommand = null
+        mBleBroadcastReceiverHelper.unregister()
+        command.successAndCompleteIfIncomplete()
     }
 
 }

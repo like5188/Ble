@@ -27,8 +27,7 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
     private val mIsSending = AtomicBoolean(false)
     private var mStartAdvertisingCommand: StartAdvertisingCommand? = null
     private val mBleBroadcastReceiverHelper: BleBroadcastReceiverHelper by lazy {
-        BleBroadcastReceiverHelper(
-            mActivity,
+        BleBroadcastReceiverHelper(mActivity,
             onBleOff = {
                 if (mIsSending.compareAndSet(true, false)) {
                     mStartAdvertisingCommand?.failureAndComplete("蓝牙被关闭，广播停止了")
@@ -51,7 +50,7 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
         }
 
         override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
-            mStartAdvertisingCommand?.successAndCompleteIfIncomplete()
+            mStartAdvertisingCommand?.successAndComplete()
         }
     }
 
@@ -90,10 +89,11 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
         if (mIsSending.compareAndSet(true, false)) {
             mActivity.getBluetoothAdapter()?.bluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)
             mStartAdvertisingCommand?.failureAndComplete("广播停止了")
+            command.successAndCompleteIfIncomplete()
         } else {
             mStartAdvertisingCommand?.failureAndComplete("广播未开启")
+            command.failureAndCompleteIfIncomplete("广播未开启")
         }
-        command.completeIfIncomplete()
     }
 
     @Synchronized
@@ -101,7 +101,7 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
         stopAdvertising(StopAdvertisingCommand())
         mStartAdvertisingCommand = null
         mBleBroadcastReceiverHelper.unregister()
-        command.completeIfIncomplete()
+        command.successAndCompleteIfIncomplete()
     }
 
 }

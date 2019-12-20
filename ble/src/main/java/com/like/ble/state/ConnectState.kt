@@ -160,7 +160,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
         mBluetoothGatt?.disconnect()
         mBluetoothGatt?.close()
         mBluetoothGatt = null
-        command.completeIfIncomplete()
+        command.successAndCompleteIfIncomplete()
     }
 
     override fun writeAndWaitForData(command: WriteAndWaitForDataCommand) {
@@ -465,7 +465,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
     @Synchronized
     override fun close(command: CloseCommand) {
         disconnect(DisconnectCommand(command.address))
-        command.completeIfIncomplete()
+        command.successAndCompleteIfIncomplete()
     }
 
     private fun isConnected(): Boolean {

@@ -210,7 +210,7 @@ class BlePeripheralActivity : AppCompatActivity() {
                 "BLE测试设备",
                 {
                     mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_blue))
-                    mBinding.tvAdvertisingStatus.text = "广播成功"
+                    mBinding.tvAdvertisingStatus.text = "广播已开启"
                     initServices()//该方法是添加一个服务，在此处调用即将服务广播出去
                 },
                 {

@@ -54,7 +54,11 @@ abstract class Command(val des: String, val address: String = "") {
 
     internal fun isCompleted() = mIsCompleted.get()
 
-    private fun complete() {
+    fun addJob(job: Job) {
+        mJobs.add(job)
+    }
+
+    internal fun complete() {
         mIsCompleted.set(true)
         if (mJobs.isNotEmpty()) {
             mJobs.forEach {
@@ -64,39 +68,12 @@ abstract class Command(val des: String, val address: String = "") {
         }
     }
 
-    fun addJob(job: Job) {
-        mJobs.add(job)
-    }
-
-    internal fun completeIfIncomplete() {
-        if (isCompleted()) return
-        complete()
-    }
-
-    /**
-     * 命令执行成功时调用，不会设置完成标志，用于[StartScanCommand]，因为需要多次返回值，最后完成的时候调用[completeIfIncomplete]。
-     */
-    internal fun successIfIncomplete(vararg args: Any?) {
-        if (isCompleted()) return
-        doOnSuccess(*args)
-    }
-
     /**
      * 命令执行成功时调用
      */
     internal fun successAndCompleteIfIncomplete(vararg args: Any?) {
         if (isCompleted()) return
-        doOnSuccess(*args)
-        complete()
-    }
-
-    /**
-     * 命令执行失败时调用
-     */
-    internal fun failureAndCompleteIfIncomplete(throwable: Throwable) {
-        if (isCompleted()) return
-        doOnFailure(throwable)
-        complete()
+        successAndComplete(*args)
     }
 
     /**
@@ -104,12 +81,21 @@ abstract class Command(val des: String, val address: String = "") {
      */
     internal fun failureAndCompleteIfIncomplete(errorMsg: String) {
         if (isCompleted()) return
-        doOnFailure(Throwable(errorMsg))
+        failureAndComplete(errorMsg)
+    }
+
+    /**
+     * 在命令完成后也可以继续触发 [doOnSuccess] 回调。
+     * 用于长连接的命令，比如[StartAdvertisingCommand]、[StartScanCommand]、[ConnectCommand]。
+     */
+    internal fun successAndComplete(vararg args: Any?) {
+        doOnSuccess(*args)
         complete()
     }
 
     /**
-     * 这个方法可以多次触发[doOnFailure]回调，不会判断是否完成。用于[ConnectCommand]、[StartAdvertisingCommand]，在连接成功后，连接断开时通知更新界面。
+     * 在命令完成后也可以继续触发 [doOnFailure] 回调。
+     * 用于长连接的命令，比如[StartAdvertisingCommand]、[StartScanCommand]、[ConnectCommand]。
      */
     internal fun failureAndComplete(errorMsg: String) {
         doOnFailure(Throwable(errorMsg))
