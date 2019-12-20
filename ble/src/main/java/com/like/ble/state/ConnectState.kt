@@ -41,7 +41,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
         // 发现蓝牙服务
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             if (status == BluetoothGatt.GATT_SUCCESS) {// 发现了蓝牙服务后，才算真正的连接成功。
-                mConnectCommand?.successAndCompleteIfIncomplete()
+                mConnectCommand?.successAndComplete()
             } else {
                 disconnect(DisconnectCommand(gatt.device.address))
             }
@@ -122,14 +122,14 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
     @Synchronized
     override fun connect(command: ConnectCommand) {
         if (isConnected()) {
-            command.successAndCompleteIfIncomplete()
+            command.failureAndComplete("蓝牙已经连接了")
             return
         }
 
         // 获取远端的蓝牙设备
         val bluetoothDevice = mActivity.getBluetoothAdapter()?.getRemoteDevice(command.address)
         if (bluetoothDevice == null) {
-            command.failureAndComplete("连接蓝牙设备失败：设备 ${command.address} 未找到")
+            command.failureAndComplete("连接蓝牙设备失败：远程设备 ${command.address} 未找到")
             return
         }
 
@@ -153,14 +153,18 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
 
     @Synchronized
     override fun disconnect(command: DisconnectCommand) {
-        mConnectCommand?.failureAndComplete("蓝牙连接失败：${mConnectCommand?.address}")
-        mOtherCommand?.failureAndCompleteIfIncomplete("蓝牙已断开：${mOtherCommand?.address}")
-        mConnectCommand = null
-        mOtherCommand = null
-        mBluetoothGatt?.disconnect()
+        if (isConnected()) {
+            mBluetoothGatt?.disconnect()
+            mConnectCommand?.failureAndComplete("蓝牙连接断开了：${mConnectCommand?.address}")
+            mOtherCommand?.failureAndCompleteIfIncomplete("蓝牙连接断开了：${mOtherCommand?.address}")
+            command.successAndCompleteIfIncomplete()
+        } else {
+            mConnectCommand?.failureAndComplete("蓝牙未连接：${mConnectCommand?.address}")
+            mOtherCommand?.failureAndCompleteIfIncomplete("蓝牙未连接：${mOtherCommand?.address}")
+            command.failureAndCompleteIfIncomplete("蓝牙未连接")
+        }
         mBluetoothGatt?.close()
         mBluetoothGatt = null
-        command.successAndCompleteIfIncomplete()
     }
 
     override fun writeAndWaitForData(command: WriteAndWaitForDataCommand) {
@@ -465,6 +469,8 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
     @Synchronized
     override fun close(command: CloseCommand) {
         disconnect(DisconnectCommand(command.address))
+        mConnectCommand = null
+        mOtherCommand = null
         command.successAndCompleteIfIncomplete()
     }
 
