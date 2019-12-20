@@ -157,11 +157,8 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
         mOtherCommand?.failureAndCompleteIfIncomplete("蓝牙已断开：${mOtherCommand?.address}")
         mConnectCommand = null
         mOtherCommand = null
-        if (isConnected()) {
-            mBluetoothGatt?.disconnect()
-        }
+        mBluetoothGatt?.disconnect()
         mBluetoothGatt?.close()
-        mBluetoothGatt = null
         command.completeIfIncomplete()
     }
 
@@ -467,6 +464,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
     @Synchronized
     override fun close(command: CloseCommand) {
         disconnect(DisconnectCommand(command.address))
+        mBluetoothGatt = null
         command.completeIfIncomplete()
     }
 
