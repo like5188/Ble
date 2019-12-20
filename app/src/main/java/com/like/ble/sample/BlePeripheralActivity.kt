@@ -209,11 +209,13 @@ class BlePeripheralActivity : AppCompatActivity() {
                 createScanResponseAdvertiseData(byteArrayOf(0x34, 0x56)),// 外设必须广播广播包，扫描包是可选。但添加扫描包也意味着广播更多得数据，即可广播62个字节。
                 "BLE测试设备",
                 {
-                    appendText("广播成功", true, R.color.ble_text_blue)
+                    mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_blue))
+                    mBinding.tvAdvertisingStatus.text = "广播成功"
                     initServices()//该方法是添加一个服务，在此处调用即将服务广播出去
                 },
                 {
-                    appendText(it.message ?: "", true, R.color.ble_text_red)
+                    mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
+                    mBinding.tvAdvertisingStatus.text = it.message ?: "广播停止了"
                 }
             )
         )
