@@ -476,9 +476,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
 
     private fun isConnected(): Boolean {
         val device = mBluetoothGatt?.device ?: return false
-        return mActivity.getBluetoothManager()?.getConnectedDevices(BluetoothProfile.GATT)?.any {
-            it == device
-        } ?: false
+        return mActivity.isBleDeviceConnected(device)
     }
 
 }

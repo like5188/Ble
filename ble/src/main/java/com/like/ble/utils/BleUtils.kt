@@ -7,6 +7,9 @@ import java.nio.ByteBuffer
 import java.util.*
 import kotlin.math.ceil
 
+fun Context.isBleDeviceConnected(device: BluetoothDevice): Boolean =
+    getBluetoothManager()?.getConnectedDevices(BluetoothProfile.GATT)?.any { it == device } ?: false
+
 /**
  * Context生命周期内不会改变
  */

@@ -11,6 +11,7 @@ import com.like.ble.IBleManager
 import com.like.ble.command.StartScanCommand
 import com.like.ble.command.StopScanCommand
 import com.like.ble.sample.databinding.ActivityBleBinding
+import com.like.ble.utils.isBleDeviceConnected
 import com.like.livedatarecyclerview.layoutmanager.WrapLinearLayoutManager
 import java.util.*
 
@@ -51,7 +52,9 @@ class BleActivity : AppCompatActivity() {
                     val item: BleInfo? =
                         mAdapter.mAdapterDataManager.getAll().firstOrNull { (it as? BleInfo)?.address == address } as? BleInfo
                     if (item == null) {// 防止重复添加
-                        mAdapter.mAdapterDataManager.addItemToEnd(BleInfo(name, address, ObservableInt(rssi), scanRecord))
+                        val bleInfo = BleInfo(name, address, ObservableInt(rssi), scanRecord)
+                        bleInfo.isConnected.set(isBleDeviceConnected(device))
+                        mAdapter.mAdapterDataManager.addItemToEnd(bleInfo)
                     } else {
                         item.updateRssi(rssi)
                     }
