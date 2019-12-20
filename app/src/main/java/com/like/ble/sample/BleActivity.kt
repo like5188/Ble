@@ -57,7 +57,7 @@ class BleActivity : AppCompatActivity() {
                 },
                 {
                     mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
-                    mBinding.tvScanStatus.text = it.message ?: "广播停止了"
+                    mBinding.tvScanStatus.text = it.message ?: "扫描停止了"
                 })
         )
     }
