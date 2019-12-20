@@ -2,7 +2,6 @@ package com.like.ble.state
 
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseSettings
-import android.bluetooth.le.BluetoothLeAdvertiser
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.FragmentActivity
@@ -25,7 +24,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class AdvertisingState(private val mActivity: FragmentActivity) : State() {
     private val mIsRunning = AtomicBoolean(false)
-    private var mBluetoothLeAdvertiser: BluetoothLeAdvertiser? = null
     private var mStartAdvertisingCommand: StartAdvertisingCommand? = null
     private val mAdvertiseCallback: AdvertiseCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : AdvertiseCallback() {
         override fun onStartFailure(errorCode: Int) {
@@ -49,12 +47,10 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
     @Synchronized
     override fun startAdvertising(command: StartAdvertisingCommand) {
         if (mIsRunning.compareAndSet(false, true)) {
-            if (mBluetoothLeAdvertiser == null) {
-                mBluetoothLeAdvertiser = mActivity.getBluetoothAdapter()?.bluetoothLeAdvertiser
-                if (mBluetoothLeAdvertiser == null) {
-                    command.failureAndCompleteIfIncomplete("phone does not support Bluetooth Advertiser")
-                    return
-                }
+            val bluetoothLeAdvertiser = mActivity.getBluetoothAdapter()?.bluetoothLeAdvertiser
+            if (bluetoothLeAdvertiser == null) {
+                command.failureAndCompleteIfIncomplete("phone does not support Bluetooth Advertiser")
+                return
             }
 
             // 设置设备名字
@@ -63,7 +59,12 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
             }
 
             mStartAdvertisingCommand = command
-            mBluetoothLeAdvertiser?.startAdvertising(command.settings, command.advertiseData, command.scanResponse, mAdvertiseCallback)
+            bluetoothLeAdvertiser.startAdvertising(
+                command.settings,
+                command.advertiseData,
+                command.scanResponse,
+                mAdvertiseCallback
+            )
         } else {
             command.failureAndCompleteIfIncomplete("正在广播中")
         }
@@ -74,7 +75,7 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
         mStartAdvertisingCommand?.failureAndCompleteIfIncomplete("停止广播")
         mStartAdvertisingCommand = null
         if (mIsRunning.compareAndSet(true, false)) {
-            mBluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)
+            mActivity.getBluetoothAdapter()?.bluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)
         }
         command.completeIfIncomplete()
     }
@@ -82,7 +83,6 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
     @Synchronized
     override fun close(command: CloseCommand) {
         stopAdvertising(StopAdvertisingCommand())
-        mBluetoothLeAdvertiser = null
         command.completeIfIncomplete()
     }
 
