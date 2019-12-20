@@ -31,7 +31,7 @@ class ReadCharacteristicCommand(
         try {
             mDataCache.put(data)
         } catch (e: Exception) {
-            failureAndCompleteIfIncomplete(IllegalArgumentException("maxFrameTransferSize 设置太小"))
+            failureAndCompleteIfIncomplete("maxFrameTransferSize 设置太小")
         }
     }
 
