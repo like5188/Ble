@@ -1,16 +1,11 @@
 package com.like.ble.command
 
-import com.like.ble.utils.toByteArrayOrNull
-import java.nio.ByteBuffer
-
 /**
- * 读特征值命令
+ * 读特征值命令，一次最多可以读取600字节
  *
  * @param address                   蓝牙设备地址
  * @param characteristicUuidString  特征UUID
  * @param timeout                   命令执行超时时间（毫秒）
- * @param maxFrameTransferSize      每帧可以传输的最大字节数
- * @param isWholeFrame              是否是完整的一帧
  * @param onSuccess                 命令执行成功回调
  * @param onFailure                 命令执行失败回调
  */
@@ -18,31 +13,21 @@ class ReadCharacteristicCommand(
     address: String,
     val characteristicUuidString: String,
     val timeout: Long = 3000L,
-    private val maxFrameTransferSize: Int = 616,// onCharacteristicReadRequest()方法中最大只能返回616字节。
-    val isWholeFrame: (ByteBuffer) -> Boolean = { true },
     private val onSuccess: ((ByteArray?) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command("读特征值命令", address) {
-    // 缓存读取特征数据时的返回数据，因为一帧有可能分为多次接收
-    private val mDataCache: ByteBuffer by lazy { ByteBuffer.allocate(maxFrameTransferSize) }
-
-    fun addDataToCache(data: ByteArray) {
-        if (isCompleted()) return
-        try {
-            mDataCache.put(data)
-        } catch (e: Exception) {
-            failureAndCompleteIfIncomplete("maxFrameTransferSize 设置太小")
-        }
-    }
-
-    fun isWholeFrame() = isWholeFrame(mDataCache)
 
     override fun execute() {
         mReceiver?.readCharacteristic(this)
     }
 
     override fun doOnSuccess(vararg args: Any?) {
-        onSuccess?.invoke(mDataCache.toByteArrayOrNull())
+        if (args.isNotEmpty()) {
+            val arg0 = args[0]
+            if (arg0 is ByteArray?) {
+                onSuccess?.invoke(arg0)
+            }
+        }
     }
 
     override fun doOnFailure(throwable: Throwable) {

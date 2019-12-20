@@ -61,10 +61,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
             val command = mOtherCommand
             if (command !is ReadCharacteristicCommand) return
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                command.addDataToCache(characteristic.value)
-                if (command.isWholeFrame()) {
-                    command.successAndCompleteIfIncomplete()
-                }
+                command.successAndCompleteIfIncomplete(characteristic.value)
             } else {
                 command.failureAndCompleteIfIncomplete("读取特征值失败：${characteristic.uuid.getValidString()}")
             }

@@ -95,12 +95,8 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                         address,
                         "0000fff1-0000-1000-8000-00805f9b34fb",
                         10000,
-                        1024,
                         {
-                            it.get(it.position() - 1) == Byte.MAX_VALUE
-                        },
-                        {
-                            mActivity.longToastBottom("读特征成功 ${it?.contentToString()}")
+                            mActivity.longToastBottom("读特征成功。数据长度：${it?.size} ${it?.contentToString()}")
                         },
                         {
                             mActivity.longToastBottom(it.message)
