@@ -13,7 +13,6 @@ import com.like.ble.sample.databinding.ItemBleScanBinding
 import com.like.livedatarecyclerview.adapter.BaseAdapter
 import com.like.livedatarecyclerview.model.IRecyclerViewItem
 import com.like.livedatarecyclerview.viewholder.CommonViewHolder
-import java.util.*
 
 class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleManager) :
     BaseAdapter() {
@@ -202,12 +201,12 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                         5000,
                         200,
                         20,
-                        40,
+                        1024,
                         {
                             it.get(it.position() - 1) == Byte.MAX_VALUE
                         },
                         {
-                            mActivity.longToastBottom("写数据并等待获取数据成功：${Arrays.toString(it)}")
+                            mActivity.longToastBottom("写数据并等待获取数据成功。数据长度：${it?.size} ${it?.contentToString()}")
                         },
                         {
                             mActivity.longToastBottom(it.message)
