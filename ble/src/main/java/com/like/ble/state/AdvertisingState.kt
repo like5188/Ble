@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class AdvertisingState(private val mActivity: FragmentActivity) : State() {
-    private val mIsRunning = AtomicBoolean(false)
+    private val mIsSending = AtomicBoolean(false)
     private var mStartAdvertisingCommand: StartAdvertisingCommand? = null
     private val mAdvertiseCallback: AdvertiseCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : AdvertiseCallback() {
         override fun onStartFailure(errorCode: Int) {
@@ -36,7 +36,7 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
                 else -> "errorCode=$errorCode"
             }
             mStartAdvertisingCommand?.failureAndCompleteIfIncomplete(errorMsg)
-            mIsRunning.set(false)
+            mIsSending.set(false)
         }
 
         override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
@@ -46,7 +46,7 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
 
     @Synchronized
     override fun startAdvertising(command: StartAdvertisingCommand) {
-        if (mIsRunning.compareAndSet(false, true)) {
+        if (mIsSending.compareAndSet(false, true)) {
             val bluetoothLeAdvertiser = mActivity.getBluetoothAdapter()?.bluetoothLeAdvertiser
             if (bluetoothLeAdvertiser == null) {
                 command.failureAndCompleteIfIncomplete("phone does not support Bluetooth Advertiser")
@@ -74,7 +74,7 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
     override fun stopAdvertising(command: StopAdvertisingCommand) {
         mStartAdvertisingCommand?.failureAndCompleteIfIncomplete("停止广播")
         mStartAdvertisingCommand = null
-        if (mIsRunning.compareAndSet(true, false)) {
+        if (mIsSending.compareAndSet(true, false)) {
             mActivity.getBluetoothAdapter()?.bluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)
         }
         command.completeIfIncomplete()
