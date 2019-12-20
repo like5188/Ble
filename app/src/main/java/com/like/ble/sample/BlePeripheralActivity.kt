@@ -44,7 +44,7 @@ class BlePeripheralActivity : AppCompatActivity() {
     private var mBluetoothGattServer: BluetoothGattServer? = null
     private val mBluetoothGattServerCallback = object : BluetoothGattServerCallback() {
         private val mResponseData1: ByteArray by lazy {
-            val arr = ByteArray(616)// 最大616
+            val arr = ByteArray(616)// 如果mtu=23，那么offset最大为594，能传输的数据最大为594+22=616
             for (i in 1 until arr.size) {
                 arr[i - 1] = i.toByte()
             }
@@ -100,6 +100,7 @@ class BlePeripheralActivity : AppCompatActivity() {
             appendText("sendResponse：size=${response.size} ${response.contentToString()}")
 
             // 注意：如果所传数据长度>=offset的步进（MTU - 1），就会自动再次触发onCharacteristicReadRequest()方法。
+            // offset 不会超过600，所以最大传输数据为：offset + MTU - 1
             // sendResponse()中的参数offset可以随便传，不会影响onCharacteristicReadRequest()方法返回的offset。
             mBluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, response)
         }
