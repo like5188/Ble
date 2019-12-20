@@ -3,7 +3,6 @@ package com.like.ble.sample
 import android.bluetooth.*
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
-import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.os.ParcelUuid
@@ -305,8 +304,7 @@ class BlePeripheralActivity : AppCompatActivity() {
 
     private fun initServices() {
         if (mBluetoothGattServer != null) return
-        val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
-        val bluetoothGattServer = bluetoothManager?.openGattServer(this, mBluetoothGattServerCallback) ?: return
+        val bluetoothGattServer = getBluetoothManager()?.openGattServer(this, mBluetoothGattServerCallback) ?: return
         val service = BluetoothGattService(UUID_SERVICE, BluetoothGattService.SERVICE_TYPE_PRIMARY)
 
         val characteristicRead = BluetoothGattCharacteristic(
