@@ -53,6 +53,7 @@ class BlePeripheralActivity : AppCompatActivity() {
         }
         private val mResponseData2 = byteArrayOf(0x02, Byte.MAX_VALUE)
         private val mResponseData = mResponseData1
+        private var mMtu = 23
 
         /**
          * @param newState  连接状态，只能为[BluetoothProfile.STATE_CONNECTED]和[BluetoothProfile.STATE_DISCONNECTED]。
@@ -95,11 +96,10 @@ class BlePeripheralActivity : AppCompatActivity() {
                 false
             )
 
-            val response = mResponseData.copyOfRangeByLength(offset, mResponseData.size - offset)
-            appendText("sendResponse：size=${response.size}")
+            val response = mResponseData.copyOfRangeByLength(offset, mMtu - 1)
+            appendText("sendResponse：size=${response.size} ${response.contentToString()}")
 
             // 注意：如果所传数据长度>=offset的步进（MTU - 1），就会自动再次触发onCharacteristicReadRequest()方法。
-            // offset最大为594+（MTU - 1）
             // sendResponse()中的参数offset可以随便传，不会影响onCharacteristicReadRequest()方法返回的offset。
             mBluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, response)
         }
@@ -130,7 +130,7 @@ class BlePeripheralActivity : AppCompatActivity() {
                     // 外围设备向中心设备不能发送数据，必须通过notify 或者indicate的方式，andorid只发现notify接口。
                     // 调用 notifyCharacteristicChanged() 方法向中心设备发送数据，会触发 onNotificationSent() 方法和中心设备的 BluetoothGattCallback.onCharacteristicChanged() 方法。
                     // 注意：默认mtu下一次只能传递20字节。
-                    mResponseData.batch(20).forEach {
+                    mResponseData.batch(mMtu - 3).forEach {
                         characteristic.value = it
                         mBluetoothGattServer?.notifyCharacteristicChanged(device, characteristic, false)// 最后一个参数表示是否需要客户端确认
                     }
@@ -147,8 +147,8 @@ class BlePeripheralActivity : AppCompatActivity() {
             appendText("--> onDescriptorReadRequest", false, R.color.ble_text_blue)
             appendText("device=${device.address} requestId=$requestId offset=$offset descriptor=${descriptor.uuid.getValidString()}", false)
 
-            val response = mResponseData.copyOfRangeByLength(offset, mResponseData.size - offset)
-            appendText("sendResponse：size=${response.size}")
+            val response = mResponseData.copyOfRangeByLength(offset, mMtu - 1)
+            appendText("sendResponse：size=${response.size} ${response.contentToString()}")
 
             mBluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, response)
         }
@@ -182,6 +182,7 @@ class BlePeripheralActivity : AppCompatActivity() {
         override fun onMtuChanged(device: BluetoothDevice, mtu: Int) {
             appendText("--> onMtuChanged", false, R.color.ble_text_blue)
             appendText("device=${device.address} mtu=$mtu")
+            mMtu = mtu
         }
 
         override fun onPhyRead(device: BluetoothDevice, txPhy: Int, rxPhy: Int, status: Int) {
