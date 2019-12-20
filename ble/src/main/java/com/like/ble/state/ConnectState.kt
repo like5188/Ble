@@ -129,7 +129,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
         // 获取远端的蓝牙设备
         val bluetoothDevice = mActivity.getBluetoothAdapter()?.getRemoteDevice(command.address)
         if (bluetoothDevice == null) {
-            command.failureAndCompleteIfIncomplete("连接蓝牙设备失败：设备 ${command.address} 未找到")
+            command.failureAndComplete("连接蓝牙设备失败：设备 ${command.address} 未找到")
             return
         }
 
@@ -141,7 +141,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
             bluetoothDevice.connectGatt(mActivity, false, mGattCallback)// 第二个参数表示是否自动重连
         }
         if (mBluetoothGatt == null) {
-            command.failureAndCompleteIfIncomplete("连接蓝牙设备失败：${command.address}")
+            command.failureAndComplete("连接蓝牙设备失败：${command.address}")
             return
         }
 
