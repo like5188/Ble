@@ -95,11 +95,11 @@ class BlePeripheralActivity : AppCompatActivity() {
                 false
             )
 
-            val response = mResponseData.copyOfRangeByLength(offset, 22)
-            appendText("sendResponse：size=${response.size} ${response.contentToString()}")
+            val response = mResponseData.copyOfRangeByLength(offset, mResponseData.size - offset)
+            appendText("sendResponse：size=${response.size}")
 
-            // 注意：如果所传数据长度>=offset的步进（22），就会自动再次触发onCharacteristicReadRequest()方法。
-            // offset最大为594，所以传递的数据最大为594+22=616
+            // 注意：如果所传数据长度>=offset的步进（MTU - 1），就会自动再次触发onCharacteristicReadRequest()方法。
+            // offset最大为594+（MTU - 1）
             // sendResponse()中的参数offset可以随便传，不会影响onCharacteristicReadRequest()方法返回的offset。
             mBluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, response)
         }
@@ -147,8 +147,8 @@ class BlePeripheralActivity : AppCompatActivity() {
             appendText("--> onDescriptorReadRequest", false, R.color.ble_text_blue)
             appendText("device=${device.address} requestId=$requestId offset=$offset descriptor=${descriptor.uuid.getValidString()}", false)
 
-            val response = mResponseData.copyOfRangeByLength(offset, 22)
-            appendText("sendResponse：${response.contentToString()}")
+            val response = mResponseData.copyOfRangeByLength(offset, mResponseData.size - offset)
+            appendText("sendResponse：size=${response.size}")
 
             mBluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, response)
         }
