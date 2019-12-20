@@ -19,7 +19,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".BleActivity" />
+        <activity android:name=".BleCentralActivity" />
         <activity android:name=".BlePeripheralActivity" />
     </application>
 

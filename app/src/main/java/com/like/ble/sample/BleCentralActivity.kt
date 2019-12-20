@@ -10,21 +10,20 @@ import com.like.ble.CentralManager
 import com.like.ble.IBleManager
 import com.like.ble.command.StartScanCommand
 import com.like.ble.command.StopScanCommand
-import com.like.ble.sample.databinding.ActivityBleBinding
+import com.like.ble.sample.databinding.ActivityBleCentralBinding
 import com.like.livedatarecyclerview.layoutmanager.WrapLinearLayoutManager
 import java.util.*
-
 
 /**
  * 蓝牙测试
  */
-class BleActivity : AppCompatActivity() {
+class BleCentralActivity : AppCompatActivity() {
     companion object {
-        private val TAG = BleActivity::class.java.simpleName
+        private val TAG = BleCentralActivity::class.java.simpleName
     }
 
-    private val mBinding: ActivityBleBinding by lazy {
-        DataBindingUtil.setContentView<ActivityBleBinding>(this, R.layout.activity_ble)
+    private val mBinding: ActivityBleCentralBinding by lazy {
+        DataBindingUtil.setContentView<ActivityBleCentralBinding>(this, R.layout.activity_ble_central)
     }
     private val mBleManager: IBleManager by lazy { CentralManager(this) }
     private val mAdapter: BleAdapter by lazy { BleAdapter(this, mBleManager) }

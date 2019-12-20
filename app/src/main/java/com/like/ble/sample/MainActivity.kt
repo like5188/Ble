@@ -13,7 +13,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun gotoBleActivity(view: View) {
-        this.startActivity(Intent(this, BleActivity::class.java))
+        this.startActivity(Intent(this, BleCentralActivity::class.java))
     }
 
     fun gotoBlePeripheralActivity(view: View) {

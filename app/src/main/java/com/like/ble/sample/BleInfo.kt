@@ -8,7 +8,7 @@ import kotlin.math.pow
 
 class BleInfo(val name: String, val address: String, var rssi: ObservableInt, val scanRecord: ByteArray?) : IItem {
     override var variableId: Int = BR.bleInfo
-    override var layoutId: Int = R.layout.item_ble
+    override var layoutId: Int = R.layout.item_ble_scan
     var isConnected = ObservableBoolean(false) // 是否连接
     val distance: ObservableInt = ObservableInt(0)
 
