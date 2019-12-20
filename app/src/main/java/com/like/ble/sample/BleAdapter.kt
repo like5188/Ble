@@ -9,7 +9,7 @@ import androidx.core.content.ContextCompat
 import com.google.android.flexbox.FlexboxLayout
 import com.like.ble.IBleManager
 import com.like.ble.command.*
-import com.like.ble.sample.databinding.ItemBleBinding
+import com.like.ble.sample.databinding.ItemBleScanBinding
 import com.like.livedatarecyclerview.adapter.BaseAdapter
 import com.like.livedatarecyclerview.model.IRecyclerViewItem
 import com.like.livedatarecyclerview.viewholder.CommonViewHolder
@@ -39,7 +39,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
         super.bindOtherVariable(holder, position, item)
         if (item !is BleInfo) return
         val binding = holder.binding
-        if (binding !is ItemBleBinding) return
+        if (binding !is ItemBleScanBinding) return
         val address = item.address
         binding.tvConnectStatus.setOnClickListener {
             binding.tvConnectStatus.setTextColor(ContextCompat.getColor(mActivity, R.color.ble_text_black_1))
