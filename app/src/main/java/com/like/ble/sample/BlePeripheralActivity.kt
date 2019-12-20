@@ -213,14 +213,13 @@ class BlePeripheralActivity : AppCompatActivity() {
                     initServices()//该方法是添加一个服务，在此处调用即将服务广播出去
                 },
                 {
-                    appendText("广播失败：${it.message}", true, R.color.ble_text_red)
+                    appendText(it.message ?: "", true, R.color.ble_text_red)
                 }
             )
         )
     }
 
     fun stopAdvertising(view: View) {
-        appendText("停止广播", true, R.color.ble_text_blue)
         mBleManager.sendCommand(StopAdvertisingCommand())
     }
 

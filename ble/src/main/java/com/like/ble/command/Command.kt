@@ -109,7 +109,7 @@ abstract class Command(val des: String, val address: String = "") {
     }
 
     /**
-     * 这个方法可以多次触发[doOnFailure]回调，不会判断是否完成。用于[ConnectCommand]，在连接成功后，连接断开时通知更新界面。
+     * 这个方法可以多次触发[doOnFailure]回调，不会判断是否完成。用于[ConnectCommand]、[StartAdvertisingCommand]，在连接成功后，连接断开时通知更新界面。
      */
     internal fun failureAndComplete(errorMsg: String) {
         doOnFailure(Throwable(errorMsg))

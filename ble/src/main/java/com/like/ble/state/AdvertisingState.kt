@@ -8,6 +8,7 @@ import androidx.fragment.app.FragmentActivity
 import com.like.ble.command.CloseCommand
 import com.like.ble.command.StartAdvertisingCommand
 import com.like.ble.command.StopAdvertisingCommand
+import com.like.ble.utils.BleBroadcastReceiverHelper
 import com.like.ble.utils.getBluetoothAdapter
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -25,6 +26,16 @@ import java.util.concurrent.atomic.AtomicBoolean
 class AdvertisingState(private val mActivity: FragmentActivity) : State() {
     private val mIsSending = AtomicBoolean(false)
     private var mStartAdvertisingCommand: StartAdvertisingCommand? = null
+    private val mBleBroadcastReceiverHelper: BleBroadcastReceiverHelper by lazy {
+        BleBroadcastReceiverHelper(
+            mActivity,
+            onBleOff = {
+                if (mIsSending.compareAndSet(true, false)) {
+                    mStartAdvertisingCommand?.failureAndComplete("蓝牙被关闭，广播停止了")
+                }
+            }
+        )
+    }
     private val mAdvertiseCallback: AdvertiseCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : AdvertiseCallback() {
         override fun onStartFailure(errorCode: Int) {
             val errorMsg = when (errorCode) {
@@ -42,6 +53,10 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
         override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
             mStartAdvertisingCommand?.successAndCompleteIfIncomplete()
         }
+    }
+
+    init {
+        mBleBroadcastReceiverHelper.register()
     }
 
     @Synchronized
@@ -72,10 +87,11 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
 
     @Synchronized
     override fun stopAdvertising(command: StopAdvertisingCommand) {
-        mStartAdvertisingCommand?.failureAndCompleteIfIncomplete("停止广播")
-        mStartAdvertisingCommand = null
         if (mIsSending.compareAndSet(true, false)) {
             mActivity.getBluetoothAdapter()?.bluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)
+            mStartAdvertisingCommand?.failureAndComplete("广播停止了")
+        } else {
+            mStartAdvertisingCommand?.failureAndComplete("广播未开启")
         }
         command.completeIfIncomplete()
     }
@@ -83,6 +99,8 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
     @Synchronized
     override fun close(command: CloseCommand) {
         stopAdvertising(StopAdvertisingCommand())
+        mStartAdvertisingCommand = null
+        mBleBroadcastReceiverHelper.unregister()
         command.completeIfIncomplete()
     }
 
