@@ -159,6 +159,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
         mOtherCommand = null
         mBluetoothGatt?.disconnect()
         mBluetoothGatt?.close()
+        mBluetoothGatt = null
         command.completeIfIncomplete()
     }
 
@@ -464,7 +465,6 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
     @Synchronized
     override fun close(command: CloseCommand) {
         disconnect(DisconnectCommand(command.address))
-        mBluetoothGatt = null
         command.completeIfIncomplete()
     }
 
