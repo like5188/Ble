@@ -248,7 +248,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
             return
         }
 
-        if (command.getBatchDataList().isEmpty()) {
+        if (command.data.isEmpty()) {
             command.failureAndCompleteIfIncomplete("没有数据，无法写入：${getUuidValidString(command.characteristicUuidString)}")
             return
         }
@@ -274,13 +274,14 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
             WRITE_TYPE_SIGNED  写特征携带认证签名，具体作用不太清楚。
             */
             characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-            command.getBatchDataList().forEach {
+            command.data.forEach {
                 characteristic.value = it
                 if (mBluetoothGatt?.writeCharacteristic(characteristic) != true) {
                     command.failureAndCompleteIfIncomplete("写特征值失败：${getUuidValidString(command.characteristicUuidString)}")
                     return@launch
                 }
-                delay(command.writeInterval)// todo 不用延时，用onCharacteristicWrite()方法来触发下一次写。可以考虑宏命令，把分包变成多个写命令。
+                command.waitForNextFlag()
+                delay(10)
             }
         })
 

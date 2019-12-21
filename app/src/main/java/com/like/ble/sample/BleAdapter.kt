@@ -103,11 +103,13 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                     )
                     1 -> WriteCharacteristicCommand(
                         address,
-                        byteArrayOf(0x1),
+                        listOf(
+                            byteArrayOf(0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2),
+                            byteArrayOf(0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4),
+                            byteArrayOf(0x5), byteArrayOf(0x6), byteArrayOf(0x7)
+                        ),
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         5000,
-                        200,
-                        20,
                         {
                             mActivity.longToastBottom("写特征成功")
                         },
