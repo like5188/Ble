@@ -1,5 +1,8 @@
 package com.like.ble.command
 
+import android.bluetooth.BluetoothAdapter
+import com.like.ble.utils.isUuidStringValid
+
 /**
  * 读特征值命令，一次最多可以读取600字节
  *
@@ -16,6 +19,14 @@ class ReadCharacteristicCommand(
     private val onSuccess: ((ByteArray?) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command("读特征值命令", address) {
+
+    init {
+        when {
+            !BluetoothAdapter.checkBluetoothAddress(address) -> failureAndCompleteIfIncomplete("地址无效：$address")
+            !isUuidStringValid(characteristicUuidString) -> failureAndCompleteIfIncomplete("characteristicUuidString 无效")
+            timeout <= 0L -> failureAndCompleteIfIncomplete("timeout 必须大于 0")
+        }
+    }
 
     override suspend fun execute() {
         mReceiver?.readCharacteristic(this)

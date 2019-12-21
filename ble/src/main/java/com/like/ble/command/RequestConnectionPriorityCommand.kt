@@ -1,5 +1,8 @@
 package com.like.ble.command
 
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothGatt
+
 /**
  * requestConnectionPriority命令
  *
@@ -16,6 +19,14 @@ class RequestConnectionPriorityCommand(
     private val onSuccess: (() -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command("requestConnectionPriority命令", address) {
+
+    init {
+        when {
+            !BluetoothAdapter.checkBluetoothAddress(address) -> failureAndCompleteIfIncomplete("地址无效：$address")
+            connectionPriority < BluetoothGatt.CONNECTION_PRIORITY_BALANCED
+                    || connectionPriority > BluetoothGatt.CONNECTION_PRIORITY_LOW_POWER -> failureAndCompleteIfIncomplete("connectionPriority 无效")
+        }
+    }
 
     override suspend fun execute() {
         mReceiver?.requestConnectionPriority(this)

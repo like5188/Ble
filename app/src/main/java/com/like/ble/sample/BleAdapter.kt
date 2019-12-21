@@ -115,7 +115,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                     )
                     2 -> SetMtuCommand(
                         address,
-                        50,
+                        518,
                         3000,
                         {
                             mActivity.longToastBottom("设置MTU成功 $it")

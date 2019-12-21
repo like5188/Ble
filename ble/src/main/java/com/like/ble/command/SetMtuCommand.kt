@@ -1,5 +1,8 @@
 package com.like.ble.command
 
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothGatt
+
 /**
  * 设置MTU命令
  *
@@ -16,6 +19,14 @@ class SetMtuCommand(
     private val onSuccess: ((Int) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command("设置MTU命令", address) {
+
+    init {
+        when {
+            !BluetoothAdapter.checkBluetoothAddress(address) -> failureAndCompleteIfIncomplete("地址无效：$address")
+            mtu < 23 || mtu > 517 -> failureAndCompleteIfIncomplete("mtu 的范围是 [23，517]")
+            timeout <= 0L -> failureAndCompleteIfIncomplete("timeout 必须大于 0")
+        }
+    }
 
     override suspend fun execute() {
         mReceiver?.setMtu(this)

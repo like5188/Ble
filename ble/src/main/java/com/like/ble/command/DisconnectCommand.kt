@@ -1,11 +1,19 @@
 package com.like.ble.command
 
+import android.bluetooth.BluetoothAdapter
+
 /**
  * 断开蓝牙连接命令
  *
  * @param address           蓝牙设备地址
  */
 class DisconnectCommand(address: String) : Command("断开蓝牙连接命令", address) {
+
+    init {
+        when {
+            !BluetoothAdapter.checkBluetoothAddress(address) -> failureAndCompleteIfIncomplete("地址无效：$address")
+        }
+    }
 
     override suspend fun execute() {
         mReceiver?.disconnect(this)

@@ -34,7 +34,12 @@ fun Context.isSupportBluetooth(): Boolean = packageManager.hasSystemFeature(Pack
  * 查找远程设备的特征，并开启通知，以便触发onCharacteristicChanged()方法
  */
 internal fun BluetoothGatt.findCharacteristic(characteristicUuidString: String): BluetoothGattCharacteristic? {
-    val characteristicUuid = UUID.fromString(characteristicUuidString)
+    val characteristicUuid: UUID = try {
+        UUID.fromString(characteristicUuidString)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        return null
+    }
     var characteristic: BluetoothGattCharacteristic?
     services.forEach {
         characteristic = it.getCharacteristic(characteristicUuid)
@@ -44,6 +49,20 @@ internal fun BluetoothGatt.findCharacteristic(characteristicUuidString: String):
     }
     return null
 }
+
+internal fun isUuidStringValid(uuidString: String): Boolean {
+    if (uuidString.isEmpty()) {
+        return false
+    }
+    return try {
+        UUID.fromString(uuidString)
+        true
+    } catch (e: Exception) {
+        e.printStackTrace()
+        false
+    }
+}
+
 
 fun getConnectionStateString(status: Int) = when (status) {
     0 -> "DISCONNECTED"

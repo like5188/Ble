@@ -71,9 +71,12 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
 
         override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
             val command = getCommandFromCache<ReadNotifyCommand>() ?: return
-            command.addDataToCache(characteristic.value)
-            if (command.isWholeFrame()) {
-                command.successAndCompleteIfIncomplete()
+            if (command.addDataToCache(characteristic.value)) {
+                if (command.isWholeFrame()) {
+                    command.successAndCompleteIfIncomplete()
+                }
+            } else {
+                command.failureAndCompleteIfIncomplete("添加数据到缓存失败")
             }
         }
 
@@ -208,11 +211,6 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
     override fun writeCharacteristic(command: WriteCharacteristicCommand) {
         if (!isConnected()) {
             command.failureAndCompleteIfIncomplete("设备未连接：${command.address}")
-            return
-        }
-
-        if (command.data.isEmpty()) {
-            command.failureAndCompleteIfIncomplete("没有数据，无法写入：${getUuidValidString(command.characteristicUuidString)}")
             return
         }
 

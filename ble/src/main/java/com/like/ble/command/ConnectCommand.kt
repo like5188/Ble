@@ -1,5 +1,7 @@
 package com.like.ble.command
 
+import android.bluetooth.BluetoothAdapter
+
 /**
  * 连接蓝牙命令
  *
@@ -14,6 +16,13 @@ class ConnectCommand(
     private val onSuccess: (() -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command("连接蓝牙命令", address) {
+
+    init {
+        when {
+            !BluetoothAdapter.checkBluetoothAddress(address) -> failureAndCompleteIfIncomplete("地址无效：$address")
+            timeout <= 0L -> failureAndCompleteIfIncomplete("timeout 必须大于 0")
+        }
+    }
 
     override suspend fun execute() {
         mReceiver?.connect(this)

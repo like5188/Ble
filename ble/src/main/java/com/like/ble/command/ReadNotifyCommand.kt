@@ -1,5 +1,7 @@
 package com.like.ble.command
 
+import android.bluetooth.BluetoothAdapter
+import com.like.ble.utils.isUuidStringValid
 import com.like.ble.utils.toByteArrayOrNull
 import java.nio.ByteBuffer
 
@@ -25,12 +27,28 @@ class ReadNotifyCommand(
     private val onSuccess: ((ByteArray?) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command("读取通知传来的数据命令", address) {
+
+    init {
+        when {
+            !BluetoothAdapter.checkBluetoothAddress(address) -> failureAndCompleteIfIncomplete("地址无效：$address")
+            !isUuidStringValid(characteristicUuidString) -> failureAndCompleteIfIncomplete("characteristicUuidString 无效")
+            timeout <= 0L -> failureAndCompleteIfIncomplete("timeout 必须大于 0")
+            maxFrameTransferSize <= 0L -> failureAndCompleteIfIncomplete("maxFrameTransferSize 必须大于 0")
+        }
+    }
+
     // 缓存读取特征数据时的返回数据，因为一帧有可能分为多次接收
     private val mDataCache: ByteBuffer by lazy { ByteBuffer.allocate(maxFrameTransferSize) }
 
-    fun addDataToCache(data: ByteArray) {
-        if (isCompleted()) return
-        mDataCache.put(data)
+    fun addDataToCache(data: ByteArray): Boolean {
+        if (isCompleted()) return false
+        return try {
+            mDataCache.put(data)
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
     }
 
     fun isWholeFrame() = isWholeFrame(mDataCache)

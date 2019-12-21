@@ -1,5 +1,8 @@
 package com.like.ble.command
 
+import android.bluetooth.BluetoothAdapter
+import com.like.ble.utils.isUuidStringValid
+
 /**
  * 开启特征通知命令
  *
@@ -16,6 +19,14 @@ class EnableCharacteristicNotifyCommand(
     private val onSuccess: (() -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command("设置通知特征值命令", address) {
+
+    init {
+        when {
+            !BluetoothAdapter.checkBluetoothAddress(address) -> failureAndCompleteIfIncomplete("地址无效：$address")
+            !isUuidStringValid(characteristicUuidString) -> failureAndCompleteIfIncomplete("characteristicUuidString 无效")
+            !isUuidStringValid(descriptorUuidString) -> failureAndCompleteIfIncomplete("descriptorUuidString 无效")
+        }
+    }
 
     override suspend fun execute() {
         mReceiver?.enableCharacteristicNotify(this)
