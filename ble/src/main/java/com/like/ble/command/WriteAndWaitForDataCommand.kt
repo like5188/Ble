@@ -45,7 +45,7 @@ class WriteAndWaitForDataCommand(
 
     fun getBatchDataList() = mBatchDataList
 
-    override fun execute() {
+    override suspend fun execute() {
         mReceiver?.writeAndWaitForData(this)
     }
 

@@ -5,7 +5,7 @@ package com.like.ble.command
  */
 class StopAdvertisingCommand : Command("停止广播命令") {
 
-    override fun execute() {
+    override suspend fun execute() {
         mReceiver?.stopAdvertising(this)
     }
 

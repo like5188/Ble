@@ -7,7 +7,7 @@ package com.like.ble.command
  */
 class DisconnectCommand(address: String) : Command("断开蓝牙连接命令", address) {
 
-    override fun execute() {
+    override suspend fun execute() {
         mReceiver?.disconnect(this)
     }
 

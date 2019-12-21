@@ -22,7 +22,7 @@ class StartAdvertisingCommand(
     private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command("开始广播命令") {
 
-    override fun execute() {
+    override suspend fun execute() {
         mReceiver?.startAdvertising(this)
     }
 

@@ -117,7 +117,7 @@ abstract class Command(val des: String, val address: String = "") {
     /**
      * 执行命令
      */
-    internal abstract fun execute()
+    internal abstract suspend fun execute()
 
     /**
      * @return 命令所属分组[GROUP_CLOSE]、[GROUP_PERIPHERAL]、[GROUP_PERIPHERAL_ADVERTISING]、[GROUP_CENTRAL]、[GROUP_CENTRAL_SCAN]、[GROUP_CENTRAL_DEVICE]

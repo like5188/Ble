@@ -24,7 +24,7 @@ class StartScanCommand(
     private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command("开始扫描蓝牙设备命令") {
 
-    override fun execute() {
+    override suspend fun execute() {
         mReceiver?.startScan(this)
     }
 

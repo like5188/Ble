@@ -5,7 +5,7 @@ package com.like.ble.command
  */
 class StopScanCommand : Command("停止扫描蓝牙设备命令") {
 
-    override fun execute() {
+    override suspend fun execute() {
         mReceiver?.stopScan(this)
     }
 

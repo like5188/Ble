@@ -15,7 +15,7 @@ class ConnectCommand(
     private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command("连接蓝牙命令", address) {
 
-    override fun execute() {
+    override suspend fun execute() {
         mReceiver?.connect(this)
     }
 

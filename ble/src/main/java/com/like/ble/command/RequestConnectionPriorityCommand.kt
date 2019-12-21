@@ -17,7 +17,7 @@ class RequestConnectionPriorityCommand(
     private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command("requestConnectionPriority命令", address) {
 
-    override fun execute() {
+    override suspend fun execute() {
         mReceiver?.requestConnectionPriority(this)
     }
 

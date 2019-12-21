@@ -17,7 +17,7 @@ class ReadCharacteristicCommand(
     private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command("读特征值命令", address) {
 
-    override fun execute() {
+    override suspend fun execute() {
         mReceiver?.readCharacteristic(this)
     }
 

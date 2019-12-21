@@ -17,7 +17,7 @@ class DisableCharacteristicIndicateCommand(
     private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command("取消设置通知特征值命令", address) {
 
-    override fun execute() {
+    override suspend fun execute() {
         mReceiver?.disableCharacteristicIndicate(this)
     }
 

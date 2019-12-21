@@ -34,7 +34,7 @@ class WriteCharacteristicCommand(
 
     fun isAllWrite() = mWriteCharacteristicBatchCount.decrementAndGet() <= 0
 
-    override fun execute() {
+    override suspend fun execute() {
         mReceiver?.writeCharacteristic(this)
     }
 

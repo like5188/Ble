@@ -15,7 +15,7 @@ class ReadRemoteRssiCommand(
     private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command("读RSSI命令", address) {
 
-    override fun execute() {
+    override suspend fun execute() {
         mReceiver?.readRemoteRssi(this)
     }
 

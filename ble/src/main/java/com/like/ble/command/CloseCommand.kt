@@ -5,7 +5,7 @@ package com.like.ble.command
  */
 class CloseCommand : Command("关闭蓝牙命令") {
 
-    override fun execute() {
+    override suspend fun execute() {
         mReceiver?.close(this)
     }
 
