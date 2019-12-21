@@ -5,7 +5,10 @@ import android.os.Build
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.*
-import com.like.ble.utils.*
+import com.like.ble.utils.findCharacteristic
+import com.like.ble.utils.getBluetoothAdapter
+import com.like.ble.utils.getValidString
+import com.like.ble.utils.isBleDeviceConnected
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -184,9 +187,9 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
             return
         }
 
-        val characteristic = mBluetoothGatt?.findCharacteristic(command.characteristicUuidString)
+        val characteristic = mBluetoothGatt?.findCharacteristic(command.characteristicUuid)
         if (characteristic == null) {
-            command.failureAndCompleteIfIncomplete("特征值不存在：${getUuidValidString(command.characteristicUuidString)}")
+            command.failureAndCompleteIfIncomplete("特征值不存在：${command.characteristicUuid.getValidString()}")
             return
         }
 
@@ -198,13 +201,13 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
         addCommandToCache(command)
 
         if (mBluetoothGatt?.readCharacteristic(characteristic) != true) {
-            command.failureAndCompleteIfIncomplete("读取特征值失败：${getUuidValidString(command.characteristicUuidString)}")
+            command.failureAndCompleteIfIncomplete("读取特征值失败：${command.characteristicUuid.getValidString()}")
             return
         }
 
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
-            command.failureAndCompleteIfIncomplete("读取特征值超时：${getUuidValidString(command.characteristicUuidString)}")
+            command.failureAndCompleteIfIncomplete("读取特征值超时：${command.characteristicUuid.getValidString()}")
         })
     }
 
@@ -214,9 +217,9 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
             return
         }
 
-        val characteristic = mBluetoothGatt?.findCharacteristic(command.characteristicUuidString)
+        val characteristic = mBluetoothGatt?.findCharacteristic(command.characteristicUuid)
         if (characteristic == null) {
-            command.failureAndCompleteIfIncomplete("特征值不存在：${getUuidValidString(command.characteristicUuidString)}")
+            command.failureAndCompleteIfIncomplete("特征值不存在：${command.characteristicUuid.getValidString()}")
             return
         }
 
@@ -238,7 +241,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
             command.data.forEach {
                 characteristic.value = it
                 if (mBluetoothGatt?.writeCharacteristic(characteristic) != true) {
-                    command.failureAndCompleteIfIncomplete("写特征值失败：${getUuidValidString(command.characteristicUuidString)}")
+                    command.failureAndCompleteIfIncomplete("写特征值失败：${command.characteristicUuid.getValidString()}")
                     return@launch
                 }
                 command.waitForNextFlag()
@@ -248,7 +251,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
 
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
-            command.failureAndCompleteIfIncomplete("写特征值超时：${getUuidValidString(command.characteristicUuidString)}")
+            command.failureAndCompleteIfIncomplete("写特征值超时：${command.characteristicUuid.getValidString()}")
         })
     }
 
@@ -258,9 +261,9 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
             return
         }
 
-        val characteristic = mBluetoothGatt?.findCharacteristic(command.characteristicUuidString)
+        val characteristic = mBluetoothGatt?.findCharacteristic(command.characteristicUuid)
         if (characteristic == null) {
-            command.failureAndCompleteIfIncomplete("特征值不存在：${getUuidValidString(command.characteristicUuidString)}")
+            command.failureAndCompleteIfIncomplete("特征值不存在：${command.characteristicUuid.getValidString()}")
             return
         }
 
@@ -273,7 +276,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
 
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
-            command.failureAndCompleteIfIncomplete("读取通知传来的数据超时：${getUuidValidString(command.characteristicUuidString)}")
+            command.failureAndCompleteIfIncomplete("读取通知传来的数据超时：${command.characteristicUuid.getValidString()}")
         })
 
     }
@@ -342,24 +345,24 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
     }
 
     override fun enableCharacteristicNotify(command: EnableCharacteristicNotifyCommand) {
-        setCharacteristicNotification(command.characteristicUuidString, command.descriptorUuidString, true, command)
+        setCharacteristicNotification(command.characteristicUuid, command.descriptorUuid, true, command)
     }
 
     override fun disableCharacteristicNotify(command: DisableCharacteristicNotifyCommand) {
-        setCharacteristicNotification(command.characteristicUuidString, command.descriptorUuidString, false, command)
+        setCharacteristicNotification(command.characteristicUuid, command.descriptorUuid, false, command)
     }
 
     override fun enableCharacteristicIndicate(command: EnableCharacteristicIndicateCommand) {
-        setCharacteristicIndication(command.characteristicUuidString, command.descriptorUuidString, true, command)
+        setCharacteristicIndication(command.characteristicUuid, command.descriptorUuid, true, command)
     }
 
     override fun disableCharacteristicIndicate(command: DisableCharacteristicIndicateCommand) {
-        setCharacteristicIndication(command.characteristicUuidString, command.descriptorUuidString, false, command)
+        setCharacteristicIndication(command.characteristicUuid, command.descriptorUuid, false, command)
     }
 
     private fun setCharacteristicNotification(
-        characteristicUuidString: String,
-        descriptorUuidString: String,
+        characteristicUuid: UUID,
+        descriptorUuid: UUID,
         enable: Boolean,
         command: Command
     ) {
@@ -368,9 +371,9 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
             return
         }
 
-        val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuidString)
+        val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid)
         if (characteristic == null) {
-            command.failureAndCompleteIfIncomplete("特征值不存在：${getUuidValidString(characteristicUuidString)}")
+            command.failureAndCompleteIfIncomplete("特征值不存在：${characteristicUuid.getValidString()}")
             return
         }
 
@@ -384,7 +387,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
             return
         }
 
-        val descriptor = characteristic.getDescriptor(UUID.fromString(descriptorUuidString))
+        val descriptor = characteristic.getDescriptor(descriptorUuid)
         if (descriptor == null) {
             command.failureAndCompleteIfIncomplete("descriptor equals null")
             return
@@ -405,8 +408,8 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
     }
 
     private fun setCharacteristicIndication(
-        characteristicUuidString: String,
-        descriptorUuidString: String,
+        characteristicUuid: UUID,
+        descriptorUuid: UUID,
         enable: Boolean,
         command: Command
     ) {
@@ -415,9 +418,9 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
             return
         }
 
-        val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuidString)
+        val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid)
         if (characteristic == null) {
-            command.failureAndCompleteIfIncomplete("特征值不存在：${getUuidValidString(characteristicUuidString)}")
+            command.failureAndCompleteIfIncomplete("特征值不存在：${characteristicUuid.getValidString()}")
             return
         }
 
@@ -431,7 +434,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
             return
         }
 
-        val descriptor = characteristic.getDescriptor(UUID.fromString(descriptorUuidString))
+        val descriptor = characteristic.getDescriptor(descriptorUuid)
         if (descriptor == null) {
             command.failureAndCompleteIfIncomplete("descriptor equals null")
             return

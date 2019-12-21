@@ -10,6 +10,7 @@ import com.google.android.flexbox.FlexboxLayout
 import com.like.ble.IBleManager
 import com.like.ble.command.*
 import com.like.ble.sample.databinding.ItemBleScanBinding
+import com.like.ble.utils.createBleUuidBy16Bit
 import com.like.livedatarecyclerview.adapter.BaseAdapter
 import com.like.livedatarecyclerview.model.IRecyclerViewItem
 import com.like.livedatarecyclerview.viewholder.CommonViewHolder
@@ -92,7 +93,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                 val command = when (index) {
                     0 -> ReadCharacteristicCommand(
                         address,
-                        "0000fff1-0000-1000-8000-00805f9b34fb",
+                        createBleUuidBy16Bit("fff1"),
                         10000,
                         {
                             mActivity.longToastBottom("读特征成功。数据长度：${it?.size} ${it?.contentToString()}")
@@ -104,7 +105,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                     1 -> WriteCharacteristicCommand(
                         address,
                         listOf(byteArrayOf(0x1)),
-                        "0000fff2-0000-1000-8000-00805f9b34fb",
+                        createBleUuidBy16Bit("fff2"),
                         5000,
                         {
                             mActivity.longToastBottom("写特征成功")
@@ -150,8 +151,8 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                     }
                     5 -> EnableCharacteristicNotifyCommand(
                         address,
-                        "0000fff2-0000-1000-8000-00805f9b34fb",
-                        "00002902-0000-1000-8000-00805f9b34fb",
+                        createBleUuidBy16Bit("fff2"),
+                        createBleUuidBy16Bit("2902"),
                         {
                             mActivity.longToastBottom("开启notify成功")
                         },
@@ -161,8 +162,8 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                     )
                     6 -> DisableCharacteristicNotifyCommand(
                         address,
-                        "0000fff2-0000-1000-8000-00805f9b34fb",
-                        "00002902-0000-1000-8000-00805f9b34fb",
+                        createBleUuidBy16Bit("fff2"),
+                        createBleUuidBy16Bit("2902"),
                         {
                             mActivity.longToastBottom("关闭notify成功")
                         },
@@ -172,8 +173,8 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                     )
                     7 -> EnableCharacteristicIndicateCommand(
                         address,
-                        "0000fff2-0000-1000-8000-00805f9b34fb",
-                        "00002902-0000-1000-8000-00805f9b34fb",
+                        createBleUuidBy16Bit("fff2"),
+                        createBleUuidBy16Bit("2902"),
                         {
                             mActivity.longToastBottom("开启indicate成功")
                         },
@@ -183,8 +184,8 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                     )
                     8 -> DisableCharacteristicIndicateCommand(
                         address,
-                        "0000fff2-0000-1000-8000-00805f9b34fb",
-                        "00002902-0000-1000-8000-00805f9b34fb",
+                        createBleUuidBy16Bit("fff2"),
+                        createBleUuidBy16Bit("2902"),
                         {
                             mActivity.longToastBottom("关闭indicate成功")
                         },
@@ -194,7 +195,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                     )
                     9 -> ReadNotifyCommand(
                         address,
-                        "0000fff2-0000-1000-8000-00805f9b34fb",
+                        createBleUuidBy16Bit("fff2"),
                         5000,
                         1024,
                         {

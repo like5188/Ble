@@ -43,7 +43,7 @@ class BlePeripheralActivity : AppCompatActivity() {
     private val mBleManager: IBleManager by lazy { PeripheralManager(this) }
     private var mBluetoothGattServer: BluetoothGattServer? = null
     private val mBluetoothGattServerCallback = object : BluetoothGattServerCallback() {
-        private val mResponseData1: ByteArray by lazy {
+        private val mResponseData: ByteArray by lazy {
             val arr = ByteArray(600)// 最大只能传输600字节
             for (i in 1 until arr.size) {
                 arr[i - 1] = i.toByte()
@@ -51,8 +51,6 @@ class BlePeripheralActivity : AppCompatActivity() {
             arr[arr.size - 1] = Byte.MAX_VALUE// 一帧结束的标志
             arr
         }
-        private val mResponseData2 = byteArrayOf(0x02, Byte.MAX_VALUE)
-        private val mResponseData = mResponseData1
         private var mMtu = 23
 
         /**

@@ -1,20 +1,20 @@
 package com.like.ble.command
 
 import android.bluetooth.BluetoothAdapter
-import com.like.ble.utils.isUuidStringValid
+import java.util.*
 
 /**
  * 读特征值命令，一次最多可以读取600字节
  *
  * @param address                   蓝牙设备地址
- * @param characteristicUuidString  特征UUID
+ * @param characteristicUuid        特征UUID
  * @param timeout                   命令执行超时时间（毫秒）
  * @param onSuccess                 命令执行成功回调
  * @param onFailure                 命令执行失败回调
  */
 class ReadCharacteristicCommand(
     address: String,
-    val characteristicUuidString: String,
+    val characteristicUuid: UUID,
     val timeout: Long = 3000L,
     private val onSuccess: ((ByteArray?) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
@@ -23,7 +23,6 @@ class ReadCharacteristicCommand(
     init {
         when {
             !BluetoothAdapter.checkBluetoothAddress(address) -> failureAndCompleteIfIncomplete("地址无效：$address")
-            !isUuidStringValid(characteristicUuidString) -> failureAndCompleteIfIncomplete("characteristicUuidString 无效")
             timeout <= 0L -> failureAndCompleteIfIncomplete("timeout 必须大于 0")
         }
     }
@@ -52,14 +51,14 @@ class ReadCharacteristicCommand(
         if (other !is ReadCharacteristicCommand) return false
 
         if (address != other.address) return false
-        if (characteristicUuidString != other.characteristicUuidString) return false
+        if (characteristicUuid != other.characteristicUuid) return false
 
         return true
     }
 
     override fun hashCode(): Int {
         var result = address.hashCode()
-        result = 31 * result + characteristicUuidString.hashCode()
+        result = 31 * result + characteristicUuid.hashCode()
         return result
     }
 

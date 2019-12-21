@@ -3,6 +3,7 @@ package com.like.ble.utils
 import android.bluetooth.*
 import android.content.Context
 import android.content.pm.PackageManager
+import java.lang.IllegalArgumentException
 import java.nio.ByteBuffer
 import java.util.*
 import kotlin.math.ceil
@@ -33,13 +34,7 @@ fun Context.isSupportBluetooth(): Boolean = packageManager.hasSystemFeature(Pack
 /**
  * 查找远程设备的特征，并开启通知，以便触发onCharacteristicChanged()方法
  */
-internal fun BluetoothGatt.findCharacteristic(characteristicUuidString: String): BluetoothGattCharacteristic? {
-    val characteristicUuid: UUID = try {
-        UUID.fromString(characteristicUuidString)
-    } catch (e: Exception) {
-        e.printStackTrace()
-        return null
-    }
+internal fun BluetoothGatt.findCharacteristic(characteristicUuid: UUID): BluetoothGattCharacteristic? {
     var characteristic: BluetoothGattCharacteristic?
     services.forEach {
         characteristic = it.getCharacteristic(characteristicUuid)
@@ -49,20 +44,6 @@ internal fun BluetoothGatt.findCharacteristic(characteristicUuidString: String):
     }
     return null
 }
-
-internal fun isUuidStringValid(uuidString: String): Boolean {
-    if (uuidString.isEmpty()) {
-        return false
-    }
-    return try {
-        UUID.fromString(uuidString)
-        true
-    } catch (e: Exception) {
-        e.printStackTrace()
-        false
-    }
-}
-
 
 fun getConnectionStateString(status: Int) = when (status) {
     0 -> "DISCONNECTED"
@@ -86,7 +67,38 @@ fun getBluetoothGattStatusString(status: Int) = when (status) {
     else -> ""
 }
 
-fun getUuidValidString(uuid: String) = "0x${uuid.substring(4, 8)}"
+fun createBleUuidBy16Bit(uuidString: String?): UUID {
+    if (uuidString?.length != 4) {
+        throw IllegalArgumentException("uuidString 的长度必须为 4")
+    }
+    return createBleUuidBy32Bit("0000$uuidString")
+}
+
+fun createBleUuidBy32Bit(uuidString: String?): UUID {
+    if (uuidString?.length != 8) {
+        throw IllegalArgumentException("uuidString 的长度必须为 8")
+    }
+    return UUID.fromString("$uuidString-0000-1000-8000-00805F9B34FB")
+}
+
+fun createBleUuidOrNullBy16Bit(uuidString: String?): UUID? {
+    if (uuidString?.length != 4) {
+        return null
+    }
+    return createBleUuidOrNullBy32Bit("0000$uuidString")
+}
+
+fun createBleUuidOrNullBy32Bit(uuidString: String?): UUID? {
+    if (uuidString?.length != 8) {
+        return null
+    }
+    return try {
+        UUID.fromString("$uuidString-0000-1000-8000-00805F9B34FB")
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
 
 fun UUID.getValidString(): String = "0x${toString().substring(4, 8)}"
 

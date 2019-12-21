@@ -1,9 +1,9 @@
 package com.like.ble.command
 
 import android.bluetooth.BluetoothAdapter
-import com.like.ble.utils.isUuidStringValid
 import com.like.ble.utils.toByteArrayOrNull
 import java.nio.ByteBuffer
+import java.util.*
 
 /**
  * 读取通知传来的数据命令（通过notify或者indicate的方式）
@@ -11,7 +11,7 @@ import java.nio.ByteBuffer
  * 先发送[ReadNotifyCommand]，再发送[WriteCharacteristicCommand]
  *
  * @param address                   蓝牙设备地址
- * @param characteristicUuidString  特征UUID
+ * @param characteristicUuid        特征UUID
  * @param timeout                   命令执行超时时间（毫秒）
  * @param maxFrameTransferSize      每帧可以传输的最大字节数
  * @param isWholeFrame              是否是完整的一帧
@@ -20,7 +20,7 @@ import java.nio.ByteBuffer
  */
 class ReadNotifyCommand(
     address: String,
-    val characteristicUuidString: String,
+    val characteristicUuid: UUID,
     val timeout: Long = 3000L,
     private val maxFrameTransferSize: Int = 1024,
     private val isWholeFrame: (ByteBuffer) -> Boolean = { true },
@@ -31,7 +31,6 @@ class ReadNotifyCommand(
     init {
         when {
             !BluetoothAdapter.checkBluetoothAddress(address) -> failureAndCompleteIfIncomplete("地址无效：$address")
-            !isUuidStringValid(characteristicUuidString) -> failureAndCompleteIfIncomplete("characteristicUuidString 无效")
             timeout <= 0L -> failureAndCompleteIfIncomplete("timeout 必须大于 0")
             maxFrameTransferSize <= 0L -> failureAndCompleteIfIncomplete("maxFrameTransferSize 必须大于 0")
         }
@@ -72,14 +71,14 @@ class ReadNotifyCommand(
         if (other !is ReadCharacteristicCommand) return false
 
         if (address != other.address) return false
-        if (characteristicUuidString != other.characteristicUuidString) return false
+        if (characteristicUuid != other.characteristicUuid) return false
 
         return true
     }
 
     override fun hashCode(): Int {
         var result = address.hashCode()
-        result = 31 * result + characteristicUuidString.hashCode()
+        result = 31 * result + characteristicUuid.hashCode()
         return result
     }
 
