@@ -27,7 +27,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
             "关闭notify",
             "开启indicate",
             "关闭indicate",
-            "写数据并等待获取数据"
+            "读取通知传来的数据"
         )
 
     override fun bindOtherVariable(
@@ -103,11 +103,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                     )
                     1 -> WriteCharacteristicCommand(
                         address,
-                        listOf(
-                            byteArrayOf(0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2),
-                            byteArrayOf(0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4),
-                            byteArrayOf(0x5), byteArrayOf(0x6), byteArrayOf(0x7)
-                        ),
+                        listOf(byteArrayOf(0x1)),
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         5000,
                         {
@@ -196,19 +192,16 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
                             mActivity.longToastBottom(it.message)
                         }
                     )
-                    9 -> WriteAndWaitForDataCommand(
+                    9 -> ReadNotifyCommand(
                         address,
-                        byteArrayOf(0x2),
                         "0000fff2-0000-1000-8000-00805f9b34fb",
                         5000,
-                        200,
-                        20,
                         1024,
                         {
                             it.get(it.position() - 1) == Byte.MAX_VALUE
                         },
                         {
-                            mActivity.longToastBottom("写数据并等待获取数据成功。数据长度：${it?.size} ${it?.contentToString()}")
+                            mActivity.longToastBottom("读取通知传来的数据成功。数据长度：${it?.size} ${it?.contentToString()}")
                         },
                         {
                             mActivity.longToastBottom(it.message)

@@ -70,6 +70,9 @@ class CentralInvoker(private val mActivity: FragmentActivity) : Invoker(mActivit
         if (curCommand.hasGroup(Command.GROUP_CENTRAL_DEVICE) && command is DisconnectCommand) {
             return true
         }
+        if (curCommand is ReadNotifyCommand && command is WriteCharacteristicCommand) {
+            return true
+        }
         return false
     }
 
