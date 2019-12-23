@@ -39,14 +39,14 @@ class BleConnectActivity : AppCompatActivity() {
                     runOnUiThread {
                         mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_blue))
                         mBinding.tvConnectStatus.text = "连接成功"
-                    }
-                    if (it.isNotEmpty()) {
-                        val bleGattServiceInfos = it.map { bluetoothGattService ->
-                            BleConnectInfo(bluetoothGattService)
+                        if (it.isNotEmpty()) {
+                            val bleGattServiceInfos = it.map { bluetoothGattService ->
+                                BleConnectInfo(bluetoothGattService)
+                            }
+                            mAdapter.mAdapterDataManager.addItemsToEnd(bleGattServiceInfos)
+                        } else {
+                            mAdapter.mAdapterDataManager.clear()
                         }
-                        mAdapter.mAdapterDataManager.addItemsToEnd(bleGattServiceInfos)
-                    } else {
-                        mAdapter.mAdapterDataManager.clear()
                     }
                 },
                 {
