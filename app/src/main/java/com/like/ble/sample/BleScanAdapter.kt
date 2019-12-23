@@ -8,7 +8,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.util.forEach
 import androidx.core.util.isEmpty
 import androidx.fragment.app.FragmentActivity
-import com.like.ble.IBleManager
 import com.like.ble.sample.databinding.ItemBleScanBinding
 import com.like.ble.utils.deleteLast
 import com.like.ble.utils.getValidString
@@ -19,19 +18,7 @@ import com.like.livedatarecyclerview.adapter.BaseAdapter
 import com.like.livedatarecyclerview.model.IRecyclerViewItem
 import com.like.livedatarecyclerview.viewholder.CommonViewHolder
 
-class BleScanAdapter(private val mActivity: FragmentActivity, private val mBleManager: IBleManager) : BaseAdapter() {
-    private val mCommandArray = arrayOf(
-        "读特征",
-        "写特征",
-        "设置MTU",
-        "读RSSI",
-        "RequestConnectionPriority",
-        "开启notify",
-        "关闭notify",
-        "开启indicate",
-        "关闭indicate",
-        "读取通知传来的数据"
-    )
+class BleScanAdapter(private val mActivity: FragmentActivity) : BaseAdapter() {
     private val mRawDialogFragment: RawDialogFragment by lazy {
         RawDialogFragment()
     }
