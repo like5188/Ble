@@ -3,7 +3,6 @@ package com.like.ble.utils
 import android.bluetooth.*
 import android.content.Context
 import android.content.pm.PackageManager
-import java.lang.IllegalArgumentException
 import java.nio.ByteBuffer
 import java.util.*
 import kotlin.math.ceil
@@ -100,7 +99,31 @@ fun createBleUuidOrNullBy32Bit(uuidString: String?): UUID? {
     }
 }
 
-fun UUID.getValidString(): String = "0x${toString().substring(4, 8)}"
+fun StringBuilder.deleteLast() {
+    deleteCharAt(length - 1)
+}
+
+fun Int.toHexString(): String {
+    var hexString = Integer.toHexString(this)
+    while (hexString.length < 4) {
+        hexString = "0$hexString"
+    }
+    return hexString
+}
+
+fun ByteArray.toHexString(): String {
+    val sb = StringBuffer(size)
+    var sTemp: String
+    for (i in indices) {
+        sTemp = Integer.toHexString(this[i].toInt())
+        if (sTemp.length < 2)
+            sb.append(0)
+        sb.append(sTemp.toUpperCase())
+    }
+    return sb.toString()
+}
+
+fun UUID.getValidString(): String = "0x${toString().substring(4, 8).toUpperCase()}"
 
 fun BluetoothGattService.getTypeString() = when (type) {
     0 -> "PRIMARY"

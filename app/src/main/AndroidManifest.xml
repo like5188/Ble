@@ -21,6 +21,7 @@
         </activity>
         <activity android:name=".BleCentralActivity" />
         <activity android:name=".BlePeripheralActivity" />
+        <activity android:name=".ConnectActivity" />
     </application>
 
 </manifest>

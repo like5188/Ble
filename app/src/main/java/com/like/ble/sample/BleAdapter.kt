@@ -1,16 +1,16 @@
 package com.like.ble.sample
 
 import android.app.Activity
-import android.bluetooth.BluetoothGatt
-import android.os.Build
-import android.view.Gravity
-import android.widget.TextView
-import androidx.core.content.ContextCompat
-import com.google.android.flexbox.FlexboxLayout
+import android.content.Intent
+import android.view.View
+import androidx.core.util.forEach
+import androidx.core.util.isEmpty
 import com.like.ble.IBleManager
-import com.like.ble.command.*
 import com.like.ble.sample.databinding.ItemBleScanBinding
-import com.like.ble.utils.createBleUuidBy16Bit
+import com.like.ble.utils.deleteLast
+import com.like.ble.utils.getValidString
+import com.like.ble.utils.scanrecordcompat.ScanRecordBelow21
+import com.like.ble.utils.toHexString
 import com.like.livedatarecyclerview.adapter.BaseAdapter
 import com.like.livedatarecyclerview.model.IRecyclerViewItem
 import com.like.livedatarecyclerview.viewholder.CommonViewHolder
@@ -36,184 +36,60 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
         position: Int,
         item: IRecyclerViewItem?
     ) {
-        super.bindOtherVariable(holder, position, item)
         if (item !is BleInfo) return
         val binding = holder.binding
         if (binding !is ItemBleScanBinding) return
-        val address = item.address
-        binding.tvConnectStatus.setOnClickListener {
-            binding.tvConnectStatus.setTextColor(ContextCompat.getColor(mActivity, R.color.ble_text_black_1))
-            if (item.isConnected.get()) {
-                mBleManager.sendCommand(DisconnectCommand(address))
-            } else {
-                binding.tvConnectStatus.text = "连接中……"
-                mBleManager.sendCommand(
-                    ConnectCommand(
-                        address,
-                        10000L,
-                        {
-                            if (item.isConnected.get()) {
-                                item.isConnected.notifyChange()// 必须调用，否则如果本来就是true，就不能触发更新界面
-                            } else {
-                                item.isConnected.set(true)
-                            }
 
-                        },
-                        {
-                            if (item.isConnected.get()) {
-                                item.isConnected.set(false)
-                            } else {
-                                item.isConnected.notifyChange()// 必须调用，否则如果本来就是false，就不能触发更新界面
-                            }
-                        })
-                )
-            }
+        binding.tvConnect.setOnClickListener {
+            val connectIntent = Intent(mActivity, ConnectActivity::class.java)
+            connectIntent.putExtra("data", item)
+            mActivity.startActivity(connectIntent)
         }
 
-        binding.flexBoxLayout.removeAllViews()
-        mCommandArray.forEachIndexed { index, title ->
-            // 通过代码向FlexboxLayout添加View
-            val textView = TextView(mActivity)
-            textView.text = title
-            textView.gravity = Gravity.CENTER
-            textView.setPadding(20, 10, 20, 10)
-            textView.setTextColor(ContextCompat.getColor(mActivity, R.color.ble_text_white))
-            textView.background = ContextCompat.getDrawable(mActivity, R.drawable.flexbox_textview_bg)
-            binding.flexBoxLayout.addView(textView)
+        binding.tvRaw.setOnClickListener {
+            mActivity.shortToastBottom("原始数据")
+        }
 
-            // 通过FlexboxLayout.LayoutParams 设置子元素支持的属性
-            val params = textView.layoutParams
-            if (params is FlexboxLayout.LayoutParams) {
-                params.leftMargin = 10
-                params.topMargin = 10
-                params.rightMargin = 10
-                params.bottomMargin = 10
+        val scanRecordCompat = ScanRecordBelow21.parseFromBytes(item.scanRecord) ?: return
+        binding.tvTxPowerLevel.text = "${scanRecordCompat.txPowerLevel} dBm"
+
+        if (scanRecordCompat.serviceUuids.isEmpty()) {
+            binding.llServiceUuids.visibility = View.GONE
+            binding.tvServiceUuids.text = ""
+        } else {
+            binding.llServiceUuids.visibility = View.VISIBLE
+            val sb = StringBuilder()
+            scanRecordCompat.serviceUuids.forEach {
+                sb.append(it.uuid.getValidString()).append("；")
             }
-            textView.setOnClickListener {
-                val command = when (index) {
-                    0 -> ReadCharacteristicCommand(
-                        address,
-                        createBleUuidBy16Bit("fff1"),
-                        10000,
-                        {
-                            mActivity.longToastBottom("读特征成功。数据长度：${it?.size} ${it?.contentToString()}")
-                        },
-                        {
-                            mActivity.longToastBottom(it.message)
-                        }
-                    )
-                    1 -> WriteCharacteristicCommand(
-                        address,
-                        listOf(byteArrayOf(0x1)),
-                        createBleUuidBy16Bit("fff2"),
-                        5000,
-                        {
-                            mActivity.longToastBottom("写特征成功")
-                        },
-                        {
-                            mActivity.longToastBottom(it.message)
-                        }
-                    )
-                    2 -> SetMtuCommand(
-                        address,
-                        50,
-                        3000,
-                        {
-                            mActivity.longToastBottom("设置MTU成功 $it")
-                        },
-                        {
-                            mActivity.longToastBottom(it.message)
-                        }
-                    )
-                    3 -> ReadRemoteRssiCommand(
-                        address,
-                        3000,
-                        {
-                            mActivity.longToastBottom("读RSSI成功 $it")
-                        },
-                        {
-                            mActivity.longToastBottom(it.message)
-                        }
-                    )
-                    4 -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        RequestConnectionPriorityCommand(
-                            address,
-                            BluetoothGatt.CONNECTION_PRIORITY_HIGH,
-                            {
-                                mActivity.longToastBottom("requestConnectionPriorityCommand成功")
-                            },
-                            {
-                                mActivity.longToastBottom(it.message)
-                            }
-                        )
-                    } else {
-                        null
-                    }
-                    5 -> EnableCharacteristicNotifyCommand(
-                        address,
-                        createBleUuidBy16Bit("fff2"),
-                        createBleUuidBy16Bit("2902"),
-                        {
-                            mActivity.longToastBottom("开启notify成功")
-                        },
-                        {
-                            mActivity.longToastBottom(it.message)
-                        }
-                    )
-                    6 -> DisableCharacteristicNotifyCommand(
-                        address,
-                        createBleUuidBy16Bit("fff2"),
-                        createBleUuidBy16Bit("2902"),
-                        {
-                            mActivity.longToastBottom("关闭notify成功")
-                        },
-                        {
-                            mActivity.longToastBottom(it.message)
-                        }
-                    )
-                    7 -> EnableCharacteristicIndicateCommand(
-                        address,
-                        createBleUuidBy16Bit("fff2"),
-                        createBleUuidBy16Bit("2902"),
-                        {
-                            mActivity.longToastBottom("开启indicate成功")
-                        },
-                        {
-                            mActivity.longToastBottom(it.message)
-                        }
-                    )
-                    8 -> DisableCharacteristicIndicateCommand(
-                        address,
-                        createBleUuidBy16Bit("fff2"),
-                        createBleUuidBy16Bit("2902"),
-                        {
-                            mActivity.longToastBottom("关闭indicate成功")
-                        },
-                        {
-                            mActivity.longToastBottom(it.message)
-                        }
-                    )
-                    9 -> ReadNotifyCommand(
-                        address,
-                        createBleUuidBy16Bit("fff2"),
-                        5000,
-                        1024,
-                        {
-                            it.get(it.position() - 1) == Byte.MAX_VALUE
-                        },
-                        {
-                            mActivity.longToastBottom("读取通知传来的数据成功。数据长度：${it?.size} ${it?.contentToString()}")
-                        },
-                        {
-                            mActivity.longToastBottom(it.message)
-                        }
-                    )
-                    else -> null
-                }
-                command?.let {
-                    mBleManager.sendCommand(it)
-                }
+            sb.deleteLast()
+            binding.tvServiceUuids.text = sb.toString()
+        }
+
+        if (scanRecordCompat.manufacturerSpecificData.isEmpty()) {
+            binding.llManufacturerData.visibility = View.GONE
+            binding.tvManufacturerData.text = ""
+        } else {
+            binding.llManufacturerData.visibility = View.VISIBLE
+            val sb = StringBuilder()
+            scanRecordCompat.manufacturerSpecificData.forEach { key, value ->
+                sb.append("id：0x${key.toHexString()}，Data：0x${value.toHexString()}").append("；")
             }
+            sb.deleteLast()
+            binding.tvManufacturerData.text = sb.toString()
+        }
+
+        if (scanRecordCompat.serviceData.isEmpty()) {
+            binding.llServiceData.visibility = View.GONE
+            binding.tvServiceData.text = ""
+        } else {
+            binding.llServiceData.visibility = View.VISIBLE
+            val sb = StringBuilder()
+            scanRecordCompat.serviceData.forEach {
+                sb.append("UUID:${it.key.uuid.getValidString()}，Data：0x${it.value.toHexString()}").append("；")
+            }
+            sb.deleteLast()
+            binding.tvServiceData.text = sb.toString()
         }
     }
 

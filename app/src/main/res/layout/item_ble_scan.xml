@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
@@ -39,14 +38,13 @@
                 tools:text="SJZG-TEST" />
 
             <TextView
-                android:id="@+id/tv_connect_status"
+                android:id="@+id/tv_connect"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="20dp"
-                android:text="@{bleInfo.isConnected?`已连接`:`未连接`}"
-                android:textColor="@{bleInfo.isConnected?@color/ble_text_blue:@color/ble_text_yellow}"
-                android:textSize="14sp"
-                tools:text="未连接" />
+                android:text="去连接"
+                android:textColor="@color/ble_text_blue"
+                android:textSize="14sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -82,30 +80,114 @@
                 android:textColor="@color/ble_text_black_1"
                 android:textSize="14sp"
                 tools:text="100m" />
+
+            <TextView
+                android:id="@+id/tv_raw"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="40dp"
+                android:text="RAW"
+                android:textColor="@color/ble_text_blue"
+                android:textSize="14sp" />
         </LinearLayout>
 
-        <TextView
+        <LinearLayout
+            android:id="@+id/ll_detail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="@{Arrays.toString(bleInfo.scanRecord)}"
-            android:textColor="@color/ble_text_black_2"
-            android:textSize="14sp"
-            tools:text="[1,2,3]" />
+            android:orientation="vertical">
 
-        <!--android:clickable="true" android:focusable="true" 禁止点击穿透-->
-        <com.google.android.flexbox.FlexboxLayout
-            android:id="@+id/flex_box_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:visibility="@{bleInfo.isConnected?View.VISIBLE:View.GONE}"
-            app:alignContent="flex_start"
-            app:alignItems="center"
-            app:flexDirection="row"
-            app:flexWrap="wrap"
-            app:justifyContent="flex_start"
-            app:showDivider="beginning|middle" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tx Power Level："
+                    android:textColor="@color/ble_text_black_1"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tv_tx_power_level"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/ble_text_black_2"
+                    android:textSize="14sp"
+                    tools:text="-1 dBm" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/ll_service_uuids"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="16-bit Service UUIDs："
+                    android:textColor="@color/ble_text_black_1"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tv_service_uuids"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/ble_text_black_2"
+                    android:textSize="14sp"
+                    tools:text="0xFFF0；0xFFF1" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/ll_manufacturer_data"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Manufacturer Data："
+                    android:textColor="@color/ble_text_black_1"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tv_manufacturer_data"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/ble_text_black_2"
+                    android:textSize="14sp"
+                    tools:text="id：0x0101，Data：0x1234" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/ll_service_data"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Service Data："
+                    android:textColor="@color/ble_text_black_1"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tv_service_data"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/ble_text_black_2"
+                    android:textSize="14sp"
+                    tools:text="UUID:0xFFF0，Data：0x7F" />
+            </LinearLayout>
+        </LinearLayout>
 
         <View
             android:layout_width="match_parent"
