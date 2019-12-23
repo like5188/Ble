@@ -12,7 +12,6 @@ import com.like.ble.command.StartScanCommand
 import com.like.ble.command.StopScanCommand
 import com.like.ble.sample.databinding.ActivityBleCentralBinding
 import com.like.livedatarecyclerview.layoutmanager.WrapLinearLayoutManager
-import java.util.*
 
 /**
  * 蓝牙测试
@@ -42,7 +41,7 @@ class BleCentralActivity : AppCompatActivity() {
                 "",
                 true,
                 "",
-                UUID.fromString("0000fff0-0000-1000-8000-00805f9b34fb"),
+                null,
                 { device, rssi, scanRecord ->
                     val address = device.address ?: ""
                     val name = device.name ?: "未知设备"
