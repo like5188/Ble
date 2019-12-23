@@ -44,7 +44,7 @@ class BleCentralActivity : AppCompatActivity() {
                 null,
                 { device, rssi, scanRecord ->
                     val address = device.address ?: ""
-                    val name = device.name ?: "未知设备"
+                    val name = device.name ?: "N/A"
                     val item: BleInfo? =
                         mAdapter.mAdapterDataManager.getAll().firstOrNull { (it as? BleInfo)?.address == address } as? BleInfo
                     if (item == null) {// 防止重复添加
