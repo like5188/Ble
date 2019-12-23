@@ -1,6 +1,7 @@
 package com.like.ble.command
 
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothGattService
 
 /**
  * 连接蓝牙命令
@@ -13,7 +14,7 @@ import android.bluetooth.BluetoothAdapter
 class ConnectCommand(
     address: String,
     val timeout: Long = 10000L,
-    private val onSuccess: (() -> Unit)? = null,
+    private val onSuccess: ((List<BluetoothGattService>) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command("连接蓝牙命令", address) {
 
@@ -29,7 +30,10 @@ class ConnectCommand(
     }
 
     override fun doOnSuccess(vararg args: Any?) {
-        onSuccess?.invoke()
+        if (args.isNotEmpty()) {
+            val arg0 = args[0]
+            onSuccess?.invoke(arg0 as List<BluetoothGattService>)
+        }
     }
 
     override fun doOnFailure(throwable: Throwable) {

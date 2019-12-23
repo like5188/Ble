@@ -44,7 +44,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
         // 发现蓝牙服务
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             if (status == BluetoothGatt.GATT_SUCCESS) {// 发现了蓝牙服务后，才算真正的连接成功。
-                getCommandFromCache<ConnectCommand>()?.successAndComplete()
+                getCommandFromCache<ConnectCommand>()?.successAndComplete(gatt.services)
             } else {
                 disconnect(DisconnectCommand(gatt.device.address))
             }

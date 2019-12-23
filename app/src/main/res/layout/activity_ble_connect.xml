@@ -5,8 +5,8 @@
     <data>
 
         <variable
-            name="bleInfo"
-            type="com.like.ble.sample.BleInfo" />
+            name="bleScanInfo"
+            type="com.like.ble.sample.BleScanInfo" />
     </data>
 
     <LinearLayout
@@ -27,7 +27,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:gravity="center_vertical"
-                android:text="@{bleInfo.name}"
+                android:text="@{bleScanInfo.name}"
                 android:textColor="@color/ble_text_white"
                 android:textSize="20sp"
                 tools:text="蓝牙设备名称" />
@@ -36,7 +36,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:gravity="center_vertical|right"
-                android:text="@{bleInfo.address}"
+                android:text="@{bleScanInfo.address}"
                 android:textColor="@color/ble_text_white"
                 android:textSize="14sp"
                 tools:text="蓝牙设备地址" />

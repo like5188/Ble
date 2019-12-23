@@ -6,11 +6,9 @@
 
         <import type="android.view.View" />
 
-        <import type="java.util.Arrays" />
-
         <variable
-            name="bleInfo"
-            type="com.like.ble.sample.BleInfo" />
+            name="bleScanInfo"
+            type="com.like.ble.sample.BleScanInfo" />
     </data>
 
     <LinearLayout
@@ -32,9 +30,10 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@{bleInfo.name}"
+                android:text="@{bleScanInfo.name}"
                 android:textColor="@color/ble_text_black_0"
                 android:textSize="16sp"
+                android:textStyle="bold"
                 tools:text="SJZG-TEST" />
 
             <TextView
@@ -58,8 +57,8 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@{bleInfo.address}"
-                android:textColor="@color/ble_text_black_1"
+                android:text="@{bleScanInfo.address}"
+                android:textColor="@color/ble_text_black_0"
                 android:textSize="14sp"
                 tools:text="XX:XX:XX:XX:XX:XX" />
 
@@ -67,8 +66,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="end"
-                android:text="@{String.valueOf(bleInfo.rssi)}"
-                android:textColor="@color/ble_text_black_1"
+                android:text="@{String.valueOf(bleScanInfo.rssi)}"
+                android:textColor="@color/ble_text_black_0"
                 android:textSize="14sp"
                 tools:text="-100" />
 
@@ -76,8 +75,8 @@
                 android:layout_width="60dp"
                 android:layout_height="wrap_content"
                 android:gravity="end"
-                android:text="@{String.valueOf(bleInfo.distance)+`m`}"
-                android:textColor="@color/ble_text_black_1"
+                android:text="@{String.valueOf(bleScanInfo.distance)+`m`}"
+                android:textColor="@color/ble_text_black_0"
                 android:textSize="14sp"
                 tools:text="100m" />
 
@@ -97,7 +96,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:orientation="vertical"
-            android:visibility="gone">
+            android:visibility="@{bleScanInfo.isShowDetails?View.VISIBLE:View.GONE}">
 
             <TextView
                 android:id="@+id/tv_tx_power_level"

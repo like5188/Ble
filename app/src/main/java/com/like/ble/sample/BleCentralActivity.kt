@@ -25,7 +25,7 @@ class BleCentralActivity : AppCompatActivity() {
         DataBindingUtil.setContentView<ActivityBleCentralBinding>(this, R.layout.activity_ble_central)
     }
     private val mBleManager: IBleManager by lazy { CentralManager(this) }
-    private val mAdapter: BleAdapter by lazy { BleAdapter(this, mBleManager) }
+    private val mAdapter: BleScanAdapter by lazy { BleScanAdapter(this, mBleManager) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,10 +45,10 @@ class BleCentralActivity : AppCompatActivity() {
                 { device, rssi, scanRecord ->
                     val address = device.address ?: ""
                     val name = device.name ?: "N/A"
-                    val item: BleInfo? =
-                        mAdapter.mAdapterDataManager.getAll().firstOrNull { (it as? BleInfo)?.address == address } as? BleInfo
+                    val item: BleScanInfo? =
+                        mAdapter.mAdapterDataManager.getAll().firstOrNull { (it as? BleScanInfo)?.address == address } as? BleScanInfo
                     if (item == null) {// 防止重复添加
-                        mAdapter.mAdapterDataManager.addItemToEnd(BleInfo(name, address, ObservableInt(rssi), scanRecord))
+                        mAdapter.mAdapterDataManager.addItemToEnd(BleScanInfo(name, address, ObservableInt(rssi), scanRecord))
                     } else {
                         item.updateRssi(rssi)
                     }

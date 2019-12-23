@@ -19,7 +19,7 @@ import com.like.livedatarecyclerview.adapter.BaseAdapter
 import com.like.livedatarecyclerview.model.IRecyclerViewItem
 import com.like.livedatarecyclerview.viewholder.CommonViewHolder
 
-class BleAdapter(private val mActivity: FragmentActivity, private val mBleManager: IBleManager) : BaseAdapter() {
+class BleScanAdapter(private val mActivity: FragmentActivity, private val mBleManager: IBleManager) : BaseAdapter() {
     private val mCommandArray = arrayOf(
         "读特征",
         "写特征",
@@ -41,12 +41,12 @@ class BleAdapter(private val mActivity: FragmentActivity, private val mBleManage
         position: Int,
         item: IRecyclerViewItem?
     ) {
-        if (item !is BleInfo) return
+        if (item !is BleScanInfo) return
         val binding = holder.binding
         if (binding !is ItemBleScanBinding) return
 
         binding.tvConnect.setOnClickListener {
-            val connectIntent = Intent(mActivity, ConnectActivity::class.java)
+            val connectIntent = Intent(mActivity, BleConnectActivity::class.java)
             connectIntent.putExtra("data", item)
             mActivity.startActivity(connectIntent)
         }
@@ -63,21 +63,23 @@ class BleAdapter(private val mActivity: FragmentActivity, private val mBleManage
 
         // 单击显示隐藏数据详情
         binding.root.setOnClickListener {
-            if (binding.llDetail.visibility == View.GONE) {
-                binding.llDetail.visibility = View.VISIBLE
-            } else {
-                binding.llDetail.visibility = View.GONE
-            }
+            item.isShowDetails.set(!item.isShowDetails.get())
         }
 
         val scanRecordCompat = ScanRecordBelow21.parseFromBytes(item.scanRecord) ?: return
         val textColor = ContextCompat.getColor(mActivity, R.color.ble_text_black_1)
         val textColorHexString = Integer.toHexString(textColor).substring(2)
 
-        binding.tvTxPowerLevel.text =
-            Html.fromHtml(String.format("""<font color="#$textColorHexString">Tx Power Level：</font>${scanRecordCompat.txPowerLevel} dBm"""))
+        if (scanRecordCompat.txPowerLevel == Integer.MIN_VALUE) {
+            binding.tvTxPowerLevel.visibility = View.GONE
+            binding.tvTxPowerLevel.text = ""
+        } else {
+            binding.tvTxPowerLevel.visibility = View.VISIBLE
+            binding.tvTxPowerLevel.text =
+                Html.fromHtml(String.format("""<font color="#$textColorHexString">Tx Power Level：</font>${scanRecordCompat.txPowerLevel} dBm"""))
+        }
 
-        if (scanRecordCompat.serviceUuids.isEmpty()) {
+        if (scanRecordCompat.serviceUuids.isNullOrEmpty()) {
             binding.tvServiceUuids.visibility = View.GONE
             binding.tvServiceUuids.text = ""
         } else {
@@ -91,7 +93,7 @@ class BleAdapter(private val mActivity: FragmentActivity, private val mBleManage
                 Html.fromHtml(String.format("""<font color="#$textColorHexString">16-bit Service UUIDs：</font>$sb"""))
         }
 
-        if (scanRecordCompat.manufacturerSpecificData.isEmpty()) {
+        if (scanRecordCompat.manufacturerSpecificData == null || scanRecordCompat.manufacturerSpecificData.isEmpty()) {
             binding.tvManufacturerData.visibility = View.GONE
             binding.tvManufacturerData.text = ""
         } else {
@@ -105,7 +107,7 @@ class BleAdapter(private val mActivity: FragmentActivity, private val mBleManage
                 Html.fromHtml(String.format("""<font color="#$textColorHexString">Manufacturer Data：</font>$sb"""))
         }
 
-        if (scanRecordCompat.serviceData.isEmpty()) {
+        if (scanRecordCompat.serviceData.isNullOrEmpty()) {
             binding.tvServiceData.visibility = View.GONE
             binding.tvServiceData.text = ""
         } else {

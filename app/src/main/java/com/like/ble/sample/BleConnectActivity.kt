@@ -9,19 +9,23 @@ import com.like.ble.CentralManager
 import com.like.ble.IBleManager
 import com.like.ble.command.ConnectCommand
 import com.like.ble.command.DisconnectCommand
-import com.like.ble.sample.databinding.ActivityConnectBinding
+import com.like.ble.sample.databinding.ActivityBleConnectBinding
+import com.like.livedatarecyclerview.layoutmanager.WrapLinearLayoutManager
 
-class ConnectActivity : AppCompatActivity() {
-    private val mBinding: ActivityConnectBinding by lazy {
-        DataBindingUtil.setContentView<ActivityConnectBinding>(this, R.layout.activity_connect)
+class BleConnectActivity : AppCompatActivity() {
+    private val mBinding: ActivityBleConnectBinding by lazy {
+        DataBindingUtil.setContentView<ActivityBleConnectBinding>(this, R.layout.activity_ble_connect)
     }
     private val mBleManager: IBleManager by lazy { CentralManager(this) }
-    private lateinit var mData: BleInfo
+    private lateinit var mData: BleScanInfo
+    private val mAdapter: BleConnectAdapter by lazy { BleConnectAdapter(this, mBleManager) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mData = intent.getSerializableExtra("data") as? BleInfo ?: throw UnsupportedOperationException("data is null")
-        mBinding.setVariable(BR.bleInfo, mData)
+        mData = intent.getSerializableExtra("data") as? BleScanInfo ?: throw UnsupportedOperationException("data is null")
+        mBinding.setVariable(BR.bleScanInfo, mData)
+        mBinding.rv.layoutManager = WrapLinearLayoutManager(this)
+        mBinding.rv.adapter = mAdapter
     }
 
     fun connect(view: View) {
@@ -36,11 +40,20 @@ class ConnectActivity : AppCompatActivity() {
                         mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_blue))
                         mBinding.tvConnectStatus.text = "连接成功"
                     }
+                    if (it.isNotEmpty()) {
+                        val bleGattServiceInfos = it.map { bluetoothGattService ->
+                            BleConnectInfo(bluetoothGattService)
+                        }
+                        mAdapter.mAdapterDataManager.addItemsToEnd(bleGattServiceInfos)
+                    } else {
+                        mAdapter.mAdapterDataManager.clear()
+                    }
                 },
                 {
                     runOnUiThread {
                         mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
                         mBinding.tvConnectStatus.text = it.message
+                        mAdapter.mAdapterDataManager.clear()
                     }
                 })
         )
