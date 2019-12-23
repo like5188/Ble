@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/ble_text_white"
+        android:orientation="vertical"
+        android:padding="10dp">
+        <!--原始数据-->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Raw Data："
+            android:textColor="@android:color/black"
+            android:textSize="16dp" />
+
+        <TextView
+            android:id="@+id/tv_raw_data"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/raw_data_bg"
+            android:minLines="2"
+            android:padding="5dp"
+            android:textSize="14dp" />
+        <!--数据详情-->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Details："
+            android:textColor="@android:color/black"
+            android:textSize="16dp" />
+
+        <TableLayout
+            android:id="@+id/tl"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:divider="@color/ble_divider"
+            android:orientation="vertical"
+            android:showDividers="beginning|middle|end"
+            android:stretchColumns="*">
+
+            <TableRow android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="1dp"
+                    android:gravity="center"
+                    android:padding="4dp"
+                    android:text="LEN." />
+
+                <TextView
+                    android:layout_width="1dp"
+                    android:gravity="center"
+                    android:padding="4dp"
+                    android:text="TYPE" />
+
+                <TextView
+                    android:layout_width="1dp"
+                    android:layout_span="3"
+                    android:gravity="center"
+                    android:padding="4dp"
+                    android:text="VALUE" />
+            </TableRow>
+        </TableLayout>
+    </LinearLayout>
+</layout>

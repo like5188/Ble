@@ -103,24 +103,20 @@ fun StringBuilder.deleteLast() {
     deleteCharAt(length - 1)
 }
 
-fun Int.toHexString(): String {
-    var hexString = Integer.toHexString(this)
-    while (hexString.length < 4) {
-        hexString = "0$hexString"
-    }
-    return hexString
+fun Int.toHexString2(): String {
+    return String.format("%02x", this).toUpperCase()
+}
+
+fun Int.toHexString4(): String {
+    return String.format("%04x", this).toUpperCase()
 }
 
 fun ByteArray.toHexString(): String {
-    val sb = StringBuffer(size)
-    var sTemp: String
-    for (i in indices) {
-        sTemp = Integer.toHexString(this[i].toInt())
-        if (sTemp.length < 2)
-            sb.append(0)
-        sb.append(sTemp.toUpperCase())
+    val sb = StringBuilder()
+    for (b in this) {
+        sb.append(String.format("%02x", b))
     }
-    return sb.toString()
+    return sb.toString().toUpperCase()
 }
 
 fun UUID.getValidString(): String = "0x${toString().substring(4, 8).toUpperCase()}"

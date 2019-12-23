@@ -1,37 +1,40 @@
 package com.like.ble.sample
 
-import android.app.Activity
 import android.content.Intent
+import android.os.Bundle
 import android.text.Html
 import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.util.forEach
 import androidx.core.util.isEmpty
+import androidx.fragment.app.FragmentActivity
 import com.like.ble.IBleManager
 import com.like.ble.sample.databinding.ItemBleScanBinding
 import com.like.ble.utils.deleteLast
 import com.like.ble.utils.getValidString
 import com.like.ble.utils.scanrecordcompat.ScanRecordBelow21
 import com.like.ble.utils.toHexString
+import com.like.ble.utils.toHexString4
 import com.like.livedatarecyclerview.adapter.BaseAdapter
 import com.like.livedatarecyclerview.model.IRecyclerViewItem
 import com.like.livedatarecyclerview.viewholder.CommonViewHolder
 
-class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleManager) :
-    BaseAdapter() {
-    private val mCommandArray =
-        arrayOf(
-            "读特征",
-            "写特征",
-            "设置MTU",
-            "读RSSI",
-            "RequestConnectionPriority",
-            "开启notify",
-            "关闭notify",
-            "开启indicate",
-            "关闭indicate",
-            "读取通知传来的数据"
-        )
+class BleAdapter(private val mActivity: FragmentActivity, private val mBleManager: IBleManager) : BaseAdapter() {
+    private val mCommandArray = arrayOf(
+        "读特征",
+        "写特征",
+        "设置MTU",
+        "读RSSI",
+        "RequestConnectionPriority",
+        "开启notify",
+        "关闭notify",
+        "开启indicate",
+        "关闭indicate",
+        "读取通知传来的数据"
+    )
+    private val mRawDialogFragment: RawDialogFragment by lazy {
+        RawDialogFragment()
+    }
 
     override fun bindOtherVariable(
         holder: CommonViewHolder,
@@ -48,10 +51,17 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
             mActivity.startActivity(connectIntent)
         }
 
-        binding.tvRaw.setOnClickListener {
-            mActivity.shortToastBottom("原始数据")
+        // 单击显示原始数据
+        if (item.scanRecord != null) {
+            binding.tvRaw.setOnClickListener {
+                mRawDialogFragment.arguments = Bundle().apply {
+                    putByteArray("data", item.scanRecord)
+                }
+                mRawDialogFragment.show(mActivity)
+            }
         }
 
+        // 单击显示隐藏数据详情
         binding.root.setOnClickListener {
             if (binding.llDetail.visibility == View.GONE) {
                 binding.llDetail.visibility = View.VISIBLE
@@ -88,7 +98,7 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
             binding.tvManufacturerData.visibility = View.VISIBLE
             val sb = StringBuilder()
             scanRecordCompat.manufacturerSpecificData.forEach { key, value ->
-                sb.append("id:0x${key.toHexString()}，Data:0x${value.toHexString()}").append("；")
+                sb.append("id:0x${key.toHexString4()}，Data:0x${value.toHexString()}").append("；")
             }
             sb.deleteLast()
             binding.tvManufacturerData.text =
