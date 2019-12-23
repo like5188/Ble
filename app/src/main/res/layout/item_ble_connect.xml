@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <data>
 
@@ -12,16 +13,64 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/ble_text_white"
-        android:orientation="vertical"
-        android:paddingLeft="10dp"
-        android:paddingRight="10dp">
+        android:orientation="vertical">
 
-        <TextView
+        <LinearLayout
+            android:id="@+id/ll_service"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="SJZG-TEST"
-            android:textColor="@color/ble_text_black_0"
-            android:textSize="16sp" />
+            android:orientation="vertical"
+            android:padding="10dp">
+
+            <TextView
+                android:id="@+id/tv_service_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/ble_text_black_0"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                tools:text="Generic Attribute" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="UUID："
+                    android:textColor="@color/ble_text_black_1"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tv_service_uuid"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/ble_text_black_2"
+                    android:textSize="14sp"
+                    tools:text="0xFFFF" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_service_type"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/ble_text_black_2"
+                android:textSize="14sp"
+                tools:text="PRIMARY SERVICE" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_characteristics"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/ble_divider" />
     </LinearLayout>
 
 </layout>
