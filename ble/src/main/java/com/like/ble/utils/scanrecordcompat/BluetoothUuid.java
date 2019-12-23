@@ -1,4 +1,4 @@
-package com.like.ble.utils.scanrecord;
+package com.like.ble.utils.scanrecordcompat;
 
 import android.os.ParcelUuid;
 import java.nio.ByteBuffer;
