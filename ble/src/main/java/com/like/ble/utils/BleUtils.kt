@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import java.nio.ByteBuffer
 import java.util.*
+import java.util.regex.Pattern
 import kotlin.math.ceil
 
 fun Context.isBleDeviceConnected(device: BluetoothDevice): Boolean =
@@ -218,3 +219,5 @@ internal fun ByteBuffer.toByteArrayOrNull(): ByteArray? {
     }
     return bytes
 }
+
+fun String.isHexString() = Pattern.matches("^[A-Fa-f0-9]+\$", this)
