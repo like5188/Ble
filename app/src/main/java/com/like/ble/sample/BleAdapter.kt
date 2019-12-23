@@ -52,6 +52,14 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
             mActivity.shortToastBottom("原始数据")
         }
 
+        binding.root.setOnClickListener {
+            if (binding.llDetail.visibility == View.GONE) {
+                binding.llDetail.visibility = View.VISIBLE
+            } else {
+                binding.llDetail.visibility = View.GONE
+            }
+        }
+
         val scanRecordCompat = ScanRecordBelow21.parseFromBytes(item.scanRecord) ?: return
         val textColor = ContextCompat.getColor(mActivity, R.color.ble_text_black_1)
         val textColorHexString = Integer.toHexString(textColor).substring(2)
