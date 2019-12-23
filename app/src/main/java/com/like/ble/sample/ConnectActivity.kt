@@ -8,7 +8,7 @@ class ConnectActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val data: BleInfo? = intent.getSerializableExtra("IBleManager") as? BleInfo
+        val data: BleInfo? = intent.getSerializableExtra("data") as? BleInfo
         Log.e("ConnectActivity", "data=$data")
     }
 
