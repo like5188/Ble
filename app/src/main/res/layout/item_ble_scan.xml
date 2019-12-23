@@ -98,95 +98,37 @@
             android:layout_marginTop="10dp"
             android:orientation="vertical">
 
-            <LinearLayout
+            <TextView
+                android:id="@+id/tv_tx_power_level"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:textColor="@color/ble_text_black_2"
+                android:textSize="14sp"
+                tools:text="Tx Power Level：-1 dBm" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Tx Power Level："
-                    android:textColor="@color/ble_text_black_1"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:id="@+id/tv_tx_power_level"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/ble_text_black_2"
-                    android:textSize="14sp"
-                    tools:text="-1 dBm" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/ll_service_uuids"
+            <TextView
+                android:id="@+id/tv_service_uuids"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:orientation="horizontal">
+                android:textColor="@color/ble_text_black_2"
+                android:textSize="14sp"
+                tools:text="16-bit Service UUIDs：0xFFF0；0xFFF1" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="16-bit Service UUIDs："
-                    android:textColor="@color/ble_text_black_1"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:id="@+id/tv_service_uuids"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/ble_text_black_2"
-                    android:textSize="14sp"
-                    tools:text="0xFFF0；0xFFF1" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/ll_manufacturer_data"
+            <TextView
+                android:id="@+id/tv_manufacturer_data"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:orientation="horizontal">
+                android:textColor="@color/ble_text_black_2"
+                android:textSize="14sp"
+                tools:text="Manufacturer Data：id：0x0101，Data：0x1234" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Manufacturer Data："
-                    android:textColor="@color/ble_text_black_1"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:id="@+id/tv_manufacturer_data"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/ble_text_black_2"
-                    android:textSize="14sp"
-                    tools:text="id：0x0101，Data：0x1234" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/ll_service_data"
+            <TextView
+                android:id="@+id/tv_service_data"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Service Data："
-                    android:textColor="@color/ble_text_black_1"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:id="@+id/tv_service_data"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/ble_text_black_2"
-                    android:textSize="14sp"
-                    tools:text="UUID:0xFFF0，Data：0x7F" />
-            </LinearLayout>
+                android:textColor="@color/ble_text_black_2"
+                android:textSize="14sp"
+                tools:text="Service Data：UUID:0xFFF0，Data：0x7F" />
         </LinearLayout>
 
         <View

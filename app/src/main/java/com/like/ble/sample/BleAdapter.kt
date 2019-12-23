@@ -2,7 +2,9 @@ package com.like.ble.sample
 
 import android.app.Activity
 import android.content.Intent
+import android.text.Html
 import android.view.View
+import androidx.core.content.ContextCompat
 import androidx.core.util.forEach
 import androidx.core.util.isEmpty
 import com.like.ble.IBleManager
@@ -51,45 +53,51 @@ class BleAdapter(private val mActivity: Activity, private val mBleManager: IBleM
         }
 
         val scanRecordCompat = ScanRecordBelow21.parseFromBytes(item.scanRecord) ?: return
-        binding.tvTxPowerLevel.text = "${scanRecordCompat.txPowerLevel} dBm"
+        val textColor = ContextCompat.getColor(mActivity, R.color.ble_text_black_1)
+        val textColorHexString = Integer.toHexString(textColor).substring(2)
+
+        binding.tvTxPowerLevel.text =
+            Html.fromHtml(String.format("""<font color="#$textColorHexString">Tx Power Level：</font>${scanRecordCompat.txPowerLevel} dBm"""))
 
         if (scanRecordCompat.serviceUuids.isEmpty()) {
-            binding.llServiceUuids.visibility = View.GONE
+            binding.tvServiceUuids.visibility = View.GONE
             binding.tvServiceUuids.text = ""
         } else {
-            binding.llServiceUuids.visibility = View.VISIBLE
+            binding.tvServiceUuids.visibility = View.VISIBLE
             val sb = StringBuilder()
             scanRecordCompat.serviceUuids.forEach {
                 sb.append(it.uuid.getValidString()).append("；")
             }
             sb.deleteLast()
-            binding.tvServiceUuids.text = sb.toString()
+            binding.tvServiceUuids.text =
+                Html.fromHtml(String.format("""<font color="#$textColorHexString">16-bit Service UUIDs：</font>$sb"""))
         }
 
         if (scanRecordCompat.manufacturerSpecificData.isEmpty()) {
-            binding.llManufacturerData.visibility = View.GONE
+            binding.tvManufacturerData.visibility = View.GONE
             binding.tvManufacturerData.text = ""
         } else {
-            binding.llManufacturerData.visibility = View.VISIBLE
+            binding.tvManufacturerData.visibility = View.VISIBLE
             val sb = StringBuilder()
             scanRecordCompat.manufacturerSpecificData.forEach { key, value ->
-                sb.append("id：0x${key.toHexString()}，Data：0x${value.toHexString()}").append("；")
+                sb.append("id:0x${key.toHexString()}，Data:0x${value.toHexString()}").append("；")
             }
             sb.deleteLast()
-            binding.tvManufacturerData.text = sb.toString()
+            binding.tvManufacturerData.text =
+                Html.fromHtml(String.format("""<font color="#$textColorHexString">Manufacturer Data：</font>$sb"""))
         }
 
         if (scanRecordCompat.serviceData.isEmpty()) {
-            binding.llServiceData.visibility = View.GONE
+            binding.tvServiceData.visibility = View.GONE
             binding.tvServiceData.text = ""
         } else {
-            binding.llServiceData.visibility = View.VISIBLE
+            binding.tvServiceData.visibility = View.VISIBLE
             val sb = StringBuilder()
             scanRecordCompat.serviceData.forEach {
-                sb.append("UUID:${it.key.uuid.getValidString()}，Data：0x${it.value.toHexString()}").append("；")
+                sb.append("UUID:${it.key.uuid.getValidString()}，Data:0x${it.value.toHexString()}").append("；")
             }
             sb.deleteLast()
-            binding.tvServiceData.text = sb.toString()
+            binding.tvServiceData.text = Html.fromHtml(String.format("""<font color="#$textColorHexString">Service Data：</font>$sb"""))
         }
     }
 
