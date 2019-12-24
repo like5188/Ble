@@ -43,8 +43,8 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                 binding.tvServiceName.text = "Generic Access"
             }
             else -> {
-                binding.tvServiceName.text = "Service"
-                //遍历特征
+                binding.tvServiceName.text = "Unknown Service"
+                // 添加BluetoothGattCharacteristic
                 binding.llCharacteristics.removeAllViews()
                 val characteristics = item.service.characteristics ?: return
                 if (characteristics.isNotEmpty()) {
@@ -72,7 +72,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
         )
 
         // 特征名称
-        binding.tvCharacteristicName.text = "Characteristic"
+        binding.tvCharacteristicName.text = "Unknown Characteristic"
         // 特征uuid
         binding.tvCharacteristicUuid.text = characteristic.uuid.getValidString()
         // 特征属性
@@ -91,6 +91,31 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                 addDescriptor(it, binding.llDescriptors)
             }
         }
+
+        if (characteristic.properties and 0x02 != 0) {
+            binding.ivRead.visibility = View.VISIBLE
+            binding.ivRead.setOnClickListener {
+                mActivity.shortToastBottom("read characteristic")
+            }
+        }
+        if (characteristic.properties and 0x04 != 0 || characteristic.properties and 0x08 != 0) {
+            binding.ivWrite.visibility = View.VISIBLE
+            binding.ivWrite.setOnClickListener {
+                mActivity.shortToastBottom("write characteristic")
+            }
+        }
+        if (characteristic.properties and 0x10 != 0) {
+            binding.ivNotify.visibility = View.VISIBLE
+            binding.ivNotify.setOnClickListener {
+                mActivity.shortToastBottom("notify on")
+            }
+        }
+        if (characteristic.properties and 0x20 != 0) {
+            binding.ivIndicate.visibility = View.VISIBLE
+            binding.ivIndicate.setOnClickListener {
+                mActivity.shortToastBottom("indicate on")
+            }
+        }
     }
 
     private fun addDescriptor(descriptor: BluetoothGattDescriptor, llDescriptors: LinearLayout) {
@@ -100,9 +125,19 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
             llDescriptors,
             false
         )
-        //设置描述uuid
+        // 描述名称
+        binding.tvDescriptorName.text = "Unknown Descriptor"
+        // 描述uuid
         binding.tvDescriptorUuid.text = descriptor.uuid.getValidString()
         llDescriptors.addView(binding.root)
+
+        // 无法判断描述的权限，只能同时显示读和写两个操作。设置只读权限的描述，nRF也全部显示的（即显示写入和读取按钮）。
+        binding.ivRead.setOnClickListener {
+            mActivity.shortToastBottom("read descriptor")
+        }
+        binding.ivWrite.setOnClickListener {
+            mActivity.shortToastBottom("write descriptor")
+        }
     }
 
 }
