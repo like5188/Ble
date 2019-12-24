@@ -41,7 +41,7 @@ class BleConnectActivity : AppCompatActivity() {
                         mBinding.tvConnectStatus.text = "连接成功"
                         if (it.isNotEmpty()) {
                             val bleGattServiceInfos = it.map { bluetoothGattService ->
-                                BleConnectInfo(bluetoothGattService)
+                                BleConnectInfo(mData.address, bluetoothGattService)
                             }
                             mAdapter.mAdapterDataManager.addItemsToEnd(bleGattServiceInfos)
                         } else {

@@ -8,15 +8,18 @@ import android.widget.LinearLayout
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.FragmentActivity
 import com.like.ble.IBleManager
+import com.like.ble.command.*
 import com.like.ble.sample.databinding.ItemBleConnectBinding
 import com.like.ble.sample.databinding.ItemBleConnectCharacteristicBinding
 import com.like.ble.sample.databinding.ItemBleConnectDescriptorsBinding
+import com.like.ble.utils.createBleUuidBy16Bit
 import com.like.ble.utils.getPropertiesString
 import com.like.ble.utils.getTypeString
 import com.like.ble.utils.getValidString
 import com.like.livedatarecyclerview.adapter.BaseAdapter
 import com.like.livedatarecyclerview.model.IRecyclerViewItem
 import com.like.livedatarecyclerview.viewholder.CommonViewHolder
+import java.util.concurrent.atomic.AtomicBoolean
 
 class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBleManager: IBleManager) : BaseAdapter() {
     private val mLayoutInflater: LayoutInflater by lazy { LayoutInflater.from(mActivity) }
@@ -56,14 +59,14 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                         }
                     }
                     characteristics.forEach {
-                        addCharacteristic(it, binding.llCharacteristics)
+                        addCharacteristic(item.address, it, binding.llCharacteristics)
                     }
                 }
             }
         }
     }
 
-    private fun addCharacteristic(characteristic: BluetoothGattCharacteristic, llCharacteristics: LinearLayout) {
+    private fun addCharacteristic(address: String, characteristic: BluetoothGattCharacteristic, llCharacteristics: LinearLayout) {
         val binding = DataBindingUtil.inflate<ItemBleConnectCharacteristicBinding>(
             mLayoutInflater,
             R.layout.item_ble_connect_characteristic,
@@ -95,25 +98,113 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
         if (characteristic.properties and 0x02 != 0) {
             binding.ivRead.visibility = View.VISIBLE
             binding.ivRead.setOnClickListener {
-                mActivity.shortToastBottom("read characteristic")
+                mBleManager.sendCommand(ReadCharacteristicCommand(
+                    address,
+                    characteristic.uuid,
+                    10000,
+                    {
+                        mActivity.longToastBottom("读特征成功。数据长度：${it?.size} ${it?.contentToString()}")
+                    },
+                    {
+                        mActivity.longToastBottom(it.message)
+                    }
+                ))
             }
         }
         if (characteristic.properties and 0x04 != 0 || characteristic.properties and 0x08 != 0) {
             binding.ivWrite.visibility = View.VISIBLE
             binding.ivWrite.setOnClickListener {
-                mActivity.shortToastBottom("write characteristic")
+                mBleManager.sendCommand(ReadNotifyCommand(
+                    address,
+                    characteristic.uuid,
+                    5000,
+                    1024,
+                    {
+                        it.get(it.position() - 1) == Byte.MAX_VALUE
+                    },
+                    {
+                        mActivity.longToastBottom("读取通知传来的数据成功。数据长度：${it?.size} ${it?.contentToString()}")
+                    },
+                    {
+                        mActivity.longToastBottom(it.message)
+                    }
+                ))
+                mBleManager.sendCommand(WriteCharacteristicCommand(
+                    address,
+                    listOf(byteArrayOf(0x1)),
+                    characteristic.uuid,
+                    5000,
+                    {
+                        mActivity.longToastBottom("写特征成功")
+                    },
+                    {
+                        mActivity.longToastBottom(it.message)
+                    }
+                ))
             }
         }
         if (characteristic.properties and 0x10 != 0) {
             binding.ivNotify.visibility = View.VISIBLE
+            val isOn = AtomicBoolean(false)
             binding.ivNotify.setOnClickListener {
-                mActivity.shortToastBottom("notify on")
+                if (isOn.get()) {
+                    mBleManager.sendCommand(DisableCharacteristicNotifyCommand(
+                        address,
+                        characteristic.uuid,
+                        createBleUuidBy16Bit("2902"),
+                        {
+                            mActivity.longToastBottom("关闭notify成功")
+                            isOn.set(false)
+                        },
+                        {
+                            mActivity.longToastBottom(it.message)
+                        }
+                    ))
+                } else {
+                    mBleManager.sendCommand(EnableCharacteristicNotifyCommand(
+                        address,
+                        characteristic.uuid,
+                        createBleUuidBy16Bit("2902"),
+                        {
+                            mActivity.longToastBottom("开启notify成功")
+                            isOn.set(true)
+                        },
+                        {
+                            mActivity.longToastBottom(it.message)
+                        }
+                    ))
+                }
             }
         }
         if (characteristic.properties and 0x20 != 0) {
             binding.ivIndicate.visibility = View.VISIBLE
+            val isOn = AtomicBoolean(false)
             binding.ivIndicate.setOnClickListener {
-                mActivity.shortToastBottom("indicate on")
+                if (isOn.get()) {
+                    mBleManager.sendCommand(DisableCharacteristicIndicateCommand(
+                        address,
+                        characteristic.uuid,
+                        createBleUuidBy16Bit("2902"),
+                        {
+                            mActivity.longToastBottom("关闭indicate成功")
+                        },
+                        {
+                            mActivity.longToastBottom(it.message)
+                        }
+                    ))
+                } else {
+                    mBleManager.sendCommand(EnableCharacteristicIndicateCommand(
+                        address,
+                        characteristic.uuid,
+                        createBleUuidBy16Bit("2902"),
+                        {
+                            mActivity.longToastBottom("开启indicate成功")
+                        },
+                        {
+                            mActivity.longToastBottom(it.message)
+                        }
+                    ))
+                }
             }
         }
     }

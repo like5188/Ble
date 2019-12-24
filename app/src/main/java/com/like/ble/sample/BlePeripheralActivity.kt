@@ -101,9 +101,15 @@ class BlePeripheralActivity : AppCompatActivity() {
                 false
             )
 
-            val response = mResponseData.copyOfRangeByLength(offset, mMtu - 1)
+            val response = when (characteristic.uuid) {
+                UUID_CHARACTERISTIC_1 -> {
+                    mResponseData.copyOfRangeByLength(offset, mMtu - 1)
+                }
+                else -> {
+                    byteArrayOf(Byte.MAX_VALUE)
+                }
+            }
             appendText("sendResponse：size=${response.size} ${response.contentToString()}")
-
             // 注意：如果所传数据长度>=offset的步进（MTU - 1），就会自动再次触发onCharacteristicReadRequest()方法。
             // 传输的数据最大为600子节
             // sendResponse()中的参数offset可以随便传，不会影响onCharacteristicReadRequest()方法返回的offset。
@@ -333,9 +339,19 @@ class BlePeripheralActivity : AppCompatActivity() {
             val service1 = BluetoothGattService(UUID_SERVICE_1, BluetoothGattService.SERVICE_TYPE_PRIMARY)
             val characteristic1 = BluetoothGattCharacteristic(
                 UUID_CHARACTERISTIC_1,
-                BluetoothGattCharacteristic.PROPERTY_READ,
-                BluetoothGattCharacteristic.PERMISSION_READ
+                BluetoothGattCharacteristic.PROPERTY_READ or
+                        BluetoothGattCharacteristic.PROPERTY_WRITE or
+                        BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE or
+                        BluetoothGattCharacteristic.PROPERTY_NOTIFY or
+                        BluetoothGattCharacteristic.PROPERTY_INDICATE,
+                BluetoothGattCharacteristic.PERMISSION_READ or
+                        BluetoothGattCharacteristic.PERMISSION_WRITE
             )
+            val descriptor1 = BluetoothGattDescriptor(
+                UUID_DESCRIPTOR,
+                BluetoothGattCharacteristic.PERMISSION_WRITE
+            )
+            characteristic1.addDescriptor(descriptor1)
             service1.addCharacteristic(characteristic1)
             bluetoothGattServer.addService(service1)
             delay(100)
@@ -343,10 +359,19 @@ class BlePeripheralActivity : AppCompatActivity() {
             val service2 = BluetoothGattService(UUID_SERVICE_2, BluetoothGattService.SERVICE_TYPE_PRIMARY)
             val characteristic2 = BluetoothGattCharacteristic(
                 UUID_CHARACTERISTIC_2,
-                BluetoothGattCharacteristic.PROPERTY_WRITE or
-                        BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE,
+                BluetoothGattCharacteristic.PROPERTY_READ or
+                        BluetoothGattCharacteristic.PROPERTY_WRITE or
+                        BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE or
+                        BluetoothGattCharacteristic.PROPERTY_NOTIFY or
+                        BluetoothGattCharacteristic.PROPERTY_INDICATE,
+                BluetoothGattCharacteristic.PERMISSION_READ or
+                        BluetoothGattCharacteristic.PERMISSION_WRITE
+            )
+            val descriptor2 = BluetoothGattDescriptor(
+                UUID_DESCRIPTOR,
                 BluetoothGattCharacteristic.PERMISSION_WRITE
             )
+            characteristic2.addDescriptor(descriptor2)
             service2.addCharacteristic(characteristic2)
             bluetoothGattServer.addService(service2)
             delay(100)
@@ -354,15 +379,19 @@ class BlePeripheralActivity : AppCompatActivity() {
             val service3 = BluetoothGattService(UUID_SERVICE_3, BluetoothGattService.SERVICE_TYPE_PRIMARY)
             val characteristic3 = BluetoothGattCharacteristic(
                 UUID_CHARACTERISTIC_3,
-                BluetoothGattCharacteristic.PROPERTY_NOTIFY or
+                BluetoothGattCharacteristic.PROPERTY_READ or
+                        BluetoothGattCharacteristic.PROPERTY_WRITE or
+                        BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE or
+                        BluetoothGattCharacteristic.PROPERTY_NOTIFY or
                         BluetoothGattCharacteristic.PROPERTY_INDICATE,
-                BluetoothGattCharacteristic.PERMISSION_READ
+                BluetoothGattCharacteristic.PERMISSION_READ or
+                        BluetoothGattCharacteristic.PERMISSION_WRITE
             )
-            val descriptor = BluetoothGattDescriptor(
+            val descriptor3 = BluetoothGattDescriptor(
                 UUID_DESCRIPTOR,
                 BluetoothGattCharacteristic.PERMISSION_WRITE
             )
-            characteristic3.addDescriptor(descriptor)
+            characteristic3.addDescriptor(descriptor3)
             service3.addCharacteristic(characteristic3)
             bluetoothGattServer.addService(service3)
             delay(100)
