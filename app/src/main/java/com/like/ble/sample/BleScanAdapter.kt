@@ -38,6 +38,11 @@ class BleScanAdapter(private val mActivity: FragmentActivity) : BaseAdapter() {
             mActivity.startActivity(connectIntent)
         }
 
+        // 单击显示隐藏数据详情
+        binding.root.setOnClickListener {
+            item.isShowDetails.set(!item.isShowDetails.get())
+        }
+
         // 单击显示原始数据
         if (item.scanRecord != null) {
             binding.tvRaw.setOnClickListener {
@@ -48,14 +53,20 @@ class BleScanAdapter(private val mActivity: FragmentActivity) : BaseAdapter() {
             }
         }
 
-        // 单击显示隐藏数据详情
-        binding.root.setOnClickListener {
-            item.isShowDetails.set(!item.isShowDetails.get())
-        }
-
         val scanRecordCompat = ScanRecordBelow21.parseFromBytes(item.scanRecord) ?: return
         val textColor = ContextCompat.getColor(mActivity, R.color.ble_text_black_1)
         val textColorHexString = Integer.toHexString(textColor).substring(2)
+
+        // 判断是厂商类型
+        if (item.scanRecord != null) {
+            when {
+                scanRecordCompat.getManufacturerSpecificData(0x4C) != null -> binding.ivManufacturerType.setImageResource(R.drawable.apple)
+                scanRecordCompat.getManufacturerSpecificData(0x06) != null -> binding.ivManufacturerType.setImageResource(R.drawable.windows)
+                else -> binding.ivManufacturerType.setImageResource(R.drawable.bluetooth)
+            }
+        } else {
+            binding.ivManufacturerType.setImageResource(R.drawable.bluetooth)
+        }
 
         if (scanRecordCompat.txPowerLevel == Integer.MIN_VALUE) {
             binding.tvTxPowerLevel.visibility = View.GONE
