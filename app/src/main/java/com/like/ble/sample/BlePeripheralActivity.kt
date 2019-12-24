@@ -8,18 +8,22 @@ import android.os.Bundle
 import android.os.ParcelUuid
 import android.text.Html
 import android.text.method.ScrollingMovementMethod
+import android.util.Log
 import android.view.View
 import androidx.annotation.ColorRes
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.lifecycleScope
 import com.like.ble.IBleManager
 import com.like.ble.PeripheralManager
 import com.like.ble.command.StartAdvertisingCommand
 import com.like.ble.command.StopAdvertisingCommand
 import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
 import com.like.ble.utils.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.*
 
 /**
@@ -31,10 +35,14 @@ import java.util.*
 class BlePeripheralActivity : AppCompatActivity() {
     companion object {
         // 0000????-0000-1000-8000-00805f9b34fb ????就表示4个可以自定义16进制数
-        private val UUID_SERVICE: UUID = UUID.fromString("0000fff0-0000-1000-8000-00805f9b34fb")
-        private val UUID_CHARACTERISTIC_READ: UUID = UUID.fromString("0000fff1-0000-1000-8000-00805f9b34fb")
-        private val UUID_CHARACTERISTIC_WRITE: UUID = UUID.fromString("0000fff2-0000-1000-8000-00805f9b34fb")
-        private val UUID_DESCRIPTOR: UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")// 通知专用
+        private val UUID_SERVICE_1: UUID = UUID.fromString("0000ff01-0000-1000-8000-00805f9b34fb")
+        private val UUID_SERVICE_2: UUID = UUID.fromString("0000ff02-0000-1000-8000-00805f9b34fb")
+        private val UUID_SERVICE_3: UUID = UUID.fromString("0000ff03-0000-1000-8000-00805f9b34fb")
+        private val UUID_CHARACTERISTIC_1: UUID = UUID.fromString("0000ff11-0000-1000-8000-00805f9b34fb")
+        private val UUID_CHARACTERISTIC_2: UUID = UUID.fromString("0000ff12-0000-1000-8000-00805f9b34fb")
+        private val UUID_CHARACTERISTIC_3: UUID = UUID.fromString("0000ff13-0000-1000-8000-00805f9b34fb")
+        private val UUID_DESCRIPTOR: UUID =
+            UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")// 使能对应《Characteristic》的notification或Indication
     }
 
     private val mBinding: ActivityBlePeripheralBinding by lazy {
@@ -62,6 +70,7 @@ class BlePeripheralActivity : AppCompatActivity() {
         }
 
         override fun onServiceAdded(status: Int, service: BluetoothGattService) {
+            Log.e("tag", "onServiceAdded")
             appendText("--> onServiceAdded", false, R.color.ble_text_blue)
             appendText("status=${getBluetoothGattStatusString(status)}", false)
             appendText("service：${service.uuid.getValidString()}", false)
@@ -225,6 +234,7 @@ class BlePeripheralActivity : AppCompatActivity() {
         mBleManager.sendCommand(StopAdvertisingCommand())
     }
 
+    @Synchronized
     private fun appendText(text: String, isBreak: Boolean = true, @ColorRes textColorResId: Int = R.color.ble_text_black_1) {
         runOnUiThread {
             val textColor = ContextCompat.getColor(this, textColorResId)
@@ -288,7 +298,9 @@ class BlePeripheralActivity : AppCompatActivity() {
         return AdvertiseData.Builder()
             .setIncludeDeviceName(true)// 设置广播包中是否包含蓝牙的名称。
             .setIncludeTxPowerLevel(true)// 设置广播包中是否包含蓝牙的发射功率。 数值范围：±127 dBm。
-            .addServiceUuid(ParcelUuid(UUID_SERVICE))// 添加是为了让使用者扫描时候过滤
+            .addServiceUuid(ParcelUuid(UUID_SERVICE_1))// 添加是为了让使用者扫描到
+            .addServiceUuid(ParcelUuid(UUID_SERVICE_2))// 添加是为了让使用者扫描到
+            .addServiceUuid(ParcelUuid(UUID_SERVICE_3))// 添加是为了让使用者扫描到
             .build()
     }
 
@@ -298,39 +310,59 @@ class BlePeripheralActivity : AppCompatActivity() {
     private fun createScanResponseAdvertiseData(data: ByteArray): AdvertiseData {
         return AdvertiseData.Builder()
             // 如果一个外设需要在不连接的情况下对外广播数据，其数据可以存储在UUID对应的数据中，也可以存储在厂商数据中。但由于厂商ID是需要由Bluetooth SIG进行分配的，厂商间一般都将数据设置在厂商数据。
-            .addServiceData(ParcelUuid(UUID_SERVICE), byteArrayOf(Byte.MAX_VALUE))// 设置特定的UUID和其数据在广播包中
-            .addManufacturerData(0x01AC, data)// 设置特定厂商Id和其数据在广播包中。前两个字节表示厂商ID,剩下的是厂商自定义的数据。
+            .addServiceData(ParcelUuid(UUID_SERVICE_1), byteArrayOf(0x01))// 设置特定的UUID和其数据在广播包中
+            .addServiceData(ParcelUuid(UUID_SERVICE_2), byteArrayOf(0x02))// 设置特定的UUID和其数据在广播包中
+            .addServiceData(ParcelUuid(UUID_SERVICE_3), byteArrayOf(0x03))// 设置特定的UUID和其数据在广播包中
+            .addManufacturerData(0xAC, data)// 设置特定厂商Id和其数据在广播包中。前两个字节表示厂商ID,剩下的是厂商自定义的数据。
             .build()
     }
 
     private fun initServices() {
-        val bluetoothGattServer = getBluetoothManager()?.openGattServer(this, mBluetoothGattServerCallback) ?: return
-        val service = BluetoothGattService(UUID_SERVICE, BluetoothGattService.SERVICE_TYPE_PRIMARY)
+        if (mBluetoothGattServer != null) return
 
-        val characteristicRead = BluetoothGattCharacteristic(
-            UUID_CHARACTERISTIC_READ,
-            BluetoothGattCharacteristic.PROPERTY_READ,
-            BluetoothGattCharacteristic.PERMISSION_READ
-        )
-        service.addCharacteristic(characteristicRead)
+        lifecycleScope.launch {
+            val bluetoothGattServer =
+                getBluetoothManager()?.openGattServer(this@BlePeripheralActivity, mBluetoothGattServerCallback) ?: return@launch
 
-        val characteristicWrite = BluetoothGattCharacteristic(
-            UUID_CHARACTERISTIC_WRITE,
-            BluetoothGattCharacteristic.PROPERTY_WRITE or
-                    BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE or
-                    BluetoothGattCharacteristic.PROPERTY_NOTIFY or
-                    BluetoothGattCharacteristic.PROPERTY_INDICATE,
-            BluetoothGattCharacteristic.PERMISSION_WRITE
-        )
-        val descriptor = BluetoothGattDescriptor(
-            UUID_DESCRIPTOR,
-            BluetoothGattCharacteristic.PERMISSION_WRITE
-        )
-        characteristicWrite.addDescriptor(descriptor)
-        service.addCharacteristic(characteristicWrite)
+            val service1 = BluetoothGattService(UUID_SERVICE_1, BluetoothGattService.SERVICE_TYPE_PRIMARY)
+            val characteristic1 = BluetoothGattCharacteristic(
+                UUID_CHARACTERISTIC_1,
+                BluetoothGattCharacteristic.PROPERTY_READ,
+                BluetoothGattCharacteristic.PERMISSION_READ
+            )
+            service1.addCharacteristic(characteristic1)
+            bluetoothGattServer.addService(service1)
+            delay(100)
 
-        bluetoothGattServer.addService(service)
-        mBluetoothGattServer = bluetoothGattServer
+            val service2 = BluetoothGattService(UUID_SERVICE_2, BluetoothGattService.SERVICE_TYPE_PRIMARY)
+            val characteristic2 = BluetoothGattCharacteristic(
+                UUID_CHARACTERISTIC_2,
+                BluetoothGattCharacteristic.PROPERTY_WRITE or
+                        BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE,
+                BluetoothGattCharacteristic.PERMISSION_WRITE
+            )
+            service2.addCharacteristic(characteristic2)
+            bluetoothGattServer.addService(service2)
+            delay(100)
+
+            val service3 = BluetoothGattService(UUID_SERVICE_3, BluetoothGattService.SERVICE_TYPE_PRIMARY)
+            val characteristic3 = BluetoothGattCharacteristic(
+                UUID_CHARACTERISTIC_3,
+                BluetoothGattCharacteristic.PROPERTY_NOTIFY or
+                        BluetoothGattCharacteristic.PROPERTY_INDICATE,
+                BluetoothGattCharacteristic.PERMISSION_READ
+            )
+            val descriptor = BluetoothGattDescriptor(
+                UUID_DESCRIPTOR,
+                BluetoothGattCharacteristic.PERMISSION_WRITE
+            )
+            characteristic3.addDescriptor(descriptor)
+            service3.addCharacteristic(characteristic3)
+            bluetoothGattServer.addService(service3)
+            delay(100)
+
+            mBluetoothGattServer = bluetoothGattServer
+        }
     }
 
     override fun onDestroy() {
