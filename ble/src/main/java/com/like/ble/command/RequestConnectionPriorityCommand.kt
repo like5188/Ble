@@ -16,7 +16,7 @@ import android.bluetooth.BluetoothGatt
 class RequestConnectionPriorityCommand(
     address: String,
     val connectionPriority: Int,
-    private val onSuccess: (() -> Unit)? = null,
+    private val onSuccess: ((Int) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
 ) : Command("requestConnectionPriority命令", address) {
 
@@ -33,7 +33,12 @@ class RequestConnectionPriorityCommand(
     }
 
     override fun doOnSuccess(vararg args: Any?) {
-        onSuccess?.invoke()
+        if (args.isNotEmpty()) {
+            val arg0 = args[0]
+            if (arg0 is Int) {
+                onSuccess?.invoke(arg0)
+            }
+        }
     }
 
     override fun doOnFailure(throwable: Throwable) {

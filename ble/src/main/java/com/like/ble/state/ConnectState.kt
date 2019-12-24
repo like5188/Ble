@@ -102,7 +102,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
         }
 
         override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
-            val command = getCommandFromCache<SetMtuCommand>() ?: return
+            val command = getCommandFromCache<RequestMtuCommand>() ?: return
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 command.successAndCompleteIfIncomplete(mtu)
             } else {
@@ -111,7 +111,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
         }
 
         override fun onReadRemoteRssi(gatt: BluetoothGatt?, rssi: Int, status: Int) {
-            val command = getCommandFromCache<WriteCharacteristicCommand>() ?: return
+            val command = getCommandFromCache<ReadRemoteRssiCommand>() ?: return
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 command.successAndCompleteIfIncomplete(rssi)
             } else {
@@ -281,7 +281,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
 
     }
 
-    override fun setMtu(command: SetMtuCommand) {
+    override fun setMtu(command: RequestMtuCommand) {
         if (!isConnected()) {
             command.failureAndCompleteIfIncomplete("设备未连接：${command.address}")
             return
@@ -340,7 +340,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
         if (mBluetoothGatt?.requestConnectionPriority(command.connectionPriority) != true) {
             command.failureAndCompleteIfIncomplete("requestConnectionPriority失败：${command.address}")
         } else {
-            command.successAndCompleteIfIncomplete()
+            command.successAndCompleteIfIncomplete(command.connectionPriority)
         }
     }
 

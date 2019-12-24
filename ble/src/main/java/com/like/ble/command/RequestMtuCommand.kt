@@ -1,10 +1,9 @@
 package com.like.ble.command
 
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothGatt
 
 /**
- * 设置MTU命令
+ * requestMtu命令
  *
  * @param address           蓝牙设备地址
  * @param mtu               需要设置的MTU值
@@ -12,13 +11,13 @@ import android.bluetooth.BluetoothGatt
  * @param onSuccess         命令执行成功回调
  * @param onFailure         命令执行失败回调
  */
-class SetMtuCommand(
+class RequestMtuCommand(
     address: String,
     val mtu: Int,
     val timeout: Long = 3000L,
     private val onSuccess: ((Int) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
-) : Command("设置MTU命令", address) {
+) : Command("requestMtu命令", address) {
 
     init {
         when {
@@ -49,7 +48,7 @@ class SetMtuCommand(
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is SetMtuCommand) return false
+        if (other !is RequestMtuCommand) return false
 
         if (address != other.address) return false
         if (mtu != other.mtu) return false

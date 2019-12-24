@@ -68,15 +68,11 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
-    implementation 'com.google.android.material:material:1.0.0'
-    // 使CollapsingToolbarLayout支持subtitle
-    implementation "com.hendraanggrian.material:collapsingtoolbarlayout-subtitle:1.0.0"
-
     // coroutines
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.2'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.2.0-rc03'
-// Activity 或 Fragment 对协程的支持：lifecycleScope
+    // Activity 或 Fragment 对协程的支持：lifecycleScope
 
     implementation 'io.reactivex.rxjava2:rxjava:2.2.11'
     implementation 'com.github.tbruyelle:rxpermissions:0.10.2'

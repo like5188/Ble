@@ -3,7 +3,7 @@ package com.like.ble.command
 import android.bluetooth.BluetoothAdapter
 
 /**
- * 读RSSI命令
+ * readRemoteRssi命令
  *
  * @param address                   蓝牙设备地址
  * @param timeout                   命令执行超时时间（毫秒）
@@ -15,7 +15,7 @@ class ReadRemoteRssiCommand(
     val timeout: Long = 3000L,
     private val onSuccess: ((Int) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
-) : Command("读RSSI命令", address) {
+) : Command("readRemoteRssi命令", address) {
 
     init {
         when {
