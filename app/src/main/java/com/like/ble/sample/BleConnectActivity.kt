@@ -1,7 +1,6 @@
 package com.like.ble.sample
 
 import android.os.Bundle
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
@@ -23,44 +22,53 @@ class BleConnectActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mData = intent.getSerializableExtra("data") as? BleScanInfo ?: throw UnsupportedOperationException("data is null")
-        mBinding.setVariable(BR.bleScanInfo, mData)
         mBinding.rv.layoutManager = WrapLinearLayoutManager(this)
         mBinding.rv.adapter = mAdapter
-    }
 
-    fun connect(view: View) {
-        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_black_1))
-        mBinding.tvConnectStatus.text = "连接中……"
-        mBleManager.sendCommand(
-            ConnectCommand(
-                mData.address,
-                10000L,
-                {
-                    runOnUiThread {
-                        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_blue))
-                        mBinding.tvConnectStatus.text = "连接成功"
-                        if (it.isNotEmpty()) {
-                            val bleGattServiceInfos = it.map { bluetoothGattService ->
-                                BleConnectInfo(mData.address, bluetoothGattService)
-                            }
-                            mAdapter.mAdapterDataManager.addItemsToEnd(bleGattServiceInfos)
-                        } else {
-                            mAdapter.mAdapterDataManager.clear()
-                        }
-                    }
-                },
-                {
-                    runOnUiThread {
-                        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
-                        mBinding.tvConnectStatus.text = it.message
-                        mAdapter.mAdapterDataManager.clear()
-                    }
-                })
-        )
-    }
+        mBinding.subtitleCollapsingToolbarLayout.title = mData.name
+        mBinding.subtitleCollapsingToolbarLayout.subtitle = mData.address
 
-    fun disconnect(view: View) {
-        mBleManager.sendCommand(DisconnectCommand(mData.address))
+        // 填充menu
+        mBinding.toolbar.inflateMenu(R.menu.connect_menu)
+        // 设置点击事件
+        mBinding.toolbar.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.connect -> {
+                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_black_1))
+                    mBinding.tvConnectStatus.text = "连接中……"
+                    mBleManager.sendCommand(
+                        ConnectCommand(
+                            mData.address,
+                            10000L,
+                            {
+                                runOnUiThread {
+                                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_blue))
+                                    mBinding.tvConnectStatus.text = "连接成功"
+                                    if (it.isNotEmpty()) {
+                                        val bleGattServiceInfos = it.map { bluetoothGattService ->
+                                            BleConnectInfo(mData.address, bluetoothGattService)
+                                        }
+                                        mAdapter.mAdapterDataManager.addItemsToEnd(bleGattServiceInfos)
+                                    } else {
+                                        mAdapter.mAdapterDataManager.clear()
+                                    }
+                                }
+                            },
+                            {
+                                runOnUiThread {
+                                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
+                                    mBinding.tvConnectStatus.text = it.message
+                                    mAdapter.mAdapterDataManager.clear()
+                                }
+                            })
+                    )
+                }
+                R.id.disconnect -> {
+                    mBleManager.sendCommand(DisconnectCommand(mData.address))
+                }
+            }
+            true
+        }
     }
 
     override fun onDestroy() {
