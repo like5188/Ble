@@ -30,9 +30,9 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
         val binding = holder.binding
         if (binding !is ItemBleConnectBinding) return
 
-        // 服务的UUID
+        // 服务UUID
         binding.tvServiceUuid.text = item.service.uuid.getValidString()
-        // 服务的类型
+        // 服务类型
         binding.tvServiceType.text = item.service.getTypeString()
         // 服务名称
         when (item.service.uuid.toString()) {
