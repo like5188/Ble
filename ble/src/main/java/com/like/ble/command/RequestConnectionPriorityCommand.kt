@@ -24,7 +24,7 @@ class RequestConnectionPriorityCommand(
         when {
             !BluetoothAdapter.checkBluetoothAddress(address) -> failureAndCompleteIfIncomplete("地址无效：$address")
             connectionPriority < BluetoothGatt.CONNECTION_PRIORITY_BALANCED
-                    || connectionPriority > BluetoothGatt.CONNECTION_PRIORITY_LOW_POWER -> failureAndCompleteIfIncomplete("connectionPriority 无效")
+                    || connectionPriority > BluetoothGatt.CONNECTION_PRIORITY_LOW_POWER -> failureAndCompleteIfIncomplete("connectionPriority 只能是 1、2")
         }
     }
 

@@ -54,6 +54,9 @@ class BleConnectActivity : AppCompatActivity() {
                         mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
                         mBinding.tvConnectStatus.text = it.message
                         mAdapter.mAdapterDataManager.clear()
+                        mBinding.etRequestMtu.setText("")
+                        mBinding.etReadRemoteRssi.setText("")
+                        mBinding.etRequestConnectionPriority.setText("")
                     }
                 })
         )
@@ -66,6 +69,7 @@ class BleConnectActivity : AppCompatActivity() {
     fun requestMtu(view: View) {
         if (mBinding.etRequestMtu.text.trim().isEmpty()) {
             shortToastBottom("请输入MTU的值")
+            return
         }
         val mtu = mBinding.etRequestMtu.text.toString().trim().toInt()
         mBleManager.sendCommand(RequestMtuCommand(
@@ -73,14 +77,10 @@ class BleConnectActivity : AppCompatActivity() {
             mtu,
             3000,
             {
-                runOnUiThread {
-                    mBinding.etRequestMtu.setText(it.toString())
-                }
+                shortToastBottom("设置成功")
             },
             {
-                runOnUiThread {
-                    mBinding.etRequestMtu.setText(it.message)
-                }
+                shortToastBottom(it.message)
             }
         ))
     }
@@ -95,16 +95,15 @@ class BleConnectActivity : AppCompatActivity() {
                 }
             },
             {
-                runOnUiThread {
-                    mBinding.etReadRemoteRssi.setText(it.message)
-                }
+                shortToastBottom(it.message)
             }
         ))
     }
 
     fun requestConnectionPriority(view: View) {
         if (mBinding.etRequestConnectionPriority.text.trim().isEmpty()) {
-            shortToastBottom("请输入connection priority的值，只能是1、2")
+            shortToastBottom("请输入connection priority的值")
+            return
         }
         val connectionPriority = mBinding.etRequestConnectionPriority.text.toString().trim().toInt()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -112,14 +111,10 @@ class BleConnectActivity : AppCompatActivity() {
                 mData.address,
                 connectionPriority,
                 {
-                    runOnUiThread {
-                        mBinding.etRequestConnectionPriority.setText(it.toString())
-                    }
+                    shortToastBottom("设置成功")
                 },
                 {
-                    runOnUiThread {
-                        mBinding.etRequestConnectionPriority.setText(it.message)
-                    }
+                    shortToastBottom(it.message)
                 }
             ))
         }
