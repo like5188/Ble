@@ -1,6 +1,5 @@
 package com.like.ble.sample
 
-import android.bluetooth.BluetoothGatt
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -65,9 +64,13 @@ class BleConnectActivity : AppCompatActivity() {
     }
 
     fun requestMtu(view: View) {
+        if (mBinding.etRequestMtu.text.trim().isEmpty()) {
+            shortToastBottom("请输入MTU的值")
+        }
+        val mtu = mBinding.etRequestMtu.text.toString().trim().toInt()
         mBleManager.sendCommand(RequestMtuCommand(
             mData.address,
-            50,
+            mtu,
             3000,
             {
                 runOnUiThread {
@@ -100,10 +103,14 @@ class BleConnectActivity : AppCompatActivity() {
     }
 
     fun requestConnectionPriority(view: View) {
+        if (mBinding.etRequestConnectionPriority.text.trim().isEmpty()) {
+            shortToastBottom("请输入connection priority的值，只能是1、2")
+        }
+        val connectionPriority = mBinding.etRequestConnectionPriority.text.toString().trim().toInt()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             mBleManager.sendCommand(RequestConnectionPriorityCommand(
                 mData.address,
-                BluetoothGatt.CONNECTION_PRIORITY_HIGH,
+                connectionPriority,
                 {
                     runOnUiThread {
                         mBinding.etRequestConnectionPriority.setText(it.toString())
