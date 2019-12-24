@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.os.ParcelUuid
 import android.text.Html
 import android.text.method.ScrollingMovementMethod
-import android.util.Log
 import android.view.View
 import androidx.annotation.ColorRes
 import androidx.annotation.RequiresApi
@@ -70,7 +69,6 @@ class BlePeripheralActivity : AppCompatActivity() {
         }
 
         override fun onServiceAdded(status: Int, service: BluetoothGattService) {
-            Log.e("tag", "onServiceAdded")
             appendText("--> onServiceAdded", false, R.color.ble_text_blue)
             appendText("status=${getBluetoothGattStatusString(status)}", false)
             appendText("service：${service.uuid.getValidString()}", false)
