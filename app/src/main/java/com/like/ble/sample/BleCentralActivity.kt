@@ -36,6 +36,7 @@ class BleCentralActivity : AppCompatActivity() {
     fun startScan(view: View) {
         mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_blue))
         mBinding.tvScanStatus.text = "扫描已开启"
+        mAdapter.mAdapterDataManager.clear()
         mBleManager.sendCommand(
             StartScanCommand(
                 "",

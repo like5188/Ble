@@ -225,6 +225,14 @@ class BlePeripheralActivity : AppCompatActivity() {
                 {
                     mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
                     mBinding.tvAdvertisingStatus.text = it.message ?: "广播停止了"
+                    if (!isBluetoothEnable()) {// 说明关闭了蓝牙
+                        getBluetoothManager()?.getConnectedDevices(BluetoothProfile.GATT)?.forEach { device ->
+                            mBluetoothGattServer?.cancelConnection(device)
+                        }
+                        mBluetoothGattServer?.clearServices()
+                        mBluetoothGattServer?.close()
+                        mBluetoothGattServer = null
+                    }
                 }
             )
         )
