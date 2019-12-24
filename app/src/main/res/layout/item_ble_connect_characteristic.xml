@@ -45,8 +45,7 @@
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:layout_marginLeft="10dp"
-                android:backgroundTint="@color/ble_text_blue"
-                android:src="@drawable/windows"
+                android:src="@drawable/notify_close"
                 android:visibility="gone" />
 
             <ImageView
@@ -54,8 +53,7 @@
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:layout_marginLeft="10dp"
-                android:backgroundTint="@color/ble_text_blue"
-                android:src="@drawable/apple"
+                android:src="@drawable/indicate_close"
                 android:visibility="gone" />
         </LinearLayout>
 

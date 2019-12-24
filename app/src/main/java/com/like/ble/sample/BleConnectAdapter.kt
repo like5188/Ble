@@ -153,11 +153,16 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                         characteristic.uuid,
                         createBleUuidBy16Bit("2902"),
                         {
-                            mActivity.longToastBottom("关闭notify成功")
                             isOn.set(false)
+                            mActivity.runOnUiThread {
+                                binding.ivNotify.setImageResource(R.drawable.notify_close)
+                            }
                         },
                         {
-                            mActivity.longToastBottom(it.message)
+                            isOn.set(true)
+                            mActivity.runOnUiThread {
+                                binding.ivNotify.setImageResource(R.drawable.notify)
+                            }
                         }
                     ))
                 } else {
@@ -166,11 +171,16 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                         characteristic.uuid,
                         createBleUuidBy16Bit("2902"),
                         {
-                            mActivity.longToastBottom("开启notify成功")
                             isOn.set(true)
+                            mActivity.runOnUiThread {
+                                binding.ivNotify.setImageResource(R.drawable.notify)
+                            }
                         },
                         {
-                            mActivity.longToastBottom(it.message)
+                            isOn.set(false)
+                            mActivity.runOnUiThread {
+                                binding.ivNotify.setImageResource(R.drawable.notify_close)
+                            }
                         }
                     ))
                 }
@@ -186,10 +196,16 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                         characteristic.uuid,
                         createBleUuidBy16Bit("2902"),
                         {
-                            mActivity.longToastBottom("关闭indicate成功")
+                            isOn.set(false)
+                            mActivity.runOnUiThread {
+                                binding.ivIndicate.setImageResource(R.drawable.indicate_close)
+                            }
                         },
                         {
-                            mActivity.longToastBottom(it.message)
+                            isOn.set(true)
+                            mActivity.runOnUiThread {
+                                binding.ivIndicate.setImageResource(R.drawable.indicate)
+                            }
                         }
                     ))
                 } else {
@@ -198,10 +214,16 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                         characteristic.uuid,
                         createBleUuidBy16Bit("2902"),
                         {
-                            mActivity.longToastBottom("开启indicate成功")
+                            isOn.set(true)
+                            mActivity.runOnUiThread {
+                                binding.ivIndicate.setImageResource(R.drawable.indicate)
+                            }
                         },
                         {
-                            mActivity.longToastBottom(it.message)
+                            isOn.set(false)
+                            mActivity.runOnUiThread {
+                                binding.ivIndicate.setImageResource(R.drawable.indicate_close)
+                            }
                         }
                     ))
                 }
