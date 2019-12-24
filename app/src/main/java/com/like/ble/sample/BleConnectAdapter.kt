@@ -154,15 +154,11 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                         createBleUuidBy16Bit("2902"),
                         {
                             isOn.set(false)
-                            mActivity.runOnUiThread {
-                                binding.ivNotify.setImageResource(R.drawable.notify_close)
-                            }
+                            binding.ivNotify.setImageResource(R.drawable.notify_close)
                         },
                         {
                             isOn.set(true)
-                            mActivity.runOnUiThread {
-                                binding.ivNotify.setImageResource(R.drawable.notify)
-                            }
+                            binding.ivNotify.setImageResource(R.drawable.notify)
                         }
                     ))
                 } else {
@@ -172,15 +168,11 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                         createBleUuidBy16Bit("2902"),
                         {
                             isOn.set(true)
-                            mActivity.runOnUiThread {
-                                binding.ivNotify.setImageResource(R.drawable.notify)
-                            }
+                            binding.ivNotify.setImageResource(R.drawable.notify)
                         },
                         {
                             isOn.set(false)
-                            mActivity.runOnUiThread {
-                                binding.ivNotify.setImageResource(R.drawable.notify_close)
-                            }
+                            binding.ivNotify.setImageResource(R.drawable.notify_close)
                         }
                     ))
                 }
@@ -197,15 +189,11 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                         createBleUuidBy16Bit("2902"),
                         {
                             isOn.set(false)
-                            mActivity.runOnUiThread {
-                                binding.ivIndicate.setImageResource(R.drawable.indicate_close)
-                            }
+                            binding.ivIndicate.setImageResource(R.drawable.indicate_close)
                         },
                         {
                             isOn.set(true)
-                            mActivity.runOnUiThread {
-                                binding.ivIndicate.setImageResource(R.drawable.indicate)
-                            }
+                            binding.ivIndicate.setImageResource(R.drawable.indicate)
                         }
                     ))
                 } else {
@@ -215,15 +203,11 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                         createBleUuidBy16Bit("2902"),
                         {
                             isOn.set(true)
-                            mActivity.runOnUiThread {
-                                binding.ivIndicate.setImageResource(R.drawable.indicate)
-                            }
+                            binding.ivIndicate.setImageResource(R.drawable.indicate)
                         },
                         {
                             isOn.set(false)
-                            mActivity.runOnUiThread {
-                                binding.ivIndicate.setImageResource(R.drawable.indicate_close)
-                            }
+                            binding.ivIndicate.setImageResource(R.drawable.indicate_close)
                         }
                     ))
                 }

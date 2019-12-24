@@ -36,28 +36,24 @@ class BleConnectActivity : AppCompatActivity() {
                 mData.address,
                 10000L,
                 {
-                    runOnUiThread {
-                        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_blue))
-                        mBinding.tvConnectStatus.text = "连接成功"
-                        if (it.isNotEmpty()) {
-                            val bleGattServiceInfos = it.map { bluetoothGattService ->
-                                BleConnectInfo(mData.address, bluetoothGattService)
-                            }
-                            mAdapter.mAdapterDataManager.addItemsToEnd(bleGattServiceInfos)
-                        } else {
-                            mAdapter.mAdapterDataManager.clear()
+                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_blue))
+                    mBinding.tvConnectStatus.text = "连接成功"
+                    if (it.isNotEmpty()) {
+                        val bleGattServiceInfos = it.map { bluetoothGattService ->
+                            BleConnectInfo(mData.address, bluetoothGattService)
                         }
+                        mAdapter.mAdapterDataManager.addItemsToEnd(bleGattServiceInfos)
+                    } else {
+                        mAdapter.mAdapterDataManager.clear()
                     }
                 },
                 {
-                    runOnUiThread {
-                        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
-                        mBinding.tvConnectStatus.text = it.message
-                        mAdapter.mAdapterDataManager.clear()
-                        mBinding.etRequestMtu.setText("")
-                        mBinding.etReadRemoteRssi.setText("")
-                        mBinding.etRequestConnectionPriority.setText("")
-                    }
+                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
+                    mBinding.tvConnectStatus.text = it.message
+                    mAdapter.mAdapterDataManager.clear()
+                    mBinding.etRequestMtu.setText("")
+                    mBinding.etReadRemoteRssi.setText("")
+                    mBinding.etRequestConnectionPriority.setText("")
                 })
         )
     }
@@ -90,9 +86,7 @@ class BleConnectActivity : AppCompatActivity() {
             mData.address,
             3000,
             {
-                runOnUiThread {
-                    mBinding.etReadRemoteRssi.setText(it.toString())
-                }
+                mBinding.etReadRemoteRssi.setText(it.toString())
             },
             {
                 shortToastBottom(it.message)

@@ -1,5 +1,8 @@
 package com.like.ble.command
 
+import android.os.Handler
+import android.os.Looper
+import androidx.annotation.MainThread
 import com.like.ble.state.State
 import kotlinx.coroutines.Job
 import java.util.concurrent.atomic.AtomicBoolean
@@ -37,6 +40,8 @@ abstract class Command(val des: String, val address: String = "") {
          */
         internal const val GROUP_CENTRAL_DEVICE = 1 shl 5
     }
+
+    private val handler = Handler(Looper.getMainLooper())
 
     /**
      * 命令实际执行者
@@ -89,7 +94,9 @@ abstract class Command(val des: String, val address: String = "") {
      * 用于长连接的命令，比如[StartAdvertisingCommand]、[StartScanCommand]、[ConnectCommand]。
      */
     internal fun successAndComplete(vararg args: Any?) {
-        doOnSuccess(*args)
+        runOnUiThread {
+            doOnSuccess(*args)
+        }
         complete()
     }
 
@@ -98,19 +105,23 @@ abstract class Command(val des: String, val address: String = "") {
      * 用于长连接的命令，比如[StartAdvertisingCommand]、[StartScanCommand]、[ConnectCommand]。
      */
     internal fun failureAndComplete(errorMsg: String) {
-        doOnFailure(Throwable(errorMsg))
+        runOnUiThread {
+            doOnFailure(Throwable(errorMsg))
+        }
         complete()
     }
 
     /**
      * 如果命令传入了成功回调方法，则需要重写此方法，在其中回调成功回调方法。
      */
+    @MainThread
     protected open fun doOnSuccess(vararg args: Any?) {
     }
 
     /**
      * 如果命令传入了失败回调方法，则需要重写此方法，在其中回调失败回调方法。
      */
+    @MainThread
     protected open fun doOnFailure(throwable: Throwable) {
     }
 
@@ -134,6 +145,10 @@ abstract class Command(val des: String, val address: String = "") {
 
     override fun toString(): String {
         return "Command(des='$des', address='$address', mIsCompleted='${mIsCompleted.get()}')"
+    }
+
+    private fun runOnUiThread(f: () -> Unit) {
+        if (Looper.getMainLooper() === Looper.myLooper()) f() else handler.post { f() }
     }
 
 }

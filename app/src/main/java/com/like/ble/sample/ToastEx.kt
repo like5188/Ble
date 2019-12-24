@@ -36,7 +36,7 @@ object ToastHelper {
      */
     @SuppressLint("ShowToast")
     fun show(context: Context, text: CharSequence?, duration: Int = Toast.LENGTH_SHORT, gravity: Int = Gravity.BOTTOM) {
-        context.runOnUiThread {
+        runOnUiThread {
             if (toast == null) {
                 toast = Toast.makeText(context.applicationContext, text?.toString() ?: "null", duration)
             } else {
@@ -56,7 +56,7 @@ object ToastHelper {
      * @param gravity    toast的位置。[android.view.Gravity]
      */
     fun show(context: Context, view: View, duration: Int = Toast.LENGTH_SHORT, gravity: Int = Gravity.BOTTOM) {
-        context.runOnUiThread {
+        runOnUiThread {
             if (toast == null) {
                 toast = Toast(context.applicationContext)
             }
@@ -67,7 +67,7 @@ object ToastHelper {
         }
     }
 
-    private fun Context.runOnUiThread(f: Context.() -> Unit) {
+    private fun runOnUiThread(f: () -> Unit) {
         if (Looper.getMainLooper() === Looper.myLooper()) f() else handler.post { f() }
     }
 }
