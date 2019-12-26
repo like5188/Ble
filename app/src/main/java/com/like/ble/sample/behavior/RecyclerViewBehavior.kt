@@ -12,12 +12,12 @@ import com.like.ble.sample.R
 
 class RecyclerViewBehavior(context: Context, attrs: AttributeSet) : CoordinatorLayout.Behavior<RecyclerView>(context, attrs) {
     override fun layoutDependsOn(parent: CoordinatorLayout, child: RecyclerView, dependency: View): Boolean {
-        return dependency.id == R.id.connect_header
+        return dependency.id == R.id.ll_header
     }
 
     override fun onLayoutChild(parent: CoordinatorLayout, child: RecyclerView, layoutDirection: Int): Boolean {
         parent.getDependencies(child)
-            .firstOrNull { it.id == R.id.connect_header }
+            .firstOrNull { it.id == R.id.ll_header }
             ?.let { header ->
                 val lp = child.layoutParams as CoordinatorLayout.LayoutParams
                 val available = Rect()
