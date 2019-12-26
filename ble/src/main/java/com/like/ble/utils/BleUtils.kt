@@ -120,6 +120,25 @@ fun ByteArray.toHexString(): String {
     return sb.toString().toUpperCase()
 }
 
+
+/**
+ * 16进制表示的字符串转换为字节数组
+ *
+ * @return byte[] 字节数组
+ */
+fun String.hexStringToByteArray(): ByteArray {
+    val hexString = this.replace(" ".toRegex(), "")
+    val len = hexString.length
+    val bytes = ByteArray(len / 2)
+    var i = 0
+    while (i < len) {
+        // 两位一组，表示一个字节,把这样表示的16进制字符串，还原成一个字节
+        bytes[i / 2] = ((Character.digit(hexString[i], 16) shl 4) + Character.digit(hexString[i + 1], 16)).toByte()
+        i += 2
+    }
+    return bytes
+}
+
 fun UUID.getValidString(): String = "0x${toString().substring(4, 8).toUpperCase()}"
 
 fun BluetoothGattService.getTypeString() = when (type) {

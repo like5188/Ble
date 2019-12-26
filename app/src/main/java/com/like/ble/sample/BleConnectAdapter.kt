@@ -2,6 +2,7 @@ package com.like.ble.sample
 
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
+import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.LinearLayout
@@ -12,10 +13,7 @@ import com.like.ble.command.*
 import com.like.ble.sample.databinding.ItemBleConnectBinding
 import com.like.ble.sample.databinding.ItemBleConnectCharacteristicBinding
 import com.like.ble.sample.databinding.ItemBleConnectDescriptorsBinding
-import com.like.ble.utils.createBleUuidBy16Bit
-import com.like.ble.utils.getPropertiesString
-import com.like.ble.utils.getTypeString
-import com.like.ble.utils.getValidString
+import com.like.ble.utils.*
 import com.like.livedatarecyclerview.adapter.BaseAdapter
 import com.like.livedatarecyclerview.model.IRecyclerViewItem
 import com.like.livedatarecyclerview.viewholder.CommonViewHolder
@@ -23,6 +21,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBleManager: IBleManager) : BaseAdapter() {
     private val mLayoutInflater: LayoutInflater by lazy { LayoutInflater.from(mActivity) }
+    private val mWriteDataFragment: WriteDataFragment by lazy {
+        WriteDataFragment()
+    }
 
     override fun bindOtherVariable(
         holder: CommonViewHolder,
@@ -114,33 +115,44 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
         if (characteristic.properties and 0x04 != 0 || characteristic.properties and 0x08 != 0) {
             binding.ivWrite.visibility = View.VISIBLE
             binding.ivWrite.setOnClickListener {
-                mBleManager.sendCommand(ReadNotifyCommand(
-                    address,
-                    characteristic.uuid,
-                    5000,
-                    1024,
-                    {
-                        it.get(it.position() - 1) == Byte.MAX_VALUE
-                    },
-                    {
-                        mActivity.longToastBottom("读取通知传来的数据成功。数据长度：${it?.size} ${it?.contentToString()}")
-                    },
-                    {
-                        mActivity.longToastBottom(it.message)
-                    }
-                ))
-                mBleManager.sendCommand(WriteCharacteristicCommand(
-                    address,
-                    listOf(byteArrayOf(0x1)),
-                    characteristic.uuid,
-                    5000,
-                    {
-                        mActivity.longToastBottom("写特征成功")
-                    },
-                    {
-                        mActivity.longToastBottom(it.message)
-                    }
-                ))
+                mWriteDataFragment.arguments = Bundle().apply {
+                    putSerializable("callback", object : WriteDataFragment.Callback {
+                        override fun onData(data: ByteArray) {
+                            when (data[0]) {
+                                0x1.toByte() -> {
+                                    mBleManager.sendCommand(ReadNotifyCommand(
+                                        address,
+                                        characteristic.uuid,
+                                        5000,
+                                        1024,
+                                        {
+                                            it.get(it.position() - 1) == Byte.MAX_VALUE
+                                        },
+                                        {
+                                            mActivity.longToastBottom("读取通知传来的数据成功。数据长度：${it?.size} ${it?.contentToString()}")
+                                        },
+                                        {
+                                            mActivity.longToastBottom(it.message)
+                                        }
+                                    ))
+                                }
+                            }
+                            mBleManager.sendCommand(WriteCharacteristicCommand(
+                                address,
+                                data.batch(20),
+                                characteristic.uuid,
+                                5000,
+                                {
+                                    mActivity.longToastBottom("写特征成功")
+                                },
+                                {
+                                    mActivity.longToastBottom(it.message)
+                                }
+                            ))
+                        }
+                    })
+                }
+                mWriteDataFragment.show(mActivity)
             }
         }
         if (characteristic.properties and 0x10 != 0) {
