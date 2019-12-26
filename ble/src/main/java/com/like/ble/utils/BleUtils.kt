@@ -32,7 +32,7 @@ fun Context.isBluetoothEnable(): Boolean = getBluetoothAdapter()?.isEnabled ?: f
 fun Context.isSupportBluetooth(): Boolean = packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
 
 /**
- * 查找远程设备的特征，并开启通知，以便触发onCharacteristicChanged()方法
+ * 查找远程设备的特征
  */
 internal fun BluetoothGatt.findCharacteristic(characteristicUuid: UUID): BluetoothGattCharacteristic? {
     var characteristic: BluetoothGattCharacteristic?
