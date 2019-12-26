@@ -17,14 +17,12 @@
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/appBarLayout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+            android:layout_height="wrap_content">
 
             <com.google.android.material.appbar.CollapsingToolbarLayout
                 android:id="@+id/collapsingToolbarLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:contentScrim="?attr/colorPrimary"
                 app:layout_collapseParallaxMultiplier="0.3"
                 app:layout_scrollFlags="scroll|exitUntilCollapsed">
 
@@ -32,6 +30,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="120dp"
+                    android:background="@color/ble_text_white"
                     android:orientation="vertical"
                     app:layout_collapseMode="parallax">
 
