@@ -94,15 +94,15 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
             val disableCharacteristicNotifyCommand = getCommandFromCache<DisableCharacteristicNotifyCommand>()
             val enableCharacteristicIndicateCommand = getCommandFromCache<EnableCharacteristicIndicateCommand>()
             val disableCharacteristicIndicateCommand = getCommandFromCache<DisableCharacteristicIndicateCommand>()
-            val writeCharacteristicCommand = getCommandFromCache<WriteCharacteristicCommand>()
+            val writeDescriptorCommand = getCommandFromCache<WriteDescriptorCommand>()
 
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 enableCharacteristicNotifyCommand?.successAndCompleteIfIncomplete()
                 disableCharacteristicNotifyCommand?.successAndCompleteIfIncomplete()
                 enableCharacteristicIndicateCommand?.successAndCompleteIfIncomplete()
                 disableCharacteristicIndicateCommand?.successAndCompleteIfIncomplete()
-                if (writeCharacteristicCommand != null && writeCharacteristicCommand.isAllWrite()) {
-                    writeCharacteristicCommand.successAndCompleteIfIncomplete()
+                if (writeDescriptorCommand != null && writeDescriptorCommand.isAllWrite()) {
+                    writeDescriptorCommand.successAndCompleteIfIncomplete()
                 }
             } else {
                 val errorMsg = "写描述值失败：${descriptor.uuid.getValidString()}"
@@ -110,7 +110,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
                 disableCharacteristicNotifyCommand?.failureAndCompleteIfIncomplete(errorMsg)
                 enableCharacteristicIndicateCommand?.failureAndCompleteIfIncomplete(errorMsg)
                 disableCharacteristicIndicateCommand?.failureAndCompleteIfIncomplete(errorMsg)
-                writeCharacteristicCommand?.failureAndCompleteIfIncomplete(errorMsg)
+                writeDescriptorCommand?.failureAndCompleteIfIncomplete(errorMsg)
             }
         }
 
