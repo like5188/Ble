@@ -37,6 +37,7 @@ class WriteCharacteristicCommand(
 
     // 记录写入所有的数据批次，在所有的数据都发送完成后，才调用onSuccess()
     private val mWriteCount: AtomicInteger by lazy { AtomicInteger(data.size) }
+    // 是否可以进行下一批次的写入操作
     private val mNextFlag = AtomicBoolean(false)
 
     fun isAllWrite(): Boolean {
