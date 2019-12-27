@@ -36,12 +36,12 @@ class WriteCharacteristicCommand(
     }
 
     // 记录写入所有的数据批次，在所有的数据都发送完成后，才调用onSuccess()
-    private val mWriteCharacteristicBatchCount: AtomicInteger by lazy { AtomicInteger(data.size) }
+    private val mWriteCount: AtomicInteger by lazy { AtomicInteger(data.size) }
     private val mNextFlag = AtomicBoolean(false)
 
     fun isAllWrite(): Boolean {
         mNextFlag.set(true)
-        return mWriteCharacteristicBatchCount.decrementAndGet() <= 0
+        return mWriteCount.decrementAndGet() <= 0
     }
 
     internal suspend fun waitForNextFlag() {
