@@ -12,6 +12,7 @@ import java.util.*
  *
  * @param address                   蓝牙设备地址
  * @param characteristicUuid        特征UUID
+ * @param serviceUuid               服务UUID，如果不为null，则会在此服务下查找[characteristicUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
  * @param timeout                   命令执行超时时间（毫秒）
  * @param maxFrameTransferSize      每帧可以传输的最大字节数
  * @param isWholeFrame              是否是完整的一帧
@@ -21,6 +22,7 @@ import java.util.*
 class ReadNotifyCommand(
     address: String,
     val characteristicUuid: UUID,
+    val serviceUuid: UUID? = null,
     val timeout: Long = 3000L,
     private val maxFrameTransferSize: Int = 1024,
     private val isWholeFrame: (ByteBuffer) -> Boolean = { true },

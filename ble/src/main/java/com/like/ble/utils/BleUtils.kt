@@ -34,15 +34,18 @@ fun Context.isSupportBluetooth(): Boolean = packageManager.hasSystemFeature(Pack
 /**
  * 查找远程设备的特征
  */
-internal fun BluetoothGatt.findCharacteristic(characteristicUuid: UUID): BluetoothGattCharacteristic? {
-    var characteristic: BluetoothGattCharacteristic?
-    services.forEach {
-        characteristic = it.getCharacteristic(characteristicUuid)
-        if (characteristic != null) {
-            return characteristic
+internal fun BluetoothGatt.findCharacteristic(characteristicUuid: UUID, serviceUuid: UUID? = null): BluetoothGattCharacteristic? {
+    if (serviceUuid != null) {
+        return services.firstOrNull { it.uuid == serviceUuid }?.getCharacteristic(characteristicUuid)
+    } else {
+        services.forEach {
+            val characteristic = it.getCharacteristic(characteristicUuid)
+            if (characteristic != null) {
+                return characteristic
+            }
         }
+        return null
     }
-    return null
 }
 
 fun getConnectionStateString(status: Int) = when (status) {

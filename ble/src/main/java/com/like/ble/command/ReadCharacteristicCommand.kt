@@ -8,6 +8,7 @@ import java.util.*
  *
  * @param address                   蓝牙设备地址
  * @param characteristicUuid        特征UUID
+ * @param serviceUuid               服务UUID，如果不为null，则会在此服务下查找[characteristicUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
  * @param timeout                   命令执行超时时间（毫秒）
  * @param onSuccess                 命令执行成功回调
  * @param onFailure                 命令执行失败回调
@@ -15,6 +16,7 @@ import java.util.*
 class ReadCharacteristicCommand(
     address: String,
     val characteristicUuid: UUID,
+    val serviceUuid: UUID? = null,
     val timeout: Long = 3000L,
     private val onSuccess: ((ByteArray?) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null

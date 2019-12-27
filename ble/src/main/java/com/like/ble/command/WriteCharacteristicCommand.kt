@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * @param address                   蓝牙设备地址
  * @param data                      需要写入的数据，已经分好包了的，每次传递一个 ByteArray。BLE默认单次传输长度为20字节（core spec里面定义了ATT的默认MTU为23个bytes，除去ATT的opcode一个字节以及ATT的handle2个字节之后，剩下的20个字节便是留给GATT的了。）。如果不分包的话，可以设置更大的MTU（(最大为512字节）。
  * @param characteristicUuid        特征UUID
+ * @param serviceUuid               服务UUID，如果不为null，则会在此服务下查找[characteristicUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
  * @param timeout                   命令执行超时时间（毫秒）
  * @param onSuccess                 命令执行成功回调
  * @param onFailure                 命令执行失败回调
@@ -20,6 +21,7 @@ class WriteCharacteristicCommand(
     address: String,
     val data: List<ByteArray>,
     val characteristicUuid: UUID,
+    val serviceUuid: UUID? = null,
     val timeout: Long = 3000L,
     private val onSuccess: (() -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null

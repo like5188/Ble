@@ -60,14 +60,14 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                         }
                     }
                     characteristics.forEach {
-                        addCharacteristic(item.address, it, binding.llCharacteristics)
+                        addCharacteristic(item, it, binding.llCharacteristics)
                     }
                 }
             }
         }
     }
 
-    private fun addCharacteristic(address: String, characteristic: BluetoothGattCharacteristic, llCharacteristics: LinearLayout) {
+    private fun addCharacteristic(item: BleConnectInfo, characteristic: BluetoothGattCharacteristic, llCharacteristics: LinearLayout) {
         val binding = DataBindingUtil.inflate<ItemBleConnectCharacteristicBinding>(
             mLayoutInflater,
             R.layout.item_ble_connect_characteristic,
@@ -92,7 +92,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
         } else {
             binding.tvDescriptorsTag.visibility = View.VISIBLE
             descriptors.forEach {
-                addDescriptor(it, binding.llDescriptors)
+                addDescriptor(item, it, binding.llDescriptors)
             }
         }
 
@@ -100,8 +100,9 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
             binding.ivRead.visibility = View.VISIBLE
             binding.ivRead.setOnClickListener {
                 mBleManager.sendCommand(ReadCharacteristicCommand(
-                    address,
+                    item.address,
                     characteristic.uuid,
+                    item.service.uuid,
                     10000,
                     {
                         mActivity.longToastBottom("读特征成功。数据长度：${it?.size} ${it?.contentToString()}")
@@ -121,8 +122,9 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                             when (data[0]) {
                                 0x1.toByte() -> {
                                     mBleManager.sendCommand(ReadNotifyCommand(
-                                        address,
+                                        item.address,
                                         characteristic.uuid,
+                                        item.service.uuid,
                                         5000,
                                         1024,
                                         {
@@ -138,9 +140,10 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                                 }
                             }
                             mBleManager.sendCommand(WriteCharacteristicCommand(
-                                address,
+                                item.address,
                                 data.batch(20),
                                 characteristic.uuid,
+                                item.service.uuid,
                                 5000,
                                 {
                                     mActivity.longToastBottom("写特征成功")
@@ -161,9 +164,10 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
             binding.ivNotify.setOnClickListener {
                 if (isOn.get()) {
                     mBleManager.sendCommand(DisableCharacteristicNotifyCommand(
-                        address,
+                        item.address,
                         characteristic.uuid,
                         createBleUuidBy16Bit("2902"),
+                        item.service.uuid,
                         {
                             isOn.set(false)
                             binding.ivNotify.setImageResource(R.drawable.notify_close)
@@ -175,9 +179,10 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                     ))
                 } else {
                     mBleManager.sendCommand(EnableCharacteristicNotifyCommand(
-                        address,
+                        item.address,
                         characteristic.uuid,
                         createBleUuidBy16Bit("2902"),
+                        item.service.uuid,
                         {
                             isOn.set(true)
                             binding.ivNotify.setImageResource(R.drawable.notify)
@@ -196,9 +201,10 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
             binding.ivIndicate.setOnClickListener {
                 if (isOn.get()) {
                     mBleManager.sendCommand(DisableCharacteristicIndicateCommand(
-                        address,
+                        item.address,
                         characteristic.uuid,
                         createBleUuidBy16Bit("2902"),
+                        item.service.uuid,
                         {
                             isOn.set(false)
                             binding.ivIndicate.setImageResource(R.drawable.indicate_close)
@@ -210,9 +216,10 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                     ))
                 } else {
                     mBleManager.sendCommand(EnableCharacteristicIndicateCommand(
-                        address,
+                        item.address,
                         characteristic.uuid,
                         createBleUuidBy16Bit("2902"),
+                        item.service.uuid,
                         {
                             isOn.set(true)
                             binding.ivIndicate.setImageResource(R.drawable.indicate)
@@ -227,7 +234,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
         }
     }
 
-    private fun addDescriptor(descriptor: BluetoothGattDescriptor, llDescriptors: LinearLayout) {
+    private fun addDescriptor(item: BleConnectInfo, descriptor: BluetoothGattDescriptor, llDescriptors: LinearLayout) {
         val binding = DataBindingUtil.inflate<ItemBleConnectDescriptorsBinding>(
             mLayoutInflater,
             R.layout.item_ble_connect_descriptors,
