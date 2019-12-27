@@ -14,6 +14,8 @@ abstract class State {
     open fun disconnect(command: DisconnectCommand) {}
     open fun readCharacteristic(command: ReadCharacteristicCommand) {}
     open fun writeCharacteristic(command: WriteCharacteristicCommand) {}
+    open fun readDescriptor(command: ReadDescriptorCommand) {}
+    open fun writeDescriptor(command: WriteDescriptorCommand) {}
     open fun setMtu(command: RequestMtuCommand) {}
     open fun enableCharacteristicNotify(command: EnableCharacteristicNotifyCommand) {}
     open fun disableCharacteristicNotify(command: DisableCharacteristicNotifyCommand) {}

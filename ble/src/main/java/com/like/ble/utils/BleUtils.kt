@@ -48,6 +48,53 @@ internal fun BluetoothGatt.findCharacteristic(characteristicUuid: UUID, serviceU
     }
 }
 
+/**
+ * 查找远程设备的描述
+ */
+internal fun BluetoothGatt.findDescriptor(
+    descriptorUuid: UUID,
+    characteristicUuid: UUID? = null,
+    serviceUuid: UUID? = null
+): BluetoothGattDescriptor? {
+    when {
+        serviceUuid != null && characteristicUuid != null -> {
+            return services.firstOrNull { it.uuid == serviceUuid }?.getCharacteristic(characteristicUuid)?.getDescriptor(descriptorUuid)
+        }
+        serviceUuid != null -> {
+            services.firstOrNull { it.uuid == serviceUuid }?.characteristics?.forEach {
+                val descriptor = it.getDescriptor(descriptorUuid)
+                if (descriptor != null) {
+                    return descriptor
+                }
+            }
+            return null
+        }
+        characteristicUuid != null -> {
+            services.forEach {
+                val characteristic = it.getCharacteristic(characteristicUuid)
+                if (characteristic != null) {
+                    val descriptor = characteristic.getDescriptor(descriptorUuid)
+                    if (descriptor != null) {
+                        return descriptor
+                    }
+                }
+            }
+            return null
+        }
+        else -> {
+            services.forEach { service ->
+                service.characteristics.forEach { characteristic ->
+                    val descriptor = characteristic.getDescriptor(descriptorUuid)
+                    if (descriptor != null) {
+                        return descriptor
+                    }
+                }
+            }
+            return null
+        }
+    }
+}
+
 fun getConnectionStateString(status: Int) = when (status) {
     0 -> "DISCONNECTED"
     1 -> "CONNECTING"

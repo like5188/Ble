@@ -17,13 +17,12 @@ import com.like.ble.utils.*
 import com.like.livedatarecyclerview.adapter.BaseAdapter
 import com.like.livedatarecyclerview.model.IRecyclerViewItem
 import com.like.livedatarecyclerview.viewholder.CommonViewHolder
+import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
 class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBleManager: IBleManager) : BaseAdapter() {
     private val mLayoutInflater: LayoutInflater by lazy { LayoutInflater.from(mActivity) }
-    private val mWriteDataFragment: WriteDataFragment by lazy {
-        WriteDataFragment()
-    }
+    private val mWriteDataFragment: WriteDataFragment by lazy { WriteDataFragment() }
 
     override fun bindOtherVariable(
         holder: CommonViewHolder,
@@ -60,14 +59,19 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                         }
                     }
                     characteristics.forEach {
-                        addCharacteristic(item, it, binding.llCharacteristics)
+                        addCharacteristic(item.address, item.service.uuid, it, binding.llCharacteristics)
                     }
                 }
             }
         }
     }
 
-    private fun addCharacteristic(item: BleConnectInfo, characteristic: BluetoothGattCharacteristic, llCharacteristics: LinearLayout) {
+    private fun addCharacteristic(
+        address: String,
+        serviceUuid: UUID,
+        characteristic: BluetoothGattCharacteristic,
+        llCharacteristics: LinearLayout
+    ) {
         val binding = DataBindingUtil.inflate<ItemBleConnectCharacteristicBinding>(
             mLayoutInflater,
             R.layout.item_ble_connect_characteristic,
@@ -92,7 +96,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
         } else {
             binding.tvDescriptorsTag.visibility = View.VISIBLE
             descriptors.forEach {
-                addDescriptor(item, it, binding.llDescriptors)
+                addDescriptor(address, serviceUuid, characteristic, it, binding.llDescriptors)
             }
         }
 
@@ -100,9 +104,9 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
             binding.ivRead.visibility = View.VISIBLE
             binding.ivRead.setOnClickListener {
                 mBleManager.sendCommand(ReadCharacteristicCommand(
-                    item.address,
+                    address,
                     characteristic.uuid,
-                    item.service.uuid,
+                    serviceUuid,
                     10000,
                     {
                         mActivity.longToastBottom("读特征成功。数据长度：${it?.size} ${it?.contentToString()}")
@@ -122,9 +126,9 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                             when (data[0]) {
                                 0x1.toByte() -> {
                                     mBleManager.sendCommand(ReadNotifyCommand(
-                                        item.address,
+                                        address,
                                         characteristic.uuid,
-                                        item.service.uuid,
+                                        serviceUuid,
                                         5000,
                                         1024,
                                         {
@@ -140,10 +144,10 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                                 }
                             }
                             mBleManager.sendCommand(WriteCharacteristicCommand(
-                                item.address,
+                                address,
                                 data.batch(20),
                                 characteristic.uuid,
-                                item.service.uuid,
+                                serviceUuid,
                                 5000,
                                 {
                                     mActivity.longToastBottom("写特征成功")
@@ -164,10 +168,10 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
             binding.ivNotify.setOnClickListener {
                 if (isOn.get()) {
                     mBleManager.sendCommand(DisableCharacteristicNotifyCommand(
-                        item.address,
+                        address,
                         characteristic.uuid,
                         createBleUuidBy16Bit("2902"),
-                        item.service.uuid,
+                        serviceUuid,
                         {
                             isOn.set(false)
                             binding.ivNotify.setImageResource(R.drawable.notify_close)
@@ -179,10 +183,10 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                     ))
                 } else {
                     mBleManager.sendCommand(EnableCharacteristicNotifyCommand(
-                        item.address,
+                        address,
                         characteristic.uuid,
                         createBleUuidBy16Bit("2902"),
-                        item.service.uuid,
+                        serviceUuid,
                         {
                             isOn.set(true)
                             binding.ivNotify.setImageResource(R.drawable.notify)
@@ -201,10 +205,10 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
             binding.ivIndicate.setOnClickListener {
                 if (isOn.get()) {
                     mBleManager.sendCommand(DisableCharacteristicIndicateCommand(
-                        item.address,
+                        address,
                         characteristic.uuid,
                         createBleUuidBy16Bit("2902"),
-                        item.service.uuid,
+                        serviceUuid,
                         {
                             isOn.set(false)
                             binding.ivIndicate.setImageResource(R.drawable.indicate_close)
@@ -216,10 +220,10 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                     ))
                 } else {
                     mBleManager.sendCommand(EnableCharacteristicIndicateCommand(
-                        item.address,
+                        address,
                         characteristic.uuid,
                         createBleUuidBy16Bit("2902"),
-                        item.service.uuid,
+                        serviceUuid,
                         {
                             isOn.set(true)
                             binding.ivIndicate.setImageResource(R.drawable.indicate)
@@ -234,7 +238,13 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
         }
     }
 
-    private fun addDescriptor(item: BleConnectInfo, descriptor: BluetoothGattDescriptor, llDescriptors: LinearLayout) {
+    private fun addDescriptor(
+        address: String,
+        serviceUuid: UUID,
+        characteristic: BluetoothGattCharacteristic,
+        descriptor: BluetoothGattDescriptor,
+        llDescriptors: LinearLayout
+    ) {
         val binding = DataBindingUtil.inflate<ItemBleConnectDescriptorsBinding>(
             mLayoutInflater,
             R.layout.item_ble_connect_descriptors,
@@ -247,12 +257,48 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
         binding.tvDescriptorUuid.text = descriptor.uuid.getValidString()
         llDescriptors.addView(binding.root)
 
+        if ("00002902-0000-1000-8000-00805f9b34fb" == descriptor.uuid.toString()) {// 设置通知的描述，只读
+            binding.ivWrite.visibility = View.GONE
+        }
+
         // 无法判断描述的权限，只能同时显示读和写两个操作。设置只读权限的描述，nRF也全部显示的（即显示写入和读取按钮）。
         binding.ivRead.setOnClickListener {
-            mActivity.shortToastBottom("read descriptor")
+            mBleManager.sendCommand(ReadDescriptorCommand(
+                address,
+                descriptor.uuid,
+                characteristic.uuid,
+                serviceUuid,
+                10000,
+                {
+                    mActivity.longToastBottom("读描述成功。数据长度：${it?.size} ${it?.contentToString()}")
+                },
+                {
+                    mActivity.longToastBottom(it.message)
+                }
+            ))
         }
         binding.ivWrite.setOnClickListener {
-            mActivity.shortToastBottom("write descriptor")
+            mWriteDataFragment.arguments = Bundle().apply {
+                putSerializable("callback", object : WriteDataFragment.Callback {
+                    override fun onData(data: ByteArray) {
+                        mBleManager.sendCommand(WriteDescriptorCommand(
+                            address,
+                            data.batch(20),
+                            descriptor.uuid,
+                            characteristic.uuid,
+                            serviceUuid,
+                            5000,
+                            {
+                                mActivity.longToastBottom("写描述成功")
+                            },
+                            {
+                                mActivity.longToastBottom(it.message)
+                            }
+                        ))
+                    }
+                })
+            }
+            mWriteDataFragment.show(mActivity)
         }
     }
 

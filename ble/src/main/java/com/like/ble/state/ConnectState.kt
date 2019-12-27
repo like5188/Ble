@@ -5,10 +5,7 @@ import android.os.Build
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.*
-import com.like.ble.utils.findCharacteristic
-import com.like.ble.utils.getBluetoothAdapter
-import com.like.ble.utils.getValidString
-import com.like.ble.utils.isBleDeviceConnected
+import com.like.ble.utils.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -83,21 +80,37 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
             }
         }
 
-        override fun onDescriptorWrite(gatt: BluetoothGatt?, descriptor: BluetoothGattDescriptor?, status: Int) {
+        override fun onDescriptorRead(gatt: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) {
+            val command = getCommandFromCache<ReadDescriptorCommand>() ?: return
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                command.successAndCompleteIfIncomplete(descriptor.value)
+            } else {
+                command.failureAndCompleteIfIncomplete("读取描述值失败：${descriptor.uuid.getValidString()}")
+            }
+        }
+
+        override fun onDescriptorWrite(gatt: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) {
             val enableCharacteristicNotifyCommand = getCommandFromCache<EnableCharacteristicNotifyCommand>()
             val disableCharacteristicNotifyCommand = getCommandFromCache<DisableCharacteristicNotifyCommand>()
             val enableCharacteristicIndicateCommand = getCommandFromCache<EnableCharacteristicIndicateCommand>()
             val disableCharacteristicIndicateCommand = getCommandFromCache<DisableCharacteristicIndicateCommand>()
+            val writeCharacteristicCommand = getCommandFromCache<WriteCharacteristicCommand>()
+
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 enableCharacteristicNotifyCommand?.successAndCompleteIfIncomplete()
                 disableCharacteristicNotifyCommand?.successAndCompleteIfIncomplete()
                 enableCharacteristicIndicateCommand?.successAndCompleteIfIncomplete()
                 disableCharacteristicIndicateCommand?.successAndCompleteIfIncomplete()
+                if (writeCharacteristicCommand != null && writeCharacteristicCommand.isAllWrite()) {
+                    writeCharacteristicCommand.successAndCompleteIfIncomplete()
+                }
             } else {
-                enableCharacteristicNotifyCommand?.failureAndCompleteIfIncomplete("writeDescriptor fail")
-                disableCharacteristicNotifyCommand?.failureAndCompleteIfIncomplete("writeDescriptor fail")
-                enableCharacteristicIndicateCommand?.failureAndCompleteIfIncomplete("writeDescriptor fail")
-                disableCharacteristicIndicateCommand?.failureAndCompleteIfIncomplete("writeDescriptor fail")
+                val errorMsg = "写描述值失败：${descriptor.uuid.getValidString()}"
+                enableCharacteristicNotifyCommand?.failureAndCompleteIfIncomplete(errorMsg)
+                disableCharacteristicNotifyCommand?.failureAndCompleteIfIncomplete(errorMsg)
+                enableCharacteristicIndicateCommand?.failureAndCompleteIfIncomplete(errorMsg)
+                disableCharacteristicIndicateCommand?.failureAndCompleteIfIncomplete(errorMsg)
+                writeCharacteristicCommand?.failureAndCompleteIfIncomplete(errorMsg)
             }
         }
 
@@ -252,6 +265,82 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
             command.failureAndCompleteIfIncomplete("写特征值超时：${command.characteristicUuid.getValidString()}")
+        })
+    }
+
+    override fun readDescriptor(command: ReadDescriptorCommand) {
+        if (!isConnected()) {
+            command.failureAndCompleteIfIncomplete("设备未连接：${command.address}")
+            return
+        }
+
+        val descriptor = mBluetoothGatt?.findDescriptor(command.descriptorUuid, command.characteristicUuid, command.serviceUuid)
+        if (descriptor == null) {
+            command.failureAndCompleteIfIncomplete("描述值不存在：${command.descriptorUuid.getValidString()}")
+            return
+        }
+
+        // 由于descriptor.permissions永远为0x0000，所以无法判断，但是如果权限不允许，还是会操作失败的。
+//        if (descriptor.permissions and (BluetoothGattDescriptor.PERMISSION_READ or BluetoothGattDescriptor.PERMISSION_READ_ENCRYPTED or BluetoothGattDescriptor.PERMISSION_READ_ENCRYPTED_MITM) == 0) {
+//            command.failureAndCompleteIfIncomplete("this descriptor not support read!")
+//            return
+//        }
+
+        addCommandToCache(command)
+
+        if (mBluetoothGatt?.readDescriptor(descriptor) != true) {
+            command.failureAndCompleteIfIncomplete("读取描述值失败：${command.descriptorUuid.getValidString()}")
+            return
+        }
+
+        command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
+            delay(command.timeout)
+            command.failureAndCompleteIfIncomplete("读取描述值超时：${command.descriptorUuid.getValidString()}")
+        })
+    }
+
+    override fun writeDescriptor(command: WriteDescriptorCommand) {
+        if (!isConnected()) {
+            command.failureAndCompleteIfIncomplete("设备未连接：${command.address}")
+            return
+        }
+
+        val descriptor = mBluetoothGatt?.findDescriptor(command.descriptorUuid, command.characteristicUuid, command.serviceUuid)
+        if (descriptor == null) {
+            command.failureAndCompleteIfIncomplete("描述值不存在：${command.descriptorUuid.getValidString()}")
+            return
+        }
+
+        // 由于descriptor.permissions永远为0x0000，所以无法判断，但是如果权限不允许，还是会操作失败的。
+//        if (descriptor.permissions and
+//            (BluetoothGattDescriptor.PERMISSION_WRITE or
+//                    BluetoothGattDescriptor.PERMISSION_WRITE_ENCRYPTED or
+//                    BluetoothGattDescriptor.PERMISSION_WRITE_ENCRYPTED_MITM or
+//                    BluetoothGattDescriptor.PERMISSION_WRITE_SIGNED or
+//                    BluetoothGattDescriptor.PERMISSION_WRITE_SIGNED_MITM
+//                    ) == 0
+//        ) {
+//            command.failureAndCompleteIfIncomplete("this descriptor not support write!")
+//            return
+//        }
+
+        addCommandToCache(command)
+
+        command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
+            command.data.forEach {
+                descriptor.value = it
+                if (mBluetoothGatt?.writeDescriptor(descriptor) != true) {
+                    command.failureAndCompleteIfIncomplete("写描述值失败：${command.descriptorUuid.getValidString()}")
+                    return@launch
+                }
+                command.waitForNextFlag()
+                delay(10)
+            }
+        })
+
+        command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
+            delay(command.timeout)
+            command.failureAndCompleteIfIncomplete("写描述值超时：${command.descriptorUuid.getValidString()}")
         })
     }
 

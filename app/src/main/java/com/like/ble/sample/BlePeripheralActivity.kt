@@ -40,8 +40,10 @@ class BlePeripheralActivity : AppCompatActivity() {
         private val UUID_CHARACTERISTIC_1: UUID = UUID.fromString("0000ff11-0000-1000-8000-00805f9b34fb")
         private val UUID_CHARACTERISTIC_2: UUID = UUID.fromString("0000ff12-0000-1000-8000-00805f9b34fb")
         private val UUID_CHARACTERISTIC_3: UUID = UUID.fromString("0000ff13-0000-1000-8000-00805f9b34fb")
-        private val UUID_DESCRIPTOR: UUID =
+        private val UUID_DESCRIPTOR_1: UUID =
             UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")// 使能对应《Characteristic》的notification或Indication
+        private val UUID_DESCRIPTOR_2: UUID = UUID.fromString("0000ff21-0000-1000-8000-00805f9b34fb")
+        private val UUID_DESCRIPTOR_3: UUID = UUID.fromString("0000ff22-0000-1000-8000-00805f9b34fb")
     }
 
     private val mBinding: ActivityBlePeripheralBinding by lazy {
@@ -159,7 +161,14 @@ class BlePeripheralActivity : AppCompatActivity() {
             appendText("--> onDescriptorReadRequest", false, R.color.ble_text_blue)
             appendText("device=${device.address} requestId=$requestId offset=$offset descriptor=${descriptor.uuid.getValidString()}", false)
 
-            val response = mResponseData.copyOfRangeByLength(offset, mMtu - 1)
+            val response = when (descriptor.uuid) {
+                UUID_DESCRIPTOR_1 -> {
+                    byteArrayOf(Byte.MAX_VALUE, Byte.MAX_VALUE)
+                }
+                else -> {
+                    mResponseData.copyOfRangeByLength(offset, mMtu - 1)
+                }
+            }
             appendText("sendResponse：size=${response.size} ${response.contentToString()}")
 
             mBluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, response)
@@ -177,7 +186,7 @@ class BlePeripheralActivity : AppCompatActivity() {
             appendText("--> onDescriptorWriteRequest", false, R.color.ble_text_blue)
             appendText("device=${device.address} requestId=$requestId descriptor=${descriptor.uuid.getValidString()} preparedWrite=$preparedWrite responseNeeded=$responseNeeded offset=$offset value=${value.contentToString()}")
             if (responseNeeded) {
-                mBluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, byteArrayOf())
+                mBluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value)
             }
         }
 
@@ -348,8 +357,9 @@ class BlePeripheralActivity : AppCompatActivity() {
                         BluetoothGattCharacteristic.PERMISSION_WRITE
             )
             val descriptor1 = BluetoothGattDescriptor(
-                UUID_DESCRIPTOR,
-                BluetoothGattCharacteristic.PERMISSION_WRITE
+                UUID_DESCRIPTOR_1,
+                BluetoothGattDescriptor.PERMISSION_WRITE or
+                        BluetoothGattDescriptor.PERMISSION_READ
             )
             characteristic1.addDescriptor(descriptor1)
             service1.addCharacteristic(characteristic1)
@@ -359,17 +369,13 @@ class BlePeripheralActivity : AppCompatActivity() {
             val service2 = BluetoothGattService(UUID_SERVICE_2, BluetoothGattService.SERVICE_TYPE_PRIMARY)
             val characteristic2 = BluetoothGattCharacteristic(
                 UUID_CHARACTERISTIC_2,
-                BluetoothGattCharacteristic.PROPERTY_READ or
-                        BluetoothGattCharacteristic.PROPERTY_WRITE or
-                        BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE or
-                        BluetoothGattCharacteristic.PROPERTY_NOTIFY or
-                        BluetoothGattCharacteristic.PROPERTY_INDICATE,
-                BluetoothGattCharacteristic.PERMISSION_READ or
-                        BluetoothGattCharacteristic.PERMISSION_WRITE
+                BluetoothGattCharacteristic.PROPERTY_READ,
+                BluetoothGattCharacteristic.PERMISSION_READ
             )
             val descriptor2 = BluetoothGattDescriptor(
-                UUID_DESCRIPTOR,
-                BluetoothGattCharacteristic.PERMISSION_WRITE
+                UUID_DESCRIPTOR_2,
+                BluetoothGattDescriptor.PERMISSION_WRITE or
+                        BluetoothGattDescriptor.PERMISSION_READ
             )
             characteristic2.addDescriptor(descriptor2)
             service2.addCharacteristic(characteristic2)
@@ -379,17 +385,14 @@ class BlePeripheralActivity : AppCompatActivity() {
             val service3 = BluetoothGattService(UUID_SERVICE_3, BluetoothGattService.SERVICE_TYPE_PRIMARY)
             val characteristic3 = BluetoothGattCharacteristic(
                 UUID_CHARACTERISTIC_3,
-                BluetoothGattCharacteristic.PROPERTY_READ or
-                        BluetoothGattCharacteristic.PROPERTY_WRITE or
-                        BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE or
-                        BluetoothGattCharacteristic.PROPERTY_NOTIFY or
-                        BluetoothGattCharacteristic.PROPERTY_INDICATE,
-                BluetoothGattCharacteristic.PERMISSION_READ or
-                        BluetoothGattCharacteristic.PERMISSION_WRITE
+                BluetoothGattCharacteristic.PROPERTY_WRITE or
+                        BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE,
+                BluetoothGattCharacteristic.PERMISSION_WRITE
             )
             val descriptor3 = BluetoothGattDescriptor(
-                UUID_DESCRIPTOR,
-                BluetoothGattCharacteristic.PERMISSION_WRITE
+                UUID_DESCRIPTOR_3,
+                BluetoothGattDescriptor.PERMISSION_WRITE or
+                        BluetoothGattDescriptor.PERMISSION_READ
             )
             characteristic3.addDescriptor(descriptor3)
             service3.addCharacteristic(characteristic3)
