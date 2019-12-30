@@ -48,6 +48,10 @@ class ReadNotifyCommand(
         }
     }
 
+    fun getData(): ByteArray? {
+        return mDataCache.toByteArrayOrNull()
+    }
+
     fun isWholeFrame() = isWholeFrame(mDataCache)
 
     override suspend fun execute() {
@@ -55,7 +59,10 @@ class ReadNotifyCommand(
     }
 
     override fun doOnSuccess(vararg args: Any?) {
-        onSuccess?.invoke(mDataCache.toByteArrayOrNull())
+        if (args.isNotEmpty()) {
+            val arg0 = args[0]
+            onSuccess?.invoke(arg0 as? ByteArray)
+        }
     }
 
     override fun doOnFailure(throwable: Throwable) {

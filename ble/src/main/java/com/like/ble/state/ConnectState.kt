@@ -74,7 +74,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
             val command = getCommandFromCache<ReadNotifyCommand>() ?: return
             if (command.addDataToCache(characteristic.value)) {
                 if (command.isWholeFrame()) {
-                    command.successAndCompleteIfIncomplete()
+                    command.successAndCompleteIfIncomplete(command.getData())
                 }
             } else {
                 command.failureAndCompleteIfIncomplete("添加数据到缓存失败")
