@@ -5,6 +5,7 @@ import android.os.Build
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.*
+import com.like.ble.command.base.Command
 import com.like.ble.utils.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -173,9 +174,9 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
             mCommands.forEach {
                 val cmd = it.value
                 if (cmd is ConnectCommand) {
-                    cmd.failureAndComplete("蓝牙连接断开了：${cmd.address}")
+                    cmd.failureAndComplete("蓝牙连接断开了")
                 } else {
-                    cmd.failureAndCompleteIfIncomplete("蓝牙连接断开了：${cmd.address}")
+                    cmd.failureAndCompleteIfIncomplete("蓝牙连接断开了")
                 }
             }
             command.successAndCompleteIfIncomplete()
@@ -183,9 +184,9 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
             mCommands.forEach {
                 val cmd = it.value
                 if (cmd is ConnectCommand) {
-                    cmd.failureAndComplete("蓝牙未连接：${cmd.address}")
+                    cmd.failureAndComplete("蓝牙未连接")
                 } else {
-                    cmd.failureAndCompleteIfIncomplete("蓝牙未连接：${cmd.address}")
+                    cmd.failureAndCompleteIfIncomplete("蓝牙未连接")
                 }
             }
             command.failureAndCompleteIfIncomplete("蓝牙未连接")
@@ -547,7 +548,10 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
 
     @Synchronized
     override fun close(command: CloseCommand) {
-        disconnect(DisconnectCommand(command.address))
+        val address = mBluetoothGatt?.device?.address ?: ""
+        if (address.isNotEmpty()) {
+            disconnect(DisconnectCommand(address))
+        }
         mCommands.clear()
         command.successAndCompleteIfIncomplete()
     }

@@ -1,47 +1,23 @@
-package com.like.ble.command
+package com.like.ble.command.base
 
-import android.os.Handler
-import android.os.Looper
 import androidx.annotation.MainThread
 import com.like.ble.state.State
+import com.like.ble.utils.mainThread
 import kotlinx.coroutines.Job
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * 蓝牙命令基类
  *
- * @param des   命令功能描述
+ * @param des       命令功能描述
+ * @param timeout   命令执行超时时间（毫秒）。默认0L，表示没有超时时间。
  */
-abstract class Command(val des: String, val address: String = "") {
-    companion object {
-        // 命令分组，用于过滤判断条件等
-        /**
-         * 关闭命令
-         */
-        internal const val GROUP_CLOSE = 1 shl 0
-        /**
-         * 与外围设备相关的命令
-         */
-        internal const val GROUP_PERIPHERAL = 1 shl 1
-        /**
-         * 与外围设备广播相关的命令
-         */
-        internal const val GROUP_PERIPHERAL_ADVERTISING = 1 shl 2
-        /**
-         * 与中心设备相关的命令
-         */
-        internal const val GROUP_CENTRAL = 1 shl 3
-        /**
-         * 与中心设备扫描相关的命令
-         */
-        internal const val GROUP_CENTRAL_SCAN = 1 shl 4
-        /**
-         * 与具体中心设备相关的命令。即含有address字段的命令。
-         */
-        internal const val GROUP_CENTRAL_DEVICE = 1 shl 5
+abstract class Command(private val des: String, val timeout: Long = 0L) {
+    init {
+        if (timeout < 0L) {
+            failureAndCompleteIfIncomplete("timeout must be greater than or equal to 0")
+        }
     }
-
-    private val handler = Handler(Looper.getMainLooper())
 
     /**
      * 命令实际执行者
@@ -91,10 +67,10 @@ abstract class Command(val des: String, val address: String = "") {
 
     /**
      * 在命令完成后也可以继续触发 [doOnSuccess] 回调。
-     * 用于长连接的命令，比如[StartAdvertisingCommand]、[StartScanCommand]、[ConnectCommand]。
+     * 用于长连接的命令，比如[com.like.ble.command.StartAdvertisingCommand]、[com.like.ble.command.StartScanCommand]、[com.like.ble.command.ConnectCommand]。
      */
     internal fun successAndComplete(vararg args: Any?) {
-        runOnUiThread {
+        mainThread {
             doOnSuccess(*args)
         }
         complete()
@@ -102,10 +78,10 @@ abstract class Command(val des: String, val address: String = "") {
 
     /**
      * 在命令完成后也可以继续触发 [doOnFailure] 回调。
-     * 用于长连接的命令，比如[StartAdvertisingCommand]、[StartScanCommand]、[ConnectCommand]。
+     * 用于长连接的命令，比如[com.like.ble.command.StartAdvertisingCommand]、[com.like.ble.command.StartScanCommand]、[com.like.ble.command.ConnectCommand]。
      */
     internal fun failureAndComplete(errorMsg: String) {
-        runOnUiThread {
+        mainThread {
             doOnFailure(Throwable(errorMsg))
         }
         complete()
@@ -130,25 +106,8 @@ abstract class Command(val des: String, val address: String = "") {
      */
     internal abstract suspend fun execute()
 
-    /**
-     * @return 命令所属分组[GROUP_CLOSE]、[GROUP_PERIPHERAL]、[GROUP_PERIPHERAL_ADVERTISING]、[GROUP_CENTRAL]、[GROUP_CENTRAL_SCAN]、[GROUP_CENTRAL_DEVICE]
-     */
-    protected abstract fun getGroups(): Int
-
-    /**
-     * @param group  需要判断的分组值
-     * @return 是否存在
-     */
-    fun hasGroup(group: Int): Boolean {
-        return getGroups() and group != 0
-    }
-
     override fun toString(): String {
-        return "Command(des='$des', address='$address', mIsCompleted='${mIsCompleted.get()}')"
-    }
-
-    private fun runOnUiThread(f: () -> Unit) {
-        if (Looper.getMainLooper() === Looper.myLooper()) f() else handler.post { f() }
+        return "Command(des='$des', mIsCompleted='${isCompleted()}')"
     }
 
 }

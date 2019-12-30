@@ -1,29 +1,25 @@
 package com.like.ble.command
 
-import android.bluetooth.BluetoothAdapter
+import com.like.ble.command.base.AddressCommand
 
 /**
  * requestMtu命令
  *
- * @param address           蓝牙设备地址
  * @param mtu               需要设置的MTU值
- * @param timeout           命令执行超时时间（毫秒）
  * @param onSuccess         命令执行成功回调
  * @param onFailure         命令执行失败回调
  */
 class RequestMtuCommand(
     address: String,
     val mtu: Int,
-    val timeout: Long = 3000L,
+    timeout: Long = 3000L,
     private val onSuccess: ((Int) -> Unit)? = null,
     private val onFailure: ((Throwable) -> Unit)? = null
-) : Command("requestMtu命令", address) {
+) : AddressCommand("requestMtu命令", timeout, address) {
 
     init {
-        when {
-            !BluetoothAdapter.checkBluetoothAddress(address) -> failureAndCompleteIfIncomplete("地址无效：$address")
-            mtu < 23 || mtu > 517 -> failureAndCompleteIfIncomplete("mtu 的范围是 [23，517]")
-            timeout <= 0L -> failureAndCompleteIfIncomplete("timeout 必须大于 0")
+        if (mtu < 23 || mtu > 517) {
+            failureAndCompleteIfIncomplete("the range of mtu is [23，517]")
         }
     }
 
@@ -44,20 +40,18 @@ class RequestMtuCommand(
         onFailure?.invoke(throwable)
     }
 
-    override fun getGroups(): Int = GROUP_CENTRAL or GROUP_CENTRAL_DEVICE
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is RequestMtuCommand) return false
+        if (!super.equals(other)) return false
 
-        if (address != other.address) return false
         if (mtu != other.mtu) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        var result = address.hashCode()
+        var result = super.hashCode()
         result = 31 * result + mtu
         return result
     }

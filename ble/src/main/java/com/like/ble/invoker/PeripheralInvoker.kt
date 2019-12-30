@@ -2,7 +2,7 @@ package com.like.ble.invoker
 
 import android.util.Log
 import androidx.fragment.app.FragmentActivity
-import com.like.ble.command.Command
+import com.like.ble.command.base.Command
 import kotlinx.coroutines.delay
 
 /**
@@ -18,7 +18,7 @@ class PeripheralInvoker(activity: FragmentActivity) : Invoker(activity) {
     override suspend fun execute(command: Command) {
         val curCommand = mCurCommand
         // 判断需要抛弃
-        if (curCommand != null && !curCommand.isCompleted() && curCommand::class.java == command::class.java) {
+        if (curCommand != null && !curCommand.isCompleted() && curCommand::class.java == command::class.java && curCommand == command) {
             Log.w(TAG, "命令正在执行，直接抛弃：$command")
             return
         }

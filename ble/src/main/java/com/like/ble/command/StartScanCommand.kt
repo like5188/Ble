@@ -1,6 +1,7 @@
 package com.like.ble.command
 
 import android.bluetooth.BluetoothDevice
+import com.like.ble.command.base.Command
 import java.util.*
 
 /**
@@ -42,7 +43,5 @@ class StartScanCommand(
     override fun doOnFailure(throwable: Throwable) {
         onFailure?.invoke(throwable)
     }
-
-    override fun getGroups(): Int = GROUP_CENTRAL or GROUP_CENTRAL_SCAN
 
 }

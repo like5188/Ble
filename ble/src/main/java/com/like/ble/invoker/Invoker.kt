@@ -5,7 +5,7 @@ import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import androidx.fragment.app.FragmentActivity
-import com.like.ble.command.Command
+import com.like.ble.command.base.Command
 import com.like.ble.utils.PermissionUtils
 import com.like.ble.utils.bindToLifecycleOwner
 import com.like.ble.utils.callback.RxCallback

@@ -1,11 +1,10 @@
 package com.like.ble
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
-import com.like.ble.command.Command
+import com.like.ble.command.base.Command
 import com.like.ble.executor.IExecutor
 import com.like.ble.executor.PeripheralExecutor
 import kotlinx.coroutines.launch
@@ -20,12 +19,8 @@ class PeripheralManager(private val mActivity: FragmentActivity) : IBleManager {
     private val mExecutor: IExecutor by lazy { PeripheralExecutor(mActivity) }
 
     override fun sendCommand(command: Command) {
-        if (command.hasGroup(Command.GROUP_PERIPHERAL) || command.hasGroup(Command.GROUP_CLOSE)) {
-            mActivity.lifecycleScope.launch {
-                mExecutor.execute(command)
-            }
-        } else {
-            Log.e("CentralManager", "蓝牙外围设备不支持该命令：$command")
+        mActivity.lifecycleScope.launch {
+            mExecutor.execute(command)
         }
     }
 

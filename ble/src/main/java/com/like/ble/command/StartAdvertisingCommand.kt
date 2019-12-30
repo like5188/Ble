@@ -2,6 +2,7 @@ package com.like.ble.command
 
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
+import com.like.ble.command.base.Command
 
 /**
  * 开始广播命令
@@ -33,7 +34,5 @@ class StartAdvertisingCommand(
     override fun doOnFailure(throwable: Throwable) {
         onFailure?.invoke(throwable)
     }
-
-    override fun getGroups(): Int = GROUP_PERIPHERAL or GROUP_PERIPHERAL_ADVERTISING
 
 }

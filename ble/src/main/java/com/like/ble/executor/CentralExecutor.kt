@@ -1,8 +1,9 @@
 package com.like.ble.executor
 
 import androidx.fragment.app.FragmentActivity
-import com.like.ble.command.CloseCommand
-import com.like.ble.command.Command
+import com.like.ble.command.*
+import com.like.ble.command.base.AddressCommand
+import com.like.ble.command.base.Command
 import com.like.ble.invoker.CentralInvoker
 import com.like.ble.invoker.Invoker
 import com.like.ble.state.ConnectState
@@ -30,20 +31,17 @@ class CentralExecutor(private val mActivity: FragmentActivity) : IExecutor {
     }
 
     private fun getStateByCommand(command: Command): State? {
-        return when {
-            command.hasGroup(Command.GROUP_CENTRAL_SCAN) -> {
+        return when (command) {
+            is StartScanCommand, is StopScanCommand -> {
                 mScanState
             }
-            command.hasGroup(Command.GROUP_CENTRAL_DEVICE) -> {
+            is AddressCommand -> {
                 if (!mConnectStateMap.containsKey(command.address)) {
                     mConnectStateMap[command.address] = ConnectState(mActivity)
                 }
                 mConnectStateMap[command.address]
             }
-            command.hasGroup(Command.GROUP_CLOSE) -> {
-                mCurState
-            }
-            else -> null
+            else -> mCurState
         }
     }
 

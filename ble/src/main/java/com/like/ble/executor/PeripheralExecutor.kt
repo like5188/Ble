@@ -4,7 +4,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.FragmentActivity
 import com.like.ble.command.CloseCommand
-import com.like.ble.command.Command
+import com.like.ble.command.base.Command
 import com.like.ble.invoker.Invoker
 import com.like.ble.invoker.PeripheralInvoker
 import com.like.ble.state.AdvertisingState
