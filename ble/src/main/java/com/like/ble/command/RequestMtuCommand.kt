@@ -6,16 +6,13 @@ import com.like.ble.command.base.AddressCommand
  * requestMtu命令
  *
  * @param mtu               需要设置的MTU值
- * @param onSuccess         命令执行成功回调
- * @param onFailure         命令执行失败回调
  */
 class RequestMtuCommand(
     address: String,
     val mtu: Int,
     timeout: Long = 3000L,
-    private val onSuccess: ((Int) -> Unit)? = null,
-    private val onFailure: ((Throwable) -> Unit)? = null
-) : AddressCommand("requestMtu命令", timeout, address) {
+    callback: Callback? = null
+) : AddressCommand("requestMtu命令", timeout, callback, address) {
 
     init {
         if (mtu < 23 || mtu > 517) {
@@ -25,19 +22,6 @@ class RequestMtuCommand(
 
     override suspend fun execute() {
         mReceiver?.setMtu(this)
-    }
-
-    override fun doOnSuccess(vararg args: Any?) {
-        if (args.isNotEmpty()) {
-            val arg0 = args[0]
-            if (arg0 is Int) {
-                onSuccess?.invoke(arg0)
-            }
-        }
-    }
-
-    override fun doOnFailure(throwable: Throwable) {
-        onFailure?.invoke(throwable)
     }
 
     override fun equals(other: Any?): Boolean {

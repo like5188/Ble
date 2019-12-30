@@ -42,7 +42,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
         // 发现蓝牙服务
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             if (status == BluetoothGatt.GATT_SUCCESS) {// 发现了蓝牙服务后，才算真正的连接成功。
-                getCommandFromCache<ConnectCommand>()?.successAndComplete(gatt.services)
+                getCommandFromCache<ConnectCommand>()?.resultAndComplete(gatt.services)
             } else {
                 disconnect(DisconnectCommand(gatt.device.address))
             }
@@ -52,7 +52,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
         override fun onCharacteristicRead(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
             val command = getCommandFromCache<ReadCharacteristicCommand>() ?: return
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                command.successAndCompleteIfIncomplete(characteristic.value)
+                command.resultAndCompleteIfIncomplete(characteristic.value)
             } else {
                 command.failureAndCompleteIfIncomplete("读取特征值失败：${characteristic.uuid.getValidString()}")
             }
@@ -63,7 +63,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
             val command = getCommandFromCache<WriteCharacteristicCommand>() ?: return
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 if (command.isAllWrite()) {
-                    command.successAndCompleteIfIncomplete()
+                    command.complete()
                 }
             } else {
                 command.failureAndCompleteIfIncomplete("写特征值失败：${characteristic.uuid.getValidString()}")
@@ -74,7 +74,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
             val command = getCommandFromCache<ReadNotifyCommand>() ?: return
             if (command.addDataToCache(characteristic.value)) {
                 if (command.isWholeFrame()) {
-                    command.successAndCompleteIfIncomplete(command.getData())
+                    command.resultAndCompleteIfIncomplete(command.getData())
                 }
             } else {
                 command.failureAndCompleteIfIncomplete("添加数据到缓存失败")
@@ -84,7 +84,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
         override fun onDescriptorRead(gatt: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) {
             val command = getCommandFromCache<ReadDescriptorCommand>() ?: return
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                command.successAndCompleteIfIncomplete(descriptor.value)
+                command.resultAndCompleteIfIncomplete(descriptor.value)
             } else {
                 command.failureAndCompleteIfIncomplete("读取描述值失败：${descriptor.uuid.getValidString()}")
             }
@@ -98,12 +98,12 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
             val writeDescriptorCommand = getCommandFromCache<WriteDescriptorCommand>()
 
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                enableCharacteristicNotifyCommand?.successAndCompleteIfIncomplete()
-                disableCharacteristicNotifyCommand?.successAndCompleteIfIncomplete()
-                enableCharacteristicIndicateCommand?.successAndCompleteIfIncomplete()
-                disableCharacteristicIndicateCommand?.successAndCompleteIfIncomplete()
+                enableCharacteristicNotifyCommand?.complete()
+                disableCharacteristicNotifyCommand?.complete()
+                enableCharacteristicIndicateCommand?.complete()
+                disableCharacteristicIndicateCommand?.complete()
                 if (writeDescriptorCommand != null && writeDescriptorCommand.isAllWrite()) {
-                    writeDescriptorCommand.successAndCompleteIfIncomplete()
+                    writeDescriptorCommand.complete()
                 }
             } else {
                 val errorMsg = "写描述值失败：${descriptor.uuid.getValidString()}"
@@ -118,7 +118,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
         override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
             val command = getCommandFromCache<RequestMtuCommand>() ?: return
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                command.successAndCompleteIfIncomplete(mtu)
+                command.resultAndCompleteIfIncomplete(mtu)
             } else {
                 command.failureAndCompleteIfIncomplete("failed to set mtu")
             }
@@ -127,7 +127,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
         override fun onReadRemoteRssi(gatt: BluetoothGatt?, rssi: Int, status: Int) {
             val command = getCommandFromCache<ReadRemoteRssiCommand>() ?: return
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                command.successAndCompleteIfIncomplete(rssi)
+                command.resultAndCompleteIfIncomplete(rssi)
             } else {
                 command.failureAndCompleteIfIncomplete("failed to read remote rssi")
             }
@@ -179,7 +179,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
                     cmd.failureAndCompleteIfIncomplete("蓝牙连接断开了")
                 }
             }
-            command.successAndCompleteIfIncomplete()
+            command.complete()
         } else {
             mCommands.forEach {
                 val cmd = it.value
@@ -430,7 +430,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
         if (mBluetoothGatt?.requestConnectionPriority(command.connectionPriority) != true) {
             command.failureAndCompleteIfIncomplete("requestConnectionPriority失败：${command.address}")
         } else {
-            command.successAndCompleteIfIncomplete(command.connectionPriority)
+            command.resultAndCompleteIfIncomplete(command.connectionPriority)
         }
     }
 
@@ -553,7 +553,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
             disconnect(DisconnectCommand(address))
         }
         mCommands.clear()
-        command.successAndCompleteIfIncomplete()
+        command.complete()
     }
 
     private fun isConnected(): Boolean {

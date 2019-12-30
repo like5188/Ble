@@ -1,5 +1,6 @@
 package com.like.ble.sample
 
+import android.bluetooth.BluetoothDevice
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -10,6 +11,7 @@ import com.like.ble.CentralManager
 import com.like.ble.IBleManager
 import com.like.ble.command.StartScanCommand
 import com.like.ble.command.StopScanCommand
+import com.like.ble.command.base.Command
 import com.like.ble.sample.databinding.ActivityBleCentralBinding
 import com.like.livedatarecyclerview.layoutmanager.WrapLinearLayoutManager
 
@@ -38,26 +40,31 @@ class BleCentralActivity : AppCompatActivity() {
         mBinding.tvScanStatus.text = "扫描已开启"
         mAdapter.mAdapterDataManager.clear()
         mBleManager.sendCommand(
-            StartScanCommand(
-                "",
-                true,
-                "",
-                null,
-                { device, rssi, scanRecord ->
-                    val address = device.address ?: ""
-                    val name = device.name ?: "N/A"
-                    val item: BleScanInfo? =
-                        mAdapter.mAdapterDataManager.getAll().firstOrNull { (it as? BleScanInfo)?.address == address } as? BleScanInfo
-                    if (item == null) {// 防止重复添加
-                        mAdapter.mAdapterDataManager.addItemToEnd(BleScanInfo(name, address, ObservableInt(rssi), scanRecord))
-                    } else {
-                        item.updateRssi(rssi)
+            StartScanCommand(callback = object : Command.Callback() {
+                override fun onResult(vararg args: Any?) {
+                    if (args.size >= 3) {
+                        val device = args[0]
+                        val rssi = args[1]
+                        val scanRecord = args[2]
+                        if (device is BluetoothDevice && rssi is Int && scanRecord is ByteArray?) {
+                            val address = device.address ?: ""
+                            val name = device.name ?: "N/A"
+                            val item: BleScanInfo? =
+                                mAdapter.mAdapterDataManager.getAll().firstOrNull { (it as? BleScanInfo)?.address == address } as? BleScanInfo
+                            if (item == null) {// 防止重复添加
+                                mAdapter.mAdapterDataManager.addItemToEnd(BleScanInfo(name, address, ObservableInt(rssi), scanRecord))
+                            } else {
+                                item.updateRssi(rssi)
+                            }
+                        }
                     }
-                },
-                {
-                    mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
-                    mBinding.tvScanStatus.text = it.message ?: "扫描停止了"
-                })
+                }
+
+                override fun onFailure(t: Throwable) {
+                    mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(this@BleCentralActivity, R.color.ble_text_red))
+                    mBinding.tvScanStatus.text = t.message ?: "扫描停止了"
+                }
+            })
         )
     }
 

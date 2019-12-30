@@ -82,7 +82,7 @@ class ScanState(private val mActivity: FragmentActivity) : State() {
         if (startScanCommand.filterDeviceAddress.isNotEmpty() && device.address != startScanCommand.filterDeviceAddress) {
             return
         }
-        startScanCommand.successAndComplete(device, rssi, scanRecord)
+        startScanCommand.resultAndComplete(device, rssi, scanRecord)
     }
 
     @Synchronized
@@ -139,7 +139,7 @@ class ScanState(private val mActivity: FragmentActivity) : State() {
                 mActivity.getBluetoothAdapter()?.stopLeScan(mLeScanCallback)
             }
             mStartScanCommand?.failureAndComplete("扫描停止了")
-            command.successAndCompleteIfIncomplete()
+            command.complete()
         } else {
             mStartScanCommand?.failureAndComplete("扫描未开启")
             command.failureAndCompleteIfIncomplete("扫描未开启")
@@ -151,7 +151,7 @@ class ScanState(private val mActivity: FragmentActivity) : State() {
         stopScan(StopScanCommand())
         mStartScanCommand = null
         mBleBroadcastReceiverHelper.unregister()
-        command.successAndCompleteIfIncomplete()
+        command.complete()
     }
 
 }

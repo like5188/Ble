@@ -19,6 +19,7 @@ import com.like.ble.IBleManager
 import com.like.ble.PeripheralManager
 import com.like.ble.command.StartAdvertisingCommand
 import com.like.ble.command.StopAdvertisingCommand
+import com.like.ble.command.base.Command
 import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
 import com.like.ble.utils.*
 import kotlinx.coroutines.delay
@@ -230,21 +231,24 @@ class BlePeripheralActivity : AppCompatActivity() {
                 createAdvertiseData(),
                 createScanResponseAdvertiseData(byteArrayOf(0x34, 0x56)),// 外设必须广播广播包，扫描包是可选。但添加扫描包也意味着广播更多得数据，即可广播62个字节。
                 "BLE测试设备",
-                {
-                    mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_blue))
-                    mBinding.tvAdvertisingStatus.text = "广播已开启"
-                    initServices()//该方法是添加一个服务，在此处调用即将服务广播出去
-                },
-                {
-                    mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
-                    mBinding.tvAdvertisingStatus.text = it.message ?: "广播停止了"
-                    if (!isBluetoothEnable()) {// 说明关闭了蓝牙
-                        getBluetoothManager()?.getConnectedDevices(BluetoothProfile.GATT)?.forEach { device ->
-                            mBluetoothGattServer?.cancelConnection(device)
+                object : Command.Callback() {
+                    override fun onCompleted() {
+                        mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_blue))
+                        mBinding.tvAdvertisingStatus.text = "广播已开启"
+                        initServices()//该方法是添加一个服务，在此处调用即将服务广播出去
+                    }
+
+                    override fun onFailure(t: Throwable) {
+                        mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_red))
+                        mBinding.tvAdvertisingStatus.text = t.message ?: "广播停止了"
+                        if (!isBluetoothEnable()) {// 说明关闭了蓝牙
+                            getBluetoothManager()?.getConnectedDevices(BluetoothProfile.GATT)?.forEach { device ->
+                                mBluetoothGattServer?.cancelConnection(device)
+                            }
+                            mBluetoothGattServer?.clearServices()
+                            mBluetoothGattServer?.close()
+                            mBluetoothGattServer = null
                         }
-                        mBluetoothGattServer?.clearServices()
-                        mBluetoothGattServer?.close()
-                        mBluetoothGattServer = null
                     }
                 }
             )

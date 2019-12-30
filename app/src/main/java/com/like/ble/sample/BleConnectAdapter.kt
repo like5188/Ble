@@ -10,6 +10,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.FragmentActivity
 import com.like.ble.IBleManager
 import com.like.ble.command.*
+import com.like.ble.command.base.Command
 import com.like.ble.sample.databinding.ItemBleConnectBinding
 import com.like.ble.sample.databinding.ItemBleConnectCharacteristicBinding
 import com.like.ble.sample.databinding.ItemBleConnectDescriptorsBinding
@@ -108,11 +109,19 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                     characteristic.uuid,
                     serviceUuid,
                     10000,
-                    {
-                        mActivity.longToastBottom("读特征成功。数据长度：${it?.size} ${it?.contentToString()}")
-                    },
-                    {
-                        mActivity.longToastBottom(it.message)
+                    object : Command.Callback() {
+                        override fun onResult(vararg args: Any?) {
+                            if (args.isNotEmpty()) {
+                                val arg0 = args[0]
+                                if (arg0 is ByteArray?) {
+                                    mActivity.longToastBottom("读特征成功。数据长度：${arg0?.size} ${arg0?.contentToString()}")
+                                }
+                            }
+                        }
+
+                        override fun onFailure(t: Throwable) {
+                            mActivity.longToastBottom(t.message)
+                        }
                     }
                 ))
             }
@@ -134,11 +143,18 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                                         {
                                             it.get(it.position() - 1) == Byte.MAX_VALUE
                                         },
-                                        {
-                                            mActivity.longToastBottom("读取通知传来的数据成功。数据长度：${it?.size} ${it?.contentToString()}")
-                                        },
-                                        {
-                                            mActivity.longToastBottom(it.message)
+                                        object : Command.Callback() {
+                                            override fun onResult(vararg args: Any?) {
+                                                if (args.isNotEmpty()) {
+                                                    val arg0 = args[0] as? ByteArray
+                                                    mActivity.longToastBottom("读取通知传来的数据成功。数据长度：${arg0?.size} ${arg0?.contentToString()}")
+                                                }
+                                            }
+
+                                            override fun onFailure(t: Throwable) {
+                                                mActivity.longToastBottom(t.message)
+                                            }
+
                                         }
                                     ))
                                 }
@@ -149,11 +165,15 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                                 characteristic.uuid,
                                 serviceUuid,
                                 5000,
-                                {
-                                    mActivity.longToastBottom("写特征成功")
-                                },
-                                {
-                                    mActivity.longToastBottom(it.message)
+                                object : Command.Callback() {
+                                    override fun onCompleted() {
+                                        mActivity.longToastBottom("写特征成功")
+                                    }
+
+                                    override fun onFailure(t: Throwable) {
+                                        mActivity.longToastBottom(t.message)
+                                    }
+
                                 }
                             ))
                         }
@@ -172,13 +192,17 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                         characteristic.uuid,
                         createBleUuidBy16Bit("2902"),
                         serviceUuid,
-                        {
-                            isOn.set(false)
-                            binding.ivNotify.setImageResource(R.drawable.notify_close)
-                        },
-                        {
-                            isOn.set(true)
-                            binding.ivNotify.setImageResource(R.drawable.notify)
+                        object : Command.Callback() {
+                            override fun onCompleted() {
+                                isOn.set(false)
+                                binding.ivNotify.setImageResource(R.drawable.notify_close)
+                            }
+
+                            override fun onFailure(t: Throwable) {
+                                isOn.set(true)
+                                binding.ivNotify.setImageResource(R.drawable.notify)
+                            }
+
                         }
                     ))
                 } else {
@@ -187,13 +211,17 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                         characteristic.uuid,
                         createBleUuidBy16Bit("2902"),
                         serviceUuid,
-                        {
-                            isOn.set(true)
-                            binding.ivNotify.setImageResource(R.drawable.notify)
-                        },
-                        {
-                            isOn.set(false)
-                            binding.ivNotify.setImageResource(R.drawable.notify_close)
+                        object : Command.Callback() {
+                            override fun onCompleted() {
+                                isOn.set(true)
+                                binding.ivNotify.setImageResource(R.drawable.notify)
+                            }
+
+                            override fun onFailure(t: Throwable) {
+                                isOn.set(false)
+                                binding.ivNotify.setImageResource(R.drawable.notify_close)
+                            }
+
                         }
                     ))
                 }
@@ -209,13 +237,17 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                         characteristic.uuid,
                         createBleUuidBy16Bit("2902"),
                         serviceUuid,
-                        {
-                            isOn.set(false)
-                            binding.ivIndicate.setImageResource(R.drawable.indicate_close)
-                        },
-                        {
-                            isOn.set(true)
-                            binding.ivIndicate.setImageResource(R.drawable.indicate)
+                        object : Command.Callback() {
+                            override fun onCompleted() {
+                                isOn.set(false)
+                                binding.ivIndicate.setImageResource(R.drawable.indicate_close)
+                            }
+
+                            override fun onFailure(t: Throwable) {
+                                isOn.set(true)
+                                binding.ivIndicate.setImageResource(R.drawable.indicate)
+                            }
+
                         }
                     ))
                 } else {
@@ -224,13 +256,17 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                         characteristic.uuid,
                         createBleUuidBy16Bit("2902"),
                         serviceUuid,
-                        {
-                            isOn.set(true)
-                            binding.ivIndicate.setImageResource(R.drawable.indicate)
-                        },
-                        {
-                            isOn.set(false)
-                            binding.ivIndicate.setImageResource(R.drawable.indicate_close)
+                        object : Command.Callback() {
+                            override fun onCompleted() {
+                                isOn.set(true)
+                                binding.ivIndicate.setImageResource(R.drawable.indicate)
+                            }
+
+                            override fun onFailure(t: Throwable) {
+                                isOn.set(false)
+                                binding.ivIndicate.setImageResource(R.drawable.indicate_close)
+                            }
+
                         }
                     ))
                 }
@@ -269,11 +305,20 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                 characteristic.uuid,
                 serviceUuid,
                 10000,
-                {
-                    mActivity.longToastBottom("读描述成功。数据长度：${it?.size} ${it?.contentToString()}")
-                },
-                {
-                    mActivity.longToastBottom(it.message)
+                object : Command.Callback() {
+                    override fun onResult(vararg args: Any?) {
+                        if (args.isNotEmpty()) {
+                            val arg0 = args[0]
+                            if (arg0 is ByteArray?) {
+                                mActivity.longToastBottom("读描述成功。数据长度：${arg0?.size} ${arg0?.contentToString()}")
+                            }
+                        }
+                    }
+
+                    override fun onFailure(t: Throwable) {
+                        mActivity.longToastBottom(t.message)
+                    }
+
                 }
             ))
         }
@@ -288,11 +333,15 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                             characteristic.uuid,
                             serviceUuid,
                             5000,
-                            {
-                                mActivity.longToastBottom("写描述成功")
-                            },
-                            {
-                                mActivity.longToastBottom(it.message)
+                            object : Command.Callback() {
+                                override fun onCompleted() {
+                                    mActivity.longToastBottom("写描述成功")
+                                }
+
+                                override fun onFailure(t: Throwable) {
+                                    mActivity.longToastBottom(t.message)
+                                }
+
                             }
                         ))
                     }

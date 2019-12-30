@@ -1,5 +1,6 @@
 package com.like.ble.sample
 
+import android.bluetooth.BluetoothGattService
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -9,6 +10,7 @@ import androidx.databinding.DataBindingUtil
 import com.like.ble.CentralManager
 import com.like.ble.IBleManager
 import com.like.ble.command.*
+import com.like.ble.command.base.Command
 import com.like.ble.sample.databinding.ActivityBleConnectBinding
 import com.like.livedatarecyclerview.layoutmanager.WrapLinearLayoutManager
 
@@ -35,25 +37,31 @@ class BleConnectActivity : AppCompatActivity() {
             ConnectCommand(
                 mData.address,
                 10000L,
-                {
-                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_blue))
-                    mBinding.tvConnectStatus.text = "连接成功"
-                    if (it.isNotEmpty()) {
-                        val bleGattServiceInfos = it.map { bluetoothGattService ->
-                            BleConnectInfo(mData.address, bluetoothGattService)
+                object : Command.Callback() {
+                    override fun onResult(vararg args: Any?) {
+                        if (args.isNotEmpty()) {
+                            val bluetoothGattServiceList = args[0] as List<BluetoothGattService>
+                            mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this@BleConnectActivity, R.color.ble_text_blue))
+                            mBinding.tvConnectStatus.text = "连接成功"
+                            if (bluetoothGattServiceList.isNotEmpty()) {
+                                val bleGattServiceInfos = bluetoothGattServiceList.map { bluetoothGattService ->
+                                    BleConnectInfo(mData.address, bluetoothGattService)
+                                }
+                                mAdapter.mAdapterDataManager.addItemsToEnd(bleGattServiceInfos)
+                            } else {
+                                mAdapter.mAdapterDataManager.clear()
+                            }
                         }
-                        mAdapter.mAdapterDataManager.addItemsToEnd(bleGattServiceInfos)
-                    } else {
-                        mAdapter.mAdapterDataManager.clear()
                     }
-                },
-                {
-                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
-                    mBinding.tvConnectStatus.text = it.message
-                    mAdapter.mAdapterDataManager.clear()
-                    mBinding.etRequestMtu.setText("")
-                    mBinding.etReadRemoteRssi.setText("")
-                    mBinding.etRequestConnectionPriority.setText("")
+
+                    override fun onFailure(t: Throwable) {
+                        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this@BleConnectActivity, R.color.ble_text_red))
+                        mBinding.tvConnectStatus.text = t.message
+                        mAdapter.mAdapterDataManager.clear()
+                        mBinding.etRequestMtu.setText("")
+                        mBinding.etReadRemoteRssi.setText("")
+                        mBinding.etRequestConnectionPriority.setText("")
+                    }
                 })
         )
     }
@@ -72,11 +80,19 @@ class BleConnectActivity : AppCompatActivity() {
             mData.address,
             mtu,
             3000,
-            {
-                shortToastBottom("设置成功")
-            },
-            {
-                shortToastBottom(it.message)
+            object : Command.Callback() {
+                override fun onResult(vararg args: Any?) {
+                    if (args.isNotEmpty()) {
+                        val mtu1 = args[0]
+                        if (mtu1 is Int) {
+                            shortToastBottom("设置成功")
+                        }
+                    }
+                }
+
+                override fun onFailure(t: Throwable) {
+                    shortToastBottom(t.message)
+                }
             }
         ))
     }
@@ -85,11 +101,19 @@ class BleConnectActivity : AppCompatActivity() {
         mBleManager.sendCommand(ReadRemoteRssiCommand(
             mData.address,
             3000,
-            {
-                mBinding.etReadRemoteRssi.setText(it.toString())
-            },
-            {
-                shortToastBottom(it.message)
+            object : Command.Callback() {
+                override fun onResult(vararg args: Any?) {
+                    if (args.isNotEmpty()) {
+                        val rssi = args[0]
+                        if (rssi is Int) {
+                            mBinding.etReadRemoteRssi.setText(rssi.toString())
+                        }
+                    }
+                }
+
+                override fun onFailure(t: Throwable) {
+                    shortToastBottom(t.message)
+                }
             }
         ))
     }
@@ -104,11 +128,19 @@ class BleConnectActivity : AppCompatActivity() {
             mBleManager.sendCommand(RequestConnectionPriorityCommand(
                 mData.address,
                 connectionPriority,
-                {
-                    shortToastBottom("设置成功")
-                },
-                {
-                    shortToastBottom(it.message)
+                object : Command.Callback() {
+                    override fun onResult(vararg args: Any?) {
+                        if (args.isNotEmpty()) {
+                            val connectionPriority1 = args[0]
+                            if (connectionPriority1 is Int) {
+                                shortToastBottom("设置成功")
+                            }
+                        }
+                    }
+
+                    override fun onFailure(t: Throwable) {
+                        shortToastBottom(t.message)
+                    }
                 }
             ))
         }

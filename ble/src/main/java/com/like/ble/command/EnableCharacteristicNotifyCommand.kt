@@ -9,28 +9,17 @@ import java.util.*
  * @param characteristicUuid            特征UUID
  * @param descriptorUuid                描述UUID，属于[characteristicUuid]
  * @param serviceUuid                   服务UUID，如果不为null，则会在此服务下查找[characteristicUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
- * @param onSuccess                     命令执行成功回调
- * @param onFailure                     命令执行失败回调
  */
 class EnableCharacteristicNotifyCommand(
     address: String,
     val characteristicUuid: UUID,
     val descriptorUuid: UUID = characteristicUuid,
     val serviceUuid: UUID? = null,
-    private val onSuccess: (() -> Unit)? = null,
-    private val onFailure: ((Throwable) -> Unit)? = null
-) : AddressCommand("设置通知特征值命令", address = address) {
+    callback: Callback? = null
+) : AddressCommand("设置通知特征值命令", callback = callback, address = address) {
 
     override suspend fun execute() {
         mReceiver?.enableCharacteristicNotify(this)
-    }
-
-    override fun doOnSuccess(vararg args: Any?) {
-        onSuccess?.invoke()
-    }
-
-    override fun doOnFailure(throwable: Throwable) {
-        onFailure?.invoke(throwable)
     }
 
     override fun equals(other: Any?): Boolean {

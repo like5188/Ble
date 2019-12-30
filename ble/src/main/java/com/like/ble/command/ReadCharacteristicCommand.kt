@@ -8,33 +8,17 @@ import java.util.*
  *
  * @param characteristicUuid        特征UUID
  * @param serviceUuid               服务UUID，如果不为null，则会在此服务下查找[characteristicUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
- * @param onSuccess                 命令执行成功回调
- * @param onFailure                 命令执行失败回调
  */
 class ReadCharacteristicCommand(
     address: String,
     val characteristicUuid: UUID,
     val serviceUuid: UUID? = null,
     timeout: Long = 3000L,
-    private val onSuccess: ((ByteArray?) -> Unit)? = null,
-    private val onFailure: ((Throwable) -> Unit)? = null
-) : AddressCommand("读特征值命令", timeout, address) {
+    callback: Callback? = null
+) : AddressCommand("读特征值命令", timeout, callback, address) {
 
     override suspend fun execute() {
         mReceiver?.readCharacteristic(this)
-    }
-
-    override fun doOnSuccess(vararg args: Any?) {
-        if (args.isNotEmpty()) {
-            val arg0 = args[0]
-            if (arg0 is ByteArray?) {
-                onSuccess?.invoke(arg0)
-            }
-        }
-    }
-
-    override fun doOnFailure(throwable: Throwable) {
-        onFailure?.invoke(throwable)
     }
 
     override fun equals(other: Any?): Boolean {

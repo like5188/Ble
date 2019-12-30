@@ -2,7 +2,6 @@ package com.like.ble.command
 
 import com.like.ble.command.base.AddressCommand
 import com.like.ble.command.base.Command
-import com.like.ble.command.base.ResultCommand
 import kotlinx.coroutines.delay
 
 /**
@@ -30,14 +29,16 @@ class MacroAddressCommand : Command("宏命令") {
         }
         mCommands.forEach { command ->
             if (command != mCallbackCommand) {
-                command.addInterceptor(object : ResultCommand.Interceptor {
-                    override fun interceptSuccess(command: ResultCommand, vararg args: Any?) {
+                command.addInterceptor(object : Command.Interceptor {
+                    override fun interceptCompleted(command: Command) {
                     }
 
-                    override fun interceptFailure(command: ResultCommand, throwable: Throwable) {
-                        mCallbackCommand?.failureAndCompleteIfIncomplete(throwable.message ?: "unknown error")
+                    override fun interceptFailure(command: Command, throwable: Throwable) {
+                        mCallbackCommand?.callback?.onFailure(throwable)
                     }
 
+                    override fun interceptResult(command: Command, vararg args: Any?) {
+                    }
                 })
             }
             command.mReceiver = mReceiver

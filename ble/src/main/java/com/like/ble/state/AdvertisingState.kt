@@ -50,7 +50,7 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
         }
 
         override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
-            mStartAdvertisingCommand?.successAndComplete()
+            mStartAdvertisingCommand?.complete()
         }
     }
 
@@ -89,7 +89,7 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
         if (mIsSending.compareAndSet(true, false)) {
             mActivity.getBluetoothAdapter()?.bluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)
             mStartAdvertisingCommand?.failureAndComplete("广播停止了")
-            command.successAndCompleteIfIncomplete()
+            command.complete()
         } else {
             mStartAdvertisingCommand?.failureAndComplete("广播未开启")
             command.failureAndCompleteIfIncomplete("广播未开启")
@@ -101,7 +101,7 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
         stopAdvertising(StopAdvertisingCommand())
         mStartAdvertisingCommand = null
         mBleBroadcastReceiverHelper.unregister()
-        command.successAndCompleteIfIncomplete()
+        command.complete()
     }
 
 }
