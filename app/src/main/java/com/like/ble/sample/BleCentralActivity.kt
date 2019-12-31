@@ -34,11 +34,13 @@ class BleCentralActivity : AppCompatActivity() {
     }
 
     fun startScan(view: View) {
-        mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_blue))
-        mBinding.tvScanStatus.text = "扫描已开启"
-        mAdapter.mAdapterDataManager.clear()
         BleManager.sendCommand(
             StartScanCommand(
+                onCompleted = {
+                    mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_blue))
+                    mBinding.tvScanStatus.text = "扫描已开启"
+                    mAdapter.mAdapterDataManager.clear()
+                },
                 onResult = { device, rssi, scanRecord ->
                     val address = device.address ?: ""
                     val name = device.name ?: "N/A"

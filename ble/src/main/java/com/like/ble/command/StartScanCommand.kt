@@ -19,9 +19,10 @@ class StartScanCommand(
     val fuzzyMatchingDeviceName: Boolean = true,
     val filterDeviceAddress: String = "",
     val filterServiceUuid: UUID? = null,
+    onCompleted: (() -> Unit)? = null,
     onError: ((Throwable) -> Unit)? = null,
     private val onResult: ((BluetoothDevice, Int, ByteArray?) -> Unit)? = null
-) : Command("开始扫描蓝牙设备命令", onError = onError) {
+) : Command("开始扫描蓝牙设备命令", onCompleted = onCompleted, onError = onError) {
 
     override suspend fun execute() {
         mReceiver?.startScan(this)

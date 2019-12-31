@@ -73,7 +73,11 @@ class CentralInvoker(activity: FragmentActivity) : Invoker(activity) {
 
     private fun sendCommand(command: Command) {
         mActivity.lifecycleScope.launch {
-            mCommands.send(command)
+            try {
+                mCommands.send(command)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
