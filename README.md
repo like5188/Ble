@@ -5,7 +5,7 @@
 最新版本|[![Download](https://jitpack.io/v/like5188/Ble.svg)](https://jitpack.io/#like5188/Ble)
 
 ## 功能介绍
-1、低功耗蓝牙模块封装，包括central、peripheral。
+1、低功耗蓝牙模块封装，支持central、peripheral两种模式。
 
 2、如果相同的命令正在执行，则抛弃。
 
