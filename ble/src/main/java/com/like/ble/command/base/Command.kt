@@ -58,22 +58,25 @@ abstract class Command(
     /**
      * 命令执行完成时回调
      */
+    @Synchronized
     internal fun complete() {
-        mIsCompleted.set(true)
-        if (mJobs.isNotEmpty()) {
-            mJobs.forEach {
-                it.cancel()
+        if (mIsCompleted.compareAndSet(false, true)) {
+            if (mJobs.isNotEmpty()) {
+                mJobs.forEach {
+                    it.cancel()
+                }
+                mJobs.clear()
             }
-            mJobs.clear()
-        }
-        mainThread {
-            mInterceptor?.interceptCompleted(this) ?: onCompleted?.invoke()
+            mainThread {
+                mInterceptor?.interceptCompleted(this) ?: onCompleted?.invoke()
+            }
         }
     }
 
     /**
      * 返回结果时回调
      */
+    @Synchronized
     internal fun resultAndComplete(vararg args: Any?) {
         mainThread {
             mInterceptor?.interceptResult(this, *args) ?: doOnResult(*args)
@@ -84,13 +87,15 @@ abstract class Command(
     /**
      * 错误时回调
      */
+    @Synchronized
     internal fun errorAndComplete(errorMsg: String) {
-        mIsError.set(true)
-        mainThread {
-            val t = Throwable(errorMsg)
-            mInterceptor?.interceptFailure(this, t) ?: onError?.invoke(t)
+        if (mIsError.compareAndSet(false, true)) {
+            mainThread {
+                val t = Throwable(errorMsg)
+                mInterceptor?.interceptFailure(this, t) ?: onError?.invoke(t)
+            }
+            complete()
         }
-        complete()
     }
 
     /**
