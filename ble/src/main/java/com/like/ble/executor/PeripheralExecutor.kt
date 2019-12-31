@@ -17,7 +17,7 @@ class PeripheralExecutor(private val mActivity: FragmentActivity) : IExecutor {
     private val mInvoker: Invoker by lazy { PeripheralInvoker(mActivity) }
     private val mState: AdvertisingState by lazy { AdvertisingState(mActivity) }
 
-    override suspend fun execute(command: Command) {
+    override fun execute(command: Command) {
         command.mReceiver = mState
         mInvoker.addCommand(command)
     }

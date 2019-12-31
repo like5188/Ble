@@ -2,8 +2,6 @@ package com.like.ble
 
 import com.like.ble.command.base.Command
 import com.like.ble.executor.IExecutor
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 /**
  * 蓝牙设备管理
@@ -30,15 +28,13 @@ object BleManager {
      * @param command   蓝牙命令。
      * 内置了多个基本命令在[com.like.ble.command]包下
      */
-    suspend fun sendCommand(command: Command) {
+    fun sendCommand(command: Command) {
         val executor = mExecutor
         if (executor == null) {
             command.errorAndComplete("mExecutor is null")
             return
         }
-        withContext(Dispatchers.IO) {
-            executor.execute(command)
-        }
+        executor.execute(command)
     }
 
     /**

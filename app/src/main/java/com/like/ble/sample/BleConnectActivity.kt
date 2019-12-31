@@ -6,12 +6,10 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.lifecycleScope
 import com.like.ble.BleManager
 import com.like.ble.command.*
 import com.like.ble.sample.databinding.ActivityBleConnectBinding
 import com.like.livedatarecyclerview.layoutmanager.WrapLinearLayoutManager
-import kotlinx.coroutines.launch
 
 class BleConnectActivity : AppCompatActivity() {
     private val mBinding: ActivityBleConnectBinding by lazy {
@@ -31,39 +29,35 @@ class BleConnectActivity : AppCompatActivity() {
     fun connect(view: View) {
         mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_black_1))
         mBinding.tvConnectStatus.text = "连接中……"
-        lifecycleScope.launch {
-            BleManager.sendCommand(
-                ConnectCommand(
-                    mData.address,
-                    10000L,
-                    onResult = {
-                        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this@BleConnectActivity, R.color.ble_text_blue))
-                        mBinding.tvConnectStatus.text = "连接成功"
-                        if (it.isNotEmpty()) {
-                            val bleGattServiceInfos = it.map { bluetoothGattService ->
-                                BleConnectInfo(mData.address, bluetoothGattService)
-                            }
-                            mAdapter.mAdapterDataManager.addItemsToEnd(bleGattServiceInfos)
-                        } else {
-                            mAdapter.mAdapterDataManager.clear()
+        BleManager.sendCommand(
+            ConnectCommand(
+                mData.address,
+                10000L,
+                onResult = {
+                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this@BleConnectActivity, R.color.ble_text_blue))
+                    mBinding.tvConnectStatus.text = "连接成功"
+                    if (it.isNotEmpty()) {
+                        val bleGattServiceInfos = it.map { bluetoothGattService ->
+                            BleConnectInfo(mData.address, bluetoothGattService)
                         }
-                    },
-                    onError = {
-                        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this@BleConnectActivity, R.color.ble_text_red))
-                        mBinding.tvConnectStatus.text = it.message
+                        mAdapter.mAdapterDataManager.addItemsToEnd(bleGattServiceInfos)
+                    } else {
                         mAdapter.mAdapterDataManager.clear()
-                        mBinding.etRequestMtu.setText("")
-                        mBinding.etReadRemoteRssi.setText("")
-                        mBinding.etRequestConnectionPriority.setText("")
                     }
-                ))
-        }
+                },
+                onError = {
+                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this@BleConnectActivity, R.color.ble_text_red))
+                    mBinding.tvConnectStatus.text = it.message
+                    mAdapter.mAdapterDataManager.clear()
+                    mBinding.etRequestMtu.setText("")
+                    mBinding.etReadRemoteRssi.setText("")
+                    mBinding.etRequestConnectionPriority.setText("")
+                }
+            ))
     }
 
     fun disconnect(view: View) {
-        lifecycleScope.launch {
-            BleManager.sendCommand(DisconnectCommand(mData.address))
-        }
+        BleManager.sendCommand(DisconnectCommand(mData.address))
     }
 
     fun requestMtu(view: View) {
@@ -72,34 +66,30 @@ class BleConnectActivity : AppCompatActivity() {
             return
         }
         val mtu = mBinding.etRequestMtu.text.toString().trim().toInt()
-        lifecycleScope.launch {
-            BleManager.sendCommand(RequestMtuCommand(
-                mData.address,
-                mtu,
-                3000,
-                onResult = {
-                    shortToastBottom("设置成功")
-                },
-                onError = {
-                    shortToastBottom(it.message)
-                }
-            ))
-        }
+        BleManager.sendCommand(RequestMtuCommand(
+            mData.address,
+            mtu,
+            3000,
+            onResult = {
+                shortToastBottom("设置成功")
+            },
+            onError = {
+                shortToastBottom(it.message)
+            }
+        ))
     }
 
     fun readRemoteRssi(view: View) {
-        lifecycleScope.launch {
-            BleManager.sendCommand(ReadRemoteRssiCommand(
-                mData.address,
-                3000,
-                onResult = {
-                    mBinding.etReadRemoteRssi.setText(it.toString())
-                },
-                onError = {
-                    shortToastBottom(it.message)
-                }
-            ))
-        }
+        BleManager.sendCommand(ReadRemoteRssiCommand(
+            mData.address,
+            3000,
+            onResult = {
+                mBinding.etReadRemoteRssi.setText(it.toString())
+            },
+            onError = {
+                shortToastBottom(it.message)
+            }
+        ))
     }
 
     fun requestConnectionPriority(view: View) {
@@ -109,18 +99,16 @@ class BleConnectActivity : AppCompatActivity() {
         }
         val connectionPriority = mBinding.etRequestConnectionPriority.text.toString().trim().toInt()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            lifecycleScope.launch {
-                BleManager.sendCommand(RequestConnectionPriorityCommand(
-                    mData.address,
-                    connectionPriority,
-                    onResult = {
-                        shortToastBottom("设置成功")
-                    },
-                    onError = {
-                        shortToastBottom(it.message)
-                    }
-                ))
-            }
+            BleManager.sendCommand(RequestConnectionPriorityCommand(
+                mData.address,
+                connectionPriority,
+                onResult = {
+                    shortToastBottom("设置成功")
+                },
+                onError = {
+                    shortToastBottom(it.message)
+                }
+            ))
         }
     }
 

@@ -8,7 +8,6 @@ import android.view.View
 import android.widget.LinearLayout
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.lifecycleScope
 import com.like.ble.BleManager
 import com.like.ble.command.*
 import com.like.ble.sample.databinding.ItemBleConnectBinding
@@ -18,7 +17,6 @@ import com.like.ble.utils.*
 import com.like.livedatarecyclerview.adapter.BaseAdapter
 import com.like.livedatarecyclerview.model.IRecyclerViewItem
 import com.like.livedatarecyclerview.viewholder.CommonViewHolder
-import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -105,20 +103,18 @@ class BleConnectAdapter(private val mActivity: FragmentActivity) : BaseAdapter()
         if (characteristic.properties and 0x02 != 0) {
             binding.ivRead.visibility = View.VISIBLE
             binding.ivRead.setOnClickListener {
-                mActivity.lifecycleScope.launch {
-                    BleManager.sendCommand(ReadCharacteristicCommand(
-                        address,
-                        characteristic.uuid,
-                        serviceUuid,
-                        10000,
-                        onResult = {
-                            mActivity.longToastBottom("读特征成功。数据长度：${it?.size} ${it?.contentToString()}")
-                        },
-                        onError = {
-                            mActivity.longToastBottom(it.message)
-                        }
-                    ))
-                }
+                BleManager.sendCommand(ReadCharacteristicCommand(
+                    address,
+                    characteristic.uuid,
+                    serviceUuid,
+                    10000,
+                    onResult = {
+                        mActivity.longToastBottom("读特征成功。数据长度：${it?.size} ${it?.contentToString()}")
+                    },
+                    onError = {
+                        mActivity.longToastBottom(it.message)
+                    }
+                ))
             }
         }
         if (characteristic.properties and 0x04 != 0 || characteristic.properties and 0x08 != 0) {
@@ -127,42 +123,40 @@ class BleConnectAdapter(private val mActivity: FragmentActivity) : BaseAdapter()
                 mWriteDataFragment.arguments = Bundle().apply {
                     putSerializable("callback", object : WriteDataFragment.Callback {
                         override fun onData(data: ByteArray) {
-                            mActivity.lifecycleScope.launch {
-                                when (data[0]) {
-                                    0x1.toByte() -> {
+                            when (data[0]) {
+                                0x1.toByte() -> {
 
-                                        BleManager.sendCommand(ReadNotifyCommand(
-                                            address,
-                                            characteristic.uuid,
-                                            serviceUuid,
-                                            5000,
-                                            1024,
-                                            {
-                                                it.get(it.position() - 1) == Byte.MAX_VALUE
-                                            },
-                                            onResult = {
-                                                mActivity.longToastBottom("读取通知传来的数据成功。数据长度：${it?.size} ${it?.contentToString()}")
-                                            },
-                                            onError = {
-                                                mActivity.longToastBottom(it.message)
-                                            }
-                                        ))
-                                    }
+                                    BleManager.sendCommand(ReadNotifyCommand(
+                                        address,
+                                        characteristic.uuid,
+                                        serviceUuid,
+                                        5000,
+                                        1024,
+                                        {
+                                            it.get(it.position() - 1) == Byte.MAX_VALUE
+                                        },
+                                        onResult = {
+                                            mActivity.longToastBottom("读取通知传来的数据成功。数据长度：${it?.size} ${it?.contentToString()}")
+                                        },
+                                        onError = {
+                                            mActivity.longToastBottom(it.message)
+                                        }
+                                    ))
                                 }
-                                BleManager.sendCommand(WriteCharacteristicCommand(
-                                    address,
-                                    data.batch(20),
-                                    characteristic.uuid,
-                                    serviceUuid,
-                                    5000,
-                                    onCompleted = {
-                                        mActivity.longToastBottom("写特征成功")
-                                    },
-                                    onError = {
-                                        mActivity.longToastBottom(it.message)
-                                    }
-                                ))
                             }
+                            BleManager.sendCommand(WriteCharacteristicCommand(
+                                address,
+                                data.batch(20),
+                                characteristic.uuid,
+                                serviceUuid,
+                                5000,
+                                onCompleted = {
+                                    mActivity.longToastBottom("写特征成功")
+                                },
+                                onError = {
+                                    mActivity.longToastBottom(it.message)
+                                }
+                            ))
                         }
                     })
                 }
@@ -174,39 +168,35 @@ class BleConnectAdapter(private val mActivity: FragmentActivity) : BaseAdapter()
             val isOn = AtomicBoolean(false)
             binding.ivNotify.setOnClickListener {
                 if (isOn.get()) {
-                    mActivity.lifecycleScope.launch {
-                        BleManager.sendCommand(DisableCharacteristicNotifyCommand(
-                            address,
-                            characteristic.uuid,
-                            createBleUuidBy16Bit("2902"),
-                            serviceUuid,
-                            onCompleted = {
-                                isOn.set(false)
-                                binding.ivNotify.setImageResource(R.drawable.notify_close)
-                            },
-                            onError = {
-                                isOn.set(true)
-                                binding.ivNotify.setImageResource(R.drawable.notify)
-                            }
-                        ))
-                    }
+                    BleManager.sendCommand(DisableCharacteristicNotifyCommand(
+                        address,
+                        characteristic.uuid,
+                        createBleUuidBy16Bit("2902"),
+                        serviceUuid,
+                        onCompleted = {
+                            isOn.set(false)
+                            binding.ivNotify.setImageResource(R.drawable.notify_close)
+                        },
+                        onError = {
+                            isOn.set(true)
+                            binding.ivNotify.setImageResource(R.drawable.notify)
+                        }
+                    ))
                 } else {
-                    mActivity.lifecycleScope.launch {
-                        BleManager.sendCommand(EnableCharacteristicNotifyCommand(
-                            address,
-                            characteristic.uuid,
-                            createBleUuidBy16Bit("2902"),
-                            serviceUuid,
-                            onCompleted = {
-                                isOn.set(true)
-                                binding.ivNotify.setImageResource(R.drawable.notify)
-                            },
-                            onError = {
-                                isOn.set(false)
-                                binding.ivNotify.setImageResource(R.drawable.notify_close)
-                            }
-                        ))
-                    }
+                    BleManager.sendCommand(EnableCharacteristicNotifyCommand(
+                        address,
+                        characteristic.uuid,
+                        createBleUuidBy16Bit("2902"),
+                        serviceUuid,
+                        onCompleted = {
+                            isOn.set(true)
+                            binding.ivNotify.setImageResource(R.drawable.notify)
+                        },
+                        onError = {
+                            isOn.set(false)
+                            binding.ivNotify.setImageResource(R.drawable.notify_close)
+                        }
+                    ))
                 }
             }
         }
@@ -215,39 +205,35 @@ class BleConnectAdapter(private val mActivity: FragmentActivity) : BaseAdapter()
             val isOn = AtomicBoolean(false)
             binding.ivIndicate.setOnClickListener {
                 if (isOn.get()) {
-                    mActivity.lifecycleScope.launch {
-                        BleManager.sendCommand(DisableCharacteristicIndicateCommand(
-                            address,
-                            characteristic.uuid,
-                            createBleUuidBy16Bit("2902"),
-                            serviceUuid,
-                            onCompleted = {
-                                isOn.set(false)
-                                binding.ivIndicate.setImageResource(R.drawable.indicate_close)
-                            },
-                            onError = {
-                                isOn.set(true)
-                                binding.ivIndicate.setImageResource(R.drawable.indicate)
-                            }
-                        ))
-                    }
+                    BleManager.sendCommand(DisableCharacteristicIndicateCommand(
+                        address,
+                        characteristic.uuid,
+                        createBleUuidBy16Bit("2902"),
+                        serviceUuid,
+                        onCompleted = {
+                            isOn.set(false)
+                            binding.ivIndicate.setImageResource(R.drawable.indicate_close)
+                        },
+                        onError = {
+                            isOn.set(true)
+                            binding.ivIndicate.setImageResource(R.drawable.indicate)
+                        }
+                    ))
                 } else {
-                    mActivity.lifecycleScope.launch {
-                        BleManager.sendCommand(EnableCharacteristicIndicateCommand(
-                            address,
-                            characteristic.uuid,
-                            createBleUuidBy16Bit("2902"),
-                            serviceUuid,
-                            onCompleted = {
-                                isOn.set(true)
-                                binding.ivIndicate.setImageResource(R.drawable.indicate)
-                            },
-                            onError = {
-                                isOn.set(false)
-                                binding.ivIndicate.setImageResource(R.drawable.indicate_close)
-                            }
-                        ))
-                    }
+                    BleManager.sendCommand(EnableCharacteristicIndicateCommand(
+                        address,
+                        characteristic.uuid,
+                        createBleUuidBy16Bit("2902"),
+                        serviceUuid,
+                        onCompleted = {
+                            isOn.set(true)
+                            binding.ivIndicate.setImageResource(R.drawable.indicate)
+                        },
+                        onError = {
+                            isOn.set(false)
+                            binding.ivIndicate.setImageResource(R.drawable.indicate_close)
+                        }
+                    ))
                 }
             }
         }
@@ -278,42 +264,38 @@ class BleConnectAdapter(private val mActivity: FragmentActivity) : BaseAdapter()
 
         // 无法判断描述的权限，只能同时显示读和写两个操作。设置只读权限的描述，nRF也全部显示的（即显示写入和读取按钮）。
         binding.ivRead.setOnClickListener {
-            mActivity.lifecycleScope.launch {
-                BleManager.sendCommand(ReadDescriptorCommand(
-                    address,
-                    descriptor.uuid,
-                    characteristic.uuid,
-                    serviceUuid,
-                    10000,
-                    onResult = {
-                        mActivity.longToastBottom("读描述成功。数据长度：${it?.size} ${it?.contentToString()}")
-                    },
-                    onError = {
-                        mActivity.longToastBottom(it.message)
-                    }
-                ))
-            }
+            BleManager.sendCommand(ReadDescriptorCommand(
+                address,
+                descriptor.uuid,
+                characteristic.uuid,
+                serviceUuid,
+                10000,
+                onResult = {
+                    mActivity.longToastBottom("读描述成功。数据长度：${it?.size} ${it?.contentToString()}")
+                },
+                onError = {
+                    mActivity.longToastBottom(it.message)
+                }
+            ))
         }
         binding.ivWrite.setOnClickListener {
             mWriteDataFragment.arguments = Bundle().apply {
                 putSerializable("callback", object : WriteDataFragment.Callback {
                     override fun onData(data: ByteArray) {
-                        mActivity.lifecycleScope.launch {
-                            BleManager.sendCommand(WriteDescriptorCommand(
-                                address,
-                                data.batch(20),
-                                descriptor.uuid,
-                                characteristic.uuid,
-                                serviceUuid,
-                                5000,
-                                onCompleted = {
-                                    mActivity.longToastBottom("写描述成功")
-                                },
-                                onError = {
-                                    mActivity.longToastBottom(it.message)
-                                }
-                            ))
-                        }
+                        BleManager.sendCommand(WriteDescriptorCommand(
+                            address,
+                            data.batch(20),
+                            descriptor.uuid,
+                            characteristic.uuid,
+                            serviceUuid,
+                            5000,
+                            onCompleted = {
+                                mActivity.longToastBottom("写描述成功")
+                            },
+                            onError = {
+                                mActivity.longToastBottom(it.message)
+                            }
+                        ))
                     }
                 })
             }

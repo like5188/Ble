@@ -19,7 +19,7 @@ class CentralExecutor(private val mActivity: FragmentActivity) : IExecutor {
     private val mScanState: ScanState by lazy { ScanState(mActivity) }
     private val mConnectStateMap = mutableMapOf<String, ConnectState>()
 
-    override suspend fun execute(command: Command) {
+    override fun execute(command: Command) {
         val state = getStateByCommand(command)
         if (state == null) {
             command.errorAndComplete("更新蓝牙状态失败，无法执行命令：$command")

@@ -224,49 +224,45 @@ class BlePeripheralActivity : AppCompatActivity() {
     }
 
     fun startAdvertising(view: View) {
-        lifecycleScope.launch {
-            BleManager.sendCommand(
-                StartAdvertisingCommand(
-                    createAdvertiseSettings(),
-                    createAdvertiseData(),
-                    createScanResponseAdvertiseData(byteArrayOf(0x34, 0x56)),// 外设必须广播广播包，扫描包是可选。但添加扫描包也意味着广播更多得数据，即可广播62个字节。
-                    "BLE测试设备",
-                    onCompleted = {
-                        mBinding.tvAdvertisingStatus.setTextColor(
-                            ContextCompat.getColor(
-                                this@BlePeripheralActivity,
-                                R.color.ble_text_blue
-                            )
+        BleManager.sendCommand(
+            StartAdvertisingCommand(
+                createAdvertiseSettings(),
+                createAdvertiseData(),
+                createScanResponseAdvertiseData(byteArrayOf(0x34, 0x56)),// 外设必须广播广播包，扫描包是可选。但添加扫描包也意味着广播更多得数据，即可广播62个字节。
+                "BLE测试设备",
+                onCompleted = {
+                    mBinding.tvAdvertisingStatus.setTextColor(
+                        ContextCompat.getColor(
+                            this@BlePeripheralActivity,
+                            R.color.ble_text_blue
                         )
-                        mBinding.tvAdvertisingStatus.text = "广播已开启"
-                        initServices()//该方法是添加一个服务，在此处调用即将服务广播出去
-                    },
-                    onError = {
-                        mBinding.tvAdvertisingStatus.setTextColor(
-                            ContextCompat.getColor(
-                                this@BlePeripheralActivity,
-                                R.color.ble_text_red
-                            )
+                    )
+                    mBinding.tvAdvertisingStatus.text = "广播已开启"
+                    initServices()//该方法是添加一个服务，在此处调用即将服务广播出去
+                },
+                onError = {
+                    mBinding.tvAdvertisingStatus.setTextColor(
+                        ContextCompat.getColor(
+                            this@BlePeripheralActivity,
+                            R.color.ble_text_red
                         )
-                        mBinding.tvAdvertisingStatus.text = it.message ?: "广播停止了"
-                        if (!isBluetoothEnable()) {// 说明关闭了蓝牙
-                            getBluetoothManager()?.getConnectedDevices(BluetoothProfile.GATT)?.forEach { device ->
-                                mBluetoothGattServer?.cancelConnection(device)
-                            }
-                            mBluetoothGattServer?.clearServices()
-                            mBluetoothGattServer?.close()
-                            mBluetoothGattServer = null
+                    )
+                    mBinding.tvAdvertisingStatus.text = it.message ?: "广播停止了"
+                    if (!isBluetoothEnable()) {// 说明关闭了蓝牙
+                        getBluetoothManager()?.getConnectedDevices(BluetoothProfile.GATT)?.forEach { device ->
+                            mBluetoothGattServer?.cancelConnection(device)
                         }
+                        mBluetoothGattServer?.clearServices()
+                        mBluetoothGattServer?.close()
+                        mBluetoothGattServer = null
                     }
-                )
+                }
             )
-        }
+        )
     }
 
     fun stopAdvertising(view: View) {
-        lifecycleScope.launch {
-            BleManager.sendCommand(StopAdvertisingCommand())
-        }
+        BleManager.sendCommand(StopAdvertisingCommand())
     }
 
     @Synchronized

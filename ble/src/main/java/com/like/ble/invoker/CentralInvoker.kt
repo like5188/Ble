@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 /**
  * 蓝牙中心设备命令请求者。
  */
-class CentralInvoker(private val mActivity: FragmentActivity) : Invoker(mActivity) {
+class CentralInvoker(activity: FragmentActivity) : Invoker(activity) {
     companion object {
         private val TAG = CentralInvoker::class.java.simpleName
     }
@@ -41,7 +41,7 @@ class CentralInvoker(private val mActivity: FragmentActivity) : Invoker(mActivit
         }
     }
 
-    override suspend fun execute(command: Command) {
+    override fun execute(command: Command) {
         val curCommand = mCurCommand
         // 判断需要抛弃
         if (curCommand != null && !curCommand.isCompleted() && curCommand::class.java == command::class.java && curCommand == command) {
