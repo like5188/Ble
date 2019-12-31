@@ -155,6 +155,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                             when (data[0]) {
                                 0x1.toByte() -> {
                                     val macroCommand = MacroCommand()
+                                    // readNotifyCommand 必须第一个添加，类似于设置回调监听。
                                     macroCommand.addCommand(readNotifyCommand, true)
                                     macroCommand.addCommand(writeCharacteristicCommand, false)
                                     mBleManager.sendCommand(macroCommand)
