@@ -125,7 +125,6 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                         override fun onData(data: ByteArray) {
                             when (data[0]) {
                                 0x1.toByte() -> {
-
                                     mBleManager.sendCommand(ReadNotifyCommand(
                                         address,
                                         characteristic.uuid,
