@@ -14,7 +14,7 @@ object BleManager {
      * 设置蓝牙命令执行者
      *
      * @param executor  蓝牙命令执行者。
-     * 内置了两个执行者：
+     * 内置了两个执行者，位于[com.like.ble.executor]包中：
      * [com.like.ble.executor.CentralExecutor]：用于中心设备
      * [com.like.ble.executor.PeripheralExecutor]：用于外围设备
      */
@@ -26,7 +26,7 @@ object BleManager {
      * 发送命令
      *
      * @param command   蓝牙命令。
-     * 内置了多个基本命令在[com.like.ble.command]包下
+     * 内置了多个基本命令，位于[com.like.ble.command]包中
      */
     fun sendCommand(command: Command) {
         val executor = mExecutor
