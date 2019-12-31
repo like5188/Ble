@@ -33,7 +33,7 @@ object BleManager {
     suspend fun sendCommand(command: Command) {
         val executor = mExecutor
         if (executor == null) {
-            command.failureAndCompleteIfIncomplete("mExecutor is null")
+            command.errorAndComplete("mExecutor is null")
             return
         }
         withContext(Dispatchers.IO) {

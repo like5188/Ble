@@ -28,7 +28,7 @@ class ScanState(private val mActivity: FragmentActivity) : State() {
         BleBroadcastReceiverHelper(mActivity,
             onBleOff = {
                 if (mScanning.compareAndSet(true, false)) {
-                    mStartScanCommand?.failureAndComplete("蓝牙被关闭，扫描停止了")
+                    mStartScanCommand?.errorAndComplete("蓝牙被关闭，扫描停止了")
                 }
             }
         )
@@ -39,7 +39,7 @@ class ScanState(private val mActivity: FragmentActivity) : State() {
         }
 
         override fun onScanFailed(errorCode: Int) {
-            mStartScanCommand?.failureAndComplete("错误码：$errorCode")
+            mStartScanCommand?.errorAndComplete("错误码：$errorCode")
             mScanning.set(false)
         }
 
@@ -114,19 +114,19 @@ class ScanState(private val mActivity: FragmentActivity) : State() {
             } else {
                 if (command.filterServiceUuid == null) {
                     if (mActivity.getBluetoothAdapter()?.startLeScan(mLeScanCallback) != true) {
-                        command.failureAndComplete("扫描失败")
+                        command.errorAndComplete("扫描失败")
                         return
                     }
                 } else {
                     if (mActivity.getBluetoothAdapter()?.startLeScan(arrayOf(command.filterServiceUuid), mLeScanCallback) != true) {
-                        command.failureAndComplete("扫描失败")
+                        command.errorAndComplete("扫描失败")
                         return
                     }
                 }
             }
             command.complete()// 这里直接完成命令，避免扫描不到需要的设备时，无法触发 startScanCommand.successAndComplete(device, rssi, scanRecord)
         } else {
-            command.failureAndComplete("正在扫描中")
+            command.errorAndComplete("正在扫描中")
         }
     }
 
@@ -138,11 +138,11 @@ class ScanState(private val mActivity: FragmentActivity) : State() {
             } else {
                 mActivity.getBluetoothAdapter()?.stopLeScan(mLeScanCallback)
             }
-            mStartScanCommand?.failureAndComplete("扫描停止了")
+            mStartScanCommand?.errorAndComplete("扫描停止了")
             command.complete()
         } else {
-            mStartScanCommand?.failureAndComplete("扫描未开启")
-            command.failureAndCompleteIfIncomplete("扫描未开启")
+            mStartScanCommand?.errorAndComplete("扫描未开启")
+            command.errorAndComplete("扫描未开启")
         }
     }
 

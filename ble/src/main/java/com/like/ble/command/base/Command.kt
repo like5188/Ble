@@ -51,7 +51,7 @@ abstract class Command(
 
     internal fun isCompleted() = mIsCompleted.get()
 
-    fun addJob(job: Job) {
+    internal fun addJob(job: Job) {
         mJobs.add(job)
     }
 
@@ -68,6 +68,9 @@ abstract class Command(
         }
     }
 
+    /**
+     * 返回结果时回调
+     */
     internal fun resultAndComplete(vararg args: Any?) {
         mainThread {
             mInterceptor?.interceptResult(this, *args) ?: doOnResult(*args)
@@ -75,23 +78,16 @@ abstract class Command(
         complete()
     }
 
-    internal fun failureAndComplete(errorMsg: String) {
+    /**
+     * 错误时回调
+     */
+    internal fun errorAndComplete(errorMsg: String) {
         mIsError.set(true)
         mainThread {
             val t = Throwable(errorMsg)
             mInterceptor?.interceptFailure(this, t) ?: onError?.invoke(t)
         }
         complete()
-    }
-
-    internal fun resultAndCompleteIfIncomplete(vararg args: Any?) {
-        if (isCompleted()) return
-        resultAndComplete(*args)
-    }
-
-    internal fun failureAndCompleteIfIncomplete(errorMsg: String) {
-        if (isCompleted()) return
-        failureAndComplete(errorMsg)
     }
 
     /**

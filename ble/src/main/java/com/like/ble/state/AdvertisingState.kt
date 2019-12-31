@@ -30,7 +30,7 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
         BleBroadcastReceiverHelper(mActivity,
             onBleOff = {
                 if (mIsSending.compareAndSet(true, false)) {
-                    mStartAdvertisingCommand?.failureAndComplete("蓝牙被关闭，广播停止了")
+                    mStartAdvertisingCommand?.errorAndComplete("蓝牙被关闭，广播停止了")
                 }
             }
         )
@@ -45,7 +45,7 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
                 ADVERTISE_FAILED_FEATURE_UNSUPPORTED -> "This feature is not supported on this platform"
                 else -> "errorCode=$errorCode"
             }
-            mStartAdvertisingCommand?.failureAndComplete(errorMsg)
+            mStartAdvertisingCommand?.errorAndComplete(errorMsg)
             mIsSending.set(false)
         }
 
@@ -63,7 +63,7 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
         if (mIsSending.compareAndSet(false, true)) {
             val bluetoothLeAdvertiser = mActivity.getBluetoothAdapter()?.bluetoothLeAdvertiser
             if (bluetoothLeAdvertiser == null) {
-                command.failureAndComplete("phone does not support Bluetooth Advertiser")
+                command.errorAndComplete("phone does not support Bluetooth Advertiser")
                 return
             }
 
@@ -80,7 +80,7 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
                 mAdvertiseCallback
             )
         } else {
-            command.failureAndComplete("正在广播中")
+            command.errorAndComplete("正在广播中")
         }
     }
 
@@ -88,11 +88,11 @@ class AdvertisingState(private val mActivity: FragmentActivity) : State() {
     override fun stopAdvertising(command: StopAdvertisingCommand) {
         if (mIsSending.compareAndSet(true, false)) {
             mActivity.getBluetoothAdapter()?.bluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)
-            mStartAdvertisingCommand?.failureAndComplete("广播停止了")
+            mStartAdvertisingCommand?.errorAndComplete("广播停止了")
             command.complete()
         } else {
-            mStartAdvertisingCommand?.failureAndComplete("广播未开启")
-            command.failureAndCompleteIfIncomplete("广播未开启")
+            mStartAdvertisingCommand?.errorAndComplete("广播未开启")
+            command.errorAndComplete("广播未开启")
         }
     }
 

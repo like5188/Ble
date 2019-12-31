@@ -24,7 +24,7 @@ class RequestConnectionPriorityCommand(
         if (connectionPriority < BluetoothGatt.CONNECTION_PRIORITY_BALANCED ||
             connectionPriority > BluetoothGatt.CONNECTION_PRIORITY_LOW_POWER
         ) {
-            failureAndCompleteIfIncomplete("the range of connectionPriority is [0，2]")
+            errorAndComplete("the range of connectionPriority is [0，2]")
         }
     }
 

@@ -25,7 +25,7 @@ class WriteCharacteristicCommand(
 
     init {
         if (data.isEmpty()) {
-            failureAndCompleteIfIncomplete("data cannot be empty")
+            errorAndComplete("data cannot be empty")
         }
     }
 

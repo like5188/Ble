@@ -28,7 +28,7 @@ class ReadNotifyCommand(
 
     init {
         if (maxFrameTransferSize <= 0L) {
-            failureAndCompleteIfIncomplete("maxFrameTransferSize must be greater than 0")
+            errorAndComplete("maxFrameTransferSize must be greater than 0")
         }
     }
 

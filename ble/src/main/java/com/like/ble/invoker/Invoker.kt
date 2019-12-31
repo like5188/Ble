@@ -24,25 +24,25 @@ abstract class Invoker(private val mActivity: FragmentActivity) {
 
     suspend fun addCommand(command: Command) {
         if (!mActivity.isSupportBluetooth()) {
-            command.failureAndCompleteIfIncomplete("手机不支持蓝牙")
+            command.errorAndComplete("手机不支持蓝牙")
             return
         }
         try {
             if (!checkPermissions()) {
-                command.failureAndCompleteIfIncomplete("蓝牙权限被拒绝")
+                command.errorAndComplete("蓝牙权限被拒绝")
                 return
             }
         } catch (e: Exception) {
-            command.failureAndCompleteIfIncomplete("请求蓝牙权限失败")
+            command.errorAndComplete("请求蓝牙权限失败")
             return
         }
         try {
             if (!isBleOpened()) {
-                command.failureAndCompleteIfIncomplete("蓝牙未打开")
+                command.errorAndComplete("蓝牙未打开")
                 return
             }
         } catch (e: Exception) {
-            command.failureAndCompleteIfIncomplete("打开蓝牙失败")
+            command.errorAndComplete("打开蓝牙失败")
             return
         }
         execute(command)
