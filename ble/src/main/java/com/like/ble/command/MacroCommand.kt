@@ -5,8 +5,13 @@ import com.like.ble.command.base.Command
 import kotlinx.coroutines.delay
 
 /**
+ * 宏命令
+ *
  * 顺序执行添加的[AddressCommand]命令。
  * 在前一个命令完成后再执行下一个命令，否则会阻塞（除了回调命令，它就算放在前面也不会阻塞）。
+ * sample中写了几个常用的宏命令：
+ *  1、[SetCharacteristicNotificationCommand]+[WriteDescriptorCommand]：使能notification或者indication。
+ *  2、[ReadNotifyCommand]+[WriteCharacteristicCommand]：发送命令并接收通知数据，注意必须要开启通知才能接收数据。
  */
 class MacroCommand : Command("宏命令") {
     private val mCommands = mutableListOf<AddressCommand>()

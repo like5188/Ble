@@ -4,14 +4,14 @@ import android.bluetooth.BluetoothGattService
 import com.like.ble.command.base.AddressCommand
 
 /**
- * 连接蓝牙命令
+ * 连接蓝牙设备命令
  */
 class ConnectCommand(
     address: String,
     timeout: Long = 10000L,
     onError: ((Throwable) -> Unit)? = null,
     private val onResult: ((List<BluetoothGattService>) -> Unit)? = null
-) : AddressCommand("连接蓝牙命令", timeout = timeout, onError = onError, address = address) {
+) : AddressCommand("连接蓝牙设备命令", timeout = timeout, onError = onError, address = address) {
 
     override suspend fun execute() {
         mReceiver?.connect(this)

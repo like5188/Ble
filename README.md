@@ -17,6 +17,26 @@
 
 6、如果版本低于API 21，那么可以用ScanRecordBelow21类来解析扫描结果。
 
+7、系统内置了常用蓝牙命令：
+    peripheral：
+        StartAdvertisingCommand（开始广播命令）
+        StopAdvertisingCommand（停止广播命令）
+    central：
+        MacroCommand（宏命令）
+        ConnectCommand（连接蓝牙设备命令）
+        DisconnectCommand（断开蓝牙设备命令）
+        ReadCharacteristicCommand（读特征值命令）
+        WriteCharacteristicCommand（写特征值命令）
+        ReadDescriptorCommand（读描述值命令）
+        WriteDescriptorCommand（写描述值命令）
+        ReadNotifyCommand（读取通知传来的数据命令）
+        ReadRemoteRssiCommand（readRemoteRssi命令）
+        RequestConnectionPriorityCommand（requestConnectionPriority命令）
+        RequestMtuCommand（requestMtu命令）
+        SetCharacteristicNotificationCommand（设置特征的notification或者indication的命令）
+        StartScanCommand（开始扫描蓝牙设备命令）
+        StopScanCommand（停止扫描蓝牙设备命令）
+
 ## 使用方法：
 
 1、引用
@@ -41,9 +61,9 @@
 ```java
     // 初始化
     private val mBleManager: BleManager by lazy { BleManager(CentralExecutor(this)) }
-    // 发送单个命令：ConnectCommand、DisconnectCommand、ReadCharacteristicCommand、WriteCharacteristicCommand、ReadDescriptorCommand、WriteDescriptorCommand、ReadNotifyCommand、ReadRemoteRssiCommand、RequestConnectionPriorityCommand、RequestMtuCommand、SetCharacteristicNotificationCommand、StartScanCommand、StopScanCommand
-    mBleManager.sendCommand(StopScanCommand())
-    // 发送宏命令：MacroCommand
+    // 发送单个命令
+    mBleManager.sendCommand(ConnectCommand())
+    // 发送宏命令
     val macroCommand = MacroCommand()
     val readNotifyCommand = ReadNotifyCommand()
     val writeCharacteristicCommand = WriteCharacteristicCommand()
@@ -58,7 +78,7 @@
 ```java
     // 初始化
     private val mBleManager: BleManager by lazy { BleManager(PeripheralExecutor(this)) }
-    // 发送单个命令：StartAdvertisingCommand、StopAdvertisingCommand
+    // 发送单个命令
     mBleManager.sendCommand(StartAdvertisingCommand())
     // 释放资源
     mBleManager.close()
