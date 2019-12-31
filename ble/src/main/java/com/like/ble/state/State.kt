@@ -54,22 +54,6 @@ abstract class State {
         throw UnsupportedOperationException("Unsupported command")
     }
 
-    open fun enableCharacteristicNotify(command: EnableCharacteristicNotifyCommand) {
-        throw UnsupportedOperationException("Unsupported command")
-    }
-
-    open fun disableCharacteristicNotify(command: DisableCharacteristicNotifyCommand) {
-        throw UnsupportedOperationException("Unsupported command")
-    }
-
-    open fun enableCharacteristicIndicate(command: EnableCharacteristicIndicateCommand) {
-        throw UnsupportedOperationException("Unsupported command")
-    }
-
-    open fun disableCharacteristicIndicate(command: DisableCharacteristicIndicateCommand) {
-        throw UnsupportedOperationException("Unsupported command")
-    }
-
     open fun readNotify(command: ReadNotifyCommand) {
         throw UnsupportedOperationException("Unsupported command")
     }

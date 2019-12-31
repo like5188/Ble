@@ -91,27 +91,13 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
         }
 
         override fun onDescriptorWrite(gatt: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) {
-            val enableCharacteristicNotifyCommand = getCommandFromCache<EnableCharacteristicNotifyCommand>()
-            val disableCharacteristicNotifyCommand = getCommandFromCache<DisableCharacteristicNotifyCommand>()
-            val enableCharacteristicIndicateCommand = getCommandFromCache<EnableCharacteristicIndicateCommand>()
-            val disableCharacteristicIndicateCommand = getCommandFromCache<DisableCharacteristicIndicateCommand>()
-            val writeDescriptorCommand = getCommandFromCache<WriteDescriptorCommand>()
-
+            val command = getCommandFromCache<WriteDescriptorCommand>() ?: return
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                enableCharacteristicNotifyCommand?.complete()
-                disableCharacteristicNotifyCommand?.complete()
-                enableCharacteristicIndicateCommand?.complete()
-                disableCharacteristicIndicateCommand?.complete()
-                if (writeDescriptorCommand != null && writeDescriptorCommand.isAllWrite()) {
-                    writeDescriptorCommand.complete()
+                if (command.isAllWrite()) {
+                    command.complete()
                 }
             } else {
-                val errorMsg = "写描述值失败：${descriptor.uuid.getValidString()}"
-                enableCharacteristicNotifyCommand?.errorAndComplete(errorMsg)
-                disableCharacteristicNotifyCommand?.errorAndComplete(errorMsg)
-                enableCharacteristicIndicateCommand?.errorAndComplete(errorMsg)
-                disableCharacteristicIndicateCommand?.errorAndComplete(errorMsg)
-                writeDescriptorCommand?.errorAndComplete(errorMsg)
+                command.errorAndComplete("写描述值失败：${descriptor.uuid.getValidString()}")
             }
         }
 
@@ -432,22 +418,6 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
         } else {
             command.resultAndComplete(command.connectionPriority)
         }
-    }
-
-    override fun enableCharacteristicNotify(command: EnableCharacteristicNotifyCommand) {
-        setCharacteristicNotification(command.serviceUuid, command.characteristicUuid, command.descriptorUuid, true, command)
-    }
-
-    override fun disableCharacteristicNotify(command: DisableCharacteristicNotifyCommand) {
-        setCharacteristicNotification(command.serviceUuid, command.characteristicUuid, command.descriptorUuid, false, command)
-    }
-
-    override fun enableCharacteristicIndicate(command: EnableCharacteristicIndicateCommand) {
-        setCharacteristicIndication(command.serviceUuid, command.characteristicUuid, command.descriptorUuid, true, command)
-    }
-
-    override fun disableCharacteristicIndicate(command: DisableCharacteristicIndicateCommand) {
-        setCharacteristicIndication(command.serviceUuid, command.characteristicUuid, command.descriptorUuid, false, command)
     }
 
     override fun setCharacteristicNotification(command: SetCharacteristicNotificationCommand) {
