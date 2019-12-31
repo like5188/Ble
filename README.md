@@ -11,7 +11,7 @@
 
 3、所有命令的回调都是在主线程中。
 
-4、支持central连接多个peripheral设备。
+4、支持一个central设备同时连接多个peripheral设备。
 
 5、命令队列规则：①如果相同的命令正在执行，则抛弃。②StopScanCommand、DisconnectCommand、StopAdvertisingCommand命令会立即执行，其它命令会排队等候前面的命令完成。
 
