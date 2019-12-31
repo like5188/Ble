@@ -180,6 +180,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                     characteristic.uuid,
                     descriptorUuid,
                     serviceUuid,
+                    SetCharacteristicNotificationCommand.TYPE_NOTIFY,
                     !isOn.get()
                 )
                 val writeDescriptorCommand = if (isOn.get()) {
@@ -229,12 +230,23 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
             binding.ivIndicate.visibility = View.VISIBLE
             val isOn = AtomicBoolean(false)
             binding.ivIndicate.setOnClickListener {
-                if (isOn.get()) {
-                    mBleManager.sendCommand(DisableCharacteristicIndicateCommand(
+                val descriptorUuid = createBleUuidBy16Bit("2902")
+                val setCharacteristicNotificationCommand = SetCharacteristicNotificationCommand(
+                    address,
+                    characteristic.uuid,
+                    descriptorUuid,
+                    serviceUuid,
+                    SetCharacteristicNotificationCommand.TYPE_INDICATE,
+                    !isOn.get()
+                )
+                val writeDescriptorCommand = if (isOn.get()) {
+                    WriteDescriptorCommand(
                         address,
+                        listOf(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE),
+                        descriptorUuid,
                         characteristic.uuid,
-                        createBleUuidBy16Bit("2902"),
                         serviceUuid,
+                        5000,
                         onCompleted = {
                             isOn.set(false)
                             binding.ivIndicate.setImageResource(R.drawable.indicate_close)
@@ -243,13 +255,15 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                             isOn.set(true)
                             binding.ivIndicate.setImageResource(R.drawable.indicate)
                         }
-                    ))
+                    )
                 } else {
-                    mBleManager.sendCommand(EnableCharacteristicIndicateCommand(
+                    WriteDescriptorCommand(
                         address,
+                        listOf(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE),
+                        descriptorUuid,
                         characteristic.uuid,
-                        createBleUuidBy16Bit("2902"),
                         serviceUuid,
+                        5000,
                         onCompleted = {
                             isOn.set(true)
                             binding.ivIndicate.setImageResource(R.drawable.indicate)
@@ -258,8 +272,14 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                             isOn.set(false)
                             binding.ivIndicate.setImageResource(R.drawable.indicate_close)
                         }
-                    ))
+                    )
                 }
+
+                val macroCommand = MacroCommand()
+                // readNotifyCommand 必须第一个添加，类似于设置回调监听。
+                macroCommand.addCommand(setCharacteristicNotificationCommand, false)
+                macroCommand.addCommand(writeDescriptorCommand, true)
+                mBleManager.sendCommand(macroCommand)
             }
         }
     }

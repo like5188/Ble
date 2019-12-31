@@ -1,14 +1,17 @@
 package com.like.ble.command
 
+import com.like.ble.command.SetCharacteristicNotificationCommand.Companion.TYPE_INDICATE
+import com.like.ble.command.SetCharacteristicNotificationCommand.Companion.TYPE_NOTIFY
 import com.like.ble.command.base.AddressCommand
 import java.util.*
 
 /**
- * 设置特征通知命令
+ * 设置特征notification、indication命令
  *
  * @param characteristicUuid            特征UUID
  * @param descriptorUuid                描述UUID，属于[characteristicUuid]
  * @param serviceUuid                   服务UUID，如果不为null，则会在此服务下查找[characteristicUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
+ * @param type                          类型：[TYPE_NOTIFY]、[TYPE_INDICATE]
  * @param enable                        true：开启通知；false：关闭通知
  */
 class SetCharacteristicNotificationCommand(
@@ -16,10 +19,21 @@ class SetCharacteristicNotificationCommand(
     val characteristicUuid: UUID,
     val descriptorUuid: UUID = characteristicUuid,
     val serviceUuid: UUID? = null,
+    val type: Int = TYPE_NOTIFY,
     val enable: Boolean = true,
     onCompleted: (() -> Unit)? = null,
     onError: ((Throwable) -> Unit)? = null
 ) : AddressCommand("设置特征通知命令", onCompleted = onCompleted, onError = onError, address = address) {
+    companion object {
+        const val TYPE_NOTIFY = 0
+        const val TYPE_INDICATE = 1
+    }
+
+    init {
+        if (type != TYPE_NOTIFY && type != TYPE_INDICATE) {
+            errorAndComplete("type can only be 0 or 1")
+        }
+    }
 
     override suspend fun execute() {
         mReceiver?.setCharacteristicNotification(this)

@@ -462,9 +462,19 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
             return
         }
 
-        if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY == 0) {
-            command.errorAndComplete("this characteristic not support notify!")
-            return
+        when (command.type) {
+            SetCharacteristicNotificationCommand.TYPE_NOTIFY -> {
+                if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY == 0) {
+                    command.errorAndComplete("this characteristic not support notify!")
+                    return
+                }
+            }
+            SetCharacteristicNotificationCommand.TYPE_INDICATE -> {
+                if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_INDICATE == 0) {
+                    command.errorAndComplete("this characteristic not support indicate!")
+                    return
+                }
+            }
         }
 
         if (mBluetoothGatt?.setCharacteristicNotification(characteristic, command.enable) != true) {
