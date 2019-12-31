@@ -19,11 +19,11 @@
 
 7、系统内置了常用蓝牙命令：
 ```java
-    peripheral：
+    peripheral 模式支持的命令：
         StartAdvertisingCommand（开始广播命令）
         StopAdvertisingCommand（停止广播命令）
 
-    central：
+    central 模式支持的命令：
         MacroCommand（宏命令）
         ConnectCommand（连接蓝牙设备命令）
         DisconnectCommand（断开蓝牙设备命令）
