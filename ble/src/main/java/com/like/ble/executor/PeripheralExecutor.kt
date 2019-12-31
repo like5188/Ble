@@ -6,7 +6,6 @@ import androidx.fragment.app.FragmentActivity
 import com.like.ble.command.CloseCommand
 import com.like.ble.command.base.Command
 import com.like.ble.invoker.Invoker
-import com.like.ble.invoker.PeripheralInvoker
 import com.like.ble.state.AdvertisingState
 
 /**
@@ -14,7 +13,7 @@ import com.like.ble.state.AdvertisingState
  */
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class PeripheralExecutor(private val mActivity: FragmentActivity) : IExecutor {
-    private val mInvoker: Invoker by lazy { PeripheralInvoker(mActivity) }
+    private val mInvoker: Invoker by lazy { Invoker(mActivity) }
     private val mState: AdvertisingState by lazy { AdvertisingState(mActivity) }
 
     override fun execute(command: Command) {
