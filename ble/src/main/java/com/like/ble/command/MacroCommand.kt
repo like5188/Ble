@@ -5,7 +5,8 @@ import com.like.ble.command.base.Command
 import kotlinx.coroutines.delay
 
 /**
- * 顺序执行添加的[AddressCommand]命令，且在前一个成功后再执行下一个命令，否则会阻塞。
+ * 顺序执行添加的[AddressCommand]命令。
+ * 在前一个命令完成后再执行下一个命令，否则会阻塞（除了回调命令，它就算放在前面也不会阻塞）。
  */
 class MacroCommand : Command("宏命令") {
     private val mCommands = mutableListOf<AddressCommand>()
