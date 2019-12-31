@@ -7,11 +7,13 @@
 ## 功能介绍
 1、低功耗蓝牙模块封装，支持central、peripheral两种模式。
 
-2、封装好了权限申请、打开蓝牙功能，使用者不用处理。
+2、封装好了权限申请、打开蓝牙功能，使用者不用再做相关处理。
 
-3、支持central连接多个peripheral设备。
+3、所有回调都是在主线程中。
 
-4、①命令队列规则：如果相同的命令正在执行，则抛弃。②StopScanCommand、DisconnectCommand、StopAdvertisingCommand命令会立即执行，其它命令会排队等候前面的命令完成。
+4、支持central连接多个peripheral设备。
+
+5、命令队列规则：①如果相同的命令正在执行，则抛弃。②StopScanCommand、DisconnectCommand、StopAdvertisingCommand命令会立即执行，其它命令会排队等候前面的命令完成。
 
 ## 使用方法：
 
