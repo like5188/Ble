@@ -22,10 +22,9 @@ class ReadNotifyCommand(
     timeout: Long = 3000L,
     private val maxFrameTransferSize: Int = 1024,
     private val isWholeFrame: (ByteBuffer) -> Boolean = { true },
-    onCompleted: (() -> Unit)? = null,
     onError: ((Throwable) -> Unit)? = null,
     private val onResult: ((ByteArray?) -> Unit)? = null
-) : AddressCommand("读取通知传来的数据命令", timeout = timeout, onCompleted = onCompleted, onError = onError, address = address) {
+) : AddressCommand("读取通知传来的数据命令", timeout = timeout, onError = onError, address = address) {
 
     init {
         if (maxFrameTransferSize <= 0L) {
@@ -37,7 +36,7 @@ class ReadNotifyCommand(
     private val mDataCache: ByteBuffer by lazy { ByteBuffer.allocate(maxFrameTransferSize) }
 
     fun addDataToCache(data: ByteArray): Boolean {
-        if (isError()) return false
+        if (isCompleted()) return false
         return try {
             mDataCache.put(data)
             true

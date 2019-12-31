@@ -37,6 +37,7 @@ class CentralInvoker(activity: FragmentActivity) : Invoker(activity) {
                 } else {
                     Log.w(TAG, "命令执行完成：$command")
                 }
+                delay(100)
             }
         }
     }

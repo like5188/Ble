@@ -19,21 +19,36 @@ class MacroCommand : Command("宏命令") {
     }
 
     override suspend fun execute() {
-        if (mCommands.isEmpty()) return
-        if (mCommands.size == 1) {
-            val command = mCommands[0]
-            command.mReceiver = mReceiver
-            command.execute()
+        if (mCommands.isEmpty() || mCommands.size == 1) {
+            errorAndComplete("宏命令至少需要2个命令")
             return
         }
         mCommands.forEach { command ->
-            if (command != mCallbackCommand) {
+            if (command == mCallbackCommand) {
+                command.addInterceptor(object : Interceptor {
+                    override fun interceptCompleted(command: Command) {
+                        mCallbackCommand?.onCompleted?.invoke()
+                        complete()
+                    }
+
+                    override fun interceptFailure(command: Command, throwable: Throwable) {
+                        mCallbackCommand?.onError?.invoke(throwable)
+                        errorAndComplete(throwable.message ?: "unknown error")
+                    }
+
+                    override fun interceptResult(command: Command, vararg args: Any?) {
+                        mCallbackCommand?.doOnResult(*args)
+                        complete()
+                    }
+                })
+            } else {
                 command.addInterceptor(object : Interceptor {
                     override fun interceptCompleted(command: Command) {
                     }
 
                     override fun interceptFailure(command: Command, throwable: Throwable) {
                         mCallbackCommand?.errorAndComplete(throwable.message ?: "unknown error")
+                        errorAndComplete(throwable.message ?: "unknown error")
                     }
 
                     override fun interceptResult(command: Command, vararg args: Any?) {
@@ -42,7 +57,7 @@ class MacroCommand : Command("宏命令") {
             }
             command.mReceiver = mReceiver
             command.execute()
-            while (!command.isCompleted()) {
+            while (command != mCallbackCommand && !command.isCompleted()) {
                 delay(20)
             }
             if (command.isError()) {

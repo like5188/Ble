@@ -102,7 +102,7 @@ abstract class Command(
      * 由子类实现返回参数类型的转换
      */
     @MainThread
-    protected open fun doOnResult(vararg args: Any?) {
+    internal open fun doOnResult(vararg args: Any?) {
     }
 
     /**
