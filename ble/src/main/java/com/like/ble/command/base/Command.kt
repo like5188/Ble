@@ -9,14 +9,16 @@ import java.util.concurrent.atomic.AtomicBoolean
 /**
  * 蓝牙命令基类
  *
- * @param des           命令功能描述
+ * @param des           命令功能描述，用于打印日志。
  * @param timeout       命令执行超时时间（毫秒）。0或者小于0表示没有超时时间。
- * @param callback      命令回调
+ * @param onCompleted   命令完成回调
+ * @param onError       命令失败回调
  */
 abstract class Command(
     private val des: String,
     val timeout: Long = 0L,
-    val callback: Callback? = null
+    val onCompleted: (() -> Unit)? = null,
+    val onError: ((Throwable) -> Unit)? = null
 ) {
 
     /**
@@ -29,9 +31,9 @@ abstract class Command(
     private val mIsCompleted: AtomicBoolean = AtomicBoolean(false)
 
     /**
-     * 命令是否成功
+     * 命令是否出错
      */
-    private val mIsSuccess: AtomicBoolean = AtomicBoolean(false)
+    private val mIsError: AtomicBoolean = AtomicBoolean(false)
 
     /**
      * 异步任务。比如延迟关闭任务、执行任务等。
@@ -45,7 +47,7 @@ abstract class Command(
         mInterceptor = interceptor
     }
 
-    internal fun isSuccess() = mIsSuccess.get()
+    internal fun isError() = mIsError.get()
 
     internal fun isCompleted() = mIsCompleted.get()
 
@@ -62,23 +64,22 @@ abstract class Command(
             mJobs.clear()
         }
         mainThread {
-            mInterceptor?.interceptCompleted(this) ?: callback?.onCompleted()
+            mInterceptor?.interceptCompleted(this) ?: onCompleted?.invoke()
         }
     }
 
     internal fun resultAndComplete(vararg args: Any?) {
-        mIsSuccess.set(true)
         mainThread {
-            mInterceptor?.interceptResult(this, *args) ?: callback?.onResult(*args)
+            mInterceptor?.interceptResult(this, *args) ?: doOnResult(*args)
         }
         complete()
     }
 
     internal fun failureAndComplete(errorMsg: String) {
-        mIsSuccess.set(false)
+        mIsError.set(true)
         mainThread {
             val t = Throwable(errorMsg)
-            mInterceptor?.interceptFailure(this, t) ?: callback?.onFailure(t)
+            mInterceptor?.interceptFailure(this, t) ?: onError?.invoke(t)
         }
         complete()
     }
@@ -94,12 +95,19 @@ abstract class Command(
     }
 
     /**
+     * 由子类实现返回参数类型的转换
+     */
+    @MainThread
+    protected open fun doOnResult(vararg args: Any?) {
+    }
+
+    /**
      * 执行命令
      */
     internal abstract suspend fun execute()
 
     override fun toString(): String {
-        return "Command(des='$des', isCompleted='${isCompleted()}', isSuccess='${isSuccess()}')"
+        return "Command(des='$des', isCompleted='${isCompleted()}', isError='${isError()}')"
     }
 
     interface Interceptor {
@@ -119,9 +127,4 @@ abstract class Command(
         fun interceptResult(command: Command, vararg args: Any?)
     }
 
-    abstract class Callback {
-        open fun onCompleted() {}
-        open fun onFailure(t: Throwable) {}
-        open fun onResult(vararg args: Any?) {}
-    }
 }

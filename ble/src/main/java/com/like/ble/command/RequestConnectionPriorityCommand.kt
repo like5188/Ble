@@ -16,8 +16,9 @@ import com.like.ble.command.base.AddressCommand
 class RequestConnectionPriorityCommand(
     address: String,
     val connectionPriority: Int,
-    callback: Callback? = null
-) : AddressCommand("requestConnectionPriority命令", callback = callback, address = address) {
+    onError: ((Throwable) -> Unit)? = null,
+    private val onResult: ((Int) -> Unit)? = null
+) : AddressCommand("requestConnectionPriority命令", onError = onError, address = address) {
 
     init {
         if (connectionPriority < BluetoothGatt.CONNECTION_PRIORITY_BALANCED ||
@@ -29,6 +30,15 @@ class RequestConnectionPriorityCommand(
 
     override suspend fun execute() {
         mReceiver?.requestConnectionPriority(this)
+    }
+
+    override fun doOnResult(vararg args: Any?) {
+        if (args.isNotEmpty()) {
+            val arg0 = args[0]
+            if (arg0 is Int) {
+                onResult?.invoke(arg0)
+            }
+        }
     }
 
     override fun equals(other: Any?): Boolean {

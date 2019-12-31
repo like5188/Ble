@@ -1,26 +1,24 @@
 package com.like.ble.sample
 
-import android.bluetooth.BluetoothGattService
 import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
-import com.like.ble.CentralManager
-import com.like.ble.IBleManager
+import androidx.lifecycle.lifecycleScope
+import com.like.ble.BleManager
 import com.like.ble.command.*
-import com.like.ble.command.base.Command
 import com.like.ble.sample.databinding.ActivityBleConnectBinding
 import com.like.livedatarecyclerview.layoutmanager.WrapLinearLayoutManager
+import kotlinx.coroutines.launch
 
 class BleConnectActivity : AppCompatActivity() {
     private val mBinding: ActivityBleConnectBinding by lazy {
         DataBindingUtil.setContentView<ActivityBleConnectBinding>(this, R.layout.activity_ble_connect)
     }
-    private val mBleManager: IBleManager by lazy { CentralManager(this) }
     private lateinit var mData: BleScanInfo
-    private val mAdapter: BleConnectAdapter by lazy { BleConnectAdapter(this, mBleManager) }
+    private val mAdapter: BleConnectAdapter by lazy { BleConnectAdapter(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,41 +31,39 @@ class BleConnectActivity : AppCompatActivity() {
     fun connect(view: View) {
         mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_black_1))
         mBinding.tvConnectStatus.text = "连接中……"
-        mBleManager.sendCommand(
-            ConnectCommand(
-                mData.address,
-                10000L,
-                object : Command.Callback() {
-                    override fun onResult(vararg args: Any?) {
-                        if (args.isNotEmpty()) {
-                            val bluetoothGattServiceList = args[0] as List<BluetoothGattService>
-                            mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this@BleConnectActivity, R.color.ble_text_blue))
-                            mBinding.tvConnectStatus.text = "连接成功"
-                            if (bluetoothGattServiceList.isNotEmpty()) {
-                                val bleGattServiceInfos = bluetoothGattServiceList.map { bluetoothGattService ->
-                                    BleConnectInfo(mData.address, bluetoothGattService)
-                                }
-                                mAdapter.mAdapterDataManager.addItemsToEnd(bleGattServiceInfos)
-                            } else {
-                                mAdapter.mAdapterDataManager.clear()
+        lifecycleScope.launch {
+            BleManager.sendCommand(
+                ConnectCommand(
+                    mData.address,
+                    10000L,
+                    onResult = {
+                        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this@BleConnectActivity, R.color.ble_text_blue))
+                        mBinding.tvConnectStatus.text = "连接成功"
+                        if (it.isNotEmpty()) {
+                            val bleGattServiceInfos = it.map { bluetoothGattService ->
+                                BleConnectInfo(mData.address, bluetoothGattService)
                             }
+                            mAdapter.mAdapterDataManager.addItemsToEnd(bleGattServiceInfos)
+                        } else {
+                            mAdapter.mAdapterDataManager.clear()
                         }
-                    }
-
-                    override fun onFailure(t: Throwable) {
+                    },
+                    onError = {
                         mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this@BleConnectActivity, R.color.ble_text_red))
-                        mBinding.tvConnectStatus.text = t.message
+                        mBinding.tvConnectStatus.text = it.message
                         mAdapter.mAdapterDataManager.clear()
                         mBinding.etRequestMtu.setText("")
                         mBinding.etReadRemoteRssi.setText("")
                         mBinding.etRequestConnectionPriority.setText("")
                     }
-                })
-        )
+                ))
+        }
     }
 
     fun disconnect(view: View) {
-        mBleManager.sendCommand(DisconnectCommand(mData.address))
+        lifecycleScope.launch {
+            BleManager.sendCommand(DisconnectCommand(mData.address))
+        }
     }
 
     fun requestMtu(view: View) {
@@ -76,46 +72,34 @@ class BleConnectActivity : AppCompatActivity() {
             return
         }
         val mtu = mBinding.etRequestMtu.text.toString().trim().toInt()
-        mBleManager.sendCommand(RequestMtuCommand(
-            mData.address,
-            mtu,
-            3000,
-            object : Command.Callback() {
-                override fun onResult(vararg args: Any?) {
-                    if (args.isNotEmpty()) {
-                        val mtu1 = args[0]
-                        if (mtu1 is Int) {
-                            shortToastBottom("设置成功")
-                        }
-                    }
+        lifecycleScope.launch {
+            BleManager.sendCommand(RequestMtuCommand(
+                mData.address,
+                mtu,
+                3000,
+                onResult = {
+                    shortToastBottom("设置成功")
+                },
+                onError = {
+                    shortToastBottom(it.message)
                 }
-
-                override fun onFailure(t: Throwable) {
-                    shortToastBottom(t.message)
-                }
-            }
-        ))
+            ))
+        }
     }
 
     fun readRemoteRssi(view: View) {
-        mBleManager.sendCommand(ReadRemoteRssiCommand(
-            mData.address,
-            3000,
-            object : Command.Callback() {
-                override fun onResult(vararg args: Any?) {
-                    if (args.isNotEmpty()) {
-                        val rssi = args[0]
-                        if (rssi is Int) {
-                            mBinding.etReadRemoteRssi.setText(rssi.toString())
-                        }
-                    }
+        lifecycleScope.launch {
+            BleManager.sendCommand(ReadRemoteRssiCommand(
+                mData.address,
+                3000,
+                onResult = {
+                    mBinding.etReadRemoteRssi.setText(it.toString())
+                },
+                onError = {
+                    shortToastBottom(it.message)
                 }
-
-                override fun onFailure(t: Throwable) {
-                    shortToastBottom(t.message)
-                }
-            }
-        ))
+            ))
+        }
     }
 
     fun requestConnectionPriority(view: View) {
@@ -125,29 +109,23 @@ class BleConnectActivity : AppCompatActivity() {
         }
         val connectionPriority = mBinding.etRequestConnectionPriority.text.toString().trim().toInt()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mBleManager.sendCommand(RequestConnectionPriorityCommand(
-                mData.address,
-                connectionPriority,
-                object : Command.Callback() {
-                    override fun onResult(vararg args: Any?) {
-                        if (args.isNotEmpty()) {
-                            val connectionPriority1 = args[0]
-                            if (connectionPriority1 is Int) {
-                                shortToastBottom("设置成功")
-                            }
-                        }
+            lifecycleScope.launch {
+                BleManager.sendCommand(RequestConnectionPriorityCommand(
+                    mData.address,
+                    connectionPriority,
+                    onResult = {
+                        shortToastBottom("设置成功")
+                    },
+                    onError = {
+                        shortToastBottom(it.message)
                     }
-
-                    override fun onFailure(t: Throwable) {
-                        shortToastBottom(t.message)
-                    }
-                }
-            ))
+                ))
+            }
         }
     }
 
     override fun onDestroy() {
-        mBleManager.close()
+        BleManager.close()
         super.onDestroy()
     }
 

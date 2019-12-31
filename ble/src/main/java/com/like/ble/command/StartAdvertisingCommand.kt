@@ -17,8 +17,9 @@ class StartAdvertisingCommand(
     val advertiseData: AdvertiseData,
     val scanResponse: AdvertiseData,
     val deviceName: String = "",
-    callback: Callback? = null
-) : Command("开始广播命令", callback = callback) {
+    onCompleted: (() -> Unit)? = null,
+    onError: ((Throwable) -> Unit)? = null
+) : Command("开始广播命令", onCompleted = onCompleted, onError = onError) {
 
     override suspend fun execute() {
         mReceiver?.startAdvertising(this)

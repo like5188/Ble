@@ -15,11 +15,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
-import com.like.ble.IBleManager
-import com.like.ble.PeripheralManager
+import com.like.ble.BleManager
 import com.like.ble.command.StartAdvertisingCommand
 import com.like.ble.command.StopAdvertisingCommand
-import com.like.ble.command.base.Command
+import com.like.ble.executor.PeripheralExecutor
 import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
 import com.like.ble.utils.*
 import kotlinx.coroutines.delay
@@ -50,7 +49,6 @@ class BlePeripheralActivity : AppCompatActivity() {
     private val mBinding: ActivityBlePeripheralBinding by lazy {
         DataBindingUtil.setContentView<ActivityBlePeripheralBinding>(this, R.layout.activity_ble_peripheral)
     }
-    private val mBleManager: IBleManager by lazy { PeripheralManager(this) }
     private var mBluetoothGattServer: BluetoothGattServer? = null
     private val mBluetoothGattServerCallback = object : BluetoothGattServerCallback() {
         private val mResponseData: ByteArray by lazy {
@@ -222,25 +220,35 @@ class BlePeripheralActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mBinding.tvStatus.movementMethod = ScrollingMovementMethod()
+        BleManager.setExecutor(PeripheralExecutor(this))
     }
 
     fun startAdvertising(view: View) {
-        mBleManager.sendCommand(
-            StartAdvertisingCommand(
-                createAdvertiseSettings(),
-                createAdvertiseData(),
-                createScanResponseAdvertiseData(byteArrayOf(0x34, 0x56)),// 外设必须广播广播包，扫描包是可选。但添加扫描包也意味着广播更多得数据，即可广播62个字节。
-                "BLE测试设备",
-                object : Command.Callback() {
-                    override fun onCompleted() {
-                        mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_blue))
+        lifecycleScope.launch {
+            BleManager.sendCommand(
+                StartAdvertisingCommand(
+                    createAdvertiseSettings(),
+                    createAdvertiseData(),
+                    createScanResponseAdvertiseData(byteArrayOf(0x34, 0x56)),// 外设必须广播广播包，扫描包是可选。但添加扫描包也意味着广播更多得数据，即可广播62个字节。
+                    "BLE测试设备",
+                    onCompleted = {
+                        mBinding.tvAdvertisingStatus.setTextColor(
+                            ContextCompat.getColor(
+                                this@BlePeripheralActivity,
+                                R.color.ble_text_blue
+                            )
+                        )
                         mBinding.tvAdvertisingStatus.text = "广播已开启"
                         initServices()//该方法是添加一个服务，在此处调用即将服务广播出去
-                    }
-
-                    override fun onFailure(t: Throwable) {
-                        mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_red))
-                        mBinding.tvAdvertisingStatus.text = t.message ?: "广播停止了"
+                    },
+                    onError = {
+                        mBinding.tvAdvertisingStatus.setTextColor(
+                            ContextCompat.getColor(
+                                this@BlePeripheralActivity,
+                                R.color.ble_text_red
+                            )
+                        )
+                        mBinding.tvAdvertisingStatus.text = it.message ?: "广播停止了"
                         if (!isBluetoothEnable()) {// 说明关闭了蓝牙
                             getBluetoothManager()?.getConnectedDevices(BluetoothProfile.GATT)?.forEach { device ->
                                 mBluetoothGattServer?.cancelConnection(device)
@@ -250,13 +258,15 @@ class BlePeripheralActivity : AppCompatActivity() {
                             mBluetoothGattServer = null
                         }
                     }
-                }
+                )
             )
-        )
+        }
     }
 
     fun stopAdvertising(view: View) {
-        mBleManager.sendCommand(StopAdvertisingCommand())
+        lifecycleScope.launch {
+            BleManager.sendCommand(StopAdvertisingCommand())
+        }
     }
 
     @Synchronized
@@ -414,7 +424,7 @@ class BlePeripheralActivity : AppCompatActivity() {
         mBluetoothGattServer?.clearServices()
         mBluetoothGattServer?.close()
         mBluetoothGattServer = null
-        mBleManager.close()
+        BleManager.close()
         super.onDestroy()
     }
 }

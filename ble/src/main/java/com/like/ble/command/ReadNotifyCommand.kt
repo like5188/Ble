@@ -22,8 +22,9 @@ class ReadNotifyCommand(
     timeout: Long = 3000L,
     private val maxFrameTransferSize: Int = 1024,
     private val isWholeFrame: (ByteBuffer) -> Boolean = { true },
-    callback: Callback? = null
-) : AddressCommand("读取通知传来的数据命令", timeout, callback, address) {
+    onError: ((Throwable) -> Unit)? = null,
+    private val onResult: ((ByteArray?) -> Unit)? = null
+) : AddressCommand("读取通知传来的数据命令", timeout = timeout, onError = onError, address = address) {
 
     init {
         if (maxFrameTransferSize <= 0L) {
@@ -53,6 +54,15 @@ class ReadNotifyCommand(
 
     override suspend fun execute() {
         mReceiver?.readNotify(this)
+    }
+
+    override fun doOnResult(vararg args: Any?) {
+        if (args.isNotEmpty()) {
+            val arg0 = args[0]
+            if (arg0 is ByteArray?) {
+                onResult?.invoke(arg0)
+            }
+        }
     }
 
     override fun equals(other: Any?): Boolean {

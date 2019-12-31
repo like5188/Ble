@@ -19,8 +19,9 @@ class WriteCharacteristicCommand(
     val characteristicUuid: UUID,
     val serviceUuid: UUID? = null,
     timeout: Long = 3000L,
-    callback: Callback? = null
-) : AddressCommand("写特征值命令", timeout, callback, address) {
+    onCompleted: (() -> Unit)? = null,
+    onError: ((Throwable) -> Unit)? = null
+) : AddressCommand("写特征值命令", timeout = timeout, onCompleted = onCompleted, onError = onError, address = address) {
 
     init {
         if (data.isEmpty()) {

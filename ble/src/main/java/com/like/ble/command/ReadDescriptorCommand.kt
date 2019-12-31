@@ -16,11 +16,21 @@ class ReadDescriptorCommand(
     val characteristicUuid: UUID? = null,
     val serviceUuid: UUID? = null,
     timeout: Long = 3000L,
-    callback: Callback? = null
-) : AddressCommand("读描述值命令", timeout, callback, address) {
+    onError: ((Throwable) -> Unit)? = null,
+    private val onResult: ((ByteArray?) -> Unit)? = null
+) : AddressCommand("读描述值命令", timeout = timeout, onError = onError, address = address) {
 
     override suspend fun execute() {
         mReceiver?.readDescriptor(this)
+    }
+
+    override fun doOnResult(vararg args: Any?) {
+        if (args.isNotEmpty()) {
+            val arg0 = args[0]
+            if (arg0 is ByteArray?) {
+                onResult?.invoke(arg0)
+            }
+        }
     }
 
     override fun equals(other: Any?): Boolean {

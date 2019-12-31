@@ -34,7 +34,7 @@ class MacroAddressCommand : Command("宏命令") {
                     }
 
                     override fun interceptFailure(command: Command, throwable: Throwable) {
-                        mCallbackCommand?.callback?.onFailure(throwable)
+                        mCallbackCommand?.onError?.invoke(throwable)
                     }
 
                     override fun interceptResult(command: Command, vararg args: Any?) {
@@ -46,7 +46,7 @@ class MacroAddressCommand : Command("宏命令") {
             while (!command.isCompleted()) {
                 delay(20)
             }
-            if (!command.isSuccess() && command != mCallbackCommand) {
+            if (command.isError() && command != mCallbackCommand) {
                 return
             }
         }

@@ -10,9 +10,10 @@ import android.bluetooth.BluetoothAdapter
 abstract class AddressCommand(
     des: String,
     timeout: Long = 0L,
-    callback: Callback? = null,
+    onCompleted: (() -> Unit)? = null,
+    onError: ((Throwable) -> Unit)? = null,
     val address: String
-) : Command(des, timeout, callback) {
+) : Command(des, timeout, onCompleted, onError) {
     init {
         if (!BluetoothAdapter.checkBluetoothAddress(address)) {
             failureAndCompleteIfIncomplete("invalid address：$address")

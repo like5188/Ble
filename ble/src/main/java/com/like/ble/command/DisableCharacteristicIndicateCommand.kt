@@ -15,8 +15,9 @@ class DisableCharacteristicIndicateCommand(
     val characteristicUuid: UUID,
     val descriptorUuid: UUID = characteristicUuid,
     val serviceUuid: UUID? = null,
-    callback: Callback? = null
-) : AddressCommand("取消设置通知特征值命令", callback = callback, address = address) {
+    onCompleted: (() -> Unit)? = null,
+    onError: ((Throwable) -> Unit)? = null
+) : AddressCommand("取消设置通知特征值命令", onCompleted = onCompleted, onError = onError, address = address) {
 
     override suspend fun execute() {
         mReceiver?.disableCharacteristicIndicate(this)
