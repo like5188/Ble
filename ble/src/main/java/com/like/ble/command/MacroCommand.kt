@@ -11,7 +11,6 @@ class MacroCommand : Command("宏命令") {
     private val mCommands = mutableListOf<AddressCommand>()
     private var mCallbackCommand: AddressCommand? = null
 
-    @Throws(UnsupportedOperationException::class, IllegalArgumentException::class)
     fun addCommand(command: AddressCommand, isCallbackCommand: Boolean = false) {
         if (isCallbackCommand) {
             mCallbackCommand = command
@@ -29,12 +28,12 @@ class MacroCommand : Command("宏命令") {
         }
         mCommands.forEach { command ->
             if (command != mCallbackCommand) {
-                command.addInterceptor(object : Command.Interceptor {
+                command.addInterceptor(object : Interceptor {
                     override fun interceptCompleted(command: Command) {
                     }
 
                     override fun interceptFailure(command: Command, throwable: Throwable) {
-                        mCallbackCommand?.onError?.invoke(throwable)
+                        mCallbackCommand?.errorAndComplete(throwable.message ?: "unknown error")
                     }
 
                     override fun interceptResult(command: Command, vararg args: Any?) {
@@ -46,7 +45,7 @@ class MacroCommand : Command("宏命令") {
             while (!command.isCompleted()) {
                 delay(20)
             }
-            if (command.isError() && command != mCallbackCommand) {
+            if (command.isError()) {
                 return
             }
         }
