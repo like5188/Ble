@@ -15,6 +15,8 @@
 
 5、命令队列规则：①如果相同的命令正在执行，则抛弃。②StopScanCommand、DisconnectCommand、StopAdvertisingCommand命令会立即执行，其它命令会排队等候前面的命令完成。
 
+6、如果版本低于API 21，那么可以用ScanRecordBelow21类来解析扫描结果。
+
 ## 使用方法：
 
 1、引用
