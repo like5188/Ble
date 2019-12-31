@@ -55,6 +55,9 @@ abstract class Command(
         mJobs.add(job)
     }
 
+    /**
+     * 命令执行完成时回调
+     */
     internal fun complete() {
         mIsCompleted.set(true)
         if (mJobs.isNotEmpty()) {
@@ -106,6 +109,9 @@ abstract class Command(
         return "Command(des='$des', isCompleted='${isCompleted()}', isError='${isError()}')"
     }
 
+    /**
+     * 回调拦截器，用于宏命令[com.like.ble.command.MacroCommand]，拦截前提命令的回调。
+     */
     interface Interceptor {
         @MainThread
         fun interceptCompleted(command: Command)

@@ -7,7 +7,7 @@ import kotlinx.coroutines.delay
 /**
  * 顺序执行添加的[AddressCommand]命令，且在前一个成功后再执行下一个命令，否则会阻塞。
  */
-class MacroAddressCommand : Command("宏命令") {
+class MacroCommand : Command("宏命令") {
     private val mCommands = mutableListOf<AddressCommand>()
     private var mCallbackCommand: AddressCommand? = null
 
@@ -54,7 +54,7 @@ class MacroAddressCommand : Command("宏命令") {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is MacroAddressCommand) return false
+        if (other !is MacroCommand) return false
         if (!super.equals(other)) return false
 
         if (mCommands != other.mCommands) return false
