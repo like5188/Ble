@@ -18,41 +18,27 @@
 6、如果版本低于API 21，那么可以用ScanRecordBelow21类来解析扫描结果。
 
 7、系统内置了常用蓝牙命令：
+```java
     peripheral：
-
         StartAdvertisingCommand（开始广播命令）
-
         StopAdvertisingCommand（停止广播命令）
 
     central：
-
         MacroCommand（宏命令）
-
         ConnectCommand（连接蓝牙设备命令）
-
         DisconnectCommand（断开蓝牙设备命令）
-
         ReadCharacteristicCommand（读特征值命令）
-
         WriteCharacteristicCommand（写特征值命令）
-
         ReadDescriptorCommand（读描述值命令）
-
         WriteDescriptorCommand（写描述值命令）
-
         ReadNotifyCommand（读取通知传来的数据命令）
-
         ReadRemoteRssiCommand（readRemoteRssi命令）
-
         RequestConnectionPriorityCommand（requestConnectionPriority命令）
-
         RequestMtuCommand（requestMtu命令）
-
         SetCharacteristicNotificationCommand（设置特征的notification或者indication的命令）
-
         StartScanCommand（开始扫描蓝牙设备命令）
-
         StopScanCommand（停止扫描蓝牙设备命令）
+```
 
 ## 使用方法：
 
