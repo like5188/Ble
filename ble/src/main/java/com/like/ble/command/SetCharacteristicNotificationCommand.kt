@@ -6,13 +6,13 @@ import com.like.ble.command.base.AddressCommand
 import java.util.*
 
 /**
- * 设置特征notification、indication命令
+ * 设置特征的notification或者indication的命令
  *
  * @param characteristicUuid            特征UUID
  * @param descriptorUuid                描述UUID，属于[characteristicUuid]
  * @param serviceUuid                   服务UUID，如果不为null，则会在此服务下查找[characteristicUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
  * @param type                          类型：[TYPE_NOTIFY]、[TYPE_INDICATE]
- * @param enable                        true：开启通知；false：关闭通知
+ * @param enable                        true：开启；false：关闭
  */
 class SetCharacteristicNotificationCommand(
     address: String,
@@ -23,7 +23,7 @@ class SetCharacteristicNotificationCommand(
     val enable: Boolean = true,
     onCompleted: (() -> Unit)? = null,
     onError: ((Throwable) -> Unit)? = null
-) : AddressCommand("设置特征通知命令", onCompleted = onCompleted, onError = onError, address = address) {
+) : AddressCommand("设置特征的notification或者indication的命令", onCompleted = onCompleted, onError = onError, address = address) {
     companion object {
         const val TYPE_NOTIFY = 0
         const val TYPE_INDICATE = 1
@@ -47,6 +47,7 @@ class SetCharacteristicNotificationCommand(
         if (characteristicUuid != other.characteristicUuid) return false
         if (descriptorUuid != other.descriptorUuid) return false
         if (serviceUuid != other.serviceUuid) return false
+        if (type != other.type) return false
         if (enable != other.enable) return false
 
         return true
@@ -57,6 +58,7 @@ class SetCharacteristicNotificationCommand(
         result = 31 * result + characteristicUuid.hashCode()
         result = 31 * result + descriptorUuid.hashCode()
         result = 31 * result + (serviceUuid?.hashCode() ?: 0)
+        result = 31 * result + type
         result = 31 * result + enable.hashCode()
         return result
     }
