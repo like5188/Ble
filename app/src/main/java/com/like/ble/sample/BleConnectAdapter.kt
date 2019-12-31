@@ -174,12 +174,22 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
             binding.ivNotify.visibility = View.VISIBLE
             val isOn = AtomicBoolean(false)
             binding.ivNotify.setOnClickListener {
-                if (isOn.get()) {
-                    mBleManager.sendCommand(DisableCharacteristicNotifyCommand(
+                val descriptorUuid = createBleUuidBy16Bit("2902")
+                val setCharacteristicNotificationCommand = SetCharacteristicNotificationCommand(
+                    address,
+                    characteristic.uuid,
+                    descriptorUuid,
+                    serviceUuid,
+                    !isOn.get()
+                )
+                val writeDescriptorCommand = if (isOn.get()) {
+                    WriteDescriptorCommand(
                         address,
+                        listOf(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE),
+                        descriptorUuid,
                         characteristic.uuid,
-                        createBleUuidBy16Bit("2902"),
                         serviceUuid,
+                        5000,
                         onCompleted = {
                             isOn.set(false)
                             binding.ivNotify.setImageResource(R.drawable.notify_close)
@@ -188,13 +198,15 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                             isOn.set(true)
                             binding.ivNotify.setImageResource(R.drawable.notify)
                         }
-                    ))
+                    )
                 } else {
-                    mBleManager.sendCommand(EnableCharacteristicNotifyCommand(
+                    WriteDescriptorCommand(
                         address,
+                        listOf(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE),
+                        descriptorUuid,
                         characteristic.uuid,
-                        createBleUuidBy16Bit("2902"),
                         serviceUuid,
+                        5000,
                         onCompleted = {
                             isOn.set(true)
                             binding.ivNotify.setImageResource(R.drawable.notify)
@@ -203,8 +215,14 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                             isOn.set(false)
                             binding.ivNotify.setImageResource(R.drawable.notify_close)
                         }
-                    ))
+                    )
                 }
+
+                val macroCommand = MacroCommand()
+                // readNotifyCommand 必须第一个添加，类似于设置回调监听。
+                macroCommand.addCommand(setCharacteristicNotificationCommand, false)
+                macroCommand.addCommand(writeDescriptorCommand, true)
+                mBleManager.sendCommand(macroCommand)
             }
         }
         if (characteristic.properties and 0x20 != 0) {

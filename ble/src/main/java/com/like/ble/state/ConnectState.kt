@@ -450,6 +450,31 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
         setCharacteristicIndication(command.serviceUuid, command.characteristicUuid, command.descriptorUuid, false, command)
     }
 
+    override fun setCharacteristicNotification(command: SetCharacteristicNotificationCommand) {
+        if (!isConnected()) {
+            command.errorAndComplete("设备未连接")
+            return
+        }
+
+        val characteristic = mBluetoothGatt?.findCharacteristic(command.characteristicUuid, command.serviceUuid)
+        if (characteristic == null) {
+            command.errorAndComplete("特征值不存在：${command.characteristicUuid.getValidString()}")
+            return
+        }
+
+        if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY == 0) {
+            command.errorAndComplete("this characteristic not support notify!")
+            return
+        }
+
+        if (mBluetoothGatt?.setCharacteristicNotification(characteristic, command.enable) != true) {
+            command.errorAndComplete("setCharacteristicNotification fail")
+            return
+        }
+
+        command.complete()
+    }
+
     private fun setCharacteristicNotification(
         serviceUuid: UUID?,
         characteristicUuid: UUID,
