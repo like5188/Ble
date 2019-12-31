@@ -20,7 +20,7 @@ import com.like.livedatarecyclerview.viewholder.CommonViewHolder
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
-class BleConnectAdapter(private val mActivity: FragmentActivity) : BaseAdapter() {
+class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBleManager: BleManager) : BaseAdapter() {
     private val mLayoutInflater: LayoutInflater by lazy { LayoutInflater.from(mActivity) }
     private val mWriteDataFragment: WriteDataFragment by lazy { WriteDataFragment() }
 
@@ -103,7 +103,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity) : BaseAdapter()
         if (characteristic.properties and 0x02 != 0) {
             binding.ivRead.visibility = View.VISIBLE
             binding.ivRead.setOnClickListener {
-                BleManager.sendCommand(ReadCharacteristicCommand(
+                mBleManager.sendCommand(ReadCharacteristicCommand(
                     address,
                     characteristic.uuid,
                     serviceUuid,
@@ -126,7 +126,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity) : BaseAdapter()
                             when (data[0]) {
                                 0x1.toByte() -> {
 
-                                    BleManager.sendCommand(ReadNotifyCommand(
+                                    mBleManager.sendCommand(ReadNotifyCommand(
                                         address,
                                         characteristic.uuid,
                                         serviceUuid,
@@ -144,7 +144,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity) : BaseAdapter()
                                     ))
                                 }
                             }
-                            BleManager.sendCommand(WriteCharacteristicCommand(
+                            mBleManager.sendCommand(WriteCharacteristicCommand(
                                 address,
                                 data.batch(20),
                                 characteristic.uuid,
@@ -168,7 +168,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity) : BaseAdapter()
             val isOn = AtomicBoolean(false)
             binding.ivNotify.setOnClickListener {
                 if (isOn.get()) {
-                    BleManager.sendCommand(DisableCharacteristicNotifyCommand(
+                    mBleManager.sendCommand(DisableCharacteristicNotifyCommand(
                         address,
                         characteristic.uuid,
                         createBleUuidBy16Bit("2902"),
@@ -183,7 +183,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity) : BaseAdapter()
                         }
                     ))
                 } else {
-                    BleManager.sendCommand(EnableCharacteristicNotifyCommand(
+                    mBleManager.sendCommand(EnableCharacteristicNotifyCommand(
                         address,
                         characteristic.uuid,
                         createBleUuidBy16Bit("2902"),
@@ -205,7 +205,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity) : BaseAdapter()
             val isOn = AtomicBoolean(false)
             binding.ivIndicate.setOnClickListener {
                 if (isOn.get()) {
-                    BleManager.sendCommand(DisableCharacteristicIndicateCommand(
+                    mBleManager.sendCommand(DisableCharacteristicIndicateCommand(
                         address,
                         characteristic.uuid,
                         createBleUuidBy16Bit("2902"),
@@ -220,7 +220,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity) : BaseAdapter()
                         }
                     ))
                 } else {
-                    BleManager.sendCommand(EnableCharacteristicIndicateCommand(
+                    mBleManager.sendCommand(EnableCharacteristicIndicateCommand(
                         address,
                         characteristic.uuid,
                         createBleUuidBy16Bit("2902"),
@@ -264,7 +264,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity) : BaseAdapter()
 
         // 无法判断描述的权限，只能同时显示读和写两个操作。设置只读权限的描述，nRF也全部显示的（即显示写入和读取按钮）。
         binding.ivRead.setOnClickListener {
-            BleManager.sendCommand(ReadDescriptorCommand(
+            mBleManager.sendCommand(ReadDescriptorCommand(
                 address,
                 descriptor.uuid,
                 characteristic.uuid,
@@ -282,7 +282,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity) : BaseAdapter()
             mWriteDataFragment.arguments = Bundle().apply {
                 putSerializable("callback", object : WriteDataFragment.Callback {
                     override fun onData(data: ByteArray) {
-                        BleManager.sendCommand(WriteDescriptorCommand(
+                        mBleManager.sendCommand(WriteDescriptorCommand(
                             address,
                             data.batch(20),
                             descriptor.uuid,

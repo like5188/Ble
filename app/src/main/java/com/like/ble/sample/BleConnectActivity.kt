@@ -8,6 +8,7 @@ import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.like.ble.BleManager
 import com.like.ble.command.*
+import com.like.ble.executor.CentralExecutor
 import com.like.ble.sample.databinding.ActivityBleConnectBinding
 import com.like.livedatarecyclerview.layoutmanager.WrapLinearLayoutManager
 
@@ -16,7 +17,8 @@ class BleConnectActivity : AppCompatActivity() {
         DataBindingUtil.setContentView<ActivityBleConnectBinding>(this, R.layout.activity_ble_connect)
     }
     private lateinit var mData: BleScanInfo
-    private val mAdapter: BleConnectAdapter by lazy { BleConnectAdapter(this) }
+    private val mBleManager: BleManager by lazy { BleManager(CentralExecutor(this)) }
+    private val mAdapter: BleConnectAdapter by lazy { BleConnectAdapter(this, mBleManager) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,7 +31,7 @@ class BleConnectActivity : AppCompatActivity() {
     fun connect(view: View) {
         mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_black_1))
         mBinding.tvConnectStatus.text = "连接中……"
-        BleManager.sendCommand(
+        mBleManager.sendCommand(
             ConnectCommand(
                 mData.address,
                 10000L,
@@ -57,7 +59,7 @@ class BleConnectActivity : AppCompatActivity() {
     }
 
     fun disconnect(view: View) {
-        BleManager.sendCommand(DisconnectCommand(mData.address))
+        mBleManager.sendCommand(DisconnectCommand(mData.address))
     }
 
     fun requestMtu(view: View) {
@@ -66,7 +68,7 @@ class BleConnectActivity : AppCompatActivity() {
             return
         }
         val mtu = mBinding.etRequestMtu.text.toString().trim().toInt()
-        BleManager.sendCommand(RequestMtuCommand(
+        mBleManager.sendCommand(RequestMtuCommand(
             mData.address,
             mtu,
             3000,
@@ -80,7 +82,7 @@ class BleConnectActivity : AppCompatActivity() {
     }
 
     fun readRemoteRssi(view: View) {
-        BleManager.sendCommand(ReadRemoteRssiCommand(
+        mBleManager.sendCommand(ReadRemoteRssiCommand(
             mData.address,
             3000,
             onResult = {
@@ -99,7 +101,7 @@ class BleConnectActivity : AppCompatActivity() {
         }
         val connectionPriority = mBinding.etRequestConnectionPriority.text.toString().trim().toInt()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            BleManager.sendCommand(RequestConnectionPriorityCommand(
+            mBleManager.sendCommand(RequestConnectionPriorityCommand(
                 mData.address,
                 connectionPriority,
                 onResult = {
@@ -113,7 +115,7 @@ class BleConnectActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        BleManager.close()
+        mBleManager.close()
         super.onDestroy()
     }
 

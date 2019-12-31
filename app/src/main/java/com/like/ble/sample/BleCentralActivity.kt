@@ -25,16 +25,16 @@ class BleCentralActivity : AppCompatActivity() {
         DataBindingUtil.setContentView<ActivityBleCentralBinding>(this, R.layout.activity_ble_central)
     }
     private val mAdapter: BleScanAdapter by lazy { BleScanAdapter(this) }
+    private val mBleManager: BleManager by lazy { BleManager(CentralExecutor(this)) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mBinding.rv.layoutManager = WrapLinearLayoutManager(this)
         mBinding.rv.adapter = mAdapter
-        BleManager.setExecutor(CentralExecutor(this))
     }
 
     fun startScan(view: View) {
-        BleManager.sendCommand(
+        mBleManager.sendCommand(
             StartScanCommand(
                 onCompleted = {
                     mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_blue))
@@ -60,11 +60,11 @@ class BleCentralActivity : AppCompatActivity() {
     }
 
     fun stopScan(view: View) {
-        BleManager.sendCommand(StopScanCommand())
+        mBleManager.sendCommand(StopScanCommand())
     }
 
     override fun onDestroy() {
-        BleManager.close()
+        mBleManager.close()
         super.onDestroy()
     }
 

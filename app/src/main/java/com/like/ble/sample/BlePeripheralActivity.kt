@@ -49,6 +49,7 @@ class BlePeripheralActivity : AppCompatActivity() {
     private val mBinding: ActivityBlePeripheralBinding by lazy {
         DataBindingUtil.setContentView<ActivityBlePeripheralBinding>(this, R.layout.activity_ble_peripheral)
     }
+    private val mBleManager: BleManager by lazy { BleManager(PeripheralExecutor(this)) }
     private var mBluetoothGattServer: BluetoothGattServer? = null
     private val mBluetoothGattServerCallback = object : BluetoothGattServerCallback() {
         private val mResponseData: ByteArray by lazy {
@@ -220,11 +221,10 @@ class BlePeripheralActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mBinding.tvStatus.movementMethod = ScrollingMovementMethod()
-        BleManager.setExecutor(PeripheralExecutor(this))
     }
 
     fun startAdvertising(view: View) {
-        BleManager.sendCommand(
+        mBleManager.sendCommand(
             StartAdvertisingCommand(
                 createAdvertiseSettings(),
                 createAdvertiseData(),
@@ -262,7 +262,7 @@ class BlePeripheralActivity : AppCompatActivity() {
     }
 
     fun stopAdvertising(view: View) {
-        BleManager.sendCommand(StopAdvertisingCommand())
+        mBleManager.sendCommand(StopAdvertisingCommand())
     }
 
     @Synchronized
@@ -420,7 +420,7 @@ class BlePeripheralActivity : AppCompatActivity() {
         mBluetoothGattServer?.clearServices()
         mBluetoothGattServer?.close()
         mBluetoothGattServer = null
-        BleManager.close()
+        mBleManager.close()
         super.onDestroy()
     }
 }
