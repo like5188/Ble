@@ -7,6 +7,12 @@
 ## 功能介绍
 1、低功耗蓝牙模块封装，包括central、peripheral。
 
+2、如果相同的命令正在执行，则抛弃。
+
+3、StopScanCommand、DisconnectCommand、StopAdvertisingCommand命令会立即执行，其它命令会排队等候前面的命令完成。
+
+4、封装好了权限申请、打开蓝牙功能。
+
 ## 使用方法：
 
 1、引用
@@ -27,13 +33,13 @@
     }
 ```
 
-2、使用
+2、central
 ```java
     // 初始化
     private val mBleManager: BleManager by lazy { BleManager(CentralExecutor(this)) }
-    // 发送单个命令
+    // 发送单个命令：ConnectCommand、DisconnectCommand、ReadCharacteristicCommand、WriteCharacteristicCommand、ReadDescriptorCommand、WriteDescriptorCommand、ReadNotifyCommand、ReadRemoteRssiCommand、RequestConnectionPriorityCommand、RequestMtuCommand、SetCharacteristicNotificationCommand、StartScanCommand、StopScanCommand
     mBleManager.sendCommand(StopScanCommand())
-    // 发送宏命令
+    // 发送宏命令：MacroCommand
     val macroCommand = MacroCommand()
     val readNotifyCommand = ReadNotifyCommand()
     val writeCharacteristicCommand = WriteCharacteristicCommand()
@@ -44,7 +50,17 @@
     mBleManager.close()
 ```
 
-3、常用第三方库的引用
+3、peripheral
+```java
+    // 初始化
+    private val mBleManager: BleManager by lazy { BleManager(PeripheralExecutor(this)) }
+    // 发送单个命令：StartAdvertisingCommand、StopAdvertisingCommand
+    mBleManager.sendCommand(StartAdvertisingCommand())
+    // 释放资源
+    mBleManager.close()
+```
+
+4、常用第三方库的引用
 ```java
     // coroutines
     compileOnly 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2'
