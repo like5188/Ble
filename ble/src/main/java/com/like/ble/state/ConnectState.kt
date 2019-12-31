@@ -363,6 +363,7 @@ class ConnectState(private val mActivity: FragmentActivity) : State() {
         }
 
         addCommandToCache(command)
+        command.complete()
 
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)

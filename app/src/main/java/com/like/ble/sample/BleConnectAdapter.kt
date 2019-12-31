@@ -123,27 +123,23 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                 mWriteDataFragment.arguments = Bundle().apply {
                     putSerializable("callback", object : WriteDataFragment.Callback {
                         override fun onData(data: ByteArray) {
-                            when (data[0]) {
-                                0x1.toByte() -> {
-                                    mBleManager.sendCommand(ReadNotifyCommand(
-                                        address,
-                                        characteristic.uuid,
-                                        serviceUuid,
-                                        5000,
-                                        1024,
-                                        {
-                                            it.get(it.position() - 1) == Byte.MAX_VALUE
-                                        },
-                                        onResult = {
-                                            mActivity.longToastBottom("读取通知传来的数据成功。数据长度：${it?.size} ${it?.contentToString()}")
-                                        },
-                                        onError = {
-                                            mActivity.longToastBottom(it.message)
-                                        }
-                                    ))
+                            val readNotifyCommand = ReadNotifyCommand(
+                                address,
+                                characteristic.uuid,
+                                serviceUuid,
+                                5000,
+                                1024,
+                                {
+                                    it.get(it.position() - 1) == Byte.MAX_VALUE
+                                },
+                                onResult = {
+                                    mActivity.longToastBottom("读取通知传来的数据成功。数据长度：${it?.size} ${it?.contentToString()}")
+                                },
+                                onError = {
+                                    mActivity.longToastBottom(it.message)
                                 }
-                            }
-                            mBleManager.sendCommand(WriteCharacteristicCommand(
+                            )
+                            val writeCharacteristicCommand = WriteCharacteristicCommand(
                                 address,
                                 data.batch(20),
                                 characteristic.uuid,
@@ -155,7 +151,18 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                                 onError = {
                                     mActivity.longToastBottom(it.message)
                                 }
-                            ))
+                            )
+                            when (data[0]) {
+                                0x1.toByte() -> {
+                                    val macroCommand = MacroCommand()
+                                    macroCommand.addCommand(readNotifyCommand, true)
+                                    macroCommand.addCommand(writeCharacteristicCommand, false)
+                                    mBleManager.sendCommand(macroCommand)
+                                }
+                                else -> {
+                                    mBleManager.sendCommand(writeCharacteristicCommand)
+                                }
+                            }
                         }
                     })
                 }
