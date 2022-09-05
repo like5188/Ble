@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import java.util.*
 
 /**
- * 蓝牙连接状态
+ * 蓝牙连接状态（中心设备）
  * 可以进行连接、操作数据等等操作
  */
 class ConnectState(private val mActivity: FragmentActivity) : State() {

@@ -18,7 +18,7 @@ import com.like.ble.utils.getBluetoothAdapter
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * 蓝牙扫描状态
+ * 蓝牙扫描状态（中心设备）
  * 可以进行扫描操作
  */
 class ScanState(private val mActivity: FragmentActivity) : State() {
