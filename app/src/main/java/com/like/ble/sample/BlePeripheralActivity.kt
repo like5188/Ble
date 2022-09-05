@@ -15,9 +15,9 @@ import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.BleManager
-import com.like.ble.command.StartAdvertisingCommand
-import com.like.ble.command.StopAdvertisingCommand
-import com.like.ble.executor.PeripheralExecutor
+import com.like.ble.peripheral.command.StartAdvertisingCommand
+import com.like.ble.peripheral.command.StopAdvertisingCommand
+import com.like.ble.peripheral.executor.PeripheralExecutor
 import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
 import com.like.ble.utils.*
 import kotlinx.coroutines.delay

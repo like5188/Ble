@@ -8,8 +8,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.like.ble.BleManager
-import com.like.ble.command.*
-import com.like.ble.executor.CentralExecutor
+import com.like.ble.central.executor.CentralExecutor
+import com.like.ble.central.command.*
 import com.like.ble.sample.databinding.ActivityBleConnectBinding
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
 
