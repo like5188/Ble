@@ -1,31 +1,44 @@
 package com.like.ble.sample
 
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.view.WindowManager
+import androidx.databinding.DataBindingUtil
 import com.like.ble.sample.databinding.DialogFragmentWriteDataBinding
 import com.like.ble.utils.hexStringToByteArray
 import com.like.ble.utils.isHexString
+import com.like.common.base.BaseDialogFragment
 import java.io.Serializable
 
-class WriteDataFragment : BaseDialogFragment<DialogFragmentWriteDataBinding>() {
+class WriteDataFragment : BaseDialogFragment() {
+    private lateinit var mBinding: DialogFragmentWriteDataBinding
 
-    override fun getLayoutResId(): Int {
-        return R.layout.dialog_fragment_write_data
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        mBinding = DataBindingUtil.inflate(inflater, R.layout.dialog_fragment_write_data, container, false)
+        return mBinding.root
     }
 
-    override fun initView(binding: DialogFragmentWriteDataBinding, savedInstanceState: Bundle?) {
-        isCancelable = true
-        resources.displayMetrics?.widthPixels?.let { screenWidth ->
-            setWidth((screenWidth * 0.9).toInt())
-        }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         val callback: Callback? = arguments?.getSerializable("callback") as? Callback
-        binding.btnConfirm.setOnClickListener {
-            val data = binding.etData.text.toString().trim()
+        mBinding.btnConfirm.setOnClickListener {
+            val data = mBinding.etData.text.toString().trim()
             if (data.isHexString() && data.length % 2 == 0) {
                 callback?.onData(data.hexStringToByteArray())
                 dismiss()
             } else {
                 longToastBottom("只能输入16进制的数据")
             }
+        }
+    }
+
+    override fun initLayoutParams(layoutParams: WindowManager.LayoutParams) {
+        super.initLayoutParams(layoutParams)
+        resources.displayMetrics?.widthPixels?.let { screenWidth ->
+            // 宽高
+            layoutParams.width = (screenWidth * 0.9).toInt()
         }
     }
 

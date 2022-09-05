@@ -31,7 +31,7 @@ class MacroCommand : Command("宏命令") {
         }
         mCommands.forEach { command ->
             if (command == mCallbackCommand) {
-                command.addInterceptor(object : Interceptor {
+                command.setInterceptor(object : Interceptor {
                     override fun interceptCompleted(command: Command) {
                         mCallbackCommand?.onCompleted?.invoke()
                         complete()
@@ -48,7 +48,7 @@ class MacroCommand : Command("宏命令") {
                     }
                 })
             } else {
-                command.addInterceptor(object : Interceptor {
+                command.setInterceptor(object : Interceptor {
                     override fun interceptCompleted(command: Command) {
                     }
 

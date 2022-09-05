@@ -43,7 +43,7 @@ abstract class Command(
 
     private var mInterceptor: Interceptor? = null
 
-    internal fun addInterceptor(interceptor: Interceptor?) {
+    internal fun setInterceptor(interceptor: Interceptor?) {
         mInterceptor = interceptor
     }
 

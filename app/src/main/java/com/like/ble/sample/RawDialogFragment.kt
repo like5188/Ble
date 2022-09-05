@@ -5,33 +5,39 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.os.Bundle
 import android.util.TypedValue
-import android.view.Gravity
-import android.view.ViewGroup
+import android.view.*
 import android.widget.TableRow
 import android.widget.TextView
 import androidx.core.view.setPadding
+import androidx.databinding.DataBindingUtil
 import com.like.ble.sample.databinding.DialogFragmentRawBinding
 import com.like.ble.utils.toHexString
 import com.like.ble.utils.toHexString2
+import com.like.common.base.BaseDialogFragment
 
-class RawDialogFragment : BaseDialogFragment<DialogFragmentRawBinding>() {
+class RawDialogFragment : BaseDialogFragment() {
+    private lateinit var mBinding: DialogFragmentRawBinding
 
-    override fun getLayoutResId(): Int {
-        return R.layout.dialog_fragment_raw
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        mBinding = DataBindingUtil.inflate(inflater, R.layout.dialog_fragment_raw, container, false)
+        return mBinding.root
     }
 
-    override fun initView(binding: DialogFragmentRawBinding, savedInstanceState: Bundle?) {
-        isCancelable = true
-        resources.displayMetrics?.widthPixels?.let { screenWidth ->
-            setWidth((screenWidth * 0.9).toInt())
-        }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         val rawData: ByteArray = arguments?.get("data") as? ByteArray ?: return
         setData(rawData)
     }
 
-    private fun setData(rawData: ByteArray) {
-        val binding = getBinding() ?: return
+    override fun initLayoutParams(layoutParams: WindowManager.LayoutParams) {
+        super.initLayoutParams(layoutParams)
+        resources.displayMetrics?.widthPixels?.let { screenWidth ->
+            // 宽高
+            layoutParams.width = (screenWidth * 0.9).toInt()
+        }
+    }
 
+    private fun setData(rawData: ByteArray) {
         val rawDataSb = StringBuilder("0x")
         // 解析原始数据，显示详情
         val parseBleADData = parseADStructures(rawData)
@@ -40,15 +46,15 @@ class RawDialogFragment : BaseDialogFragment<DialogFragmentRawBinding>() {
             val typeHexString = adStructure.type.toHexString2()
             val dataHexString = adStructure.data.toHexString()
             rawDataSb.append(length.toHexString2()).append(typeHexString).append(dataHexString)
-            addADStructureTable(length, "0x$typeHexString", "0x$dataHexString", binding.tl)
+            addADStructureTable(length, "0x$typeHexString", "0x$dataHexString", mBinding.tl)
         }
 
         // 显示原始数据
-        binding.tvRawData.text = rawDataSb.toString()
+        mBinding.tvRawData.text = rawDataSb.toString()
         // 复制原始数据
-        binding.tvRawData.setOnClickListener {
+        mBinding.tvRawData.setOnClickListener {
             val clipboard = activity?.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager ?: return@setOnClickListener
-            val clip = ClipData.newPlainText("daqi", binding.tvRawData.text)
+            val clip = ClipData.newPlainText("daqi", mBinding.tvRawData.text)
             clipboard.setPrimaryClip(clip)
             activity?.shortToastBottom("复制成功")
         }
