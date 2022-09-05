@@ -140,7 +140,7 @@ class BlePeripheralActivity : AppCompatActivity() {
 
             when (value[0]) {
                 0x1.toByte() -> {
-                    // 外围设备向中心设备不能发送数据，必须通过notify 或者indicate的方式，andorid只发现notify接口。
+                    // 外围设备向中心设备不能发送数据，必须通过notify 或者indicate的方式，android只发现notify接口。
                     // 调用 notifyCharacteristicChanged() 方法向中心设备发送数据，会触发 onNotificationSent() 方法和中心设备的 BluetoothGattCallback.onCharacteristicChanged() 方法。
                     // 注意：默认mtu下一次只能传递20字节。
                     mResponseData.batch(mMtu - 3).forEach {
