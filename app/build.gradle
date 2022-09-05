@@ -4,24 +4,18 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.2"
+    compileSdkVersion 31
+
     defaultConfig {
         applicationId "com.like.ble.sample"
-        minSdkVersion 19
-        targetSdkVersion 29
+        minSdkVersion 18
+        targetSdkVersion 31
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
-        debug {
-            storeFile file("../like.jks")
-            storePassword "like5488"
-            keyAlias "like"
-            keyPassword "like5488"
-        }
         release {
             storeFile file("../like.jks")
             storePassword "like5488"
@@ -31,14 +25,6 @@ android {
     }
 
     buildTypes {
-        debug {
-            minifyEnabled false
-            zipAlignEnabled false
-            shrinkResources false
-            debuggable true
-            signingConfig signingConfigs.debug
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
         release {
             minifyEnabled true
             zipAlignEnabled true
@@ -60,29 +46,26 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'androidx.core:core-ktx:1.1.0'
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    implementation 'androidx.appcompat:appcompat:1.4.0'
+    implementation 'androidx.core:core-ktx:1.7.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
-    implementation 'com.google.android.material:material:1.0.0'
+    implementation 'com.google.android.material:material:1.4.0'
 
     // coroutines
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.2'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.2.0-rc03'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1'
     // Activity 或 Fragment 对协程的支持：lifecycleScope
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.0'
 
-    implementation 'io.reactivex.rxjava2:rxjava:2.2.11'
-    implementation 'com.github.tbruyelle:rxpermissions:0.10.2'
+    implementation 'com.github.like5188.RecyclerView:core:4.1.5'
+    implementation 'com.github.like5188.RecyclerView:ext:4.1.5'
+    implementation 'com.github.like5188.RecyclerView:ui:4.1.5'
 
-    implementation 'com.github.like5188:LiveDataRecyclerView:2.1.3'
-    implementation 'androidx.recyclerview:recyclerview:1.1.0'
-
-    implementation 'com.google.android:flexbox:1.0.0'
+    implementation 'com.google.android:flexbox:2.0.1'
 
     implementation project(':ble')
 }
