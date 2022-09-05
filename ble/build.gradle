@@ -30,7 +30,8 @@ dependencies {
     // coroutines
     compileOnly 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1'
     compileOnly 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1'
-    compileOnly 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.0'// Activity 或 Fragment 对协程的支持：lifecycleScope
+    compileOnly 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'// Activity 或 Fragment 对协程的支持：lifecycleScope
     // Activity 或 Fragment 对协程的支持：lifecycleScope
     compileOnly 'androidx.fragment:fragment-ktx:1.5.2'
+    compileOnly 'com.github.like5188:Common:6.9.9'
 }
