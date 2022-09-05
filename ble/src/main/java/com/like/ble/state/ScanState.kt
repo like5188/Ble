@@ -1,5 +1,6 @@
 package com.like.ble.state
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanCallback
@@ -21,6 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 蓝牙扫描状态（中心设备）
  * 可以进行扫描操作
  */
+@SuppressLint("MissingPermission")
 class ScanState(private val mActivity: FragmentActivity) : State() {
     private val mScanning = AtomicBoolean(false)
     private var mStartScanCommand: StartScanCommand? = null

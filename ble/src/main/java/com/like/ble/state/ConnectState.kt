@@ -1,5 +1,6 @@
 package com.like.ble.state
 
+import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.os.Build
 import androidx.fragment.app.FragmentActivity
@@ -16,6 +17,7 @@ import java.util.*
  * 蓝牙连接状态（中心设备）
  * 可以进行连接、操作数据等等操作
  */
+@SuppressLint("MissingPermission")
 class ConnectState(private val mActivity: FragmentActivity) : State() {
     private var mBluetoothGatt: BluetoothGatt? = null
     // 命令缓存

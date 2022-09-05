@@ -1,5 +1,6 @@
 package com.like.ble.state
 
+import android.annotation.SuppressLint
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseSettings
 import android.os.Build
@@ -22,6 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 广播数据是必需的，因为外设必需不停的向外广播，让中心设备知道它的存在。</br>
  * 扫描回复是可选的，中心设备可以向外设请求扫描回复，这里包含一些设备额外的信息。
  */
+@SuppressLint("MissingPermission")
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class AdvertisingState(private val mActivity: FragmentActivity) : State() {
     private val mIsSending = AtomicBoolean(false)
