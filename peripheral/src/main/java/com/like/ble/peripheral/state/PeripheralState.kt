@@ -1,6 +1,5 @@
 package com.like.ble.peripheral.state
 
-import com.like.ble.command.CloseCommand
 import com.like.ble.command.Command
 import com.like.ble.peripheral.command.StartAdvertisingCommand
 import com.like.ble.peripheral.command.StopAdvertisingCommand
@@ -17,10 +16,6 @@ abstract class PeripheralState : IState {
         }
     }
 
-    override fun close(command: CloseCommand) {
-        throw UnsupportedOperationException("Unsupported command")
-    }
-
     open fun startAdvertising(command: StartAdvertisingCommand) {
         throw UnsupportedOperationException("Unsupported command")
     }
@@ -28,4 +23,5 @@ abstract class PeripheralState : IState {
     open fun stopAdvertising(command: StopAdvertisingCommand) {
         throw UnsupportedOperationException("Unsupported command")
     }
+
 }

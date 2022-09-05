@@ -1,7 +1,6 @@
 package com.like.ble.central.state
 
 import com.like.ble.central.command.*
-import com.like.ble.command.CloseCommand
 import com.like.ble.command.Command
 import com.like.ble.state.IState
 
@@ -9,10 +8,6 @@ import com.like.ble.state.IState
  * 中心设备蓝牙状态基类。
  */
 abstract class CentralState : IState {
-
-    override fun close(command: CloseCommand) {
-        throw UnsupportedOperationException("Unsupported command")
-    }
 
     override suspend fun execute(command: Command) {
         when (command) {
