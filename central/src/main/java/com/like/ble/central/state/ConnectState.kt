@@ -3,7 +3,7 @@ package com.like.ble.central.state
 import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.os.Build
-import androidx.fragment.app.FragmentActivity
+import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.central.command.*
 import com.like.ble.command.CloseCommand
@@ -19,7 +19,7 @@ import java.util.*
  * 可以进行连接、操作数据等等操作
  */
 @SuppressLint("MissingPermission")
-class ConnectState(private val mActivity: FragmentActivity) : CentralState() {
+class ConnectState(private val mActivity: ComponentActivity) : CentralState() {
     private var mBluetoothGatt: BluetoothGatt? = null
 
     // 命令缓存

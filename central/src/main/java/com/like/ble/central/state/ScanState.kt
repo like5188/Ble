@@ -9,8 +9,8 @@ import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.os.Build
 import android.os.ParcelUuid
+import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
-import androidx.fragment.app.FragmentActivity
 import com.like.ble.central.command.StartScanCommand
 import com.like.ble.central.command.StopScanCommand
 import com.like.ble.command.CloseCommand
@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 可以进行扫描操作
  */
 @SuppressLint("MissingPermission")
-class ScanState(private val mActivity: FragmentActivity) : CentralState() {
+class ScanState(private val mActivity: ComponentActivity) : CentralState() {
     private val mScanning = AtomicBoolean(false)
     private var mStartScanCommand: StartScanCommand? = null
     private val mBleBroadcastReceiverHelper: BleBroadcastReceiverHelper by lazy {

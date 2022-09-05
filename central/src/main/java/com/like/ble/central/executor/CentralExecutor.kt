@@ -1,6 +1,6 @@
 package com.like.ble.central.executor
 
-import androidx.fragment.app.FragmentActivity
+import androidx.activity.ComponentActivity
 import com.like.ble.central.command.AddressCommand
 import com.like.ble.central.command.StartScanCommand
 import com.like.ble.central.command.StopScanCommand
@@ -16,7 +16,7 @@ import com.like.ble.state.IState
 /**
  * 蓝牙中心设备相关命令的执行者。
  */
-class CentralExecutor(private val mActivity: FragmentActivity) : IExecutor {
+class CentralExecutor(private val mActivity: ComponentActivity) : IExecutor {
     private val mInvoker: IInvoker by lazy { Invoker(mActivity) }
     private var mCurState: IState? = null
     private val mScanState: IState by lazy { ScanState(mActivity) }
