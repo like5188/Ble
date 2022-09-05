@@ -1,5 +1,6 @@
 package com.like.ble.sample
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -11,18 +12,19 @@ import com.like.ble.command.StartScanCommand
 import com.like.ble.command.StopScanCommand
 import com.like.ble.executor.CentralExecutor
 import com.like.ble.sample.databinding.ActivityBleCentralBinding
-import com.like.livedatarecyclerview.layoutmanager.WrapLinearLayoutManager
+import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
 
 /**
  * 蓝牙测试
  */
+@SuppressLint("MissingPermission")
 class BleCentralActivity : AppCompatActivity() {
     companion object {
         private val TAG = BleCentralActivity::class.java.simpleName
     }
 
     private val mBinding: ActivityBleCentralBinding by lazy {
-        DataBindingUtil.setContentView<ActivityBleCentralBinding>(this, R.layout.activity_ble_central)
+        DataBindingUtil.setContentView(this, R.layout.activity_ble_central)
     }
     private val mAdapter: BleScanAdapter by lazy { BleScanAdapter(this) }
     private val mBleManager: BleManager by lazy { BleManager(CentralExecutor(this)) }
@@ -39,15 +41,16 @@ class BleCentralActivity : AppCompatActivity() {
                 onCompleted = {
                     mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_blue))
                     mBinding.tvScanStatus.text = "扫描已开启"
-                    mAdapter.mAdapterDataManager.clear()
+                    mAdapter.submitList(null)
                 },
                 onResult = { device, rssi, scanRecord ->
                     val address = device.address ?: ""
                     val name = device.name ?: "N/A"
-                    val item: BleScanInfo? =
-                        mAdapter.mAdapterDataManager.getAll().firstOrNull { (it as? BleScanInfo)?.address == address } as? BleScanInfo
+                    val item: BleScanInfo? = mAdapter.currentList.firstOrNull { it?.address == address }
                     if (item == null) {// 防止重复添加
-                        mAdapter.mAdapterDataManager.addItemToEnd(BleScanInfo(name, address, ObservableInt(rssi), scanRecord))
+                        val newItems = mAdapter.currentList.toMutableList()
+                        newItems.add(BleScanInfo(name, address, ObservableInt(rssi), scanRecord))
+                        mAdapter.submitList(newItems)
                     } else {
                         item.updateRssi(rssi)
                     }

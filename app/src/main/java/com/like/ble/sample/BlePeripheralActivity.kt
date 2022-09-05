@@ -1,16 +1,15 @@
 package com.like.ble.sample
 
+import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
-import android.os.Build
 import android.os.Bundle
 import android.os.ParcelUuid
 import android.text.Html
 import android.text.method.ScrollingMovementMethod
 import android.view.View
 import androidx.annotation.ColorRes
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
@@ -30,7 +29,7 @@ import java.util.*
  * 自安卓5.0后，谷歌加入了对安卓手机作为低功耗蓝牙外围设备，即服务端的支持。使得手机可以通过低功耗蓝牙进行相互通信。
  * 实现这一功能其实只需要分为设置广播和设置服务器两个部分完成即可
  */
-@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+@SuppressLint("MissingPermission")
 class BlePeripheralActivity : AppCompatActivity() {
     companion object {
         // 0000????-0000-1000-8000-00805f9b34fb ????就表示4个可以自定义16进制数

@@ -8,30 +8,26 @@ import android.view.View
 import android.widget.LinearLayout
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.FragmentActivity
+import androidx.recyclerview.widget.DiffUtil
 import com.like.ble.BleManager
 import com.like.ble.command.*
 import com.like.ble.sample.databinding.ItemBleConnectBinding
 import com.like.ble.sample.databinding.ItemBleConnectCharacteristicBinding
 import com.like.ble.sample.databinding.ItemBleConnectDescriptorsBinding
 import com.like.ble.utils.*
-import com.like.livedatarecyclerview.adapter.BaseAdapter
-import com.like.livedatarecyclerview.model.IRecyclerViewItem
-import com.like.livedatarecyclerview.viewholder.CommonViewHolder
+import com.like.recyclerview.adapter.BaseListAdapter
+import com.like.recyclerview.viewholder.BindingViewHolder
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
-class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBleManager: BleManager) : BaseAdapter() {
+class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBleManager: BleManager) :
+    BaseListAdapter<ItemBleConnectBinding, BleConnectInfo>(DIFF) {
     private val mLayoutInflater: LayoutInflater by lazy { LayoutInflater.from(mActivity) }
     private val mWriteDataFragment: WriteDataFragment by lazy { WriteDataFragment() }
 
-    override fun bindOtherVariable(
-        holder: CommonViewHolder,
-        position: Int,
-        item: IRecyclerViewItem?
-    ) {
-        if (item !is BleConnectInfo) return
+    override fun onBindViewHolder(holder: BindingViewHolder<ItemBleConnectBinding>, item: BleConnectInfo) {
+        super.onBindViewHolder(holder, item)
         val binding = holder.binding
-        if (binding !is ItemBleConnectBinding) return
 
         // 服务UUID
         binding.tvServiceUuid.text = item.service.uuid.getValidString()
@@ -345,6 +341,18 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                 })
             }
             mWriteDataFragment.show(mActivity)
+        }
+    }
+
+    companion object {
+        private val DIFF = object : DiffUtil.ItemCallback<BleConnectInfo>() {
+            override fun areItemsTheSame(oldItem: BleConnectInfo, newItem: BleConnectInfo): Boolean {
+                return oldItem.address == newItem.address
+            }
+
+            override fun areContentsTheSame(oldItem: BleConnectInfo, newItem: BleConnectInfo): Boolean {
+                return oldItem.address == newItem.address
+            }
         }
     }
 

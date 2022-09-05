@@ -1,5 +1,6 @@
 package com.like.ble.sample
 
+import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -10,11 +11,12 @@ import com.like.ble.BleManager
 import com.like.ble.command.*
 import com.like.ble.executor.CentralExecutor
 import com.like.ble.sample.databinding.ActivityBleConnectBinding
-import com.like.livedatarecyclerview.layoutmanager.WrapLinearLayoutManager
+import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
 
+@SuppressLint("MissingPermission")
 class BleConnectActivity : AppCompatActivity() {
     private val mBinding: ActivityBleConnectBinding by lazy {
-        DataBindingUtil.setContentView<ActivityBleConnectBinding>(this, R.layout.activity_ble_connect)
+        DataBindingUtil.setContentView(this, R.layout.activity_ble_connect)
     }
     private lateinit var mData: BleScanInfo
     private val mBleManager: BleManager by lazy { BleManager(CentralExecutor(this)) }
@@ -42,15 +44,17 @@ class BleConnectActivity : AppCompatActivity() {
                         val bleGattServiceInfos = it.map { bluetoothGattService ->
                             BleConnectInfo(mData.address, bluetoothGattService)
                         }
-                        mAdapter.mAdapterDataManager.addItemsToEnd(bleGattServiceInfos)
+                        val newItems = mAdapter.currentList.toMutableList()
+                        newItems.addAll(bleGattServiceInfos)
+                        mAdapter.submitList(newItems)
                     } else {
-                        mAdapter.mAdapterDataManager.clear()
+                        mAdapter.submitList(null)
                     }
                 },
                 onError = {
                     mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this@BleConnectActivity, R.color.ble_text_red))
                     mBinding.tvConnectStatus.text = it.message
-                    mAdapter.mAdapterDataManager.clear()
+                    mAdapter.submitList(null)
                     mBinding.etRequestMtu.setText("")
                     mBinding.etReadRemoteRssi.setText("")
                     mBinding.etRequestConnectionPriority.setText("")

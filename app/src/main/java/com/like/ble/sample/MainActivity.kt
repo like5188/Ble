@@ -1,9 +1,9 @@
 package com.like.ble.sample
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import com.like.common.util.startActivity
 
 class MainActivity : AppCompatActivity() {
 
@@ -13,11 +13,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun gotoBleActivity(view: View) {
-        this.startActivity(Intent(this, BleCentralActivity::class.java))
+        startActivity<BleCentralActivity>()
     }
 
     fun gotoBlePeripheralActivity(view: View) {
-        this.startActivity(Intent(this, BlePeripheralActivity::class.java))
+        startActivity<BlePeripheralActivity>()
     }
 
 }

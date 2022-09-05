@@ -1,5 +1,6 @@
 package com.like.ble.sample
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.text.Html
@@ -8,29 +9,24 @@ import androidx.core.content.ContextCompat
 import androidx.core.util.forEach
 import androidx.core.util.isEmpty
 import androidx.fragment.app.FragmentActivity
+import androidx.recyclerview.widget.DiffUtil
 import com.like.ble.sample.databinding.ItemBleScanBinding
 import com.like.ble.utils.deleteLast
 import com.like.ble.utils.getValidString
 import com.like.ble.utils.scanrecordcompat.ScanRecordBelow21
 import com.like.ble.utils.toHexString
 import com.like.ble.utils.toHexString4
-import com.like.livedatarecyclerview.adapter.BaseAdapter
-import com.like.livedatarecyclerview.model.IRecyclerViewItem
-import com.like.livedatarecyclerview.viewholder.CommonViewHolder
+import com.like.recyclerview.adapter.BaseListAdapter
+import com.like.recyclerview.viewholder.BindingViewHolder
 
-class BleScanAdapter(private val mActivity: FragmentActivity) : BaseAdapter() {
+class BleScanAdapter(private val mActivity: FragmentActivity) : BaseListAdapter<ItemBleScanBinding, BleScanInfo>(DIFF) {
     private val mRawDialogFragment: RawDialogFragment by lazy {
         RawDialogFragment()
     }
 
-    override fun bindOtherVariable(
-        holder: CommonViewHolder,
-        position: Int,
-        item: IRecyclerViewItem?
-    ) {
-        if (item !is BleScanInfo) return
+    override fun onBindViewHolder(holder: BindingViewHolder<ItemBleScanBinding>, item: BleScanInfo) {
+        super.onBindViewHolder(holder, item)
         val binding = holder.binding
-        if (binding !is ItemBleScanBinding) return
 
         binding.tvConnect.setOnClickListener {
             val connectIntent = Intent(mActivity, BleConnectActivity::class.java)
@@ -119,4 +115,20 @@ class BleScanAdapter(private val mActivity: FragmentActivity) : BaseAdapter() {
         }
     }
 
+    companion object {
+        private val DIFF = object : DiffUtil.ItemCallback<BleScanInfo>() {
+            override fun areItemsTheSame(oldItem: BleScanInfo, newItem: BleScanInfo): Boolean {
+                return oldItem.address == newItem.address
+            }
+
+            @SuppressLint("DiffUtilEquals")
+            override fun areContentsTheSame(oldItem: BleScanInfo, newItem: BleScanInfo): Boolean {
+                return oldItem.name == newItem.name &&
+                        oldItem.rssi == newItem.rssi &&
+                        oldItem.scanRecord.contentEquals(newItem.scanRecord) &&
+                        oldItem.distance == newItem.distance &&
+                        oldItem.isShowDetails == newItem.isShowDetails
+            }
+        }
+    }
 }

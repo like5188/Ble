@@ -2,12 +2,13 @@ package com.like.ble.sample
 
 import androidx.databinding.ObservableBoolean
 import androidx.databinding.ObservableInt
-import com.like.livedatarecyclerview.model.IItem
+import com.like.recyclerview.model.IRecyclerViewItem
 import java.io.Serializable
 import kotlin.math.abs
 import kotlin.math.pow
 
-class BleScanInfo(val name: String, val address: String, val rssi: ObservableInt, val scanRecord: ByteArray?) : IItem, Serializable {
+class BleScanInfo(val name: String, val address: String, val rssi: ObservableInt, val scanRecord: ByteArray?) : IRecyclerViewItem,
+    Serializable {
     override var variableId: Int = BR.bleScanInfo
     override var layoutId: Int = R.layout.item_ble_scan
     val distance: ObservableInt = ObservableInt(0)
