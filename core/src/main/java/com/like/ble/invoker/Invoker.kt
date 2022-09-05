@@ -20,6 +20,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * 命令请求者
+ * 功能：
+ * 1、添加命令，并判断执行条件是否满足。
+ * 2、循环从命令队列中取出命令执行。并提供关闭循环的方法。
  */
 class Invoker(private val mActivity: FragmentActivity) : IInvoker {
     companion object {
