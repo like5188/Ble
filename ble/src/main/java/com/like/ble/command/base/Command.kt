@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 蓝牙命令基类
  *
  * @param des           命令功能描述，用于打印日志。
- * @param timeout       命令执行超时时间（毫秒）。0或者小于0表示没有超时时间。
+ * @param timeout       命令执行超时时间（毫秒）。<=0表示立即执行。
  * @param onCompleted   命令完成回调
  * @param onError       命令失败回调
  */
