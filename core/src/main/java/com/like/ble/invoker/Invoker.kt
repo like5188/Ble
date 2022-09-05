@@ -5,7 +5,7 @@ import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import android.util.Log
-import androidx.fragment.app.FragmentActivity
+import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.Command
 import com.like.ble.utils.isBluetoothEnable
@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 1、添加命令，并判断执行条件是否满足。
  * 2、循环从命令队列中取出命令执行。并提供关闭循环的方法。
  */
-class Invoker(private val mActivity: FragmentActivity) : IInvoker {
+class Invoker(private val mActivity: ComponentActivity) : IInvoker {
     companion object {
         private val TAG = Invoker::class.java.simpleName
     }

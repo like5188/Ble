@@ -3,7 +3,7 @@ package com.like.ble.peripheral.state
 import android.annotation.SuppressLint
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseSettings
-import androidx.fragment.app.FragmentActivity
+import androidx.activity.ComponentActivity
 import com.like.ble.command.CloseCommand
 import com.like.ble.peripheral.command.StartAdvertisingCommand
 import com.like.ble.peripheral.command.StopAdvertisingCommand
@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 扫描回复是可选的，中心设备可以向外设请求扫描回复，这里包含一些设备额外的信息。
  */
 @SuppressLint("MissingPermission")
-class AdvertisingState(private val mActivity: FragmentActivity) : PeripheralState() {
+class AdvertisingState(private val mActivity: ComponentActivity) : PeripheralState() {
     private val mIsSending = AtomicBoolean(false)
     private var mStartAdvertisingCommand: StartAdvertisingCommand? = null
     private val mBleBroadcastReceiverHelper: BleBroadcastReceiverHelper by lazy {
