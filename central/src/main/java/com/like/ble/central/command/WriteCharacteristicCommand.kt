@@ -46,10 +46,6 @@ class WriteCharacteristicCommand(
         mNextFlag.set(false)
     }
 
-    override fun needExecuteImmediately(): Boolean {
-        return false
-    }
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is WriteCharacteristicCommand) return false

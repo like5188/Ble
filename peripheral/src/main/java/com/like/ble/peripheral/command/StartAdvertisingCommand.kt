@@ -19,10 +19,4 @@ class StartAdvertisingCommand(
     val deviceName: String = "",
     onCompleted: (() -> Unit)? = null,
     onError: ((Throwable) -> Unit)? = null
-) : Command("开始广播命令", onCompleted = onCompleted, onError = onError) {
-
-    override fun needExecuteImmediately(): Boolean {
-        return false
-    }
-
-}
+) : Command("开始广播命令", onCompleted = onCompleted, onError = onError)

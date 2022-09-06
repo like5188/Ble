@@ -55,7 +55,7 @@ class CommandLooper(private val mActivity: ComponentActivity) {
                 return@launch
             }
             // 判断命令是否需要立即执行
-            if (command.needExecuteImmediately()) {
+            if (command.immediately) {
                 mCancel.set(true)
                 mCommands.send(command)
                 return@launch

@@ -11,10 +11,11 @@ import com.like.ble.command.Command
 abstract class AddressCommand(
     des: String,
     timeout: Long = 0L,
+    immediately: Boolean = false,
     onCompleted: (() -> Unit)? = null,
     onError: ((Throwable) -> Unit)? = null,
     val address: String
-) : Command(des, timeout, onCompleted, onError) {
+) : Command(des, timeout, immediately, onCompleted, onError) {
     init {
         if (!BluetoothAdapter.checkBluetoothAddress(address)) {
             errorAndComplete("invalid address：$address")

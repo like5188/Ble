@@ -35,8 +35,4 @@ class StartScanCommand(
         }
     }
 
-    override fun needExecuteImmediately(): Boolean {
-        return false
-    }
-
 }

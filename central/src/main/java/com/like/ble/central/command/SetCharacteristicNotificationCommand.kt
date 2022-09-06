@@ -35,10 +35,6 @@ class SetCharacteristicNotificationCommand(
         }
     }
 
-    override fun needExecuteImmediately(): Boolean {
-        return false
-    }
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is SetCharacteristicNotificationCommand) return false

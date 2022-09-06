@@ -11,12 +11,14 @@ import java.util.concurrent.atomic.AtomicBoolean
  *
  * @param des           命令功能描述，用于打印日志。
  * @param timeout       命令执行超时时间（毫秒）。<=0表示立即执行。
+ * @param immediately   是否立即执行命令。
  * @param onCompleted   命令完成回调
  * @param onError       命令失败回调
  */
 abstract class Command(
     private val des: String,
     val timeout: Long = 0L,
+    val immediately: Boolean = false,
     val onCompleted: (() -> Unit)? = null,
     val onError: ((Throwable) -> Unit)? = null
 ) {
@@ -112,11 +114,6 @@ abstract class Command(
     open suspend fun execute() {
         mState?.execute(this)
     }
-
-    /**
-     * 是否属于需要立即执行的命令
-     */
-    abstract fun needExecuteImmediately(): Boolean
 
     override fun toString(): String {
         return "Command(des='$des', isCompleted='${isCompleted()}', isError='${isError()}')"

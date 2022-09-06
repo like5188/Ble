@@ -21,7 +21,4 @@ class ConnectCommand(
         }
     }
 
-    override fun needExecuteImmediately(): Boolean {
-        return false
-    }
 }

@@ -19,8 +19,4 @@ class ReadRemoteRssiCommand(
         }
     }
 
-    override fun needExecuteImmediately(): Boolean {
-        return false
-    }
-
 }
