@@ -3,26 +3,22 @@ package com.like.ble.peripheral.executor
 import androidx.activity.ComponentActivity
 import com.like.ble.command.CloseCommand
 import com.like.ble.command.Command
-import com.like.ble.executor.IExecutor
-import com.like.ble.invoker.IInvoker
-import com.like.ble.invoker.Invoker
+import com.like.ble.executor.CommandExecutor
 import com.like.ble.peripheral.state.AdvertisingState
 import com.like.ble.state.IState
 
 /**
  * 蓝牙外围设备相关命令的执行者。
  */
-class PeripheralExecutor(private val mActivity: ComponentActivity) : IExecutor {
-    private val mInvoker: IInvoker by lazy { Invoker(mActivity) }
+class PeripheralExecutor(activity: ComponentActivity) : CommandExecutor(activity) {
     private val mAdvertisingState: IState by lazy { AdvertisingState(mActivity) }
 
-    override fun execute(command: Command) {
+    override fun onExecute(command: Command): Boolean {
         command.mState = mAdvertisingState
-        mInvoker.addCommand(command)
+        return true
     }
 
-    override fun close() {
-        mInvoker.close()
+    override fun onClose() {
         mAdvertisingState.close(CloseCommand())
     }
 

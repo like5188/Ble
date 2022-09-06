@@ -8,29 +8,35 @@ import com.like.ble.central.state.ConnectState
 import com.like.ble.central.state.ScanState
 import com.like.ble.command.CloseCommand
 import com.like.ble.command.Command
-import com.like.ble.executor.IExecutor
-import com.like.ble.invoker.IInvoker
-import com.like.ble.invoker.Invoker
+import com.like.ble.executor.CommandExecutor
 import com.like.ble.state.IState
 
 /**
  * 蓝牙中心设备相关命令的执行者。
  */
-class CentralExecutor(private val mActivity: ComponentActivity) : IExecutor {
-    private val mInvoker: IInvoker by lazy { Invoker(mActivity) }
+class CentralExecutor(activity: ComponentActivity) : CommandExecutor(activity) {
     private var mCurState: IState? = null
     private val mScanState: IState by lazy { ScanState(mActivity) }
     private val mConnectStateMap = mutableMapOf<String, IState>()
 
-    override fun execute(command: Command) {
+    override fun onExecute(command: Command): Boolean {
         val state = getStateByCommand(command)
         if (state == null) {
             command.errorAndComplete("更新蓝牙状态失败，无法执行命令：$command")
-            return
+            return false
         }
         mCurState = state
         command.mState = state
-        mInvoker.addCommand(command)
+        return true
+    }
+
+    override fun onClose() {
+        mScanState.close(CloseCommand())
+        mConnectStateMap.forEach {
+            it.value.close(CloseCommand())
+        }
+        mConnectStateMap.clear()
+        mCurState = null
     }
 
     private fun getStateByCommand(command: Command): IState? {
@@ -46,16 +52,6 @@ class CentralExecutor(private val mActivity: ComponentActivity) : IExecutor {
             }
             else -> mCurState
         }
-    }
-
-    override fun close() {
-        mInvoker.close()
-        mScanState.close(CloseCommand())
-        mConnectStateMap.forEach {
-            it.value.close(CloseCommand())
-        }
-        mConnectStateMap.clear()
-        mCurState = null
     }
 
 }

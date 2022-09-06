@@ -4,9 +4,6 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.Command
-import com.like.ble.utils.checkPermissions
-import com.like.ble.utils.isBleOpened
-import com.like.ble.utils.isSupportBluetooth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -14,14 +11,11 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * 命令请求者
- * 功能：
- * 1、添加命令，并判断执行条件是否满足。
- * 2、循环从命令队列中取出命令执行。并提供关闭循环的方法。
+ * 循环从命令队列中取出命令执行。
  */
-class Invoker(private val mActivity: ComponentActivity) : IInvoker {
+class CommandLooper(private val mActivity: ComponentActivity) {
     companion object {
-        private val TAG = Invoker::class.java.simpleName
+        private val TAG = CommandLooper::class.java.simpleName
     }
 
     private val mCommands = Channel<Command>()
@@ -48,23 +42,8 @@ class Invoker(private val mActivity: ComponentActivity) : IInvoker {
         }
     }
 
-    override fun addCommand(command: Command) {
+    fun addCommand(command: Command) {
         mActivity.lifecycleScope.launch(Dispatchers.Main) {
-            if (!mActivity.isSupportBluetooth()) {
-                command.errorAndComplete("手机不支持蓝牙")
-                return@launch
-            }
-
-            if (!mActivity.checkPermissions()) {
-                command.errorAndComplete("蓝牙权限被拒绝")
-                return@launch
-            }
-
-            if (!mActivity.isBleOpened()) {
-                command.errorAndComplete("蓝牙未打开")
-                return@launch
-            }
-
             val curCommand = mCurCommand
             // 如果相同的命令正在执行，则抛弃
             if (curCommand != null &&
@@ -86,7 +65,7 @@ class Invoker(private val mActivity: ComponentActivity) : IInvoker {
         }
     }
 
-    override fun close() {
+    fun close() {
         mCancel.set(true)
         mCommands.close()
         mCurCommand = null

@@ -1,7 +1,7 @@
 package com.like.ble
 
 import com.like.ble.command.Command
-import com.like.ble.executor.IExecutor
+import com.like.ble.executor.CommandExecutor
 
 /**
  * 蓝牙设备管理
@@ -9,7 +9,7 @@ import com.like.ble.executor.IExecutor
  *
  * @param mExecutor  蓝牙命令执行者。
  */
-class BleManager(private val mExecutor: IExecutor) {
+class BleManager(private val mExecutor: CommandExecutor) {
 
     /**
      * 发送命令
