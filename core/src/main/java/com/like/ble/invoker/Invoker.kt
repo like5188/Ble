@@ -1,17 +1,12 @@
 package com.like.ble.invoker
 
-import android.Manifest
-import android.app.Activity
-import android.bluetooth.BluetoothAdapter
-import android.content.Intent
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.Command
-import com.like.ble.utils.isBluetoothEnable
+import com.like.ble.utils.checkPermissions
+import com.like.ble.utils.isBleOpened
 import com.like.ble.utils.isSupportBluetooth
-import com.like.common.util.activityresultlauncher.requestMultiplePermissions
-import com.like.common.util.activityresultlauncher.startActivityForResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -60,18 +55,12 @@ class Invoker(private val mActivity: ComponentActivity) : IInvoker {
                 return@launch
             }
 
-            val checkPermissions = mActivity.requestMultiplePermissions(
-                Manifest.permission.BLUETOOTH_ADMIN,
-                Manifest.permission.BLUETOOTH,
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-            ).all { it.value }
-            if (!checkPermissions) {
+            if (!mActivity.checkPermissions()) {
                 command.errorAndComplete("蓝牙权限被拒绝")
                 return@launch
             }
 
-            if (!isBleOpened()) {
+            if (!mActivity.isBleOpened()) {
                 command.errorAndComplete("蓝牙未打开")
                 return@launch
             }
@@ -101,14 +90,6 @@ class Invoker(private val mActivity: ComponentActivity) : IInvoker {
         mCancel.set(true)
         mCommands.close()
         mCurCommand = null
-    }
-
-    private suspend fun isBleOpened(): Boolean = if (mActivity.isBluetoothEnable()) {
-        true
-    } else {// 蓝牙功能未打开
-        // 弹出开启蓝牙的对话框
-        val activityResult = mActivity.startActivityForResult(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
-        activityResult.resultCode == Activity.RESULT_OK
     }
 
 }
