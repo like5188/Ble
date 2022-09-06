@@ -24,7 +24,7 @@ class StartScanCommand(
     private val onResult: ((BluetoothDevice, Int, ByteArray?) -> Unit)? = null
 ) : Command("开始扫描蓝牙设备命令", onCompleted = onCompleted, onError = onError) {
 
-    override fun doOnResult(vararg args: Any?) {
+    override fun onResult(vararg args: Any?) {
         if (args.size >= 3) {
             val arg0 = args[0]
             val arg1 = args[1]

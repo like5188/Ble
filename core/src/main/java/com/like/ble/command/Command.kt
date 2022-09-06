@@ -82,7 +82,7 @@ abstract class Command(
     @Synchronized
     fun resultAndComplete(vararg args: Any?) {
         mainThread {
-            mInterceptor?.interceptResult(this, *args) ?: doOnResult(*args)
+            mInterceptor?.interceptResult(this, *args) ?: onResult(*args)
         }
         complete()
     }
@@ -105,7 +105,7 @@ abstract class Command(
      * 由子类实现返回参数类型的转换
      */
     @MainThread
-    open fun doOnResult(vararg args: Any?) {
+    open fun onResult(vararg args: Any?) {
     }
 
     /**

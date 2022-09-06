@@ -42,7 +42,7 @@ class MultipleAddressCommands : Command("组合命令") {
                     }
 
                     override fun interceptResult(command: Command, vararg args: Any?) {
-                        mCallbackCommand?.doOnResult(*args)
+                        mCallbackCommand?.onResult(*args)
                         complete()
                     }
                 })

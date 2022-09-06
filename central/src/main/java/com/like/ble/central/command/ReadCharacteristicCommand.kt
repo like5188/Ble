@@ -17,7 +17,7 @@ class ReadCharacteristicCommand(
     private val onResult: ((ByteArray?) -> Unit)? = null
 ) : AddressCommand("读特征值命令", timeout = timeout, onError = onError, address = address) {
 
-    override fun doOnResult(vararg args: Any?) {
+    override fun onResult(vararg args: Any?) {
         if (args.isNotEmpty()) {
             val arg0 = args[0]
             if (arg0 is ByteArray?) {
