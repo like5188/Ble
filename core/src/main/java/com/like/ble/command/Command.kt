@@ -120,7 +120,7 @@ abstract class Command(
     }
 
     /**
-     * 回调拦截器，用于宏命令[com.like.ble.command.MacroCommand]，拦截前提命令的回调。
+     * 回调拦截器，用于组合命令，拦截前提命令的回调。
      */
     interface Interceptor {
         @MainThread
