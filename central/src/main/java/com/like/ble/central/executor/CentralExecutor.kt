@@ -8,7 +8,6 @@ import com.like.ble.central.command.StartScanCommand
 import com.like.ble.central.command.StopScanCommand
 import com.like.ble.central.state.ConnectState
 import com.like.ble.central.state.ScanState
-import com.like.ble.command.CloseCommand
 import com.like.ble.command.Command
 import com.like.ble.executor.CommandExecutor
 import com.like.ble.state.IState
@@ -66,9 +65,9 @@ class CentralExecutor(activity: ComponentActivity) : CommandExecutor(activity) {
     }
 
     override fun onClose() {
-        mScanState.close(CloseCommand())
+        mScanState.close()
         mConnectStateMap.forEach {
-            it.value.close(CloseCommand())
+            it.value.close()
         }
         mConnectStateMap.clear()
         mCurState = null

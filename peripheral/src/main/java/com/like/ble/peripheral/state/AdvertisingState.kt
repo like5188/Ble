@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseSettings
 import androidx.activity.ComponentActivity
-import com.like.ble.command.CloseCommand
 import com.like.ble.peripheral.command.StartAdvertisingCommand
 import com.like.ble.peripheral.command.StopAdvertisingCommand
 import com.like.ble.utils.BleBroadcastReceiverManager
@@ -96,11 +95,10 @@ class AdvertisingState(private val mActivity: ComponentActivity) : PeripheralSta
     }
 
     @Synchronized
-    override fun close(command: CloseCommand) {
+    override fun close() {
         stopAdvertising(StopAdvertisingCommand())
         mStartAdvertisingCommand = null
         mBleBroadcastReceiverManager.unregister()
-        command.complete()
     }
 
 }

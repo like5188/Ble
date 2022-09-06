@@ -3,7 +3,6 @@ package com.like.ble.peripheral.executor
 import android.Manifest
 import android.os.Build
 import androidx.activity.ComponentActivity
-import com.like.ble.command.CloseCommand
 import com.like.ble.command.Command
 import com.like.ble.executor.CommandExecutor
 import com.like.ble.peripheral.state.AdvertisingState
@@ -41,7 +40,7 @@ class PeripheralExecutor(activity: ComponentActivity) : CommandExecutor(activity
     }
 
     override fun onClose() {
-        mAdvertisingState.close(CloseCommand())
+        mAdvertisingState.close()
     }
 
 }

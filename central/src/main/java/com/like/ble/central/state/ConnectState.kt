@@ -6,7 +6,6 @@ import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.central.command.*
-import com.like.ble.command.CloseCommand
 import com.like.ble.command.Command
 import com.like.ble.utils.*
 import kotlinx.coroutines.Dispatchers
@@ -557,13 +556,12 @@ class ConnectState(private val mActivity: ComponentActivity) : CentralState() {
     }
 
     @Synchronized
-    override fun close(command: CloseCommand) {
+    override fun close() {
         val address = mBluetoothGatt?.device?.address ?: ""
         if (address.isNotEmpty()) {
             disconnect(DisconnectCommand(address))
         }
         mCommands.clear()
-        command.complete()
     }
 
     private fun isConnected(): Boolean {

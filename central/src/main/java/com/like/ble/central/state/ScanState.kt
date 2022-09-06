@@ -13,7 +13,6 @@ import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import com.like.ble.central.command.StartScanCommand
 import com.like.ble.central.command.StopScanCommand
-import com.like.ble.command.CloseCommand
 import com.like.ble.utils.BleBroadcastReceiverManager
 import com.like.ble.utils.getBluetoothAdapter
 import java.util.concurrent.atomic.AtomicBoolean
@@ -149,11 +148,10 @@ class ScanState(private val mActivity: ComponentActivity) : CentralState() {
     }
 
     @Synchronized
-    override fun close(command: CloseCommand) {
+    override fun close() {
         stopScan(StopScanCommand())
         mStartScanCommand = null
         mBleBroadcastReceiverManager.unregister()
-        command.complete()
     }
 
 }
