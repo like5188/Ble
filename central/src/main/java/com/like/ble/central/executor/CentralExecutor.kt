@@ -35,17 +35,17 @@ class CentralExecutor(activity: ComponentActivity) : CommandExecutor(activity) {
                     mActivity.requestPermission(Manifest.permission.BLUETOOTH_CONNECT)
                 }
             }
-        } else if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+        } else if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
             mActivity.requestMultiplePermissions(
                 Manifest.permission.BLUETOOTH,
                 Manifest.permission.BLUETOOTH_ADMIN,
-                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION,
             ).all { it.value }
         } else {
             mActivity.requestMultiplePermissions(
                 Manifest.permission.BLUETOOTH,
                 Manifest.permission.BLUETOOTH_ADMIN,
-                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
             ).all { it.value }
         }
 
