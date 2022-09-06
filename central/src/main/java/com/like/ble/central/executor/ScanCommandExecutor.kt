@@ -1,4 +1,4 @@
-package com.like.ble.central.state
+package com.like.ble.central.executor
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
@@ -18,11 +18,11 @@ import com.like.ble.utils.getBluetoothAdapter
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * 蓝牙扫描状态
- * 可以进行扫描操作
+ * 蓝牙扫描相关的命令执行者
+ * 可以进行扫描、停止扫描操作
  */
 @SuppressLint("MissingPermission")
-class ScanState(private val mActivity: ComponentActivity) : CentralState() {
+class ScanCommandExecutor(private val mActivity: ComponentActivity) : CentralCommandExecutor() {
     private val mScanning = AtomicBoolean(false)
     private var mStartScanCommand: StartScanCommand? = null
     private val mBleBroadcastReceiverManager: BleBroadcastReceiverManager by lazy {

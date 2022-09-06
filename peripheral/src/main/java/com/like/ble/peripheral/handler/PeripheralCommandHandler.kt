@@ -5,15 +5,15 @@ import android.os.Build
 import androidx.activity.ComponentActivity
 import com.like.ble.command.Command
 import com.like.ble.handler.CommandHandler
-import com.like.ble.peripheral.state.AdvertisingState
-import com.like.ble.state.IState
+import com.like.ble.peripheral.executor.AdvertisingCommandExecutor
+import com.like.ble.executor.ICommandExecutor
 import com.like.common.util.activityresultlauncher.requestMultiplePermissions
 
 /**
  * 蓝牙外围设备相关命令处理。
  */
 class PeripheralCommandHandler(activity: ComponentActivity) : CommandHandler(activity) {
-    private val mAdvertisingState: IState by lazy { AdvertisingState(mActivity) }
+    private val mAdvertisingCommandExecutor: ICommandExecutor by lazy { AdvertisingCommandExecutor(mActivity) }
 
     override suspend fun onExecute(command: Command): Boolean {
         val checkPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -35,12 +35,12 @@ class PeripheralCommandHandler(activity: ComponentActivity) : CommandHandler(act
             return false
         }
 
-        command.mState = mAdvertisingState
+        command.mCommandExecutor = mAdvertisingCommandExecutor
         return true
     }
 
     override fun onClose() {
-        mAdvertisingState.close()
+        mAdvertisingCommandExecutor.close()
     }
 
 }

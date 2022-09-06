@@ -60,7 +60,7 @@ class MultipleAddressCommands : Command("组合命令") {
                     }
                 })
             }
-            command.mState = mState
+            command.mCommandExecutor = mCommandExecutor
             command.execute()
             while (command != mCallbackCommand && !command.isCompleted()) {
                 delay(20)

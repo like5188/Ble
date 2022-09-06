@@ -1,7 +1,7 @@
 package com.like.ble.command
 
 import androidx.annotation.MainThread
-import com.like.ble.state.IState
+import com.like.ble.executor.ICommandExecutor
 import com.like.ble.utils.mainThread
 import kotlinx.coroutines.Job
 import java.util.concurrent.atomic.AtomicBoolean
@@ -24,9 +24,9 @@ abstract class Command(
 ) {
 
     /**
-     * 命令实际执行者
+     * 命令真正执行者
      */
-    var mState: IState? = null
+    var mCommandExecutor: ICommandExecutor? = null
 
     /**
      * 命令是否已经完成
@@ -112,7 +112,7 @@ abstract class Command(
      * 执行命令
      */
     open suspend fun execute() {
-        mState?.execute(this)
+        mCommandExecutor?.execute(this)
     }
 
     override fun toString(): String {

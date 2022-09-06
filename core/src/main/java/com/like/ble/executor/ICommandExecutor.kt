@@ -1,11 +1,11 @@
-package com.like.ble.state
+package com.like.ble.executor
 
 import com.like.ble.command.Command
 
 /**
- * 蓝牙状态接口。
+ * 蓝牙命令真正的执行者。
  */
-interface IState {
+interface ICommandExecutor {
     /**
      * 释放资源
      */

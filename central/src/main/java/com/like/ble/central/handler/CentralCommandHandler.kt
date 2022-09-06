@@ -6,11 +6,11 @@ import androidx.activity.ComponentActivity
 import com.like.ble.central.command.AddressCommand
 import com.like.ble.central.command.StartScanCommand
 import com.like.ble.central.command.StopScanCommand
-import com.like.ble.central.state.ConnectState
-import com.like.ble.central.state.ScanState
+import com.like.ble.central.executor.ConnectCommandExecutor
+import com.like.ble.central.executor.ScanCommandExecutor
 import com.like.ble.command.Command
 import com.like.ble.handler.CommandHandler
-import com.like.ble.state.IState
+import com.like.ble.executor.ICommandExecutor
 import com.like.common.util.activityresultlauncher.requestMultiplePermissions
 import com.like.common.util.activityresultlauncher.requestPermission
 
@@ -18,9 +18,9 @@ import com.like.common.util.activityresultlauncher.requestPermission
  * 蓝牙中心设备相关命令处理。
  */
 class CentralCommandHandler(activity: ComponentActivity) : CommandHandler(activity) {
-    private var mCurState: IState? = null
-    private val mScanState: IState by lazy { ScanState(mActivity) }
-    private val mConnectStateMap = mutableMapOf<String, IState>()
+    private var mCurCommandExecutor: ICommandExecutor? = null
+    private val mScanCommandExecutor: ICommandExecutor by lazy { ScanCommandExecutor(mActivity) }
+    private val mConnectCommandExecutorMap = mutableMapOf<String, ICommandExecutor>()
 
     override suspend fun onExecute(command: Command): Boolean {
         val checkPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -59,32 +59,32 @@ class CentralCommandHandler(activity: ComponentActivity) : CommandHandler(activi
             return false
         }
 
-        mCurState = state
-        command.mState = state
+        mCurCommandExecutor = state
+        command.mCommandExecutor = state
         return true
     }
 
     override fun onClose() {
-        mScanState.close()
-        mConnectStateMap.forEach {
+        mScanCommandExecutor.close()
+        mConnectCommandExecutorMap.forEach {
             it.value.close()
         }
-        mConnectStateMap.clear()
-        mCurState = null
+        mConnectCommandExecutorMap.clear()
+        mCurCommandExecutor = null
     }
 
-    private fun getStateByCommand(command: Command): IState? {
+    private fun getStateByCommand(command: Command): ICommandExecutor? {
         return when (command) {
             is StartScanCommand, is StopScanCommand -> {
-                mScanState
+                mScanCommandExecutor
             }
             is AddressCommand -> {
-                if (!mConnectStateMap.containsKey(command.address)) {
-                    mConnectStateMap[command.address] = ConnectState(mActivity)
+                if (!mConnectCommandExecutorMap.containsKey(command.address)) {
+                    mConnectCommandExecutorMap[command.address] = ConnectCommandExecutor(mActivity)
                 }
-                mConnectStateMap[command.address]
+                mConnectCommandExecutorMap[command.address]
             }
-            else -> mCurState
+            else -> mCurCommandExecutor
         }
     }
 

@@ -1,4 +1,4 @@
-package com.like.ble.peripheral.state
+package com.like.ble.peripheral.executor
 
 import android.annotation.SuppressLint
 import android.bluetooth.le.AdvertiseCallback
@@ -11,7 +11,7 @@ import com.like.ble.utils.getBluetoothAdapter
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * 蓝牙广播状态
+ * 蓝牙广播相关的命令执行者
  * 可以进行发送广播、停止广播操作
  *
  * 外围设备会设定一个广播间隔，每个广播间隔中，都会发送自己的广播数据。广播间隔越长，越省电。一个没有被连接的Ble外设会不断发送广播数据，这时可以被多个中心设备发现。一旦外设被连接，则会马上停止广播。
@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 扫描回复是可选的，中心设备可以向外设请求扫描回复，这里包含一些设备额外的信息。
  */
 @SuppressLint("MissingPermission")
-class AdvertisingState(private val mActivity: ComponentActivity) : PeripheralState() {
+class AdvertisingCommandExecutor(private val mActivity: ComponentActivity) : PeripheralCommandExecutor() {
     private val mIsSending = AtomicBoolean(false)
     private var mStartAdvertisingCommand: StartAdvertisingCommand? = null
     private val mBleBroadcastReceiverManager: BleBroadcastReceiverManager by lazy {

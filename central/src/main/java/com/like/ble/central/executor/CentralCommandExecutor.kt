@@ -1,13 +1,13 @@
-package com.like.ble.central.state
+package com.like.ble.central.executor
 
 import com.like.ble.central.command.*
 import com.like.ble.command.Command
-import com.like.ble.state.IState
+import com.like.ble.executor.ICommandExecutor
 
 /**
- * 中心设备蓝牙状态基类。
+ * 中心设备蓝牙命令执行者。
  */
-abstract class CentralState : IState {
+abstract class CentralCommandExecutor : ICommandExecutor {
 
     override suspend fun execute(command: Command) {
         when (command) {

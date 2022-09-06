@@ -1,4 +1,4 @@
-package com.like.ble.central.state
+package com.like.ble.central.executor
 
 import android.annotation.SuppressLint
 import android.bluetooth.*
@@ -14,11 +14,11 @@ import kotlinx.coroutines.launch
 import java.util.*
 
 /**
- * 蓝牙连接状态
- * 可以进行连接、操作数据等等操作
+ * 蓝牙连接及连接成功后的命令执行者
+ * 可以进行连接、断开连接、操作数据等等操作
  */
 @SuppressLint("MissingPermission")
-class ConnectState(private val mActivity: ComponentActivity) : CentralState() {
+class ConnectCommandExecutor(private val mActivity: ComponentActivity) : CentralCommandExecutor() {
     private var mBluetoothGatt: BluetoothGatt? = null
 
     // 命令缓存
