@@ -49,8 +49,8 @@ abstract class CommandExecutor(val mActivity: ComponentActivity) {
     /**
      * @return true：执行；false：不执行
      */
-    abstract fun onExecute(command: Command): Boolean
+    protected abstract fun onExecute(command: Command): Boolean
 
-    abstract fun onClose()
+    protected abstract fun onClose()
 
 }
