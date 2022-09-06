@@ -24,7 +24,7 @@
         StopAdvertisingCommand（停止广播命令）
 
     central 模式支持的命令：
-        MacroCommand（宏命令）
+        MultipleAddressCommands（组合命令）
         ConnectCommand（连接蓝牙设备命令）
         DisconnectCommand（断开蓝牙设备命令）
         ReadCharacteristicCommand（读特征值命令）
@@ -56,7 +56,9 @@
 在Module的gradle中加入：
 ```groovy
     dependencies {
-        compile 'com.github.like5188:Ble:版本号'
+        implementation 'com.github.like5188.Ble:core:版本号'
+        implementation 'com.github.like5188.Ble:central:版本号'
+        implementation 'com.github.like5188.Ble:peripheral:版本号'
     }
 ```
 
@@ -66,13 +68,13 @@
     private val mBleManager: BleManager by lazy { BleManager(CentralExecutor(this)) }
     // 发送单个命令
     mBleManager.sendCommand(ConnectCommand())
-    // 发送宏命令
-    val macroCommand = MacroCommand()
+    // 发送组合命令
+    val commands = MultipleAddressCommands()
     val readNotifyCommand = ReadNotifyCommand()
     val writeCharacteristicCommand = WriteCharacteristicCommand()
-    macroCommand.addCommand(readNotifyCommand, true)
-    macroCommand.addCommand(writeCharacteristicCommand, false)
-    mBleManager.sendCommand(macroCommand)
+    commands.addCommand(readNotifyCommand, true)
+    commands.addCommand(writeCharacteristicCommand, false)
+    mBleManager.sendCommand(commands)
     // 释放资源
     mBleManager.close()
 ```
@@ -90,12 +92,10 @@
 4、常用第三方库的引用
 ```java
     // coroutines
-    compileOnly 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2'
-    compileOnly 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.2'
-    compileOnly 'androidx.lifecycle:lifecycle-runtime-ktx:2.2.0-rc03'// Activity 或 Fragment 对协程的支持：lifecycleScope
-    // rxjava2
-    compileOnly 'io.reactivex.rxjava2:rxjava:2.2.11'
-    compileOnly 'com.github.tbruyelle:rxpermissions:0.10.2'
-
-    compileOnly 'androidx.fragment:fragment-ktx:1.1.0'
+    compileOnly 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1'
+    compileOnly 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1'
+    compileOnly 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'// Activity 或 Fragment 对协程的支持：lifecycleScope
+    // Activity 或 Fragment 对协程的支持：lifecycleScope
+    compileOnly 'androidx.fragment:fragment-ktx:1.5.2'
+    compileOnly 'com.github.like5188:Common:6.9.9'
 ```
