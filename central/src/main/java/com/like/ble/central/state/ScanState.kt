@@ -14,7 +14,7 @@ import androidx.annotation.RequiresApi
 import com.like.ble.central.command.StartScanCommand
 import com.like.ble.central.command.StopScanCommand
 import com.like.ble.command.CloseCommand
-import com.like.ble.utils.BleBroadcastReceiverHelper
+import com.like.ble.utils.BleBroadcastReceiverManager
 import com.like.ble.utils.getBluetoothAdapter
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -26,8 +26,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 class ScanState(private val mActivity: ComponentActivity) : CentralState() {
     private val mScanning = AtomicBoolean(false)
     private var mStartScanCommand: StartScanCommand? = null
-    private val mBleBroadcastReceiverHelper: BleBroadcastReceiverHelper by lazy {
-        BleBroadcastReceiverHelper(mActivity,
+    private val mBleBroadcastReceiverManager: BleBroadcastReceiverManager by lazy {
+        BleBroadcastReceiverManager(mActivity,
             onBleOff = {
                 if (mScanning.compareAndSet(true, false)) {
                     mStartScanCommand?.errorAndComplete("蓝牙被关闭，扫描停止了")
@@ -61,7 +61,7 @@ class ScanState(private val mActivity: ComponentActivity) : CentralState() {
     }
 
     init {
-        mBleBroadcastReceiverHelper.register()
+        mBleBroadcastReceiverManager.register()
     }
 
     @Synchronized
@@ -152,7 +152,7 @@ class ScanState(private val mActivity: ComponentActivity) : CentralState() {
     override fun close(command: CloseCommand) {
         stopScan(StopScanCommand())
         mStartScanCommand = null
-        mBleBroadcastReceiverHelper.unregister()
+        mBleBroadcastReceiverManager.unregister()
         command.complete()
     }
 

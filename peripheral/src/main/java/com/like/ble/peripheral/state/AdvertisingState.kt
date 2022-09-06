@@ -7,7 +7,7 @@ import androidx.activity.ComponentActivity
 import com.like.ble.command.CloseCommand
 import com.like.ble.peripheral.command.StartAdvertisingCommand
 import com.like.ble.peripheral.command.StopAdvertisingCommand
-import com.like.ble.utils.BleBroadcastReceiverHelper
+import com.like.ble.utils.BleBroadcastReceiverManager
 import com.like.ble.utils.getBluetoothAdapter
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -25,8 +25,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 class AdvertisingState(private val mActivity: ComponentActivity) : PeripheralState() {
     private val mIsSending = AtomicBoolean(false)
     private var mStartAdvertisingCommand: StartAdvertisingCommand? = null
-    private val mBleBroadcastReceiverHelper: BleBroadcastReceiverHelper by lazy {
-        BleBroadcastReceiverHelper(mActivity,
+    private val mBleBroadcastReceiverManager: BleBroadcastReceiverManager by lazy {
+        BleBroadcastReceiverManager(mActivity,
             onBleOff = {
                 if (mIsSending.compareAndSet(true, false)) {
                     mStartAdvertisingCommand?.errorAndComplete("蓝牙被关闭，广播停止了")
@@ -54,7 +54,7 @@ class AdvertisingState(private val mActivity: ComponentActivity) : PeripheralSta
     }
 
     init {
-        mBleBroadcastReceiverHelper.register()
+        mBleBroadcastReceiverManager.register()
     }
 
     @Synchronized
@@ -99,7 +99,7 @@ class AdvertisingState(private val mActivity: ComponentActivity) : PeripheralSta
     override fun close(command: CloseCommand) {
         stopAdvertising(StopAdvertisingCommand())
         mStartAdvertisingCommand = null
-        mBleBroadcastReceiverHelper.unregister()
+        mBleBroadcastReceiverManager.unregister()
         command.complete()
     }
 

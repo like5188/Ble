@@ -6,7 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 
-class BleBroadcastReceiverHelper(private val mContext: Context, onBleOn: (() -> Unit)? = null, onBleOff: (() -> Unit)? = null) {
+class BleBroadcastReceiverManager(private val mContext: Context, onBleOn: (() -> Unit)? = null, onBleOff: (() -> Unit)? = null) {
     // 蓝牙打开关闭监听器
     private val mReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
