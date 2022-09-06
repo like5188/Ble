@@ -4,7 +4,7 @@ import com.like.ble.command.Command
 import com.like.ble.handler.CommandHandler
 
 /**
- * 蓝牙设备管理
+ * 蓝牙设备管理入口
  * 包括中心设备、外围设备。
  */
 class BleManager(private val mCommandHandler: CommandHandler) {
