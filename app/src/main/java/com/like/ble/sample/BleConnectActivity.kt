@@ -8,8 +8,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.like.ble.BleManager
-import com.like.ble.central.executor.CentralExecutor
 import com.like.ble.central.command.*
+import com.like.ble.central.executor.CentralExecutor
 import com.like.ble.sample.databinding.ActivityBleConnectBinding
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
 
@@ -19,7 +19,7 @@ class BleConnectActivity : AppCompatActivity() {
         DataBindingUtil.setContentView(this, R.layout.activity_ble_connect)
     }
     private lateinit var mData: BleScanInfo
-    private val mBleManager: BleManager by lazy { BleManager(CentralExecutor(this)) }
+    private val mBleManager: BleManager by lazy { BleManager(this, CentralExecutor(this)) }
     private val mAdapter: BleConnectAdapter by lazy { BleConnectAdapter(this, mBleManager) }
 
     override fun onCreate(savedInstanceState: Bundle?) {

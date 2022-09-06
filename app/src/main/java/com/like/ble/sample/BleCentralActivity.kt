@@ -27,7 +27,7 @@ class BleCentralActivity : AppCompatActivity() {
         DataBindingUtil.setContentView(this, R.layout.activity_ble_central)
     }
     private val mAdapter: BleScanAdapter by lazy { BleScanAdapter(this) }
-    private val mBleManager: BleManager by lazy { BleManager(CentralExecutor(this)) }
+    private val mBleManager: BleManager by lazy { BleManager(this, CentralExecutor(this)) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

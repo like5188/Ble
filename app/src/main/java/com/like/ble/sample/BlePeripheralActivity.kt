@@ -48,7 +48,7 @@ class BlePeripheralActivity : AppCompatActivity() {
     private val mBinding: ActivityBlePeripheralBinding by lazy {
         DataBindingUtil.setContentView(this, R.layout.activity_ble_peripheral)
     }
-    private val mBleManager: BleManager by lazy { BleManager(PeripheralExecutor(this)) }
+    private val mBleManager: BleManager by lazy { BleManager(this, PeripheralExecutor(this)) }
     private var mBluetoothGattServer: BluetoothGattServer? = null
     private val mBluetoothGattServerCallback = object : BluetoothGattServerCallback() {
         private val mResponseData: ByteArray by lazy {
