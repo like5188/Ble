@@ -17,7 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import com.like.ble.BleManager
 import com.like.ble.peripheral.command.StartAdvertisingCommand
 import com.like.ble.peripheral.command.StopAdvertisingCommand
-import com.like.ble.peripheral.executor.PeripheralExecutor
+import com.like.ble.peripheral.handler.PeripheralCommandHandler
 import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
 import com.like.ble.utils.*
 import kotlinx.coroutines.delay
@@ -48,7 +48,7 @@ class BlePeripheralActivity : AppCompatActivity() {
     private val mBinding: ActivityBlePeripheralBinding by lazy {
         DataBindingUtil.setContentView(this, R.layout.activity_ble_peripheral)
     }
-    private val mBleManager: BleManager by lazy { BleManager(PeripheralExecutor(this)) }
+    private val mBleManager: BleManager by lazy { BleManager(PeripheralCommandHandler(this)) }
     private var mBluetoothGattServer: BluetoothGattServer? = null
     private val mBluetoothGattServerCallback = object : BluetoothGattServerCallback() {
         private val mResponseData: ByteArray by lazy {

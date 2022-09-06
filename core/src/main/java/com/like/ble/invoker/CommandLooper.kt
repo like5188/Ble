@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * 循环从命令队列中取出命令执行。
+ * 命令循环。
  */
 class CommandLooper(private val mActivity: ComponentActivity) {
     companion object {

@@ -1,4 +1,4 @@
-package com.like.ble.executor
+package com.like.ble.handler
 
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
@@ -9,12 +9,12 @@ import com.like.ble.utils.isSupportBluetooth
 import kotlinx.coroutines.launch
 
 /**
- * 命令执行者
+ * 命令处理
  * 功能：
  * 1、判断蓝牙是否打开。
  * 2、提供关闭循环的方法。
  */
-abstract class CommandExecutor(val mActivity: ComponentActivity) {
+abstract class CommandHandler(val mActivity: ComponentActivity) {
     private val mCommandLooper: CommandLooper by lazy { CommandLooper(mActivity) }
 
     init {

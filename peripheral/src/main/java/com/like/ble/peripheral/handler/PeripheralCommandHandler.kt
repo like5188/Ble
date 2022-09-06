@@ -1,18 +1,18 @@
-package com.like.ble.peripheral.executor
+package com.like.ble.peripheral.handler
 
 import android.Manifest
 import android.os.Build
 import androidx.activity.ComponentActivity
 import com.like.ble.command.Command
-import com.like.ble.executor.CommandExecutor
+import com.like.ble.handler.CommandHandler
 import com.like.ble.peripheral.state.AdvertisingState
 import com.like.ble.state.IState
 import com.like.common.util.activityresultlauncher.requestMultiplePermissions
 
 /**
- * 蓝牙外围设备相关命令的执行者。
+ * 蓝牙外围设备相关命令处理。
  */
-class PeripheralExecutor(activity: ComponentActivity) : CommandExecutor(activity) {
+class PeripheralCommandHandler(activity: ComponentActivity) : CommandHandler(activity) {
     private val mAdvertisingState: IState by lazy { AdvertisingState(mActivity) }
 
     override suspend fun onExecute(command: Command): Boolean {

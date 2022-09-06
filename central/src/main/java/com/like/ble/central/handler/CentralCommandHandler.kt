@@ -1,4 +1,4 @@
-package com.like.ble.central.executor
+package com.like.ble.central.handler
 
 import android.Manifest
 import android.os.Build
@@ -9,15 +9,15 @@ import com.like.ble.central.command.StopScanCommand
 import com.like.ble.central.state.ConnectState
 import com.like.ble.central.state.ScanState
 import com.like.ble.command.Command
-import com.like.ble.executor.CommandExecutor
+import com.like.ble.handler.CommandHandler
 import com.like.ble.state.IState
 import com.like.common.util.activityresultlauncher.requestMultiplePermissions
 import com.like.common.util.activityresultlauncher.requestPermission
 
 /**
- * 蓝牙中心设备相关命令的执行者。
+ * 蓝牙中心设备相关命令处理。
  */
-class CentralExecutor(activity: ComponentActivity) : CommandExecutor(activity) {
+class CentralCommandHandler(activity: ComponentActivity) : CommandHandler(activity) {
     private var mCurState: IState? = null
     private val mScanState: IState by lazy { ScanState(mActivity) }
     private val mConnectStateMap = mutableMapOf<String, IState>()

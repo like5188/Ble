@@ -1,15 +1,13 @@
 package com.like.ble
 
 import com.like.ble.command.Command
-import com.like.ble.executor.CommandExecutor
+import com.like.ble.handler.CommandHandler
 
 /**
  * 蓝牙设备管理
  * 包括中心设备、外围设备。
- *
- * @param mExecutor  蓝牙命令执行者。
  */
-class BleManager(private val mExecutor: CommandExecutor) {
+class BleManager(private val mCommandHandler: CommandHandler) {
 
     /**
      * 发送命令
@@ -17,14 +15,14 @@ class BleManager(private val mExecutor: CommandExecutor) {
      * @param command   蓝牙命令。
      */
     fun sendCommand(command: Command) {
-        mExecutor.execute(command)
+        mCommandHandler.execute(command)
     }
 
     /**
      * 释放资源
      */
     fun close() {
-        mExecutor.close()
+        mCommandHandler.close()
     }
 
 }

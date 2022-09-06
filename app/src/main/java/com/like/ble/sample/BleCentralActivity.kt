@@ -10,7 +10,7 @@ import androidx.databinding.ObservableInt
 import com.like.ble.BleManager
 import com.like.ble.central.command.StartScanCommand
 import com.like.ble.central.command.StopScanCommand
-import com.like.ble.central.executor.CentralExecutor
+import com.like.ble.central.handler.CentralCommandHandler
 import com.like.ble.sample.databinding.ActivityBleCentralBinding
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
 
@@ -27,7 +27,7 @@ class BleCentralActivity : AppCompatActivity() {
         DataBindingUtil.setContentView(this, R.layout.activity_ble_central)
     }
     private val mAdapter: BleScanAdapter by lazy { BleScanAdapter(this) }
-    private val mBleManager: BleManager by lazy { BleManager(CentralExecutor(this)) }
+    private val mBleManager: BleManager by lazy { BleManager(CentralCommandHandler(this)) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
