@@ -4,7 +4,6 @@ import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.Command
 import com.like.ble.invoker.CommandLooper
-import com.like.ble.utils.checkPermissions
 import com.like.ble.utils.isBleOpened
 import com.like.ble.utils.isSupportBluetooth
 import kotlinx.coroutines.launch
@@ -22,11 +21,6 @@ abstract class CommandExecutor(val mActivity: ComponentActivity) {
         mActivity.lifecycleScope.launch {
             if (!mActivity.isSupportBluetooth()) {
                 command.errorAndComplete("手机不支持蓝牙")
-                return@launch
-            }
-
-            if (!mActivity.checkPermissions()) {
-                command.errorAndComplete("蓝牙权限被拒绝")
                 return@launch
             }
 
@@ -49,7 +43,7 @@ abstract class CommandExecutor(val mActivity: ComponentActivity) {
     /**
      * @return true：执行；false：不执行
      */
-    protected abstract fun onExecute(command: Command): Boolean
+    protected abstract suspend fun onExecute(command: Command): Boolean
 
     protected abstract fun onClose()
 

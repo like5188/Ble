@@ -1,10 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.like.ble">
-    <!--这个权限允许程序连接到已配对的蓝牙设备, 请求连接/接收连接/传输数据需要改权限, 主要用于对配对后进行操作-->
-    <uses-permission android:name="android.permission.BLUETOOTH" />
-    <!--这个权限允许程序发现和配对蓝牙设备, 该权限用来管理蓝牙设备, 有了这个权限, 应用才能使用本机的蓝牙设备, 主要用于对配对前的操作;-->
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <!-- Android6.0 蓝牙扫描需要下面两个危险权限-->
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <!--如果您希望应用适用于不支持 BLE 的设备，则您应仍将此元素添加到应用清单中，但设置 required="false"。然后您可以在运行时使用 PackageManager.hasSystemFeature() 确定 BLE 的可用性-->
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="false" />
 </manifest>
