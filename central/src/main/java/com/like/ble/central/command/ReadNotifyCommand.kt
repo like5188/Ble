@@ -6,7 +6,7 @@ import java.util.*
 
 /**
  * 读取通知传来的数据命令（通过notify或者indicate的方式）
- * 使用后相当于设置了一个回调监听，再配合[WriteCharacteristicCommand]，组合成[MacroCommand]，发送命令并接收通知数据，注意必须要开启通知才能接收数据。这样比单独使用[ReadCharacteristicCommand]命令来读取数据快很多。
+ * 使用后相当于设置了一个回调监听，再配合[WriteCharacteristicCommand]，组合成[MultipleAddressCommands]，发送命令并接收通知数据，注意必须要开启通知才能接收数据。这样比单独使用[ReadCharacteristicCommand]命令来读取数据快很多。
  *
  * @param characteristicUuid        特征UUID
  * @param serviceUuid               服务UUID，如果不为null，则会在此服务下查找[characteristicUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]

@@ -6,7 +6,7 @@ import java.util.*
 
 /**
  * 设置特征的notification或者indication的命令
- * 配合[WriteDescriptorCommand]，组合成[MacroCommand]，来使能notification或者indication。
+ * 配合[WriteDescriptorCommand]，组合成[MultipleAddressCommands]，来使能notification或者indication。
  *
  * @param characteristicUuid            特征UUID
  * @param descriptorUuid                描述UUID，属于[characteristicUuid]

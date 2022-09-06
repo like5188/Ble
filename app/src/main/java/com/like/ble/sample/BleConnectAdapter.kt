@@ -150,11 +150,11 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                             )
                             when (data[0]) {
                                 0x1.toByte() -> {
-                                    val macroCommand = MacroCommand()
+                                    val multipleAddressCommands = MultipleAddressCommands()
                                     // readNotifyCommand 必须第一个添加，类似于设置回调监听。
-                                    macroCommand.addCommand(readNotifyCommand, true)
-                                    macroCommand.addCommand(writeCharacteristicCommand, false)
-                                    mBleManager.sendCommand(macroCommand)
+                                    multipleAddressCommands.addCommand(readNotifyCommand, true)
+                                    multipleAddressCommands.addCommand(writeCharacteristicCommand, false)
+                                    mBleManager.sendCommand(multipleAddressCommands)
                                 }
                                 else -> {
                                     mBleManager.sendCommand(writeCharacteristicCommand)
@@ -215,11 +215,11 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                     )
                 }
 
-                val macroCommand = MacroCommand()
+                val multipleAddressCommands = MultipleAddressCommands()
                 // readNotifyCommand 必须第一个添加，类似于设置回调监听。
-                macroCommand.addCommand(setCharacteristicNotificationCommand, false)
-                macroCommand.addCommand(writeDescriptorCommand, true)
-                mBleManager.sendCommand(macroCommand)
+                multipleAddressCommands.addCommand(setCharacteristicNotificationCommand, false)
+                multipleAddressCommands.addCommand(writeDescriptorCommand, true)
+                mBleManager.sendCommand(multipleAddressCommands)
             }
         }
         if (characteristic.properties and 0x20 != 0) {
@@ -271,11 +271,11 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                     )
                 }
 
-                val macroCommand = MacroCommand()
+                val multipleAddressCommands = MultipleAddressCommands()
                 // readNotifyCommand 必须第一个添加，类似于设置回调监听。
-                macroCommand.addCommand(setCharacteristicNotificationCommand, false)
-                macroCommand.addCommand(writeDescriptorCommand, true)
-                mBleManager.sendCommand(macroCommand)
+                multipleAddressCommands.addCommand(setCharacteristicNotificationCommand, false)
+                multipleAddressCommands.addCommand(writeDescriptorCommand, true)
+                mBleManager.sendCommand(multipleAddressCommands)
             }
         }
     }

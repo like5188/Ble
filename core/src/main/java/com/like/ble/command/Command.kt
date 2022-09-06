@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * @param onError       命令失败回调
  */
 abstract class Command(
-    private val des: String,
+    val des: String,
     val timeout: Long = 0L,
     val immediately: Boolean = false,
     val onCompleted: (() -> Unit)? = null,
