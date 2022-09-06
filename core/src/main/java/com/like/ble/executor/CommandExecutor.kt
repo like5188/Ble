@@ -5,6 +5,7 @@ import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.Command
 import com.like.ble.invoker.CommandLooper
 import com.like.ble.utils.isBleOpened
+import com.like.ble.utils.isSupportBluetooth
 import kotlinx.coroutines.launch
 
 /**
@@ -15,6 +16,12 @@ import kotlinx.coroutines.launch
  */
 abstract class CommandExecutor(val mActivity: ComponentActivity) {
     private val mCommandLooper: CommandLooper by lazy { CommandLooper(mActivity) }
+
+    init {
+        if (!mActivity.isSupportBluetooth()) {
+            throw UnsupportedOperationException("手机不支持蓝牙")
+        }
+    }
 
     fun execute(command: Command) {
         mActivity.lifecycleScope.launch {
