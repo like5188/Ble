@@ -209,9 +209,9 @@ fun String.hexStringToByteArray(): ByteArray {
 fun UUID.getValidString(): String = "0x${toString().substring(4, 8).uppercase()}"
 
 fun BluetoothGattService.getTypeString() = when (type) {
-    0 -> "PRIMARY SERVICE"
-    1 -> "SECONDARY SERVICE"
-    else -> "SERVICE"
+    BluetoothGattService.SERVICE_TYPE_PRIMARY -> "PRIMARY"
+    BluetoothGattService.SERVICE_TYPE_SECONDARY -> "SECONDARY"
+    else -> "UNKNOWN TYPE"
 }
 
 fun BluetoothGattCharacteristic.getPropertiesString(): String {
