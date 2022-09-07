@@ -134,7 +134,7 @@ class ScanCommandExecutor(private val mActivity: ComponentActivity) : CentralCom
                     }
                 }
             }
-            command.complete()// 这里直接完成命令，避免扫描不到需要的设备时，无法触发 startScanCommand.successAndComplete(device, rssi, scanRecord)
+            command.complete()// 这里直接完成命令，避免扫描不到需要的设备时，无法触发 startScanCommand.success(device, rssi, scanRecord)
         } else {
             command.error("正在扫描中")
         }
