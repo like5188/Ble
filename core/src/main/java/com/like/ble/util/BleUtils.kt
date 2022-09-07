@@ -41,7 +41,7 @@ fun Context.isSupportBluetooth(): Boolean = packageManager.hasSystemFeature(Pack
  * 蓝牙是否打开。
  * 如果没打开，就去打开
  */
-suspend fun ComponentActivity.isBleOpened(): Boolean = if (isBluetoothEnable()) {
+suspend fun ComponentActivity.isBluetoothEnableAndSettingIfDisabled(): Boolean = if (isBluetoothEnable()) {
     true
 } else {// 蓝牙功能未打开
     // 弹出开启蓝牙的对话框
