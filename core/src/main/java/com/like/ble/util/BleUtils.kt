@@ -172,11 +172,11 @@ fun StringBuilder.deleteLast() {
 }
 
 fun Int.toHexString2(): String {
-    return String.format("%02x", this).toUpperCase()
+    return String.format("%02x", this).uppercase()
 }
 
 fun Int.toHexString4(): String {
-    return String.format("%04x", this).toUpperCase()
+    return String.format("%04x", this).uppercase()
 }
 
 fun ByteArray.toHexString(): String {
@@ -184,7 +184,7 @@ fun ByteArray.toHexString(): String {
     for (b in this) {
         sb.append(String.format("%02x", b))
     }
-    return sb.toString().toUpperCase()
+    return sb.toString().uppercase()
 }
 
 
@@ -206,7 +206,7 @@ fun String.hexStringToByteArray(): ByteArray {
     return bytes
 }
 
-fun UUID.getValidString(): String = "0x${toString().substring(4, 8).toUpperCase()}"
+fun UUID.getValidString(): String = "0x${toString().substring(4, 8).uppercase()}"
 
 fun BluetoothGattService.getTypeString() = when (type) {
     0 -> "PRIMARY SERVICE"
