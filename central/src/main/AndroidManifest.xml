@@ -2,8 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.like.ble.central">
 
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
     <!--这个权限允许程序连接到已配对的蓝牙设备, 请求连接/接收连接/传输数据需要改权限, 主要用于对配对后进行操作-->
     <uses-permission
         android:name="android.permission.BLUETOOTH"
@@ -12,13 +10,22 @@
     <uses-permission
         android:name="android.permission.BLUETOOTH_ADMIN"
         android:maxSdkVersion="30" />
-    <!-- Android6.0 蓝牙扫描需要下面两个位置危险权限 没有此权限，扫描将无法返回任何结果。-->
-    <uses-permission
-        android:name="android.permission.ACCESS_COARSE_LOCATION"
-        android:maxSdkVersion="30" />
-    <!-- If your app targets Android 9 or lower, you can declare
-     ACCESS_COARSE_LOCATION instead. -->
-    <uses-permission
-        android:name="android.permission.ACCESS_FINE_LOCATION"
-        android:maxSdkVersion="30" />
+
+    <!--Android 12 start-->
+    <!--危险权限 如果您的应用与已配对的蓝牙设备通信-->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <!--危险权限 如果您的应用查找蓝牙设备（如蓝牙低功耗 (BLE) 外围设备）-->
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <!--如果您的应用不推导物理位置，那么您可以坚定地断言您的应用绝不会使用蓝牙权限来推导物理位置。并从移除 ACCESS_FINE_LOCATION 权限。-->
+    <!--    <uses-permission-->
+    <!--        android:name="android.permission.BLUETOOTH_SCAN"-->
+    <!--        android:usesPermissionFlags="neverForLocation" />-->
+    <!--Android 12 end-->
+
+    <!--危险权限 应用是否使用蓝牙扫描结果来推导设备的位置。没有此权限，扫描将无法返回任何结果。-->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!--危险权限 If your app targets Android 9 or lower, you can declare ACCESS_COARSE_LOCATION instead. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!--If your app supports a service and can run on Android 10 (API level 29) or Android 11-->
+    <!--    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />-->
 </manifest>

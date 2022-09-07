@@ -9,8 +9,8 @@ import com.like.ble.central.command.StopScanCommand
 import com.like.ble.central.executor.ConnectCommandExecutor
 import com.like.ble.central.executor.ScanCommandExecutor
 import com.like.ble.command.Command
-import com.like.ble.handler.CommandHandler
 import com.like.ble.executor.ICommandExecutor
+import com.like.ble.handler.CommandHandler
 import com.like.common.util.activityresultlauncher.requestMultiplePermissions
 import com.like.common.util.activityresultlauncher.requestPermission
 
@@ -28,7 +28,10 @@ class CentralCommandHandler(activity: ComponentActivity) : CommandHandler(activi
             // https://developer.android.google.cn/about/versions/12/features/bluetooth-permissions?hl=zh-cn
             when (command) {
                 is StartScanCommand, is StopScanCommand -> {
-                    mActivity.requestPermission(Manifest.permission.BLUETOOTH_SCAN)
+                    mActivity.requestMultiplePermissions(
+                        Manifest.permission.BLUETOOTH_SCAN,
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                    ).all { it.value }
                 }
                 else -> {
                     mActivity.requestPermission(Manifest.permission.BLUETOOTH_CONNECT)
