@@ -216,35 +216,34 @@ fun BluetoothGattService.getTypeString() = when (type) {
 
 fun BluetoothGattCharacteristic.getPropertiesString(): String {
     val result = StringBuilder()
-    if (properties and 0x01 != 0) {
+    if (properties and BluetoothGattCharacteristic.PROPERTY_BROADCAST != 0) {
         result.append("BROADCAST；")
     }
-    if (properties and 0x02 != 0) {
+    if (properties and BluetoothGattCharacteristic.PROPERTY_READ != 0) {
         result.append("READ；")
     }
-    if (properties and 0x04 != 0) {
+    if (properties and BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE != 0) {
         result.append("WRITE_NO_RESPONSE；")
     }
-    if (properties and 0x08 != 0) {
+    if (properties and BluetoothGattCharacteristic.PROPERTY_WRITE != 0) {
         result.append("WRITE；")
     }
-    if (properties and 0x10 != 0) {
+    if (properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY != 0) {
         result.append("NOTIFY；")
     }
-    if (properties and 0x20 != 0) {
+    if (properties and BluetoothGattCharacteristic.PROPERTY_INDICATE != 0) {
         result.append("INDICATE；")
     }
-    if (properties and 0x40 != 0) {
+    if (properties and BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE != 0) {
         result.append("SIGNED_WRITE；")
     }
-    if (properties and 0x80 != 0) {
+    if (properties and BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS != 0) {
         result.append("EXTENDED_PROPS；")
     }
-    return if (result.isEmpty()) {
-        ""
-    } else {
-        result.substring(0, result.lastIndex)
+    if (result.isNotEmpty()) {
+        result.deleteLast()
     }
+    return result.toString()
 }
 
 /**
