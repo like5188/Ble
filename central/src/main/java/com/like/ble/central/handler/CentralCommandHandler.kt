@@ -12,7 +12,6 @@ import com.like.ble.command.Command
 import com.like.ble.executor.ICommandExecutor
 import com.like.ble.handler.CommandHandler
 import com.like.common.util.activityresultlauncher.requestMultiplePermissions
-import com.like.common.util.activityresultlauncher.requestPermission
 
 /**
  * 蓝牙中心设备相关命令处理。
@@ -23,35 +22,7 @@ class CentralCommandHandler(activity: ComponentActivity) : CommandHandler(activi
     private val mConnectCommandExecutorMap = mutableMapOf<String, ICommandExecutor>()
 
     override suspend fun onExecute(command: Command): Boolean {
-        val checkPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            // Android 12 中的新蓝牙权限
-            // https://developer.android.google.cn/about/versions/12/features/bluetooth-permissions?hl=zh-cn
-            when (command) {
-                is StartScanCommand, is StopScanCommand -> {
-                    mActivity.requestMultiplePermissions(
-                        Manifest.permission.BLUETOOTH_SCAN,
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                    ).all { it.value }
-                }
-                else -> {
-                    mActivity.requestPermission(Manifest.permission.BLUETOOTH_CONNECT)
-                }
-            }
-        } else if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-            mActivity.requestMultiplePermissions(
-                Manifest.permission.BLUETOOTH,
-                Manifest.permission.BLUETOOTH_ADMIN,
-                Manifest.permission.ACCESS_FINE_LOCATION,
-            ).all { it.value }
-        } else {
-            mActivity.requestMultiplePermissions(
-                Manifest.permission.BLUETOOTH,
-                Manifest.permission.BLUETOOTH_ADMIN,
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-            ).all { it.value }
-        }
-
-        if (!checkPermissions) {
+        if (!checkPermissions(mActivity, command)) {
             command.errorAndComplete("蓝牙权限被拒绝")
             return false
         }
@@ -89,6 +60,37 @@ class CentralCommandHandler(activity: ComponentActivity) : CommandHandler(activi
             }
             else -> mCurCommandExecutor
         }
+    }
+
+    private suspend fun checkPermissions(activity: ComponentActivity, command: Command): Boolean {
+        val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Android 12 中的新蓝牙权限
+            // https://developer.android.google.cn/about/versions/12/features/bluetooth-permissions?hl=zh-cn
+            when (command) {
+                is StartScanCommand, is StopScanCommand -> {
+                    arrayOf(
+                        Manifest.permission.BLUETOOTH_SCAN,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    )
+                }
+                else -> {
+                    arrayOf(Manifest.permission.BLUETOOTH_CONNECT)
+                }
+            }
+        } else if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+            arrayOf(
+                Manifest.permission.BLUETOOTH,
+                Manifest.permission.BLUETOOTH_ADMIN,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+            )
+        } else {
+            arrayOf(
+                Manifest.permission.BLUETOOTH,
+                Manifest.permission.BLUETOOTH_ADMIN,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+            )
+        }
+        return activity.requestMultiplePermissions(*permissions).all { it.value }
     }
 
 }
