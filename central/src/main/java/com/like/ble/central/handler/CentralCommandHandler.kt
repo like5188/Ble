@@ -19,6 +19,7 @@ import com.like.common.util.activityresultlauncher.requestMultiplePermissions
 class CentralCommandHandler(activity: ComponentActivity) : CommandHandler(activity) {
     private var mCurCommandExecutor: ICommandExecutor? = null
     private val mScanCommandExecutor: ICommandExecutor by lazy { ScanCommandExecutor(mActivity) }
+    // key：地址；value：ICommandExecutor；
     private val mConnectCommandExecutorMap = mutableMapOf<String, ICommandExecutor>()
 
     override suspend fun onExecute(command: Command): Boolean {
