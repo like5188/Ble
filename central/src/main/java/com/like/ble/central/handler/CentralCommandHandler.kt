@@ -19,6 +19,7 @@ import com.like.common.util.activityresultlauncher.requestMultiplePermissions
 class CentralCommandHandler(activity: ComponentActivity) : CommandHandler(activity) {
     private var mCurCommandExecutor: ICommandExecutor? = null
     private val mScanCommandExecutor: ICommandExecutor by lazy { ScanCommandExecutor(mActivity) }
+
     // key：地址；value：ICommandExecutor；
     private val mConnectCommandExecutorMap = mutableMapOf<String, ICommandExecutor>()
 
@@ -28,14 +29,14 @@ class CentralCommandHandler(activity: ComponentActivity) : CommandHandler(activi
             return false
         }
 
-        val state = getStateByCommand(command)
-        if (state == null) {
-            command.errorAndComplete("更新蓝牙状态失败，无法执行命令：$command")
+        val commandExecutor = getCommandExecutorBy(command)
+        if (commandExecutor == null) {
+            command.errorAndComplete("获取 CommandExecutor 失败，无法执行命令：$command")
             return false
         }
 
-        mCurCommandExecutor = state
-        command.mCommandExecutor = state
+        mCurCommandExecutor = commandExecutor
+        command.mCommandExecutor = commandExecutor
         return true
     }
 
@@ -48,7 +49,7 @@ class CentralCommandHandler(activity: ComponentActivity) : CommandHandler(activi
         mCurCommandExecutor = null
     }
 
-    private fun getStateByCommand(command: Command): ICommandExecutor? {
+    private fun getCommandExecutorBy(command: Command): ICommandExecutor? {
         return when (command) {
             is StartScanCommand, is StopScanCommand -> {
                 mScanCommandExecutor
