@@ -62,13 +62,16 @@ class BlePeripheralActivity : AppCompatActivity() {
         private var mMtu = 23
 
         /**
-         * @param newState  连接状态，只能为[BluetoothProfile.STATE_CONNECTED]和[BluetoothProfile.STATE_DISCONNECTED]。
+         * Callback indicating when a remote device has been connected or disconnected.
          */
         override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
             appendText("--> onConnectionStateChange", false, R.color.ble_text_blue)
             appendText("device=${device.address} status=${getConnectionStateString(status)} newState=${getConnectionStateString(newState)}")
         }
 
+        /**
+         * Indicates whether a local service has been added successfully.
+         */
         override fun onServiceAdded(status: Int, service: BluetoothGattService) {
             appendText("--> onServiceAdded", false, R.color.ble_text_blue)
             appendText("status=${getBluetoothGattStatusString(status)}", false)
@@ -85,6 +88,7 @@ class BlePeripheralActivity : AppCompatActivity() {
         }
 
         /**
+         * A remote client has requested to read a local characteristic.
          * 此方法要求作出响应
          *
          * @param requestId     请求的标识
@@ -118,6 +122,8 @@ class BlePeripheralActivity : AppCompatActivity() {
         }
 
         /**
+         * A remote client has requested to write to a local characteristic.
+         *
          * @param preparedWrite     true则写操作必须排队等待稍后执行
          * @param responseNeeded    是否需要响应，需要响应则必须调用 sendResponse()
          */
@@ -151,6 +157,9 @@ class BlePeripheralActivity : AppCompatActivity() {
             }
         }
 
+        /**
+         * A remote client has requested to read a local descriptor.
+         */
         override fun onDescriptorReadRequest(
             device: BluetoothDevice,
             requestId: Int,
@@ -173,6 +182,9 @@ class BlePeripheralActivity : AppCompatActivity() {
             mBluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, response)
         }
 
+        /**
+         * A remote client has requested to write to a local descriptor.
+         */
         override fun onDescriptorWriteRequest(
             device: BluetoothDevice,
             requestId: Int,
@@ -189,27 +201,42 @@ class BlePeripheralActivity : AppCompatActivity() {
             }
         }
 
+        /**
+         * Execute all pending write operations for this device.
+         */
         override fun onExecuteWrite(device: BluetoothDevice, requestId: Int, execute: Boolean) {
             appendText("--> onExecuteWrite", false, R.color.ble_text_blue)
             appendText("device=${device.address} requestId=$requestId execute=$execute")
         }
 
+        /**
+         * Callback invoked when a notification or indication has been sent to a remote device.
+         */
         override fun onNotificationSent(device: BluetoothDevice, status: Int) {
             appendText("--> onNotificationSent", false, R.color.ble_text_blue)
             appendText("device=${device.address} status=${getBluetoothGattStatusString(status)}")
         }
 
+        /**
+         * Callback indicating the MTU for a given device connection has changed.
+         */
         override fun onMtuChanged(device: BluetoothDevice, mtu: Int) {
             appendText("--> onMtuChanged", false, R.color.ble_text_blue)
             appendText("device=${device.address} mtu=$mtu")
             mMtu = mtu
         }
 
+        /**
+         * Callback triggered as result of BluetoothGattServer#readPhy
+         */
         override fun onPhyRead(device: BluetoothDevice, txPhy: Int, rxPhy: Int, status: Int) {
             appendText("--> onPhyRead", false, R.color.ble_text_blue)
             appendText("device=${device.address} txPhy=$txPhy rxPhy=$rxPhy status=${getBluetoothGattStatusString(status)}")
         }
 
+        /**
+         * Callback triggered as result of BluetoothGattServer#setPreferredPhy, or as a result of remote device changing the PHY.
+         */
         override fun onPhyUpdate(device: BluetoothDevice, txPhy: Int, rxPhy: Int, status: Int) {
             appendText("--> onPhyUpdate", false, R.color.ble_text_blue)
             appendText("device=${device.address} txPhy=$txPhy rxPhy=$rxPhy status=${getBluetoothGattStatusString(status)}")
