@@ -80,7 +80,7 @@ abstract class Command(
      * 返回结果时回调
      */
     @Synchronized
-    fun resultAndComplete(vararg args: Any?) {
+    fun result(vararg args: Any?) {
         mainThread {
             mInterceptor?.interceptResult(this, *args) ?: onResult(*args)
         }
@@ -91,7 +91,7 @@ abstract class Command(
      * 错误时回调
      */
     @Synchronized
-    fun errorAndComplete(errorMsg: String) {
+    fun error(errorMsg: String) {
         if (mIsError.compareAndSet(false, true)) {
             mainThread {
                 val t = Throwable(errorMsg)

@@ -17,7 +17,7 @@ class PeripheralCommandHandler(activity: ComponentActivity) : CommandHandler(act
 
     override suspend fun onExecute(command: Command): Boolean {
         if (!checkPermissions(mActivity, command)) {
-            command.errorAndComplete("蓝牙权限被拒绝")
+            command.error("蓝牙权限被拒绝")
             return false
         }
 

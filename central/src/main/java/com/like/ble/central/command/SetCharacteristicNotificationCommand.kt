@@ -31,7 +31,7 @@ class SetCharacteristicNotificationCommand(
 
     init {
         if (type != TYPE_NOTIFY && type != TYPE_INDICATE) {
-            errorAndComplete("type can only be 0 or 1")
+            error("type can only be 0 or 1")
         }
     }
 

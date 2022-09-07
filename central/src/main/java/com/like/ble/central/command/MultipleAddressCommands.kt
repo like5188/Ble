@@ -25,7 +25,7 @@ class MultipleAddressCommands : Command("组合命令") {
 
     override suspend fun execute() {
         if (mCommands.isEmpty() || mCommands.size == 1) {
-            errorAndComplete("${des}至少需要添加2个命令")
+            error("${des}至少需要添加2个命令")
             return
         }
         mCommands.forEach { command ->
@@ -38,7 +38,7 @@ class MultipleAddressCommands : Command("组合命令") {
 
                     override fun interceptFailure(command: Command, throwable: Throwable) {
                         mCallbackCommand?.onError?.invoke(throwable)
-                        errorAndComplete(throwable.message ?: "unknown error")
+                        error(throwable.message ?: "unknown error")
                     }
 
                     override fun interceptResult(command: Command, vararg args: Any?) {
@@ -52,8 +52,8 @@ class MultipleAddressCommands : Command("组合命令") {
                     }
 
                     override fun interceptFailure(command: Command, throwable: Throwable) {
-                        mCallbackCommand?.errorAndComplete(throwable.message ?: "unknown error")
-                        errorAndComplete(throwable.message ?: "unknown error")
+                        mCallbackCommand?.error(throwable.message ?: "unknown error")
+                        error(throwable.message ?: "unknown error")
                     }
 
                     override fun interceptResult(command: Command, vararg args: Any?) {

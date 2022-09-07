@@ -29,7 +29,7 @@ class ScanCommandExecutor(private val mActivity: ComponentActivity) : CentralCom
         BleBroadcastReceiverManager(mActivity,
             onBleOff = {
                 if (mScanning.compareAndSet(true, false)) {
-                    mStartScanCommand?.errorAndComplete("蓝牙被关闭，扫描停止了")
+                    mStartScanCommand?.error("蓝牙被关闭，扫描停止了")
                 }
             }
         )
@@ -40,7 +40,7 @@ class ScanCommandExecutor(private val mActivity: ComponentActivity) : CentralCom
         }
 
         override fun onScanFailed(errorCode: Int) {
-            mStartScanCommand?.errorAndComplete("错误码：$errorCode")
+            mStartScanCommand?.error("错误码：$errorCode")
             mScanning.set(false)
         }
 
@@ -83,7 +83,7 @@ class ScanCommandExecutor(private val mActivity: ComponentActivity) : CentralCom
         if (startScanCommand.filterDeviceAddress.isNotEmpty() && device.address != startScanCommand.filterDeviceAddress) {
             return
         }
-        startScanCommand.resultAndComplete(device, rssi, scanRecord)
+        startScanCommand.result(device, rssi, scanRecord)
     }
 
     @Synchronized
@@ -115,19 +115,19 @@ class ScanCommandExecutor(private val mActivity: ComponentActivity) : CentralCom
             } else {
                 if (command.filterServiceUuid == null) {
                     if (mActivity.getBluetoothAdapter()?.startLeScan(mLeScanCallback) != true) {
-                        command.errorAndComplete("扫描失败")
+                        command.error("扫描失败")
                         return
                     }
                 } else {
                     if (mActivity.getBluetoothAdapter()?.startLeScan(arrayOf(command.filterServiceUuid), mLeScanCallback) != true) {
-                        command.errorAndComplete("扫描失败")
+                        command.error("扫描失败")
                         return
                     }
                 }
             }
             command.complete()// 这里直接完成命令，避免扫描不到需要的设备时，无法触发 startScanCommand.successAndComplete(device, rssi, scanRecord)
         } else {
-            command.errorAndComplete("正在扫描中")
+            command.error("正在扫描中")
         }
     }
 
@@ -139,11 +139,11 @@ class ScanCommandExecutor(private val mActivity: ComponentActivity) : CentralCom
             } else {
                 mActivity.getBluetoothAdapter()?.stopLeScan(mLeScanCallback)
             }
-            mStartScanCommand?.errorAndComplete("扫描停止了")
+            mStartScanCommand?.error("扫描停止了")
             command.complete()
         } else {
-            mStartScanCommand?.errorAndComplete("扫描未开启")
-            command.errorAndComplete("扫描未开启")
+            mStartScanCommand?.error("扫描未开启")
+            command.error("扫描未开启")
         }
     }
 

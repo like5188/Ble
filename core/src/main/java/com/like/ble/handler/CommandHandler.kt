@@ -26,7 +26,7 @@ abstract class CommandHandler(val mActivity: ComponentActivity) {
     fun execute(command: Command) {
         mActivity.lifecycleScope.launch {
             if (!mActivity.isBluetoothEnableAndSettingIfDisabled()) {
-                command.errorAndComplete("蓝牙未打开")
+                command.error("蓝牙未打开")
                 return@launch
             }
 

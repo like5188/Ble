@@ -18,7 +18,7 @@ abstract class AddressCommand(
 ) : Command(des, timeout, immediately, onCompleted, onError) {
     init {
         if (!BluetoothAdapter.checkBluetoothAddress(address)) {
-            errorAndComplete("invalid address：$address")
+            error("invalid address：$address")
         }
     }
 

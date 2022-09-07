@@ -25,13 +25,13 @@ class CentralCommandHandler(activity: ComponentActivity) : CommandHandler(activi
 
     override suspend fun onExecute(command: Command): Boolean {
         if (!checkPermissions(mActivity, command)) {
-            command.errorAndComplete("蓝牙权限被拒绝")
+            command.error("蓝牙权限被拒绝")
             return false
         }
 
         val commandExecutor = getCommandExecutorBy(command)
         if (commandExecutor == null) {
-            command.errorAndComplete("获取 CommandExecutor 失败，无法执行命令：$command")
+            command.error("获取 CommandExecutor 失败，无法执行命令：$command")
             return false
         }
 

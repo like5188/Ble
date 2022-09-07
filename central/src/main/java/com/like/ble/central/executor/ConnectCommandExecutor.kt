@@ -46,7 +46,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
         // 发现蓝牙服务
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             if (status == BluetoothGatt.GATT_SUCCESS) {// 发现了蓝牙服务后，才算真正的连接成功。
-                getCommandFromCache<ConnectCommand>()?.resultAndComplete(gatt.services)
+                getCommandFromCache<ConnectCommand>()?.result(gatt.services)
             } else {
                 disconnect(DisconnectCommand(gatt.device.address))
             }
@@ -56,9 +56,9 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
         override fun onCharacteristicRead(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
             val command = getCommandFromCache<ReadCharacteristicCommand>() ?: return
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                command.resultAndComplete(characteristic.value)
+                command.result(characteristic.value)
             } else {
-                command.errorAndComplete("读取特征值失败：${characteristic.uuid.getValidString()}")
+                command.error("读取特征值失败：${characteristic.uuid.getValidString()}")
             }
         }
 
@@ -70,7 +70,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
                     command.complete()
                 }
             } else {
-                command.errorAndComplete("写特征值失败：${characteristic.uuid.getValidString()}")
+                command.error("写特征值失败：${characteristic.uuid.getValidString()}")
             }
         }
 
@@ -78,19 +78,19 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             val command = getCommandFromCache<ReadNotifyCommand>() ?: return
             if (command.addDataToCache(characteristic.value)) {
                 if (command.isWholeFrame()) {
-                    command.resultAndComplete(command.getData())
+                    command.result(command.getData())
                 }
             } else {
-                command.errorAndComplete("添加数据到缓存失败")
+                command.error("添加数据到缓存失败")
             }
         }
 
         override fun onDescriptorRead(gatt: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) {
             val command = getCommandFromCache<ReadDescriptorCommand>() ?: return
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                command.resultAndComplete(descriptor.value)
+                command.result(descriptor.value)
             } else {
-                command.errorAndComplete("读取描述值失败：${descriptor.uuid.getValidString()}")
+                command.error("读取描述值失败：${descriptor.uuid.getValidString()}")
             }
         }
 
@@ -101,25 +101,25 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
                     command.complete()
                 }
             } else {
-                command.errorAndComplete("写描述值失败：${descriptor.uuid.getValidString()}")
+                command.error("写描述值失败：${descriptor.uuid.getValidString()}")
             }
         }
 
         override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
             val command = getCommandFromCache<RequestMtuCommand>() ?: return
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                command.resultAndComplete(mtu)
+                command.result(mtu)
             } else {
-                command.errorAndComplete("failed to set mtu")
+                command.error("failed to set mtu")
             }
         }
 
         override fun onReadRemoteRssi(gatt: BluetoothGatt?, rssi: Int, status: Int) {
             val command = getCommandFromCache<ReadRemoteRssiCommand>() ?: return
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                command.resultAndComplete(rssi)
+                command.result(rssi)
             } else {
-                command.errorAndComplete("failed to read remote rssi")
+                command.error("failed to read remote rssi")
             }
         }
 
@@ -128,14 +128,14 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
     @Synchronized
     override fun connect(command: ConnectCommand) {
         if (isConnected()) {
-            command.errorAndComplete("蓝牙已经连接了")
+            command.error("蓝牙已经连接了")
             return
         }
 
         // 获取远端的蓝牙设备
         val bluetoothDevice = mActivity.getBluetoothAdapter()?.getRemoteDevice(command.address)
         if (bluetoothDevice == null) {
-            command.errorAndComplete("连接蓝牙设备失败：远程设备 ${command.address} 未找到")
+            command.error("连接蓝牙设备失败：远程设备 ${command.address} 未找到")
             return
         }
 
@@ -147,7 +147,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             bluetoothDevice.connectGatt(mActivity, false, mGattCallback)// 第二个参数表示是否自动重连
         }
         if (mBluetoothGatt == null) {
-            command.errorAndComplete("连接蓝牙设备失败：${command.address}")
+            command.error("连接蓝牙设备失败：${command.address}")
             return
         }
 
@@ -164,9 +164,9 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             mCommands.forEach {
                 val cmd = it.value
                 if (cmd is ConnectCommand) {
-                    cmd.errorAndComplete("蓝牙连接断开了")
+                    cmd.error("蓝牙连接断开了")
                 } else {
-                    cmd.errorAndComplete("蓝牙连接断开了")
+                    cmd.error("蓝牙连接断开了")
                 }
             }
             command.complete()
@@ -174,12 +174,12 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             mCommands.forEach {
                 val cmd = it.value
                 if (cmd is ConnectCommand) {
-                    cmd.errorAndComplete("蓝牙未连接")
+                    cmd.error("蓝牙未连接")
                 } else {
-                    cmd.errorAndComplete("蓝牙未连接")
+                    cmd.error("蓝牙未连接")
                 }
             }
-            command.errorAndComplete("蓝牙未连接")
+            command.error("蓝牙未连接")
         }
         mBluetoothGatt?.close()
         mBluetoothGatt = null
@@ -187,48 +187,48 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
 
     override fun readCharacteristic(command: ReadCharacteristicCommand) {
         if (!isConnected()) {
-            command.errorAndComplete("设备未连接：${command.address}")
+            command.error("设备未连接：${command.address}")
             return
         }
 
         val characteristic = mBluetoothGatt?.findCharacteristic(command.characteristicUuid, command.serviceUuid)
         if (characteristic == null) {
-            command.errorAndComplete("特征值不存在：${command.characteristicUuid.getValidString()}")
+            command.error("特征值不存在：${command.characteristicUuid.getValidString()}")
             return
         }
 
         if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_READ == 0) {
-            command.errorAndComplete("this characteristic not support read!")
+            command.error("this characteristic not support read!")
             return
         }
 
         addCommandToCache(command)
 
         if (mBluetoothGatt?.readCharacteristic(characteristic) != true) {
-            command.errorAndComplete("读取特征值失败：${command.characteristicUuid.getValidString()}")
+            command.error("读取特征值失败：${command.characteristicUuid.getValidString()}")
             return
         }
 
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
-            command.errorAndComplete("读取特征值超时：${command.characteristicUuid.getValidString()}")
+            command.error("读取特征值超时：${command.characteristicUuid.getValidString()}")
         })
     }
 
     override fun writeCharacteristic(command: WriteCharacteristicCommand) {
         if (!isConnected()) {
-            command.errorAndComplete("设备未连接：${command.address}")
+            command.error("设备未连接：${command.address}")
             return
         }
 
         val characteristic = mBluetoothGatt?.findCharacteristic(command.characteristicUuid, command.serviceUuid)
         if (characteristic == null) {
-            command.errorAndComplete("特征值不存在：${command.characteristicUuid.getValidString()}")
+            command.error("特征值不存在：${command.characteristicUuid.getValidString()}")
             return
         }
 
         if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_WRITE == 0) {
-            command.errorAndComplete("this characteristic not support write!")
+            command.error("this characteristic not support write!")
             return
         }
 
@@ -245,7 +245,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             command.data.forEach {
                 characteristic.value = it
                 if (mBluetoothGatt?.writeCharacteristic(characteristic) != true) {
-                    command.errorAndComplete("写特征值失败：${command.characteristicUuid.getValidString()}")
+                    command.error("写特征值失败：${command.characteristicUuid.getValidString()}")
                     return@launch
                 }
                 command.waitForNextFlag()
@@ -255,19 +255,19 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
 
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
-            command.errorAndComplete("写特征值超时：${command.characteristicUuid.getValidString()}")
+            command.error("写特征值超时：${command.characteristicUuid.getValidString()}")
         })
     }
 
     override fun readDescriptor(command: ReadDescriptorCommand) {
         if (!isConnected()) {
-            command.errorAndComplete("设备未连接：${command.address}")
+            command.error("设备未连接：${command.address}")
             return
         }
 
         val descriptor = mBluetoothGatt?.findDescriptor(command.descriptorUuid, command.characteristicUuid, command.serviceUuid)
         if (descriptor == null) {
-            command.errorAndComplete("描述值不存在：${command.descriptorUuid.getValidString()}")
+            command.error("描述值不存在：${command.descriptorUuid.getValidString()}")
             return
         }
 
@@ -280,25 +280,25 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
         addCommandToCache(command)
 
         if (mBluetoothGatt?.readDescriptor(descriptor) != true) {
-            command.errorAndComplete("读取描述值失败：${command.descriptorUuid.getValidString()}")
+            command.error("读取描述值失败：${command.descriptorUuid.getValidString()}")
             return
         }
 
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
-            command.errorAndComplete("读取描述值超时：${command.descriptorUuid.getValidString()}")
+            command.error("读取描述值超时：${command.descriptorUuid.getValidString()}")
         })
     }
 
     override fun writeDescriptor(command: WriteDescriptorCommand) {
         if (!isConnected()) {
-            command.errorAndComplete("设备未连接：${command.address}")
+            command.error("设备未连接：${command.address}")
             return
         }
 
         val descriptor = mBluetoothGatt?.findDescriptor(command.descriptorUuid, command.characteristicUuid, command.serviceUuid)
         if (descriptor == null) {
-            command.errorAndComplete("描述值不存在：${command.descriptorUuid.getValidString()}")
+            command.error("描述值不存在：${command.descriptorUuid.getValidString()}")
             return
         }
 
@@ -321,7 +321,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             command.data.forEach {
                 descriptor.value = it
                 if (mBluetoothGatt?.writeDescriptor(descriptor) != true) {
-                    command.errorAndComplete("写描述值失败：${command.descriptorUuid.getValidString()}")
+                    command.error("写描述值失败：${command.descriptorUuid.getValidString()}")
                     return@launch
                 }
                 command.waitForNextFlag()
@@ -331,24 +331,24 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
 
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
-            command.errorAndComplete("写描述值超时：${command.descriptorUuid.getValidString()}")
+            command.error("写描述值超时：${command.descriptorUuid.getValidString()}")
         })
     }
 
     override fun readNotify(command: ReadNotifyCommand) {
         if (!isConnected()) {
-            command.errorAndComplete("设备未连接：${command.address}")
+            command.error("设备未连接：${command.address}")
             return
         }
 
         val characteristic = mBluetoothGatt?.findCharacteristic(command.characteristicUuid, command.serviceUuid)
         if (characteristic == null) {
-            command.errorAndComplete("特征值不存在：${command.characteristicUuid.getValidString()}")
+            command.error("特征值不存在：${command.characteristicUuid.getValidString()}")
             return
         }
 
         if (characteristic.properties and (BluetoothGattCharacteristic.PROPERTY_INDICATE or BluetoothGattCharacteristic.PROPERTY_NOTIFY) == 0) {
-            command.errorAndComplete("this characteristic not support indicate or notify")
+            command.error("this characteristic not support indicate or notify")
             return
         }
 
@@ -356,103 +356,103 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
 
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
-            command.errorAndComplete("读取通知传来的数据超时：${command.characteristicUuid.getValidString()}")
+            command.error("读取通知传来的数据超时：${command.characteristicUuid.getValidString()}")
         })
 
     }
 
     override fun requestMtu(command: RequestMtuCommand) {
         if (!isConnected()) {
-            command.errorAndComplete("设备未连接：${command.address}")
+            command.error("设备未连接：${command.address}")
             return
         }
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            command.errorAndComplete("android 5.0及其以上才支持设置MTU：${command.address}")
+            command.error("android 5.0及其以上才支持设置MTU：${command.address}")
             return
         }
 
         addCommandToCache(command)
 
         if (mBluetoothGatt?.requestMtu(command.mtu) != true) {
-            command.errorAndComplete("设置MTU失败：${command.address}")
+            command.error("设置MTU失败：${command.address}")
             return
         }
 
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
-            command.errorAndComplete("设置MTU超时：${command.address}")
+            command.error("设置MTU超时：${command.address}")
         })
     }
 
     override fun readRemoteRssi(command: ReadRemoteRssiCommand) {
         if (!isConnected()) {
-            command.errorAndComplete("设备未连接：${command.address}")
+            command.error("设备未连接：${command.address}")
             return
         }
 
         addCommandToCache(command)
 
         if (mBluetoothGatt?.readRemoteRssi() != true) {
-            command.errorAndComplete("读RSSI失败：${command.address}")
+            command.error("读RSSI失败：${command.address}")
             return
         }
 
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
-            command.errorAndComplete("读RSSI超时：${command.address}")
+            command.error("读RSSI超时：${command.address}")
         })
     }
 
     override fun requestConnectionPriority(command: RequestConnectionPriorityCommand) {
         if (!isConnected()) {
-            command.errorAndComplete("设备未连接：${command.address}")
+            command.error("设备未连接：${command.address}")
             return
         }
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            command.errorAndComplete("android 5.0及其以上才支持requestConnectionPriority：${command.address}")
+            command.error("android 5.0及其以上才支持requestConnectionPriority：${command.address}")
             return
         }
 
         addCommandToCache(command)
 
         if (mBluetoothGatt?.requestConnectionPriority(command.connectionPriority) != true) {
-            command.errorAndComplete("requestConnectionPriority失败：${command.address}")
+            command.error("requestConnectionPriority失败：${command.address}")
         } else {
-            command.resultAndComplete(command.connectionPriority)
+            command.result(command.connectionPriority)
         }
     }
 
     override fun setCharacteristicNotification(command: SetCharacteristicNotificationCommand) {
         if (!isConnected()) {
-            command.errorAndComplete("设备未连接")
+            command.error("设备未连接")
             return
         }
 
         val characteristic = mBluetoothGatt?.findCharacteristic(command.characteristicUuid, command.serviceUuid)
         if (characteristic == null) {
-            command.errorAndComplete("特征值不存在：${command.characteristicUuid.getValidString()}")
+            command.error("特征值不存在：${command.characteristicUuid.getValidString()}")
             return
         }
 
         when (command.type) {
             SetCharacteristicNotificationCommand.TYPE_NOTIFY -> {
                 if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY == 0) {
-                    command.errorAndComplete("this characteristic not support notify!")
+                    command.error("this characteristic not support notify!")
                     return
                 }
             }
             SetCharacteristicNotificationCommand.TYPE_INDICATE -> {
                 if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_INDICATE == 0) {
-                    command.errorAndComplete("this characteristic not support indicate!")
+                    command.error("this characteristic not support indicate!")
                     return
                 }
             }
         }
 
         if (mBluetoothGatt?.setCharacteristicNotification(characteristic, command.enable) != true) {
-            command.errorAndComplete("setCharacteristicNotification fail")
+            command.error("setCharacteristicNotification fail")
             return
         }
 
@@ -467,29 +467,29 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
         command: Command
     ) {
         if (!isConnected()) {
-            command.errorAndComplete("设备未连接")
+            command.error("设备未连接")
             return
         }
 
         val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
         if (characteristic == null) {
-            command.errorAndComplete("特征值不存在：${characteristicUuid.getValidString()}")
+            command.error("特征值不存在：${characteristicUuid.getValidString()}")
             return
         }
 
         if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY == 0) {
-            command.errorAndComplete("this characteristic not support notify!")
+            command.error("this characteristic not support notify!")
             return
         }
 
         if (mBluetoothGatt?.setCharacteristicNotification(characteristic, enable) != true) {
-            command.errorAndComplete("setCharacteristicNotification fail")
+            command.error("setCharacteristicNotification fail")
             return
         }
 
         val descriptor = characteristic.getDescriptor(descriptorUuid)
         if (descriptor == null) {
-            command.errorAndComplete("descriptor equals null")
+            command.error("descriptor equals null")
             return
         }
 
@@ -502,7 +502,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
         addCommandToCache(command)
 
         if (mBluetoothGatt?.writeDescriptor(descriptor) != true) {
-            command.errorAndComplete("gatt writeDescriptor fail")
+            command.error("gatt writeDescriptor fail")
             return
         }
     }
@@ -515,29 +515,29 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
         command: Command
     ) {
         if (!isConnected()) {
-            command.errorAndComplete("设备未连接")
+            command.error("设备未连接")
             return
         }
 
         val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
         if (characteristic == null) {
-            command.errorAndComplete("特征值不存在：${characteristicUuid.getValidString()}")
+            command.error("特征值不存在：${characteristicUuid.getValidString()}")
             return
         }
 
         if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_INDICATE == 0) {
-            command.errorAndComplete("this characteristic not support indicate!")
+            command.error("this characteristic not support indicate!")
             return
         }
 
         if (mBluetoothGatt?.setCharacteristicNotification(characteristic, enable) != true) {
-            command.errorAndComplete("setCharacteristicNotification fail")
+            command.error("setCharacteristicNotification fail")
             return
         }
 
         val descriptor = characteristic.getDescriptor(descriptorUuid)
         if (descriptor == null) {
-            command.errorAndComplete("descriptor equals null")
+            command.error("descriptor equals null")
             return
         }
 
@@ -550,7 +550,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
         addCommandToCache(command)
 
         if (mBluetoothGatt?.writeDescriptor(descriptor) != true) {
-            command.errorAndComplete("gatt writeDescriptor fail")
+            command.error("gatt writeDescriptor fail")
             return
         }
     }

@@ -15,7 +15,7 @@ class RequestMtuCommand(
 
     init {
         if (mtu < 23 || mtu > 517) {
-            errorAndComplete("the range of mtu is [23，517]")
+            error("the range of mtu is [23，517]")
         }
     }
 
