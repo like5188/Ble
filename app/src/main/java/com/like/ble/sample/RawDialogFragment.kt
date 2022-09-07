@@ -11,8 +11,8 @@ import android.widget.TextView
 import androidx.core.view.setPadding
 import androidx.databinding.DataBindingUtil
 import com.like.ble.sample.databinding.DialogFragmentRawBinding
-import com.like.ble.utils.toHexString
-import com.like.ble.utils.toHexString2
+import com.like.ble.util.toHexString
+import com.like.ble.util.toHexString2
 import com.like.common.base.BaseDialogFragment
 
 class RawDialogFragment : BaseDialogFragment() {

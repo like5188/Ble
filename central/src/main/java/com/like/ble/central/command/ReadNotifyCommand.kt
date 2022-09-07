@@ -1,6 +1,6 @@
 package com.like.ble.central.command
 
-import com.like.ble.utils.toByteArrayOrNull
+import com.like.ble.util.toByteArrayOrNull
 import java.nio.ByteBuffer
 import java.util.*
 

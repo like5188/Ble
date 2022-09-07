@@ -11,11 +11,11 @@ import androidx.core.util.isEmpty
 import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.DiffUtil
 import com.like.ble.sample.databinding.ItemBleScanBinding
-import com.like.ble.utils.deleteLast
-import com.like.ble.utils.getValidString
-import com.like.ble.utils.scanrecordcompat.ScanRecordBelow21
-import com.like.ble.utils.toHexString
-import com.like.ble.utils.toHexString4
+import com.like.ble.util.deleteLast
+import com.like.ble.util.getValidString
+import com.like.ble.util.scanrecordcompat.ScanRecordBelow21
+import com.like.ble.util.toHexString
+import com.like.ble.util.toHexString4
 import com.like.recyclerview.adapter.BaseListAdapter
 import com.like.recyclerview.viewholder.BindingViewHolder
 

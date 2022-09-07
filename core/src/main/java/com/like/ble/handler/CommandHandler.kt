@@ -4,8 +4,8 @@ import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.Command
 import com.like.ble.invoker.CommandLooper
-import com.like.ble.utils.isBleOpened
-import com.like.ble.utils.isSupportBluetooth
+import com.like.ble.util.isBleOpened
+import com.like.ble.util.isSupportBluetooth
 import kotlinx.coroutines.launch
 
 /**

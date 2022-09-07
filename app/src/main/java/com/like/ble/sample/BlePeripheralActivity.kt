@@ -19,7 +19,7 @@ import com.like.ble.peripheral.command.StartAdvertisingCommand
 import com.like.ble.peripheral.command.StopAdvertisingCommand
 import com.like.ble.peripheral.handler.PeripheralCommandHandler
 import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
-import com.like.ble.utils.*
+import com.like.ble.util.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*

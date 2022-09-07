@@ -14,7 +14,7 @@ import com.like.ble.central.command.*
 import com.like.ble.sample.databinding.ItemBleConnectBinding
 import com.like.ble.sample.databinding.ItemBleConnectCharacteristicBinding
 import com.like.ble.sample.databinding.ItemBleConnectDescriptorsBinding
-import com.like.ble.utils.*
+import com.like.ble.util.*
 import com.like.recyclerview.adapter.BaseListAdapter
 import com.like.recyclerview.viewholder.BindingViewHolder
 import java.util.*

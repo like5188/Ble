@@ -7,8 +7,8 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.databinding.DataBindingUtil
 import com.like.ble.sample.databinding.DialogFragmentWriteDataBinding
-import com.like.ble.utils.hexStringToByteArray
-import com.like.ble.utils.isHexString
+import com.like.ble.util.hexStringToByteArray
+import com.like.ble.util.isHexString
 import com.like.common.base.BaseDialogFragment
 import java.io.Serializable
 

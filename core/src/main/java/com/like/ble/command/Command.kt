@@ -2,7 +2,7 @@ package com.like.ble.command
 
 import androidx.annotation.MainThread
 import com.like.ble.executor.ICommandExecutor
-import com.like.ble.utils.mainThread
+import com.like.ble.util.mainThread
 import kotlinx.coroutines.Job
 import java.util.concurrent.atomic.AtomicBoolean
 

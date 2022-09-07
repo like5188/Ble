@@ -7,7 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.central.command.*
 import com.like.ble.command.Command
-import com.like.ble.utils.*
+import com.like.ble.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

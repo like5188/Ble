@@ -13,8 +13,8 @@ import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import com.like.ble.central.command.StartScanCommand
 import com.like.ble.central.command.StopScanCommand
-import com.like.ble.utils.BleBroadcastReceiverManager
-import com.like.ble.utils.getBluetoothAdapter
+import com.like.ble.util.BleBroadcastReceiverManager
+import com.like.ble.util.getBluetoothAdapter
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**

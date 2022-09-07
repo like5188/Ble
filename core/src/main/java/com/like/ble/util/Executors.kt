@@ -1,4 +1,4 @@
-package com.like.ble.utils
+package com.like.ble.util
 
 import android.os.Handler
 import android.os.Looper

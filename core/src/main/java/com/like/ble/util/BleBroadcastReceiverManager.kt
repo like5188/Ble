@@ -1,4 +1,4 @@
-package com.like.ble.utils
+package com.like.ble.util
 
 import android.bluetooth.BluetoothAdapter
 import android.content.BroadcastReceiver

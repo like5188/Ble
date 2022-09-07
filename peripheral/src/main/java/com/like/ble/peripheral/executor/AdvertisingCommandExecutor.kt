@@ -6,8 +6,8 @@ import android.bluetooth.le.AdvertiseSettings
 import androidx.activity.ComponentActivity
 import com.like.ble.peripheral.command.StartAdvertisingCommand
 import com.like.ble.peripheral.command.StopAdvertisingCommand
-import com.like.ble.utils.BleBroadcastReceiverManager
-import com.like.ble.utils.getBluetoothAdapter
+import com.like.ble.util.BleBroadcastReceiverManager
+import com.like.ble.util.getBluetoothAdapter
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**

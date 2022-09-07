@@ -1,4 +1,4 @@
-package com.like.ble.utils.scanrecordcompat;
+package com.like.ble.util.scanrecordcompat;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;

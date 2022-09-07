@@ -1,6 +1,5 @@
-package com.like.ble.utils
+package com.like.ble.util
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.bluetooth.*
@@ -8,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.activity.ComponentActivity
-import com.like.common.util.activityresultlauncher.requestMultiplePermissions
 import com.like.common.util.activityresultlauncher.startActivityForResult
 import java.nio.ByteBuffer
 import java.util.*
@@ -38,16 +36,6 @@ fun Context.isBluetoothEnable(): Boolean = getBluetoothAdapter()?.isEnabled ?: f
  * 查看手机是否支持蓝牙功能
  */
 fun Context.isSupportBluetooth(): Boolean = packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
-
-/**
- * 检查蓝牙权限
- */
-suspend fun ComponentActivity.checkPermissions(): Boolean = requestMultiplePermissions(
-    Manifest.permission.BLUETOOTH_ADMIN,
-    Manifest.permission.BLUETOOTH,
-    Manifest.permission.ACCESS_FINE_LOCATION,
-    Manifest.permission.ACCESS_COARSE_LOCATION,
-).all { it.value }
 
 /**
  * 蓝牙是否打开。
