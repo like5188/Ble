@@ -105,7 +105,7 @@ abstract class Command(
      * 由子类实现返回参数类型的转换，并调用子类自己特有的回调。
      */
     @MainThread
-    protected open fun onResult(vararg args: Any?) {
+    open fun onResult(vararg args: Any?) {
     }
 
     /**
