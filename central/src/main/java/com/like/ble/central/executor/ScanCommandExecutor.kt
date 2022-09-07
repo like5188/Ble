@@ -13,6 +13,7 @@ import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import com.like.ble.central.command.StartScanCommand
 import com.like.ble.central.command.StopScanCommand
+import com.like.ble.central.util.getScanFailedString
 import com.like.ble.util.BleBroadcastReceiverManager
 import com.like.ble.util.getBluetoothAdapter
 import java.util.concurrent.atomic.AtomicBoolean
@@ -40,7 +41,7 @@ class ScanCommandExecutor(private val mActivity: ComponentActivity) : CentralCom
         }
 
         override fun onScanFailed(errorCode: Int) {
-            mStartScanCommand?.error("错误码：$errorCode")
+            mStartScanCommand?.error(getScanFailedString(errorCode))
             mScanning.set(false)
         }
 
