@@ -63,7 +63,17 @@ class BleConnectActivity : AppCompatActivity() {
     }
 
     fun disconnect(view: View) {
-        mBleManager.sendCommand(DisconnectCommand(mData.address))
+        mBleManager.sendCommand(
+            DisconnectCommand(mData.address,
+                onCompleted = {
+                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this@BleConnectActivity, R.color.ble_text_red))
+                    mBinding.tvConnectStatus.text = "连接停止了"
+                },
+                onError = {
+                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this@BleConnectActivity, R.color.ble_text_red))
+                    mBinding.tvConnectStatus.text = it.message
+                })
+        )
     }
 
     fun requestMtu(view: View) {

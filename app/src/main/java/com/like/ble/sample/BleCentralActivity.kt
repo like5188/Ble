@@ -40,7 +40,7 @@ class BleCentralActivity : AppCompatActivity() {
             StartScanCommand(
                 onCompleted = {
                     mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_blue))
-                    mBinding.tvScanStatus.text = "扫描已开启"
+                    mBinding.tvScanStatus.text = "扫描中……"
                     mAdapter.submitList(null)
                 },
                 onResult = { device, rssi, scanRecord ->
@@ -57,7 +57,7 @@ class BleCentralActivity : AppCompatActivity() {
                 },
                 onError = {
                     mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
-                    mBinding.tvScanStatus.text = it.message ?: "unknown startScan error"
+                    mBinding.tvScanStatus.text = it.message
                 }
             ))
     }
@@ -70,7 +70,7 @@ class BleCentralActivity : AppCompatActivity() {
             },
             onError = {
                 mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
-                mBinding.tvScanStatus.text = it.message ?: "unknown stopScan error"
+                mBinding.tvScanStatus.text = it.message
             }
         ))
     }

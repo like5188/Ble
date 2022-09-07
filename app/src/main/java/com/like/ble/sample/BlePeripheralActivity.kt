@@ -263,7 +263,7 @@ class BlePeripheralActivity : AppCompatActivity() {
                 },
                 onError = {
                     mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
-                    mBinding.tvAdvertisingStatus.text = it.message ?: "unknown startAdvertising error"
+                    mBinding.tvAdvertisingStatus.text = it.message
                     if (!isBluetoothEnable()) {// 说明关闭了蓝牙
                         getBluetoothManager()?.getConnectedDevices(BluetoothProfile.GATT)?.forEach { device ->
                             mBluetoothGattServer?.cancelConnection(device)
@@ -285,7 +285,7 @@ class BlePeripheralActivity : AppCompatActivity() {
             },
             onError = {
                 mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
-                mBinding.tvAdvertisingStatus.text = it.message ?: "unknown stopAdvertising error"
+                mBinding.tvAdvertisingStatus.text = it.message
             }
         ))
     }
