@@ -113,25 +113,63 @@ fun BluetoothGatt.findDescriptor(
 }
 
 fun getConnectionStateString(status: Int) = when (status) {
-    0 -> "DISCONNECTED"
-    1 -> "CONNECTING"
-    2 -> "CONNECTED"
-    3 -> "DISCONNECTING"
+    BluetoothProfile.STATE_DISCONNECTED -> "DISCONNECTED"
+    BluetoothProfile.STATE_CONNECTING -> "CONNECTING"
+    BluetoothProfile.STATE_CONNECTED -> "CONNECTED"
+    BluetoothProfile.STATE_DISCONNECTING -> "DISCONNECTING"
     else -> ""
 }
 
 fun getBluetoothGattStatusString(status: Int) = when (status) {
-    0 -> "SUCCESS"
-    0x2 -> "READ_NOT_PERMITTED"
-    0x3 -> "WRITE_NOT_PERMITTED"
-    0x5 -> "INSUFFICIENT_AUTHENTICATION"
-    0x6 -> "REQUEST_NOT_SUPPORTED"
-    0xf -> "INSUFFICIENT_ENCRYPTION"
-    0x7 -> "INVALID_OFFSET"
-    0xd -> "INVALID_ATTRIBUTE_LENGTH"
-    0x8f -> "CONNECTION_CONGESTED"
-    0x101 -> "FAILURE"
+    BluetoothGatt.GATT_SUCCESS -> "SUCCESS"
+    BluetoothGatt.GATT_READ_NOT_PERMITTED -> "READ_NOT_PERMITTED"
+    BluetoothGatt.GATT_WRITE_NOT_PERMITTED -> "WRITE_NOT_PERMITTED"
+    BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION -> "INSUFFICIENT_AUTHENTICATION"
+    BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED -> "REQUEST_NOT_SUPPORTED"
+    BluetoothGatt.GATT_INSUFFICIENT_ENCRYPTION -> "INSUFFICIENT_ENCRYPTION"
+    BluetoothGatt.GATT_INVALID_OFFSET -> "INVALID_OFFSET"
+    BluetoothGatt.GATT_INVALID_ATTRIBUTE_LENGTH -> "INVALID_ATTRIBUTE_LENGTH"
+    BluetoothGatt.GATT_CONNECTION_CONGESTED -> "CONNECTION_CONGESTED"
+    BluetoothGatt.GATT_FAILURE -> "FAILURE"
     else -> ""
+}
+
+fun BluetoothGattService.getTypeString() = when (type) {
+    BluetoothGattService.SERVICE_TYPE_PRIMARY -> "PRIMARY"
+    BluetoothGattService.SERVICE_TYPE_SECONDARY -> "SECONDARY"
+    else -> "UNKNOWN TYPE"
+}
+
+fun BluetoothGattCharacteristic.getPropertiesString(): String {
+    val result = StringBuilder()
+    if (properties and BluetoothGattCharacteristic.PROPERTY_BROADCAST != 0) {
+        result.append("BROADCAST；")
+    }
+    if (properties and BluetoothGattCharacteristic.PROPERTY_READ != 0) {
+        result.append("READ；")
+    }
+    if (properties and BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE != 0) {
+        result.append("WRITE_NO_RESPONSE；")
+    }
+    if (properties and BluetoothGattCharacteristic.PROPERTY_WRITE != 0) {
+        result.append("WRITE；")
+    }
+    if (properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY != 0) {
+        result.append("NOTIFY；")
+    }
+    if (properties and BluetoothGattCharacteristic.PROPERTY_INDICATE != 0) {
+        result.append("INDICATE；")
+    }
+    if (properties and BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE != 0) {
+        result.append("SIGNED_WRITE；")
+    }
+    if (properties and BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS != 0) {
+        result.append("EXTENDED_PROPS；")
+    }
+    if (result.isNotEmpty()) {
+        result.deleteLast()
+    }
+    return result.toString()
 }
 
 fun createBleUuidBy16Bit(uuidString: String?): UUID {
@@ -187,7 +225,6 @@ fun ByteArray.toHexString(): String {
     return sb.toString().uppercase()
 }
 
-
 /**
  * 16进制表示的字符串转换为字节数组
  *
@@ -207,44 +244,6 @@ fun String.hexStringToByteArray(): ByteArray {
 }
 
 fun UUID.getValidString(): String = "0x${toString().substring(4, 8).uppercase()}"
-
-fun BluetoothGattService.getTypeString() = when (type) {
-    BluetoothGattService.SERVICE_TYPE_PRIMARY -> "PRIMARY"
-    BluetoothGattService.SERVICE_TYPE_SECONDARY -> "SECONDARY"
-    else -> "UNKNOWN TYPE"
-}
-
-fun BluetoothGattCharacteristic.getPropertiesString(): String {
-    val result = StringBuilder()
-    if (properties and BluetoothGattCharacteristic.PROPERTY_BROADCAST != 0) {
-        result.append("BROADCAST；")
-    }
-    if (properties and BluetoothGattCharacteristic.PROPERTY_READ != 0) {
-        result.append("READ；")
-    }
-    if (properties and BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE != 0) {
-        result.append("WRITE_NO_RESPONSE；")
-    }
-    if (properties and BluetoothGattCharacteristic.PROPERTY_WRITE != 0) {
-        result.append("WRITE；")
-    }
-    if (properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY != 0) {
-        result.append("NOTIFY；")
-    }
-    if (properties and BluetoothGattCharacteristic.PROPERTY_INDICATE != 0) {
-        result.append("INDICATE；")
-    }
-    if (properties and BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE != 0) {
-        result.append("SIGNED_WRITE；")
-    }
-    if (properties and BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS != 0) {
-        result.append("EXTENDED_PROPS；")
-    }
-    if (result.isNotEmpty()) {
-        result.deleteLast()
-    }
-    return result.toString()
-}
 
 /**
  * 把 ByteArray 按照指定的 chunkSize 进行分批处理
