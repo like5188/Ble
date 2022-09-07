@@ -56,14 +56,23 @@ class BleCentralActivity : AppCompatActivity() {
                     }
                 },
                 onError = {
-                    mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(this@BleCentralActivity, R.color.ble_text_red))
-                    mBinding.tvScanStatus.text = it.message ?: "扫描停止了"
+                    mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
+                    mBinding.tvScanStatus.text = it.message ?: "unknown startScan error"
                 }
             ))
     }
 
     fun stopScan(view: View) {
-        mBleManager.sendCommand(StopScanCommand())
+        mBleManager.sendCommand(StopScanCommand(
+            onCompleted = {
+                mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
+                mBinding.tvScanStatus.text = "扫描停止了"
+            },
+            onError = {
+                mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
+                mBinding.tvScanStatus.text = it.message ?: "unknown stopScan error"
+            }
+        ))
     }
 
     override fun onDestroy() {

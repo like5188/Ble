@@ -5,4 +5,7 @@ import com.like.ble.command.Command
 /**
  * 停止扫描蓝牙设备命令
  */
-class StopScanCommand : Command("停止扫描蓝牙设备命令", immediately = true)
+class StopScanCommand(
+    onCompleted: (() -> Unit)? = null,
+    onError: ((Throwable) -> Unit)? = null,
+) : Command("停止扫描蓝牙设备命令", immediately = true, onCompleted = onCompleted, onError = onError)

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseSettings
 import androidx.activity.ComponentActivity
+import com.like.ble.command.Command
 import com.like.ble.peripheral.command.StartAdvertisingCommand
 import com.like.ble.peripheral.command.StopAdvertisingCommand
 import com.like.ble.util.BleBroadcastReceiverManager
@@ -23,13 +24,12 @@ import java.util.concurrent.atomic.AtomicBoolean
 @SuppressLint("MissingPermission")
 class AdvertisingCommandExecutor(private val mActivity: ComponentActivity) : PeripheralCommandExecutor() {
     private val mIsSending = AtomicBoolean(false)
-    private var mStartAdvertisingCommand: StartAdvertisingCommand? = null
+    private var mCurCommand: Command? = null
     private val mBleBroadcastReceiverManager: BleBroadcastReceiverManager by lazy {
         BleBroadcastReceiverManager(mActivity,
             onBleOff = {
-                if (mIsSending.compareAndSet(true, false)) {
-                    mStartAdvertisingCommand?.error("蓝牙被关闭，广播停止了")
-                }
+                mIsSending.set(false)
+                mCurCommand?.error("蓝牙功能已关闭")
             }
         )
     }
@@ -43,12 +43,12 @@ class AdvertisingCommandExecutor(private val mActivity: ComponentActivity) : Per
                 ADVERTISE_FAILED_FEATURE_UNSUPPORTED -> "This feature is not supported on this platform"
                 else -> "errorCode=$errorCode"
             }
-            mStartAdvertisingCommand?.error(errorMsg)
+            mCurCommand?.error(errorMsg)
             mIsSending.set(false)
         }
 
         override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
-            mStartAdvertisingCommand?.complete()
+            mCurCommand?.complete()
         }
     }
 
@@ -64,13 +64,13 @@ class AdvertisingCommandExecutor(private val mActivity: ComponentActivity) : Per
                 command.error("phone does not support Bluetooth Advertiser")
                 return
             }
+            mCurCommand = command
 
             // 设置设备名字
             if (command.deviceName.isNotEmpty()) {
                 mActivity.getBluetoothAdapter()?.name = command.deviceName
             }
 
-            mStartAdvertisingCommand = command
             bluetoothLeAdvertiser.startAdvertising(
                 command.settings,
                 command.advertiseData,
@@ -85,11 +85,10 @@ class AdvertisingCommandExecutor(private val mActivity: ComponentActivity) : Per
     @Synchronized
     override fun stopAdvertising(command: StopAdvertisingCommand) {
         if (mIsSending.compareAndSet(true, false)) {
+            mCurCommand = command
             mActivity.getBluetoothAdapter()?.bluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)
-            mStartAdvertisingCommand?.error("广播停止了")
             command.complete()
         } else {
-            mStartAdvertisingCommand?.error("广播未开启")
             command.error("广播未开启")
         }
     }
@@ -97,7 +96,7 @@ class AdvertisingCommandExecutor(private val mActivity: ComponentActivity) : Per
     @Synchronized
     override fun close() {
         stopAdvertising(StopAdvertisingCommand())
-        mStartAdvertisingCommand = null
+        mCurCommand = null
         mBleBroadcastReceiverManager.unregister()
     }
 

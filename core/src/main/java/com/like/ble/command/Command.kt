@@ -64,12 +64,7 @@ abstract class Command(
     @Synchronized
     fun complete() {
         if (mIsCompleted.compareAndSet(false, true)) {
-            if (mJobs.isNotEmpty()) {
-                mJobs.forEach {
-                    it.cancel()
-                }
-                mJobs.clear()
-            }
+            clearJobs()
             mainThread {
                 mInterceptor?.interceptCompleted(this) ?: onCompleted?.invoke()
             }
@@ -84,7 +79,9 @@ abstract class Command(
         mainThread {
             mInterceptor?.interceptResult(this, *args) ?: onResult(*args)
         }
-        complete()
+        if (mIsCompleted.compareAndSet(false, true)) {
+            clearJobs()
+        }
     }
 
     /**
@@ -97,7 +94,19 @@ abstract class Command(
                 val t = Throwable(errorMsg)
                 mInterceptor?.interceptFailure(this, t) ?: onError?.invoke(t)
             }
-            complete()
+            if (mIsCompleted.compareAndSet(false, true)) {
+                clearJobs()
+            }
+        }
+    }
+
+    @Synchronized
+    fun clearJobs() {
+        if (mJobs.isNotEmpty()) {
+            mJobs.forEach {
+                it.cancel()
+            }
+            mJobs.clear()
         }
     }
 
