@@ -45,13 +45,13 @@ class ScanCommandExecutor(private val mActivity: ComponentActivity) : CentralCom
         }
 
         // Bluetoothadapter.isOffloadedScanBatchingSupported()</br>
-        //    判断当前手机蓝牙芯片是否支持批处理扫描。如果支持扫描则使用批处理扫描，可通过ScanSettings.Builder对象调用setReportDelay(Long)方法来设置蓝牙LE扫描的报告延迟的时间（以毫秒为单位）来启动批处理扫描模式。
+        // 判断当前手机蓝牙芯片是否支持批处理扫描。如果支持则使用批处理扫描，可通过ScanSettings.Builder对象调用setReportDelay(Long)方法来设置蓝牙LE扫描的报告延迟的时间（以毫秒为单位）来启动批处理扫描模式。
         //
-        //ScanSettings.Builder.setReportDelay(Long);
-        //    当设备蓝牙芯片支持批处理扫描时，用来设置蓝牙LE扫描的报告延迟的时间（以毫秒为单位）。</br>
-        //    该参数默认为 0，如果不修改它的值，则默认只会在onScanResult(int,ScanResult)中返回扫描到的蓝牙设备，不会触发不会触发onBatchScanResults(List)方法。
-        //    设置为0以立即通知结果,不开启批处理扫描模式。即ScanCallback蓝牙回调中，不会触发onBatchScanResults(List)方法，但会触发onScanResult(int,ScanResult)方法，返回扫描到的蓝牙设备。
-        //    当设置的时间大于0L时，则会开启批处理扫描模式。即触发onBatchScanResults(List)方法，返回扫描到的蓝牙设备列表。但不会触发onScanResult(int,ScanResult)方法。</br>
+        // ScanSettings.Builder.setReportDelay(Long);
+        // 当设备蓝牙芯片支持批处理扫描时，用来设置蓝牙LE扫描的报告延迟的时间（以毫秒为单位）。</br>
+        // 该参数默认为 0，如果不修改它的值，则默认只会在onScanResult(int,ScanResult)中返回扫描到的蓝牙设备，不会触发不会触发onBatchScanResults(List)方法。
+        // 设置为0以立即通知结果,不开启批处理扫描模式。即ScanCallback蓝牙回调中，不会触发onBatchScanResults(List)方法，但会触发onScanResult(int,ScanResult)方法，返回扫描到的蓝牙设备。
+        // 当设置的时间大于0L时，则会开启批处理扫描模式。即触发onBatchScanResults(List)方法，返回扫描到的蓝牙设备列表。但不会触发onScanResult(int,ScanResult)方法。</br>
         override fun onBatchScanResults(results: MutableList<ScanResult>?) {
         }
     }
@@ -98,15 +98,15 @@ class ScanCommandExecutor(private val mActivity: ComponentActivity) : CentralCom
                     mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(
                         listOf(ScanFilter.Builder().setServiceUuid(ParcelUuid(command.filterServiceUuid)).build()),
                         // setScanMode() 设置扫描模式。可选择的模式有三种：
-                        //     ScanSettings.SCAN_MODE_LOW_POWER 低功耗模式
-                        //     ScanSettings.SCAN_MODE_BALANCED 平衡模式
-                        //     ScanSettings.SCAN_MODE_LOW_LATENCY 高功耗模式
+                        // ScanSettings.SCAN_MODE_LOW_POWER 低功耗模式
+                        // ScanSettings.SCAN_MODE_BALANCED 平衡模式
+                        // ScanSettings.SCAN_MODE_LOW_LATENCY 高功耗模式
                         // 从上到下，会越来越耗电,但扫描间隔越来越短，即扫描速度会越来越快。
                         // setCallbackType() 设置回调类型，可选择的类型有三种：
-                        //    ScanSettings.CALLBACK_TYPE_ALL_MATCHES 数值: 1 寻找符合过滤条件的蓝牙广播，如果没有设置过滤条件，则返回全部广播包
-                        //    ScanSettings.CALLBACK_TYPE_FIRST_MATCH 数值: 2 仅针对与筛选条件匹配的第一个广播包触发结果回调。
-                        //    ScanSettings.CALLBACK_TYPE_MATCH_LOST 数值: 4
-                        //    回调类型一般设置ScanSettings.CALLBACK_TYPE_ALL_MATCHES，有过滤条件时过滤，返回符合过滤条件的蓝牙广播。无过滤条件时，返回全部蓝牙广播。
+                        // ScanSettings.CALLBACK_TYPE_ALL_MATCHES 数值: 1 寻找符合过滤条件的蓝牙广播，如果没有设置过滤条件，则返回全部广播包
+                        // ScanSettings.CALLBACK_TYPE_FIRST_MATCH 数值: 2 仅针对与筛选条件匹配的第一个广播包触发结果回调。
+                        // ScanSettings.CALLBACK_TYPE_MATCH_LOST 数值: 4
+                        // 回调类型一般设置ScanSettings.CALLBACK_TYPE_ALL_MATCHES，有过滤条件时过滤，返回符合过滤条件的蓝牙广播。无过滤条件时，返回全部蓝牙广播。
                         // setMatchMode() 设置蓝牙LE扫描滤波器硬件匹配的匹配模式，一般设置ScanSettings.MATCH_MODE_STICKY
                         ScanSettings.Builder().build(),
                         mScanCallback
