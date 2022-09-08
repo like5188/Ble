@@ -23,7 +23,9 @@ class CommandLooper(private val mActivity: ComponentActivity) {
             for (command in mCommands) {
                 Logger.i("开始执行命令：$command")
                 command.execute()
-                delay(100)
+                do {
+                    delay(20)
+                } while (!command.isCompleted())
                 Logger.d("命令执行完成：$command")
             }
         }
