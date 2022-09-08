@@ -38,6 +38,7 @@ class BleCentralActivity : AppCompatActivity() {
     fun startScan(view: View) {
         mBleManager.sendCommand(
             StartScanCommand(
+                filterDeviceName = "BLE测试设备",
                 onCompleted = {
                     mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_blue))
                     mBinding.tvScanStatus.text = "扫描中……"
