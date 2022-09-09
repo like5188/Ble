@@ -39,7 +39,7 @@ abstract class Command(
     private val mIsError: AtomicBoolean = AtomicBoolean(false)
 
     /**
-     * 异步任务。比如延迟关闭任务、执行任务等。
+     * 异步任务。比如延迟关闭任务等。
      * 在[complete]方法中被关闭。所以逻辑中最终必须要直接或者间接调用[complete]方法来关闭任务。
      */
     private val mJobs = mutableListOf<Job>()
