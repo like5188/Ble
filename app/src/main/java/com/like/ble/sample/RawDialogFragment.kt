@@ -4,7 +4,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.os.Bundle
-import android.util.TypedValue
 import android.view.*
 import android.widget.TableRow
 import android.widget.TextView
@@ -14,11 +13,12 @@ import com.like.ble.sample.databinding.DialogFragmentRawBinding
 import com.like.ble.util.toHexString
 import com.like.ble.util.toHexString2
 import com.like.common.base.BaseDialogFragment
+import com.like.common.util.dp
 
 class RawDialogFragment : BaseDialogFragment() {
     private lateinit var mBinding: DialogFragmentRawBinding
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         mBinding = DataBindingUtil.inflate(inflater, R.layout.dialog_fragment_raw, container, false)
         return mBinding.root
     }
@@ -66,18 +66,18 @@ class RawDialogFragment : BaseDialogFragment() {
     private fun addADStructureTable(length: Int, type: String, data: String, parent: ViewGroup) {
         activity ?: return
         //创建表格
-        val tableRow: TableRow = TableRow(activity)
+        val tableRow = TableRow(activity)
         //创建length视图
         val lengthView = TextView(activity)
         lengthView.layoutParams = TableRow.LayoutParams(1, ViewGroup.LayoutParams.WRAP_CONTENT)
-        lengthView.setPadding(dp2px(4f).toInt())
+        lengthView.setPadding(4.dp)
         lengthView.text = length.toString()
         lengthView.gravity = Gravity.CENTER
         tableRow.addView(lengthView)
         //创建Type视图
         val typeView = TextView(activity)
         typeView.layoutParams = TableRow.LayoutParams(1, ViewGroup.LayoutParams.WRAP_CONTENT)
-        typeView.setPadding(dp2px(4f).toInt())
+        typeView.setPadding(4.dp)
         typeView.text = type
         typeView.gravity = Gravity.CENTER
         tableRow.addView(typeView)
@@ -86,15 +86,11 @@ class RawDialogFragment : BaseDialogFragment() {
         val valueLayoutParams = TableRow.LayoutParams(1, ViewGroup.LayoutParams.WRAP_CONTENT)
         valueLayoutParams.span = 3
         valueView.layoutParams = valueLayoutParams
-        valueView.setPadding(dp2px(4f).toInt())
+        valueView.setPadding(4.dp)
         valueView.text = data
         valueView.gravity = Gravity.CENTER
         tableRow.addView(valueView)
         parent.addView(tableRow)
-    }
-
-    private fun dp2px(num: Float): Float {
-        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, num, activity?.resources?.displayMetrics)
     }
 
     /**
