@@ -25,8 +25,9 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
     private val mLayoutInflater: LayoutInflater by lazy { LayoutInflater.from(mActivity) }
     private val mWriteDataFragment: WriteDataFragment by lazy { WriteDataFragment() }
 
-    override fun onBindViewHolder(holder: BindingViewHolder<ItemBleConnectBinding>, item: BleConnectInfo) {
+    override fun onBindViewHolder(holder: BindingViewHolder<ItemBleConnectBinding>, item: BleConnectInfo?) {
         super.onBindViewHolder(holder, item)
+        item ?: return
         val binding = holder.binding
 
         // 服务UUID

@@ -24,8 +24,9 @@ class BleScanAdapter(private val mActivity: FragmentActivity) : BaseListAdapter<
         RawDialogFragment()
     }
 
-    override fun onBindViewHolder(holder: BindingViewHolder<ItemBleScanBinding>, item: BleScanInfo) {
+    override fun onBindViewHolder(holder: BindingViewHolder<ItemBleScanBinding>, item: BleScanInfo?) {
         super.onBindViewHolder(holder, item)
+        item ?: return
         val binding = holder.binding
 
         binding.tvConnect.setOnClickListener {

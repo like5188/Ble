@@ -2,11 +2,11 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 32
 
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 31
+        targetSdkVersion 32
         versionCode 1
         versionName "1.0"
 
@@ -30,10 +30,12 @@ dependencies {
     // coroutines
     compileOnly 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1'
     compileOnly 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1'
-    compileOnly 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'// Activity 或 Fragment 对协程的支持：lifecycleScope
     // Activity 或 Fragment 对协程的支持：lifecycleScope
-    compileOnly 'androidx.fragment:fragment-ktx:1.5.2'
-    compileOnly 'com.github.like5188:Common:6.9.9'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
+    // viewModel 支持
+    implementation 'androidx.fragment:fragment-ktx:1.5.5'
+
+    implementation 'com.github.like5188:Common:7.0.6'
 
     implementation project(':core')
 }
