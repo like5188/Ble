@@ -15,7 +15,7 @@ import java.io.Serializable
 class WriteDataFragment : BaseDialogFragment() {
     private lateinit var mBinding: DialogFragmentWriteDataBinding
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         mBinding = DataBindingUtil.inflate(inflater, R.layout.dialog_fragment_write_data, container, false)
         return mBinding.root
     }
