@@ -2,10 +2,9 @@ package com.like.ble.sample
 
 import androidx.databinding.ObservableBoolean
 import androidx.databinding.ObservableInt
+import com.like.ble.util.Rssi
 import com.like.recyclerview.model.IRecyclerViewItem
 import java.io.Serializable
-import kotlin.math.abs
-import kotlin.math.pow
 
 class BleScanInfo(val name: String, val address: String, val rssi: ObservableInt, val scanRecord: ByteArray?) : IRecyclerViewItem,
     Serializable {
@@ -24,6 +23,6 @@ class BleScanInfo(val name: String, val address: String, val rssi: ObservableInt
     }
 
     private fun updateDistance(rssi: Int) {
-        distance.set(10.0.pow((abs(rssi) - 59) / (10 * 2.0)).toInt())
+        distance.set(Rssi.toDistance(rssi).toInt())
     }
 }
