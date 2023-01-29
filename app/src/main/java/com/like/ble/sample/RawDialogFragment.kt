@@ -10,6 +10,7 @@ import android.widget.TextView
 import androidx.core.view.setPadding
 import androidx.databinding.DataBindingUtil
 import com.like.ble.sample.databinding.DialogFragmentRawBinding
+import com.like.ble.util.ADStructure
 import com.like.ble.util.toHexString
 import com.like.ble.util.toHexString2
 import com.like.common.base.BaseDialogFragment
@@ -40,13 +41,13 @@ class RawDialogFragment : BaseDialogFragment() {
     private fun setData(rawData: ByteArray) {
         val rawDataSb = StringBuilder("0x")
         // 解析原始数据，显示详情
-        val parseBleADData = parseADStructures(rawData)
-        for (adStructure in parseBleADData) {
-            val length = adStructure.length
+        val adStructures = ADStructure.parse(rawData)
+        for (adStructure in adStructures) {
+            val lengthString = adStructure.length.toHexString2()
             val typeHexString = adStructure.type.toHexString2()
             val dataHexString = adStructure.data.toHexString()
-            rawDataSb.append(length.toHexString2()).append(typeHexString).append(dataHexString)
-            addADStructureTable(length, "0x$typeHexString", "0x$dataHexString", mBinding.tl)
+            rawDataSb.append(lengthString).append(typeHexString).append(dataHexString)
+            addADStructureTable(lengthString, "0x$typeHexString", "0x$dataHexString", mBinding.tl)
         }
 
         // 显示原始数据
@@ -61,9 +62,9 @@ class RawDialogFragment : BaseDialogFragment() {
     }
 
     /**
-     * 设置广播数据单元
+     * 添加数据到表格
      */
-    private fun addADStructureTable(length: Int, type: String, data: String, parent: ViewGroup) {
+    private fun addADStructureTable(lengthString: String, typeString: String, dataString: String, parent: ViewGroup) {
         activity ?: return
         //创建表格
         val tableRow = TableRow(activity)
@@ -71,14 +72,14 @@ class RawDialogFragment : BaseDialogFragment() {
         val lengthView = TextView(activity)
         lengthView.layoutParams = TableRow.LayoutParams(1, ViewGroup.LayoutParams.WRAP_CONTENT)
         lengthView.setPadding(4.dp)
-        lengthView.text = length.toString()
+        lengthView.text = lengthString
         lengthView.gravity = Gravity.CENTER
         tableRow.addView(lengthView)
         //创建Type视图
         val typeView = TextView(activity)
         typeView.layoutParams = TableRow.LayoutParams(1, ViewGroup.LayoutParams.WRAP_CONTENT)
         typeView.setPadding(4.dp)
-        typeView.text = type
+        typeView.text = typeString
         typeView.gravity = Gravity.CENTER
         tableRow.addView(typeView)
         //创建Value视图
@@ -87,55 +88,10 @@ class RawDialogFragment : BaseDialogFragment() {
         valueLayoutParams.span = 3
         valueView.layoutParams = valueLayoutParams
         valueView.setPadding(4.dp)
-        valueView.text = data
+        valueView.text = dataString
         valueView.gravity = Gravity.CENTER
         tableRow.addView(valueView)
         parent.addView(tableRow)
-    }
-
-    /**
-     * 解析蓝牙广播报文，获取数据单元
-     */
-    private fun parseADStructures(rawData: ByteArray): List<ADStructure> {
-        val aDStructures = mutableListOf<ADStructure>()
-        var currentPos = 0
-        while (currentPos < rawData.size) {
-            val length: Int = rawData[currentPos++].toInt() and 0xFF
-            if (length == 0) {
-                break
-            }
-            // Note the length includes the length of the field type itself.
-            val dataLength = length - 1
-            // fieldType is unsigned int.
-            val fieldType = rawData[currentPos++].toInt() and 0xFF
-
-            val data = ByteArray(dataLength)
-            System.arraycopy(rawData, currentPos, data, 0, dataLength)
-            aDStructures.add(ADStructure(length, fieldType, data))
-            currentPos += dataLength
-        }
-        return aDStructures
-    }
-
-    data class ADStructure(val length: Int, val type: Int, val data: ByteArray) {
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is ADStructure) return false
-
-            if (length != other.length) return false
-            if (type != other.type) return false
-            if (!data.contentEquals(other.data)) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = length
-            result = 31 * result + type
-            result = 31 * result + data.contentHashCode()
-            return result
-        }
     }
 
 }
