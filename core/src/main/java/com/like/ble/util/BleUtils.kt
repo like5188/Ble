@@ -33,7 +33,7 @@ fun Context.getBluetoothAdapter(): BluetoothAdapter? = getBluetoothManager()?.ad
 fun Context.isBluetoothEnable(): Boolean = getBluetoothAdapter()?.isEnabled ?: false
 
 /**
- * 查看手机是否支持蓝牙功能
+ * 查看设备是否支持蓝牙功能
  */
 fun Context.isSupportBluetooth(): Boolean = packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
 

@@ -54,7 +54,7 @@ class ScanCommandExecutor(private val mActivity: ComponentActivity) : CentralCom
         }
 
         // Bluetoothadapter.isOffloadedScanBatchingSupported()</br>
-        // 判断当前手机蓝牙芯片是否支持批处理扫描。如果支持则使用批处理扫描，可通过ScanSettings.Builder对象调用setReportDelay(Long)方法来设置蓝牙LE扫描的报告延迟的时间（以毫秒为单位）来启动批处理扫描模式。
+        // 判断当前设备蓝牙芯片是否支持批处理扫描。如果支持则使用批处理扫描，可通过ScanSettings.Builder对象调用setReportDelay(Long)方法来设置蓝牙LE扫描的报告延迟的时间（以毫秒为单位）来启动批处理扫描模式。
         //
         // ScanSettings.Builder.setReportDelay(Long);
         // 当设备蓝牙芯片支持批处理扫描时，用来设置蓝牙LE扫描的报告延迟的时间（以毫秒为单位）。</br>

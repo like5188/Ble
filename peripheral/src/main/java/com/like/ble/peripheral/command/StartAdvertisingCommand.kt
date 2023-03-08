@@ -10,7 +10,7 @@ import com.like.ble.command.Command
  * @param settings          广播的设置
  * @param advertiseData     广播的数据
  * @param scanResponse      与广播数据相关联的扫描响应数据
- * @param deviceName        设备名称。默认为手机名称。
+ * @param deviceName        设备名称。默认为设备名称。
  */
 class StartAdvertisingCommand(
     val settings: AdvertiseSettings,

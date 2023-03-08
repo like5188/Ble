@@ -316,7 +316,7 @@ class BlePeripheralActivity : AppCompatActivity() {
     private fun createAdvertiseSettings(): AdvertiseSettings {
         return AdvertiseSettings.Builder()
             // 设置广播的模式，低功耗，平衡和低延迟三种模式；
-            // 对应  AdvertiseSettings.ADVERTISE_MODE_LOW_POWER  ,ADVERTISE_MODE_BALANCED ,ADVERTISE_MODE_LOW_LATENCY
+            // 对应 AdvertiseSettings.ADVERTISE_MODE_LOW_POWER,ADVERTISE_MODE_BALANCED,ADVERTISE_MODE_LOW_LATENCY
             // 从左右到右，广播的间隔会越来越短
             .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
             // 设置是否可以连接。
@@ -328,10 +328,8 @@ class BlePeripheralActivity : AppCompatActivity() {
             // 设置广播的信号强度
             // 常量有AdvertiseSettings.ADVERTISE_TX_POWER_ULTRA_LOW, ADVERTISE_TX_POWER_LOW, ADVERTISE_TX_POWER_MEDIUM, ADVERTISE_TX_POWER_HIGH
             // 从左到右分别表示强度越来越强.
-            // 举例：当设置为ADVERTISE_TX_POWER_ULTRA_LOW时，
-            // 手机1和手机2放在一起，手机2扫描到的rssi信号强度为-56左右，
-            // 当设置为ADVERTISE_TX_POWER_HIGH  时， 扫描到的信号强度为-33左右，
-            // 信号强度越大，表示手机和设备靠的越近
+            // 举例：当设置为ADVERTISE_TX_POWER_ULTRA_LOW时，手机1和手机2放在一起，手机2扫描到的rssi信号强度为-56左右，
+            // 当设置为ADVERTISE_TX_POWER_HIGH时，扫描到的信号强度为-33左右，信号强度越大，表示手机和设备靠的越近
             // ＊ AdvertiseSettings.ADVERTISE_TX_POWER_HIGH -56 dBm @ 1 meter with Nexus 5
             // ＊ AdvertiseSettings.ADVERTISE_TX_POWER_LOW -75 dBm @ 1 meter with Nexus 5
             // ＊ AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM -66 dBm @ 1 meter with Nexus 5

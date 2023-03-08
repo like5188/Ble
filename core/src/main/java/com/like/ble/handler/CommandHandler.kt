@@ -19,7 +19,7 @@ abstract class CommandHandler(val mActivity: ComponentActivity) {
 
     init {
         if (!mActivity.isSupportBluetooth()) {
-            throw UnsupportedOperationException("手机不支持蓝牙")
+            throw UnsupportedOperationException("设备不支持蓝牙")
         }
     }
 
