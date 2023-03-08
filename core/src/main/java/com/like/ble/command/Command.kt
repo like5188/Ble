@@ -59,7 +59,7 @@ abstract class Command(
     }
 
     /**
-     * 命令执行完成时回调
+     * 命令执行完成时调用
      */
     @Synchronized
     fun complete() {
@@ -72,7 +72,7 @@ abstract class Command(
     }
 
     /**
-     * 返回结果时回调
+     * 返回结果时调用
      */
     @Synchronized
     fun result(vararg args: Any?) {
@@ -85,7 +85,7 @@ abstract class Command(
     }
 
     /**
-     * 错误时回调
+     * 错误时调用
      */
     @Synchronized
     fun error(errorMsg: String) {
