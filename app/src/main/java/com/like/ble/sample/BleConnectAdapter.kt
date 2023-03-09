@@ -97,7 +97,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
             }
         }
 
-        if (characteristic.properties and 0x02 != 0) {
+        if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_READ != 0) {
             binding.ivRead.visibility = View.VISIBLE
             binding.ivRead.setOnClickListener {
                 mBleManager.sendCommand(ReadCharacteristicCommand(
@@ -114,7 +114,9 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                 ))
             }
         }
-        if (characteristic.properties and 0x04 != 0 || characteristic.properties and 0x08 != 0) {
+        if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE != 0 ||
+            characteristic.properties and BluetoothGattCharacteristic.PROPERTY_WRITE != 0
+        ) {
             binding.ivWrite.visibility = View.VISIBLE
             binding.ivWrite.setOnClickListener {
                 mWriteDataFragment.arguments = Bundle().apply {
@@ -167,7 +169,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                 mWriteDataFragment.show(mActivity)
             }
         }
-        if (characteristic.properties and 0x10 != 0) {
+        if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY != 0) {
             binding.ivNotify.visibility = View.VISIBLE
             val isOn = AtomicBoolean(false)
             binding.ivNotify.setOnClickListener {
@@ -223,7 +225,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                 mBleManager.sendCommand(multipleAddressCommands)
             }
         }
-        if (characteristic.properties and 0x20 != 0) {
+        if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_INDICATE != 0) {
             binding.ivIndicate.visibility = View.VISIBLE
             val isOn = AtomicBoolean(false)
             binding.ivIndicate.setOnClickListener {
