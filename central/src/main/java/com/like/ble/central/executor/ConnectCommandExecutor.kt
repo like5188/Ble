@@ -28,20 +28,18 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             when (mCurCommand) {
                 is ConnectCommand -> {
-                    if (status == BluetoothGatt.GATT_SUCCESS) {
-                        if (newState == BluetoothGatt.STATE_CONNECTED) {// 连接蓝牙设备成功
-                            // 连接成功后，发现设备所有的 GATT Service
-                            gatt.discoverServices()
-                        }
+                    // 连接蓝牙设备成功
+                    if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothGatt.STATE_CONNECTED) {
+                        // 连接成功后，发现设备所有的 GATT Service
+                        gatt.discoverServices()
                     } else {
                         mCurCommand?.error("连接蓝牙失败：${gatt.device.address}")
                     }
                 }
                 is DisconnectCommand -> {
-                    if (status == BluetoothGatt.GATT_SUCCESS) {
-                        if (newState == BluetoothGatt.STATE_DISCONNECTED) {// 断开连接蓝牙设备成功
-                            mCurCommand?.complete()
-                        }
+                    // 断开连接蓝牙设备成功
+                    if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothGatt.STATE_DISCONNECTED) {
+                        mCurCommand?.complete()
                     } else {
                         mCurCommand?.error("断开连接蓝牙失败：${gatt.device.address}")
                     }
@@ -60,7 +58,11 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
         }
 
         // 谁进行读数据操作，然后外围设备才会被动的发出一个数据，而这个数据只能是读操作的对象才有资格获得到这个数据。
-        override fun onCharacteristicRead(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
+        override fun onCharacteristicRead(
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic,
+            status: Int
+        ) {
             val command = (mCurCommand as? ReadCharacteristicCommand) ?: return
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 command.result(characteristic.value)
@@ -70,7 +72,11 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
         }
 
         // 写特征值，注意，这里的characteristic.value中的数据是你写入的数据，而不是外围设备sendResponse返回的。
-        override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
+        override fun onCharacteristicWrite(
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic,
+            status: Int
+        ) {
             val command = (mCurCommand as? WriteCharacteristicCommand) ?: return
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 if (command.isAllWrite()) {
@@ -81,7 +87,10 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             }
         }
 
-        override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
+        override fun onCharacteristicChanged(
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic
+        ) {
             val command = (mCurCommand as? ReadNotifyCommand) ?: return
             if (command.addDataToCache(characteristic.value)) {
                 if (command.isWholeFrame()) {
@@ -92,7 +101,11 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             }
         }
 
-        override fun onDescriptorRead(gatt: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) {
+        override fun onDescriptorRead(
+            gatt: BluetoothGatt,
+            descriptor: BluetoothGattDescriptor,
+            status: Int
+        ) {
             val command = (mCurCommand as? ReadDescriptorCommand) ?: return
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 command.result(descriptor.value)
@@ -101,7 +114,11 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             }
         }
 
-        override fun onDescriptorWrite(gatt: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) {
+        override fun onDescriptorWrite(
+            gatt: BluetoothGatt,
+            descriptor: BluetoothGattDescriptor,
+            status: Int
+        ) {
             val command = (mCurCommand as? WriteDescriptorCommand) ?: return
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 if (command.isAllWrite()) {
@@ -149,7 +166,12 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
         mCurCommand = command
 
         mBluetoothGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            bluetoothDevice.connectGatt(mActivity, false, mGattCallback, BluetoothDevice.TRANSPORT_LE)// 第二个参数表示是否自动重连
+            bluetoothDevice.connectGatt(
+                mActivity,
+                false,
+                mGattCallback,
+                BluetoothDevice.TRANSPORT_LE
+            )// 第二个参数表示是否自动重连
         } else {
             bluetoothDevice.connectGatt(mActivity, false, mGattCallback)// 第二个参数表示是否自动重连
         }
@@ -184,7 +206,8 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             return
         }
 
-        val characteristic = mBluetoothGatt?.findCharacteristic(command.characteristicUuid, command.serviceUuid)
+        val characteristic =
+            mBluetoothGatt?.findCharacteristic(command.characteristicUuid, command.serviceUuid)
         if (characteristic == null) {
             command.error("特征值不存在：${command.characteristicUuid.getValidString()}")
             return
@@ -214,7 +237,8 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             return
         }
 
-        val characteristic = mBluetoothGatt?.findCharacteristic(command.characteristicUuid, command.serviceUuid)
+        val characteristic =
+            mBluetoothGatt?.findCharacteristic(command.characteristicUuid, command.serviceUuid)
         if (characteristic == null) {
             command.error("特征值不存在：${command.characteristicUuid.getValidString()}")
             return
@@ -258,7 +282,11 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             return
         }
 
-        val descriptor = mBluetoothGatt?.findDescriptor(command.descriptorUuid, command.characteristicUuid, command.serviceUuid)
+        val descriptor = mBluetoothGatt?.findDescriptor(
+            command.descriptorUuid,
+            command.characteristicUuid,
+            command.serviceUuid
+        )
         if (descriptor == null) {
             command.error("描述值不存在：${command.descriptorUuid.getValidString()}")
             return
@@ -289,7 +317,11 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             return
         }
 
-        val descriptor = mBluetoothGatt?.findDescriptor(command.descriptorUuid, command.characteristicUuid, command.serviceUuid)
+        val descriptor = mBluetoothGatt?.findDescriptor(
+            command.descriptorUuid,
+            command.characteristicUuid,
+            command.serviceUuid
+        )
         if (descriptor == null) {
             command.error("描述值不存在：${command.descriptorUuid.getValidString()}")
             return
@@ -334,7 +366,8 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             return
         }
 
-        val characteristic = mBluetoothGatt?.findCharacteristic(command.characteristicUuid, command.serviceUuid)
+        val characteristic =
+            mBluetoothGatt?.findCharacteristic(command.characteristicUuid, command.serviceUuid)
         if (characteristic == null) {
             command.error("特征值不存在：${command.characteristicUuid.getValidString()}")
             return
@@ -423,7 +456,8 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             return
         }
 
-        val characteristic = mBluetoothGatt?.findCharacteristic(command.characteristicUuid, command.serviceUuid)
+        val characteristic =
+            mBluetoothGatt?.findCharacteristic(command.characteristicUuid, command.serviceUuid)
         if (characteristic == null) {
             command.error("特征值不存在：${command.characteristicUuid.getValidString()}")
             return
