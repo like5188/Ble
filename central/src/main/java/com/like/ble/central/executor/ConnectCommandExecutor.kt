@@ -39,7 +39,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
                 }
                 is DisconnectCommand -> {
                     if (status == BluetoothGatt.GATT_SUCCESS) {
-                        if (newState == BluetoothGatt.STATE_CONNECTED) {// 断开连接蓝牙设备成功
+                        if (newState == BluetoothGatt.STATE_DISCONNECTED) {// 断开连接蓝牙设备成功
                             mCurCommand?.complete()
                         }
                     } else {
