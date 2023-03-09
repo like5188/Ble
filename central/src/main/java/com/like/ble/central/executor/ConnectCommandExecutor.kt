@@ -20,29 +20,24 @@ import java.util.*
 @SuppressLint("MissingPermission")
 class ConnectCommandExecutor(private val mActivity: ComponentActivity) : CentralCommandExecutor() {
     private var mBluetoothGatt: BluetoothGatt? = null
-    private var mCurCommand: Command? = null
 
     // 蓝牙Gatt回调方法中都不可以进行耗时操作，需要将其方法内进行的操作丢进另一个线程，尽快返回。
     private val mGattCallback = object : BluetoothGattCallback() {
         // 当连接状态改变
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-            when (mCurCommand) {
-                is ConnectCommand -> {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                if (newState == BluetoothGatt.STATE_CONNECTED) {
                     // 连接蓝牙设备成功
-                    if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothGatt.STATE_CONNECTED) {
-                        // 连接成功后，发现设备所有的 GATT Service
-                        gatt.discoverServices()
-                    } else {
-                        mCurCommand?.error("连接蓝牙失败：${gatt.device.address}")
-                    }
-                }
-                is DisconnectCommand -> {
+                    gatt.discoverServices()
+                } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
                     // 断开连接蓝牙设备成功
-                    if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothGatt.STATE_DISCONNECTED) {
-                        mCurCommand?.complete()
-                    } else {
-                        mCurCommand?.error("断开连接蓝牙失败：${gatt.device.address}")
-                    }
+                    disconnectCommand?.complete()
+                }
+            } else {
+                if (newState == BluetoothGatt.STATE_CONNECTED) {
+                    disconnectCommand?.error("断开连接蓝牙失败：${gatt.device.address}")
+                } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
+                    connectCommand?.error("连接蓝牙失败：${gatt.device.address}")
                 }
             }
         }
@@ -50,9 +45,9 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
         // 发现蓝牙服务
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             if (status == BluetoothGatt.GATT_SUCCESS) {// 发现了蓝牙服务后，才算真正的连接成功。
-                mCurCommand?.result(gatt.services)
+                connectCommand?.result(gatt.services)
             } else {
-                mCurCommand?.error("连接蓝牙失败：${gatt.device.address}")
+                connectCommand?.error("连接蓝牙失败：${gatt.device.address}")
                 disconnect(DisconnectCommand(gatt.device.address))
             }
         }
@@ -63,7 +58,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             characteristic: BluetoothGattCharacteristic,
             status: Int
         ) {
-            val command = (mCurCommand as? ReadCharacteristicCommand) ?: return
+            val command = readCharacteristicCommand ?: return
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 command.result(characteristic.value)
             } else {
@@ -77,7 +72,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             characteristic: BluetoothGattCharacteristic,
             status: Int
         ) {
-            val command = (mCurCommand as? WriteCharacteristicCommand) ?: return
+            val command = writeCharacteristicCommand ?: return
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 if (command.isAllWrite()) {
                     command.complete()
@@ -91,7 +86,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             gatt: BluetoothGatt,
             characteristic: BluetoothGattCharacteristic
         ) {
-            val command = (mCurCommand as? ReadNotifyCommand) ?: return
+            val command = readNotifyCommand ?: return
             if (command.addDataToCache(characteristic.value)) {
                 if (command.isWholeFrame()) {
                     command.result(command.getData())
@@ -106,7 +101,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             descriptor: BluetoothGattDescriptor,
             status: Int
         ) {
-            val command = (mCurCommand as? ReadDescriptorCommand) ?: return
+            val command = readDescriptorCommand ?: return
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 command.result(descriptor.value)
             } else {
@@ -119,7 +114,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             descriptor: BluetoothGattDescriptor,
             status: Int
         ) {
-            val command = (mCurCommand as? WriteDescriptorCommand) ?: return
+            val command = writeDescriptorCommand ?: return
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 if (command.isAllWrite()) {
                     command.complete()
@@ -130,7 +125,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
         }
 
         override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
-            val command = (mCurCommand as? RequestMtuCommand) ?: return
+            val command = requestMtuCommand ?: return
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 command.result(mtu)
             } else {
@@ -139,7 +134,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
         }
 
         override fun onReadRemoteRssi(gatt: BluetoothGatt?, rssi: Int, status: Int) {
-            val command = (mCurCommand as? ReadRemoteRssiCommand) ?: return
+            val command = readRemoteRssiCommand ?: return
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 command.result(rssi)
             } else {
@@ -162,8 +157,6 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             command.error("连接蓝牙失败：${command.address} 未找到")
             return
         }
-
-        mCurCommand = command
 
         mBluetoothGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             bluetoothDevice.connectGatt(
@@ -189,7 +182,6 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
 
     @Synchronized
     override fun disconnect(command: DisconnectCommand) {
-        mCurCommand = command
         if (isConnected()) {
             mBluetoothGatt?.disconnect()
             command.complete()
@@ -217,8 +209,6 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             command.error("this characteristic not support read!")
             return
         }
-
-        mCurCommand = command
 
         if (mBluetoothGatt?.readCharacteristic(characteristic) != true) {
             command.error("读取特征值失败：${command.characteristicUuid.getValidString()}")
@@ -248,8 +238,6 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             command.error("this characteristic not support write!")
             return
         }
-
-        mCurCommand = command
 
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             /*
@@ -298,8 +286,6 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
 //            return
 //        }
 
-        mCurCommand = command
-
         if (mBluetoothGatt?.readDescriptor(descriptor) != true) {
             command.error("读取描述值失败：${command.descriptorUuid.getValidString()}")
             return
@@ -340,8 +326,6 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
 //            return
 //        }
 
-        mCurCommand = command
-
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             command.data.forEach {
                 descriptor.value = it
@@ -378,8 +362,6 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             return
         }
 
-        mCurCommand = command
-
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
             command.error("读取通知传来的数据超时：${command.characteristicUuid.getValidString()}")
@@ -398,8 +380,6 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             return
         }
 
-        mCurCommand = command
-
         if (mBluetoothGatt?.requestMtu(command.mtu) != true) {
             command.error("设置MTU失败：${command.address}")
             return
@@ -416,8 +396,6 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             command.error("蓝牙未连接：${command.address}")
             return
         }
-
-        mCurCommand = command
 
         if (mBluetoothGatt?.readRemoteRssi() != true) {
             command.error("读RSSI失败：${command.address}")
@@ -440,8 +418,6 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             command.error("android 5.0及其以上才支持requestConnectionPriority：${command.address}")
             return
         }
-
-        mCurCommand = command
 
         if (mBluetoothGatt?.requestConnectionPriority(command.connectionPriority) != true) {
             command.error("requestConnectionPriority失败：${command.address}")
@@ -477,8 +453,6 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
                 }
             }
         }
-
-        mCurCommand = command
 
         if (mBluetoothGatt?.setCharacteristicNotification(characteristic, command.enable) != true) {
             command.error("setCharacteristicNotification fail")
@@ -521,8 +495,6 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             command.error("descriptor equals null")
             return
         }
-
-        mCurCommand = command
 
         descriptor.value = if (enable) {
             BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
@@ -572,8 +544,6 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             return
         }
 
-        mCurCommand = command
-
         descriptor.value = if (enable) {
             BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
         } else {
@@ -594,7 +564,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
         if (address.isNotEmpty()) {
             disconnect(DisconnectCommand(address))
         }
-        mCurCommand = null
+        super.close()
     }
 
     private fun isConnected(): Boolean {

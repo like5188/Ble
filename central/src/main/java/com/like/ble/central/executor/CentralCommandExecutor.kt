@@ -8,22 +8,74 @@ import com.like.ble.executor.ICommandExecutor
  * 中心设备蓝牙命令执行者。
  */
 abstract class CentralCommandExecutor : ICommandExecutor {
+    protected var startScanCommand: StartScanCommand? = null
+    protected var stopScanCommand: StopScanCommand? = null
+    protected var connectCommand: ConnectCommand? = null
+    protected var disconnectCommand: DisconnectCommand? = null
+    protected var readCharacteristicCommand: ReadCharacteristicCommand? = null
+    protected var writeCharacteristicCommand: WriteCharacteristicCommand? = null
+    protected var readDescriptorCommand: ReadDescriptorCommand? = null
+    protected var writeDescriptorCommand: WriteDescriptorCommand? = null
+    protected var requestMtuCommand: RequestMtuCommand? = null
+    protected var setCharacteristicNotificationCommand: SetCharacteristicNotificationCommand? = null
+    protected var readNotifyCommand: ReadNotifyCommand? = null
+    protected var readRemoteRssiCommand: ReadRemoteRssiCommand? = null
+    protected var requestConnectionPriorityCommand: RequestConnectionPriorityCommand? = null
 
     override suspend fun execute(command: Command) {
         when (command) {
-            is StartScanCommand -> startScan(command)
-            is StopScanCommand -> stopScan(command)
-            is ConnectCommand -> connect(command)
-            is DisconnectCommand -> disconnect(command)
-            is ReadCharacteristicCommand -> readCharacteristic(command)
-            is WriteCharacteristicCommand -> writeCharacteristic(command)
-            is ReadDescriptorCommand -> readDescriptor(command)
-            is WriteDescriptorCommand -> writeDescriptor(command)
-            is RequestMtuCommand -> requestMtu(command)
-            is SetCharacteristicNotificationCommand -> setCharacteristicNotification(command)
-            is ReadNotifyCommand -> readNotify(command)
-            is ReadRemoteRssiCommand -> readRemoteRssi(command)
-            is RequestConnectionPriorityCommand -> requestConnectionPriority(command)
+            is StartScanCommand -> {
+                startScanCommand = command
+                startScan(command)
+            }
+            is StopScanCommand -> {
+                stopScanCommand = command
+                stopScan(command)
+            }
+            is ConnectCommand -> {
+                connectCommand = command
+                connect(command)
+            }
+            is DisconnectCommand -> {
+                disconnectCommand = command
+                disconnect(command)
+            }
+            is ReadCharacteristicCommand -> {
+                readCharacteristicCommand = command
+                readCharacteristic(command)
+            }
+            is WriteCharacteristicCommand -> {
+                writeCharacteristicCommand = command
+                writeCharacteristic(command)
+            }
+            is ReadDescriptorCommand -> {
+                readDescriptorCommand = command
+                readDescriptor(command)
+            }
+            is WriteDescriptorCommand -> {
+                writeDescriptorCommand = command
+                writeDescriptor(command)
+            }
+            is RequestMtuCommand -> {
+                requestMtuCommand = command
+                requestMtu(command)
+            }
+            is SetCharacteristicNotificationCommand -> {
+                setCharacteristicNotificationCommand = command
+                setCharacteristicNotification(command)
+            }
+            is ReadNotifyCommand -> {
+                readNotifyCommand = command
+                readNotify(command)
+            }
+            is ReadRemoteRssiCommand -> {
+                readRemoteRssiCommand = command
+                readRemoteRssi(command)
+            }
+            is RequestConnectionPriorityCommand -> {
+                requestConnectionPriorityCommand = command
+                requestConnectionPriority(command)
+            }
         }
     }
 
@@ -77,6 +129,22 @@ abstract class CentralCommandExecutor : ICommandExecutor {
 
     open fun requestConnectionPriority(command: RequestConnectionPriorityCommand) {
         throw UnsupportedOperationException("Unsupported command")
+    }
+
+    override fun close() {
+        startScanCommand = null
+        stopScanCommand = null
+        connectCommand = null
+        disconnectCommand = null
+        readCharacteristicCommand = null
+        writeCharacteristicCommand = null
+        readDescriptorCommand = null
+        writeDescriptorCommand = null
+        requestMtuCommand = null
+        setCharacteristicNotificationCommand = null
+        readNotifyCommand = null
+        readRemoteRssiCommand = null
+        requestConnectionPriorityCommand = null
     }
 
 }

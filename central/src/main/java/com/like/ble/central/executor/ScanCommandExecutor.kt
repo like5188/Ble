@@ -13,7 +13,6 @@ import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import com.like.ble.central.command.StartScanCommand
 import com.like.ble.central.command.StopScanCommand
-import com.like.ble.command.Command
 import com.like.ble.util.BleBroadcastReceiverManager
 import com.like.ble.util.getBluetoothAdapter
 import java.util.concurrent.atomic.AtomicBoolean
@@ -25,12 +24,12 @@ import java.util.concurrent.atomic.AtomicBoolean
 @SuppressLint("MissingPermission")
 class ScanCommandExecutor(private val mActivity: ComponentActivity) : CentralCommandExecutor() {
     private val mScanning = AtomicBoolean(false)
-    private var mCurCommand: Command? = null
     private val mBleBroadcastReceiverManager: BleBroadcastReceiverManager by lazy {
         BleBroadcastReceiverManager(mActivity,
             onBleOff = {
                 mScanning.set(false)
-                mCurCommand?.error("蓝牙功能已关闭")
+                startScanCommand?.error("蓝牙功能已关闭")
+                stopScanCommand?.error("蓝牙功能已关闭")
             }
         )
     }
@@ -49,7 +48,7 @@ class ScanCommandExecutor(private val mActivity: ComponentActivity) : CentralCom
                 6 -> "Fails to start scan as application tries to scan too frequently."
                 else -> "unknown scan error"
             }
-            mCurCommand?.error(errorMsg)
+            startScanCommand?.error(errorMsg)
             mScanning.set(false)
         }
 
@@ -74,7 +73,7 @@ class ScanCommandExecutor(private val mActivity: ComponentActivity) : CentralCom
 
     @Synchronized
     private fun filterScanResult(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
-        val startScanCommand = (mCurCommand as? StartScanCommand) ?: return
+        val startScanCommand = startScanCommand ?: return
         // 设备名字匹配
         if (startScanCommand.filterDeviceName.isNotEmpty()) {
             val deviceName = device.name ?: ""
@@ -98,7 +97,6 @@ class ScanCommandExecutor(private val mActivity: ComponentActivity) : CentralCom
     @Synchronized
     override fun startScan(command: StartScanCommand) {
         if (mScanning.compareAndSet(false, true)) {
-            mCurCommand = command
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 if (command.filterServiceUuid == null) {
                     mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(mScanCallback)
@@ -143,7 +141,6 @@ class ScanCommandExecutor(private val mActivity: ComponentActivity) : CentralCom
     @Synchronized
     override fun stopScan(command: StopScanCommand) {
         if (mScanning.compareAndSet(true, false)) {
-            mCurCommand = command
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 mActivity.getBluetoothAdapter()?.bluetoothLeScanner?.stopScan(mScanCallback)
             } else {
@@ -158,8 +155,8 @@ class ScanCommandExecutor(private val mActivity: ComponentActivity) : CentralCom
     @Synchronized
     override fun close() {
         stopScan(StopScanCommand())
-        mCurCommand = null
         mBleBroadcastReceiverManager.unregister()
+        super.close()
     }
 
 }
