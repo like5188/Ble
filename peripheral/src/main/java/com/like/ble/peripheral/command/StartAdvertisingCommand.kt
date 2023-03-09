@@ -15,7 +15,7 @@ import com.like.ble.command.Command
 class StartAdvertisingCommand(
     val settings: AdvertiseSettings,
     val advertiseData: AdvertiseData,
-    val scanResponse: AdvertiseData,
+    val scanResponse: AdvertiseData? = null,
     val deviceName: String = "",
     onCompleted: (() -> Unit)? = null,
     onError: ((Throwable) -> Unit)? = null
