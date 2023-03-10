@@ -254,7 +254,7 @@ class BlePeripheralActivity : AppCompatActivity() {
             StartAdvertisingCommand(
                 createAdvertiseSettings(),
                 createAdvertiseData(),
-                createScanResponseAdvertiseData(byteArrayOf(0x34, 0x56)),// 外设必须广播广播包，扫描包是可选。但添加扫描包也意味着广播更多得数据，即可广播62个字节。
+                createScanResponseAdvertiseData(byteArrayOf(0x34, 0x56)),// 外设必须广播广播包，扫描包是可选。但添加扫描包也意味着广播更多得数据，即可广播 广播包31+扫描包31=62个字节。
                 "BLE测试设备",
                 onCompleted = {
                     mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_blue))
