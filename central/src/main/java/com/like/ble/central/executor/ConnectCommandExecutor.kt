@@ -147,7 +147,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
     @Synchronized
     override fun connect(command: ConnectCommand) {
         if (isConnected()) {
-            command.error("蓝牙已经连接了")
+            command.result(mBluetoothGatt?.services)
             return
         }
 
@@ -184,10 +184,8 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
     override fun disconnect(command: DisconnectCommand) {
         if (isConnected()) {
             mBluetoothGatt?.disconnect()
-            command.complete()
-        } else {
-            command.error("蓝牙未连接")
         }
+        command.complete()
         mBluetoothGatt?.close()
         mBluetoothGatt = null
     }
