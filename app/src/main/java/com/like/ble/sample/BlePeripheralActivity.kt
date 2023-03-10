@@ -219,7 +219,7 @@ class BlePeripheralActivity : AppCompatActivity() {
 
         /**
          * Callback indicating the MTU for a given device connection has changed.
-         * 默认的MTU长度为23字节。按照1个字节的类型操作码(六种基本操作：请求、响应、命令、指示、确认、通知)以及最少2个字节操作句柄(16BitsUUID)算，数据传输字节最多不超过20字节。
+         * MTU最大传输单元。默认的长度为23字节。按照1个字节的类型操作码(六种基本操作：请求、响应、命令、指示、确认、通知)以及最少2个字节操作句柄(16BitsUUID)算，数据传输字节最多不超过20字节。
          */
         override fun onMtuChanged(device: BluetoothDevice, mtu: Int) {
             appendText("--> onMtuChanged", false, R.color.ble_text_blue)
