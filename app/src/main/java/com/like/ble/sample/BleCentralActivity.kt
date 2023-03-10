@@ -44,18 +44,15 @@ class BleCentralActivity : AppCompatActivity() {
     }
 
     fun addBleConnectFragment(bleScanInfo: BleScanInfo?) {
-        mFragments.add(BleConnectFragment.newInstance(bleScanInfo))
-        mBinding.vp.adapter?.notifyItemInserted(mFragments.size - 1)
-        mBinding.vp.setCurrentItem(mFragments.size - 1, true)
-    }
-
-    fun showBleConnectFragment(bleScanInfo: BleScanInfo?) {
         mFragments.forEachIndexed { index, fragment ->
             if (fragment is BleConnectFragment && fragment.getBleScanInfo() == bleScanInfo) {
                 mBinding.vp.setCurrentItem(index, true)
                 return
             }
         }
+        mFragments.add(BleConnectFragment.newInstance(bleScanInfo))
+        mBinding.vp.adapter?.notifyItemInserted(mFragments.size - 1)
+        mBinding.vp.setCurrentItem(mFragments.size - 1, true)
     }
 
     private fun removeBleConnectFragment(position: Int) {

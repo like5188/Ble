@@ -30,12 +30,7 @@ class BleScanAdapter(private val mActivity: FragmentActivity) : BaseListAdapter<
 
         binding.tvConnect.setOnClickListener {
             val bleCentralActivity = mActivity as BleCentralActivity
-            if (binding.tvConnect.text == "CONNECT") {
-                bleCentralActivity.addBleConnectFragment(item)
-                binding.tvConnect.text = "OPEN TAB"
-            } else {
-                bleCentralActivity.showBleConnectFragment(item)
-            }
+            bleCentralActivity.addBleConnectFragment(item)
         }
 
         // 单击显示隐藏数据详情
