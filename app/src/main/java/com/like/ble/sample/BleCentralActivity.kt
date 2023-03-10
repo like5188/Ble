@@ -44,12 +44,14 @@ class BleCentralActivity : AppCompatActivity() {
     }
 
     fun addBleConnectFragment(bleScanInfo: BleScanInfo?) {
+        // 如果存在，就显示
         mFragments.forEachIndexed { index, fragment ->
             if (fragment is BleConnectFragment && fragment.getBleScanInfo() == bleScanInfo) {
                 mBinding.vp.setCurrentItem(index, true)
                 return
             }
         }
+        // 如果不存在，就添加
         mFragments.add(BleConnectFragment.newInstance(bleScanInfo))
         mBinding.vp.adapter?.notifyItemInserted(mFragments.size - 1)
         mBinding.vp.setCurrentItem(mFragments.size - 1, true)
