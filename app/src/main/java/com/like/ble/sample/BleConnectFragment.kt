@@ -9,7 +9,6 @@ import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.like.ble.BleManager
 import com.like.ble.central.command.*
-import com.like.ble.central.handler.CentralCommandHandler
 import com.like.ble.sample.databinding.FragmentBleConnectBinding
 import com.like.common.base.BaseLazyFragment
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
@@ -20,7 +19,7 @@ import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
 class BleConnectFragment : BaseLazyFragment() {
     private lateinit var mBinding: FragmentBleConnectBinding
     private lateinit var mData: BleScanInfo
-    private val mBleManager: BleManager by lazy { BleManager(CentralCommandHandler(requireActivity())) }
+    private val mBleManager: BleManager by lazy { (requireActivity() as BleCentralActivity).mBleManager }
     private val mAdapter: BleConnectAdapter by lazy { BleConnectAdapter(requireActivity(), mBleManager) }
 
     companion object {

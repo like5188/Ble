@@ -11,7 +11,6 @@ import androidx.databinding.ObservableInt
 import com.like.ble.BleManager
 import com.like.ble.central.command.StartScanCommand
 import com.like.ble.central.command.StopScanCommand
-import com.like.ble.central.handler.CentralCommandHandler
 import com.like.ble.sample.databinding.FragmentBleScanBinding
 import com.like.common.base.BaseLazyFragment
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
@@ -23,7 +22,7 @@ import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
 class BleScanFragment : BaseLazyFragment() {
     private lateinit var mBinding: FragmentBleScanBinding
     private val mAdapter: BleScanAdapter by lazy { BleScanAdapter(requireActivity()) }
-    private val mBleManager: BleManager by lazy { BleManager(CentralCommandHandler(requireActivity())) }
+    private val mBleManager: BleManager by lazy { (requireActivity() as BleCentralActivity).mBleManager }
 
     companion object {
         fun newInstance(): BleScanFragment {
