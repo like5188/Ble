@@ -25,4 +25,20 @@ class BleScanInfo(val name: String, val address: String, val rssi: ObservableInt
     private fun updateDistance(rssi: Int) {
         distance.set(Rssi.toDistance(rssi).toInt())
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as BleScanInfo
+
+        if (address != other.address) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return address.hashCode()
+    }
+
 }

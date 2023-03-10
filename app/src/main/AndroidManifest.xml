@@ -27,9 +27,6 @@
         <activity
             android:name=".BlePeripheralActivity"
             android:exported="false" />
-        <activity
-            android:name=".BleConnectActivity"
-            android:exported="false" />
     </application>
 
 </manifest>

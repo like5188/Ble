@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -15,41 +16,15 @@
             android:textColor="@color/ble_text_white"
             android:textSize="20sp" />
 
-        <LinearLayout
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tabLayout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:layout_height="44dp"
+            app:tabMode="scrollable" />
 
-            <TextView
-                android:id="@+id/tv_scan_status"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:padding="10dp"
-                android:text="扫描未启动" />
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:onClick="startScan"
-                android:text="扫描设备"
-                android:textColor="@color/ble_text_black_1"
-                android:textSize="14sp" />
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:onClick="stopScan"
-                android:text="停止扫描"
-                android:textColor="@color/ble_text_black_1"
-                android:textSize="14sp" />
-        </LinearLayout>
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rv"
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/vp"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scrollbars="vertical" />
+            android:layout_height="match_parent" />
     </LinearLayout>
 </layout>

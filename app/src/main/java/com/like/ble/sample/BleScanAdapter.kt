@@ -1,7 +1,6 @@
 package com.like.ble.sample
 
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.os.Bundle
 import android.text.Html
 import android.view.View
@@ -30,9 +29,13 @@ class BleScanAdapter(private val mActivity: FragmentActivity) : BaseListAdapter<
         val binding = holder.binding
 
         binding.tvConnect.setOnClickListener {
-            val connectIntent = Intent(mActivity, BleConnectActivity::class.java)
-            connectIntent.putExtra("data", item)
-            mActivity.startActivity(connectIntent)
+            val bleCentralActivity = mActivity as BleCentralActivity
+            if (binding.tvConnect.text == "CONNECT") {
+                bleCentralActivity.addBleConnectFragment(item)
+                binding.tvConnect.text = "OPEN TAB"
+            } else {
+                bleCentralActivity.showBleConnectFragment(item)
+            }
         }
 
         // 单击显示隐藏数据详情
