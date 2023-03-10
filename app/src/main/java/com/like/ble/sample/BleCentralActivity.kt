@@ -38,7 +38,7 @@ class BleCentralActivity : AppCompatActivity() {
     fun startScan(view: View) {
         mBleManager.sendCommand(
             StartScanCommand(
-                filterDeviceName = "",// BlePeripheralActivity 中设置的外围设备蓝牙名称
+                filterDeviceName = "BLE测试设备",// BlePeripheralActivity 中设置的外围设备蓝牙名称
                 onCompleted = {
                     mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_blue))
                     mBinding.tvScanStatus.text = "扫描中……"
