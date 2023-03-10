@@ -91,7 +91,7 @@ class BleConnectFragment : BaseLazyFragment() {
             ))
     }
 
-    private fun disconnect() {
+    fun disconnect() {
         mBleManager.sendCommand(
             DisconnectCommand(mData.address,
                 onCompleted = {

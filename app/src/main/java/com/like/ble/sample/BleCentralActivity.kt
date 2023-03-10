@@ -59,7 +59,8 @@ class BleCentralActivity : AppCompatActivity() {
     }
 
     private fun removeBleConnectFragment(position: Int) {
-        mFragments.removeAt(position)
+        val bleConnectFragment = mFragments.removeAt(position) as BleConnectFragment
+        bleConnectFragment.disconnect()
         mBinding.vp.adapter?.notifyItemRemoved(position)
     }
 
