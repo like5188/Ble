@@ -132,10 +132,8 @@ class ScanCommandExecutor(private val mActivity: ComponentActivity) : CentralCom
                     }
                 }
             }
-            command.complete()// 这里直接完成命令，避免扫描不到需要的设备时，无法触发 StartScanCommand.onResult(device, rssi, scanRecord)
-        } else {
-            command.error("正在扫描中")
         }
+        command.complete()// 这里直接完成命令，避免扫描不到需要的设备时，无法触发 StartScanCommand.onResult(device, rssi, scanRecord)
     }
 
     @Synchronized
@@ -146,10 +144,8 @@ class ScanCommandExecutor(private val mActivity: ComponentActivity) : CentralCom
             } else {
                 mActivity.getBluetoothAdapter()?.stopLeScan(mLeScanCallback)
             }
-            command.complete()
-        } else {
-            command.error("扫描未开启")
         }
+        command.complete()
     }
 
     @Synchronized

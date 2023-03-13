@@ -77,7 +77,7 @@ class AdvertisingCommandExecutor(private val mActivity: ComponentActivity) : Per
                 mAdvertiseCallback
             )
         } else {
-            command.error("正在广播中")
+            command.complete()
         }
     }
 
@@ -85,10 +85,8 @@ class AdvertisingCommandExecutor(private val mActivity: ComponentActivity) : Per
     override fun stopAdvertising(command: StopAdvertisingCommand) {
         if (mIsSending.compareAndSet(true, false)) {
             mActivity.getBluetoothAdapter()?.bluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)
-            command.complete()
-        } else {
-            command.error("广播未开启")
         }
+        command.complete()
     }
 
     @Synchronized
