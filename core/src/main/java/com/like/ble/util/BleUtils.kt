@@ -15,7 +15,7 @@ import kotlin.math.ceil
 
 @SuppressLint("MissingPermission")
 fun Context.isBleDeviceConnected(device: BluetoothDevice): Boolean =
-    getBluetoothManager()?.getConnectedDevices(BluetoothProfile.GATT)?.any { it == device } ?: false
+    getBluetoothManager()?.getConnectionState(device, BluetoothProfile.GATT) == BluetoothProfile.STATE_CONNECTED
 
 /**
  * Context生命周期内不会改变
