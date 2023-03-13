@@ -49,6 +49,17 @@ class CentralCommandHandler(activity: ComponentActivity) : CommandHandler(activi
         mCurCommandExecutor = null
     }
 
+    override fun onCloseScan() {
+        mScanCommandExecutor.close()
+    }
+
+    override fun onCloseConnect(address: String) {
+        if (address.isNotEmpty() && mConnectCommandExecutorMap.containsKey(address)) {
+            mConnectCommandExecutorMap[address]?.close()
+            mConnectCommandExecutorMap.remove(address)
+        }
+    }
+
     private fun getCommandExecutorBy(command: Command): ICommandExecutor? {
         return when (command) {
             is StartScanCommand, is StopScanCommand -> {

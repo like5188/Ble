@@ -66,4 +66,9 @@ class BleCentralActivity : AppCompatActivity() {
         mBinding.vp.adapter?.notifyItemRemoved(position)
     }
 
+    override fun onDestroy() {
+        mBleManager.close()
+        super.onDestroy()
+    }
+
 }

@@ -41,11 +41,21 @@ abstract class CommandHandler(val mActivity: ComponentActivity) {
         onClose()
     }
 
+    fun closeScan() {
+        onCloseScan()
+    }
+
+    fun closeConnect(address: String) {
+        onCloseConnect(address)
+    }
+
     /**
      * @return true：执行；false：不执行
      */
     protected abstract suspend fun onExecute(command: Command): Boolean
 
     protected abstract fun onClose()
+    protected open fun onCloseScan() {}
+    protected open fun onCloseConnect(address: String) {}
 
 }

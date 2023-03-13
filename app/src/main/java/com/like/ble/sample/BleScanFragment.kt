@@ -85,7 +85,7 @@ class BleScanFragment : BaseLazyFragment() {
     }
 
     override fun onDestroy() {
-        mBleManager.close()
+        mBleManager.closeScan()
         super.onDestroy()
     }
 

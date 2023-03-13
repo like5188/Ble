@@ -7,11 +7,11 @@ import android.bluetooth.le.AdvertiseSettings
 import android.os.Bundle
 import android.os.ParcelUuid
 import android.text.Html
-import android.text.method.ScrollingMovementMethod
 import android.view.View
 import androidx.annotation.ColorRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.widget.NestedScrollView
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.BleManager
@@ -247,7 +247,7 @@ class BlePeripheralActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mBinding.tvStatus.movementMethod = ScrollingMovementMethod()
+        mBinding
     }
 
     fun startAdvertising(view: View) {
@@ -303,9 +303,8 @@ class BlePeripheralActivity : AppCompatActivity() {
             } else {
                 mBinding.tvStatus.append("\n")
             }
-            val offset = mBinding.tvStatus.lineCount * mBinding.tvStatus.lineHeight
-            if (offset > mBinding.tvStatus.height) {
-                mBinding.tvStatus.scrollTo(0, offset - mBinding.tvStatus.height)
+            mBinding.sv.post {
+                mBinding.sv.fullScroll(NestedScrollView.FOCUS_DOWN)
             }
         }
     }

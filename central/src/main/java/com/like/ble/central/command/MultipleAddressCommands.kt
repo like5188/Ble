@@ -16,6 +16,9 @@ class MultipleAddressCommands : Command("组合命令") {
     private val mCommands = mutableListOf<AddressCommand>()
     private var mCallbackCommand: AddressCommand? = null
 
+    /**
+     * @param isCallbackCommand     是否需要在这个命令上执行回调
+     */
     fun addCommand(command: AddressCommand, isCallbackCommand: Boolean = false) {
         if (isCallbackCommand) {
             mCallbackCommand = command

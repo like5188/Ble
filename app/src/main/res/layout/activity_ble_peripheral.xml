@@ -62,14 +62,19 @@
 
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/tv_status"
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/sv"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:paddingLeft="10dp"
-            android:scrollbars="vertical"
-            android:textColor="@color/ble_text_blue"
-            android:textSize="14sp" />
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/tv_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:textColor="@color/ble_text_blue"
+                android:textSize="14sp" />
+        </androidx.core.widget.NestedScrollView>
 
     </LinearLayout>
 </layout>

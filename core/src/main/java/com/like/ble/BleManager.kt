@@ -19,10 +19,24 @@ class BleManager(private val mCommandHandler: CommandHandler) {
     }
 
     /**
-     * 释放资源
+     * 释放所有资源
      */
     fun close() {
         mCommandHandler.close()
+    }
+
+    /**
+     * 释放扫描的资源
+     */
+    fun closeScan() {
+        mCommandHandler.closeScan()
+    }
+
+    /**
+     * 释放指定连接的资源
+     */
+    fun closeConnect(address: String) {
+        mCommandHandler.closeConnect(address)
     }
 
 }

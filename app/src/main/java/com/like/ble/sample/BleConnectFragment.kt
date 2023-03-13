@@ -157,7 +157,7 @@ class BleConnectFragment : BaseLazyFragment() {
     }
 
     override fun onDestroy() {
-        mBleManager.close()
+        mBleManager.closeConnect(mData.address)
         super.onDestroy()
     }
 
