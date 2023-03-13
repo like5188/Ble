@@ -48,7 +48,8 @@ class BleScanFragment : BaseLazyFragment() {
             StartScanCommand(
                 filterDeviceName = "BLE测试设备",// BlePeripheralActivity 中设置的外围设备蓝牙名称
                 onCompleted = {
-                    mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
+                    val ctx = context ?: return@StartScanCommand
+                    mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
                     mBinding.tvScanStatus.text = "扫描中……"
                     mAdapter.submitList(null)
                 },
@@ -65,7 +66,8 @@ class BleScanFragment : BaseLazyFragment() {
                     }
                 },
                 onError = {
-                    mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_red))
+                    val ctx = context ?: return@StartScanCommand
+                    mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
                     mBinding.tvScanStatus.text = it.message
                 }
             ))
@@ -74,11 +76,13 @@ class BleScanFragment : BaseLazyFragment() {
     private fun stopScan() {
         mBleManager.sendCommand(StopScanCommand(
             onCompleted = {
-                mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_red))
+                val ctx = context ?: return@StopScanCommand
+                mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
                 mBinding.tvScanStatus.text = "扫描停止了"
             },
             onError = {
-                mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_red))
+                val ctx = context ?: return@StopScanCommand
+                mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
                 mBinding.tvScanStatus.text = it.message
             }
         ))

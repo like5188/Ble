@@ -61,14 +61,16 @@ class BleConnectFragment : BaseLazyFragment() {
     }
 
     private fun connect() {
-        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_black_1))
+        val ctx = context ?: return
+        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_black_1))
         mBinding.tvConnectStatus.text = "连接中……"
         mBleManager.sendCommand(
             ConnectCommand(
                 mData.address,
                 10000L,
                 onResult = {
-                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
+                    val ctx = context ?: return@ConnectCommand
+                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
                     mBinding.tvConnectStatus.text = "连接成功"
                     if (it.isNotEmpty()) {
                         val bleGattServiceInfos = it.map { bluetoothGattService ->
@@ -80,7 +82,8 @@ class BleConnectFragment : BaseLazyFragment() {
                     }
                 },
                 onError = {
-                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_red))
+                    val ctx = context ?: return@ConnectCommand
+                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
                     mBinding.tvConnectStatus.text = it.message
                     mAdapter.submitList(null)
                     mBinding.etRequestMtu.setText("")
@@ -94,11 +97,13 @@ class BleConnectFragment : BaseLazyFragment() {
         mBleManager.sendCommand(
             DisconnectCommand(mData.address,
                 onCompleted = {
-                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_red))
+                    val ctx = context ?: return@DisconnectCommand
+                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
                     mBinding.tvConnectStatus.text = "连接停止了"
                 },
                 onError = {
-                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_red))
+                    val ctx = context ?: return@DisconnectCommand
+                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
                     mBinding.tvConnectStatus.text = it.message
                 })
         )
