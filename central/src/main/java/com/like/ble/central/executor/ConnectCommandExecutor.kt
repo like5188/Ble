@@ -32,12 +32,14 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
                 } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
                     // 断开连接蓝牙设备成功
                     disconnectCommand?.complete()
+                    closeBluetoothGatt()
                 }
             } else {
                 if (newState == BluetoothGatt.STATE_CONNECTED) {
                     disconnectCommand?.error("断开连接蓝牙失败：${gatt.device.address}")
                 } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
                     connectCommand?.error("连接蓝牙失败：${gatt.device.address}")
+                    closeBluetoothGatt()
                 }
             }
         }
@@ -48,7 +50,8 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
                 connectCommand?.result(gatt.services)
             } else {
                 connectCommand?.error("连接蓝牙失败：${gatt.device.address}")
-                disconnect(DisconnectCommand(gatt.device.address))
+                disconnectBluetoothGatt()
+                closeBluetoothGatt()
             }
         }
 
@@ -168,24 +171,28 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
         } else {
             bluetoothDevice.connectGatt(mActivity, false, mGattCallback)// 第二个参数表示是否自动重连
         }
-        if (mBluetoothGatt == null) {
-            command.error("连接蓝牙失败：${command.address}")
-            return
-        }
 
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
             command.error("连接蓝牙超时：${command.address}")
-            disconnect(DisconnectCommand(command.address))
+            disconnectBluetoothGatt()
+            closeBluetoothGatt()
         })
     }
 
     @Synchronized
     override fun disconnect(command: DisconnectCommand) {
+        disconnectBluetoothGatt()
+    }
+
+    private fun disconnectBluetoothGatt() {
         if (isConnected()) {
             mBluetoothGatt?.disconnect()
         }
-        command.complete()
+    }
+
+    private fun closeBluetoothGatt() {
+        // 这里的close()方法会清空mGattCallback，导致收不到回调
         mBluetoothGatt?.close()
         mBluetoothGatt = null
     }
@@ -558,10 +565,8 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
 
     @Synchronized
     override fun close() {
-        val address = mBluetoothGatt?.device?.address ?: ""
-        if (address.isNotEmpty()) {
-            disconnect(DisconnectCommand(address))
-        }
+        disconnectBluetoothGatt()
+        closeBluetoothGatt()
         super.close()
     }
 
