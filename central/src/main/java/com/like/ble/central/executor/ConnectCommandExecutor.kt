@@ -183,18 +183,12 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
     @Synchronized
     override fun disconnect(command: DisconnectCommand) {
         disconnectBluetoothGatt()
-    }
 
-    private fun disconnectBluetoothGatt() {
-        if (isConnected()) {
-            mBluetoothGatt?.disconnect()
-        }
-    }
-
-    private fun closeBluetoothGatt() {
-        // 这里的close()方法会清空mGattCallback，导致收不到回调
-        mBluetoothGatt?.close()
-        mBluetoothGatt = null
+        command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
+            delay(command.timeout)
+            command.error("断开连接蓝牙超时：${command.address}")
+            closeBluetoothGatt()
+        })
     }
 
     override fun readCharacteristic(command: ReadCharacteristicCommand) {
@@ -568,6 +562,18 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
         disconnectBluetoothGatt()
         closeBluetoothGatt()
         super.close()
+    }
+
+    private fun disconnectBluetoothGatt() {
+        if (isConnected()) {
+            mBluetoothGatt?.disconnect()
+        }
+    }
+
+    private fun closeBluetoothGatt() {
+        // 这里的close()方法会清空mGattCallback，导致收不到回调
+        mBluetoothGatt?.close()
+        mBluetoothGatt = null
     }
 
     private fun isConnected(): Boolean {
