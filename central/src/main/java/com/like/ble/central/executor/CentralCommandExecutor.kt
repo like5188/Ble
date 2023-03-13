@@ -132,6 +132,19 @@ abstract class CentralCommandExecutor : ICommandExecutor {
     }
 
     override fun close() {
+        startScanCommand?.clearJobs()
+        stopScanCommand?.clearJobs()
+        connectCommand?.clearJobs()
+        disconnectCommand?.clearJobs()
+        readCharacteristicCommand?.clearJobs()
+        writeCharacteristicCommand?.clearJobs()
+        readDescriptorCommand?.clearJobs()
+        writeDescriptorCommand?.clearJobs()
+        requestMtuCommand?.clearJobs()
+        setCharacteristicNotificationCommand?.clearJobs()
+        readNotifyCommand?.clearJobs()
+        readRemoteRssiCommand?.clearJobs()
+        requestConnectionPriorityCommand?.clearJobs()
         startScanCommand = null
         stopScanCommand = null
         connectCommand = null

@@ -33,6 +33,8 @@ abstract class PeripheralCommandExecutor : ICommandExecutor {
     }
 
     override fun close() {
+        startAdvertisingCommand?.clearJobs()
+        stopAdvertisingCommand?.clearJobs()
         startAdvertisingCommand = null
         stopAdvertisingCommand = null
     }
