@@ -74,6 +74,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             }
         }
 
+        // 为某个特征启用通知后，如果远程设备上的特征发生更改，则会触发
         override fun onCharacteristicChanged(
             gatt: BluetoothGatt,
             characteristic: BluetoothGattCharacteristic
