@@ -412,28 +412,16 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             command.error("蓝牙未连接：${command.address}")
             return
         }
+
         val characteristic = mBluetoothGatt?.findCharacteristic(command.characteristicUuid, command.serviceUuid)
         if (characteristic == null) {
             command.error("特征值不存在：${command.characteristicUuid.getValidString()}")
             return
         }
-
-        when (command.type) {
-            SetCharacteristicNotificationCommand.TYPE_NOTIFICATION -> {
-                if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY == 0) {
-                    command.error("this characteristic not support notify!")
-                    return
-                }
-            }
-            SetCharacteristicNotificationCommand.TYPE_INDICATION -> {
-                if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_INDICATE == 0) {
-                    command.error("this characteristic not support indicate!")
-                    return
-                }
-            }
-            else -> return
+        if (characteristic.properties and (BluetoothGattCharacteristic.PROPERTY_NOTIFY or BluetoothGattCharacteristic.PROPERTY_INDICATE) == 0) {
+            command.error("this characteristic not support notify or indicate")
+            return
         }
-
         if (mBluetoothGatt?.setCharacteristicNotification(characteristic, command.enable) != true) {
             command.error("setCharacteristicNotification fail")
             return
