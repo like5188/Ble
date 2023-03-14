@@ -412,27 +412,26 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             command.error("蓝牙未连接：${command.address}")
             return
         }
-
-        when (command.type) {
-            SetCharacteristicNotificationCommand.TYPE_NOTIFICATION -> {
-                setNotification(command)
-            }
-            SetCharacteristicNotificationCommand.TYPE_INDICATION -> {
-                setIndication(command)
-            }
-        }
-    }
-
-    private fun setNotification(command: SetCharacteristicNotificationCommand) {
         val characteristic = mBluetoothGatt?.findCharacteristic(command.characteristicUuid, command.serviceUuid)
         if (characteristic == null) {
             command.error("特征值不存在：${command.characteristicUuid.getValidString()}")
             return
         }
 
-        if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY == 0) {
-            command.error("this characteristic not support notify!")
-            return
+        when (command.type) {
+            SetCharacteristicNotificationCommand.TYPE_NOTIFICATION -> {
+                if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY == 0) {
+                    command.error("this characteristic not support notify!")
+                    return
+                }
+            }
+            SetCharacteristicNotificationCommand.TYPE_INDICATION -> {
+                if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_INDICATE == 0) {
+                    command.error("this characteristic not support indicate!")
+                    return
+                }
+            }
+            else -> return
         }
 
         if (mBluetoothGatt?.setCharacteristicNotification(characteristic, command.enable) != true) {
@@ -448,54 +447,27 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             command.error("descriptor equals null")
             return
         }
-
-        descriptor.value = if (command.enable) {
-            BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-        } else {
-            BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
+        descriptor.value = when (command.type) {
+            SetCharacteristicNotificationCommand.TYPE_NOTIFICATION -> {
+                if (command.enable) {
+                    BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                } else {
+                    BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
+                }
+            }
+            SetCharacteristicNotificationCommand.TYPE_INDICATION -> {
+                if (command.enable) {
+                    BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
+                } else {
+                    BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
+                }
+            }
+            else -> return
         }
-
         if (mBluetoothGatt?.writeDescriptor(descriptor) != true) {
             command.error("gatt writeDescriptor fail")
             return
         }
-
-        command.complete()
-    }
-
-    private fun setIndication(command: SetCharacteristicNotificationCommand) {
-        val characteristic = mBluetoothGatt?.findCharacteristic(command.characteristicUuid, command.serviceUuid)
-        if (characteristic == null) {
-            command.error("特征值不存在：${command.characteristicUuid.getValidString()}")
-            return
-        }
-        if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_INDICATE == 0) {
-            command.error("this characteristic not support indicate!")
-            return
-        }
-
-        if (mBluetoothGatt?.setCharacteristicNotification(characteristic, command.enable) != true) {
-            command.error("setCharacteristicNotification fail")
-            return
-        }
-
-        val descriptor = characteristic.getDescriptor(command.descriptorUuid)
-        if (descriptor == null) {
-            command.error("descriptor equals null")
-            return
-        }
-
-        descriptor.value = if (command.enable) {
-            BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
-        } else {
-            BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
-        }
-
-        if (mBluetoothGatt?.writeDescriptor(descriptor) != true) {
-            command.error("gatt writeDescriptor fail")
-            return
-        }
-
         command.complete()
     }
 
