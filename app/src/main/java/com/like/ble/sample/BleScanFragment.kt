@@ -8,12 +8,23 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableInt
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.like.ble.BleManager
 import com.like.ble.central.command.StartScanCommand
 import com.like.ble.central.command.StopScanCommand
+import com.like.ble.central.executor.ICentralExecutor
+import com.like.ble.central.executor.ScanExecutor
+import com.like.ble.central.result.ScanResult
+import com.like.ble.result.BleResult
 import com.like.ble.sample.databinding.FragmentBleScanBinding
 import com.like.common.base.BaseLazyFragment
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * 扫描设备界面
@@ -44,48 +55,83 @@ class BleScanFragment : BaseLazyFragment() {
     }
 
     private fun startScan() {
-        mBleManager.sendCommand(
-            StartScanCommand(
-                filterDeviceName = "BLE测试设备",// BlePeripheralActivity 中设置的外围设备蓝牙名称
-                onCompleted = {
-                    val ctx = context ?: return@StartScanCommand
-                    mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
-                    mBinding.tvScanStatus.text = "扫描中……"
-                    mAdapter.submitList(null)
-                },
-                onResult = { device, rssi, scanRecord ->
-                    val address = device.address ?: ""
-                    val name = device.name ?: "N/A"
-                    val item: BleScanInfo? = mAdapter.currentList.firstOrNull { it?.address == address }
-                    if (item == null) {// 防止重复添加
-                        val newItems = mAdapter.currentList.toMutableList()
-                        newItems.add(BleScanInfo(name, address, ObservableInt(rssi), scanRecord))
-                        mAdapter.submitList(newItems)
-                    } else {
-                        item.updateRssi(rssi)
+        val ctx = context ?: return
+        mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
+        mBinding.tvScanStatus.text = "扫描中……"
+        mAdapter.submitList(null)
+        val e: ICentralExecutor = ScanExecutor(requireContext(), lifecycleScope)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                e.startScan().collectLatest {
+                    when (it) {
+                        is BleResult.Success<*> -> {
+                            val scanResult: ScanResult = it.data as ScanResult
+                            val address = scanResult.device.address ?: ""
+                            val name = scanResult.device.name ?: "N/A"
+                            val item: BleScanInfo? = mAdapter.currentList.firstOrNull { it?.address == address }
+                            if (item == null) {// 防止重复添加
+                                val newItems = mAdapter.currentList.toMutableList()
+                                newItems.add(BleScanInfo(name, address, ObservableInt(scanResult.rssi), scanResult.data))
+                                mAdapter.submitList(newItems)
+                            } else {
+                                item.updateRssi(scanResult.rssi)
+                            }
+                        }
+                        is BleResult.Error -> {
+                            mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
+                            mBinding.tvScanStatus.text = it.msg
+                        }
                     }
-                },
-                onError = {
-                    val ctx = context ?: return@StartScanCommand
-                    mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
-                    mBinding.tvScanStatus.text = it.message
                 }
-            ))
+            }
+        }
+//        mBleManager.sendCommand(
+//            StartScanCommand(
+//                filterDeviceName = "BLE测试设备",// BlePeripheralActivity 中设置的外围设备蓝牙名称
+//                onCompleted = {
+//                    val ctx = context ?: return@StartScanCommand
+//                    mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
+//                    mBinding.tvScanStatus.text = "扫描中……"
+//                    mAdapter.submitList(null)
+//                },
+//                onResult = { device, rssi, scanRecord ->
+//                    val address = device.address ?: ""
+//                    val name = device.name ?: "N/A"
+//                    val item: BleScanInfo? = mAdapter.currentList.firstOrNull { it?.address == address }
+//                    if (item == null) {// 防止重复添加
+//                        val newItems = mAdapter.currentList.toMutableList()
+//                        newItems.add(BleScanInfo(name, address, ObservableInt(rssi), scanRecord))
+//                        mAdapter.submitList(newItems)
+//                    } else {
+//                        item.updateRssi(rssi)
+//                    }
+//                },
+//                onError = {
+//                    val ctx = context ?: return@StartScanCommand
+//                    mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
+//                    mBinding.tvScanStatus.text = it.message
+//                }
+//            ))
     }
 
     private fun stopScan() {
-        mBleManager.sendCommand(StopScanCommand(
-            onCompleted = {
-                val ctx = context ?: return@StopScanCommand
-                mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
-                mBinding.tvScanStatus.text = "扫描停止了"
-            },
-            onError = {
-                val ctx = context ?: return@StopScanCommand
-                mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
-                mBinding.tvScanStatus.text = it.message
-            }
-        ))
+        val ctx = context ?: return
+        val e: ICentralExecutor = ScanExecutor(requireContext(), lifecycleScope)
+        lifecycleScope.launch {
+            e.stopScan()
+        }
+//        mBleManager.sendCommand(StopScanCommand(
+//            onCompleted = {
+//                val ctx = context ?: return@StopScanCommand
+//                mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
+//                mBinding.tvScanStatus.text = "扫描停止了"
+//            },
+//            onError = {
+//                val ctx = context ?: return@StopScanCommand
+//                mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
+//                mBinding.tvScanStatus.text = it.message
+//            }
+//        ))
     }
 
     override fun onDestroy() {
