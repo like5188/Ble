@@ -179,7 +179,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                     characteristic.uuid,
                     descriptorUuid,
                     serviceUuid,
-                    SetCharacteristicNotificationCommand.TYPE_NOTIFY,
+                    SetCharacteristicNotificationCommand.TYPE_NOTIFICATION,
                     !isOn.get()
                 )
                 val writeDescriptorCommand = if (isOn.get()) {
@@ -235,7 +235,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                     characteristic.uuid,
                     descriptorUuid,
                     serviceUuid,
-                    SetCharacteristicNotificationCommand.TYPE_INDICATE,
+                    SetCharacteristicNotificationCommand.TYPE_INDICATION,
                     !isOn.get()
                 )
                 val writeDescriptorCommand = if (isOn.get()) {

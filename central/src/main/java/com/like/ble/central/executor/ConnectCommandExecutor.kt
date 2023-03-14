@@ -6,12 +6,10 @@ import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.central.command.*
-import com.like.ble.command.Command
 import com.like.ble.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.*
 
 /**
  * 蓝牙连接及连接成功后的命令执行者
@@ -411,55 +409,24 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
 
     override fun setCharacteristicNotification(command: SetCharacteristicNotificationCommand) {
         if (!isConnected()) {
-            command.error("蓝牙未连接")
-            return
-        }
-
-        val characteristic =
-            mBluetoothGatt?.findCharacteristic(command.characteristicUuid, command.serviceUuid)
-        if (characteristic == null) {
-            command.error("特征值不存在：${command.characteristicUuid.getValidString()}")
+            command.error("蓝牙未连接：${command.address}")
             return
         }
 
         when (command.type) {
-            SetCharacteristicNotificationCommand.TYPE_NOTIFY -> {
-                if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY == 0) {
-                    command.error("this characteristic not support notify!")
-                    return
-                }
+            SetCharacteristicNotificationCommand.TYPE_NOTIFICATION -> {
+                setNotification(command)
             }
-            SetCharacteristicNotificationCommand.TYPE_INDICATE -> {
-                if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_INDICATE == 0) {
-                    command.error("this characteristic not support indicate!")
-                    return
-                }
+            SetCharacteristicNotificationCommand.TYPE_INDICATION -> {
+                setIndication(command)
             }
         }
-
-        if (mBluetoothGatt?.setCharacteristicNotification(characteristic, command.enable) != true) {
-            command.error("setCharacteristicNotification fail")
-            return
-        }
-
-        command.complete()
     }
 
-    private fun setNotification(
-        serviceUuid: UUID?,
-        characteristicUuid: UUID,
-        descriptorUuid: UUID,
-        enable: Boolean,
-        command: Command
-    ) {
-        if (!isConnected()) {
-            command.error("蓝牙未连接")
-            return
-        }
-
-        val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
+    private fun setNotification(command: SetCharacteristicNotificationCommand) {
+        val characteristic = mBluetoothGatt?.findCharacteristic(command.characteristicUuid, command.serviceUuid)
         if (characteristic == null) {
-            command.error("特征值不存在：${characteristicUuid.getValidString()}")
+            command.error("特征值不存在：${command.characteristicUuid.getValidString()}")
             return
         }
 
@@ -468,18 +435,21 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             return
         }
 
-        if (mBluetoothGatt?.setCharacteristicNotification(characteristic, enable) != true) {
+        if (mBluetoothGatt?.setCharacteristicNotification(characteristic, command.enable) != true) {
             command.error("setCharacteristicNotification fail")
             return
         }
 
-        val descriptor = characteristic.getDescriptor(descriptorUuid)
+        // 服务端一开始是无法直接发送Indication和Notification。
+        // 首先必须是客户端通过往服务端的CCCD特征（clinet characteristic configuration descriptor）
+        // 写入值来使能服务端的这两个功能Notification/Indication，这样服务端才能发送。
+        val descriptor = characteristic.getDescriptor(command.descriptorUuid)
         if (descriptor == null) {
             command.error("descriptor equals null")
             return
         }
 
-        descriptor.value = if (enable) {
+        descriptor.value = if (command.enable) {
             BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
         } else {
             BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
@@ -493,41 +463,29 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
         command.complete()
     }
 
-    private fun setIndication(
-        serviceUuid: UUID?,
-        characteristicUuid: UUID,
-        descriptorUuid: UUID,
-        enable: Boolean,
-        command: Command
-    ) {
-        if (!isConnected()) {
-            command.error("设备未连接")
-            return
-        }
-
-        val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
+    private fun setIndication(command: SetCharacteristicNotificationCommand) {
+        val characteristic = mBluetoothGatt?.findCharacteristic(command.characteristicUuid, command.serviceUuid)
         if (characteristic == null) {
-            command.error("特征值不存在：${characteristicUuid.getValidString()}")
+            command.error("特征值不存在：${command.characteristicUuid.getValidString()}")
             return
         }
-
         if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_INDICATE == 0) {
             command.error("this characteristic not support indicate!")
             return
         }
 
-        if (mBluetoothGatt?.setCharacteristicNotification(characteristic, enable) != true) {
+        if (mBluetoothGatt?.setCharacteristicNotification(characteristic, command.enable) != true) {
             command.error("setCharacteristicNotification fail")
             return
         }
 
-        val descriptor = characteristic.getDescriptor(descriptorUuid)
+        val descriptor = characteristic.getDescriptor(command.descriptorUuid)
         if (descriptor == null) {
             command.error("descriptor equals null")
             return
         }
 
-        descriptor.value = if (enable) {
+        descriptor.value = if (command.enable) {
             BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
         } else {
             BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
