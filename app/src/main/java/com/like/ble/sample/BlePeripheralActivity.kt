@@ -36,11 +36,13 @@ class BlePeripheralActivity : AppCompatActivity() {
         private val UUID_SERVICE_1: UUID = UUID.fromString("0000ff01-0000-1000-8000-00805f9b34fb")
         private val UUID_SERVICE_2: UUID = UUID.fromString("0000ff02-0000-1000-8000-00805f9b34fb")
         private val UUID_SERVICE_3: UUID = UUID.fromString("0000ff03-0000-1000-8000-00805f9b34fb")
+
         private val UUID_CHARACTERISTIC_1: UUID = UUID.fromString("0000ff11-0000-1000-8000-00805f9b34fb")
         private val UUID_CHARACTERISTIC_2: UUID = UUID.fromString("0000ff12-0000-1000-8000-00805f9b34fb")
         private val UUID_CHARACTERISTIC_3: UUID = UUID.fromString("0000ff13-0000-1000-8000-00805f9b34fb")
-        private val UUID_DESCRIPTOR_1: UUID =
-            UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")// 使能对应《Characteristic》的notification或Indication
+
+        // UUID_DESCRIPTOR_1 使能对应《Characteristic》的notification或Indication
+        private val UUID_DESCRIPTOR_1: UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
         private val UUID_DESCRIPTOR_2: UUID = UUID.fromString("0000ff21-0000-1000-8000-00805f9b34fb")
         private val UUID_DESCRIPTOR_3: UUID = UUID.fromString("0000ff22-0000-1000-8000-00805f9b34fb")
     }

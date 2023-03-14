@@ -442,7 +442,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
         // 服务端一开始是无法直接发送Indication和Notification。
         // 首先必须是客户端通过往服务端的CCCD特征（clinet characteristic configuration descriptor）
         // 写入值来使能服务端的这两个功能Notification/Indication，这样服务端才能发送。
-        val descriptor = characteristic.getDescriptor(command.descriptorUuid)
+        val descriptor = characteristic.getDescriptor(createBleUuidBy16Bit("2902"))
         if (descriptor == null) {
             command.error("descriptor equals null")
             return

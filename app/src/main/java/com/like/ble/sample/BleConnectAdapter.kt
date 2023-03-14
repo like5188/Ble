@@ -14,7 +14,10 @@ import com.like.ble.central.command.*
 import com.like.ble.sample.databinding.ItemBleConnectBinding
 import com.like.ble.sample.databinding.ItemBleConnectCharacteristicBinding
 import com.like.ble.sample.databinding.ItemBleConnectDescriptorsBinding
-import com.like.ble.util.*
+import com.like.ble.util.batch
+import com.like.ble.util.getPropertiesString
+import com.like.ble.util.getTypeString
+import com.like.ble.util.getValidString
 import com.like.recyclerview.adapter.BaseListAdapter
 import com.like.recyclerview.viewholder.BindingViewHolder
 import java.util.*
@@ -173,112 +176,44 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
             binding.ivNotify.visibility = View.VISIBLE
             val isOn = AtomicBoolean(false)
             binding.ivNotify.setOnClickListener {
-                val descriptorUuid = createBleUuidBy16Bit("2902")
                 val setCharacteristicNotificationCommand = SetCharacteristicNotificationCommand(
                     address,
                     characteristic.uuid,
-                    descriptorUuid,
                     serviceUuid,
                     SetCharacteristicNotificationCommand.TYPE_NOTIFICATION,
-                    !isOn.get()
+                    !isOn.get(),
+                    onCompleted = {
+                        isOn.set(!isOn.get())
+                        if (isOn.get()) {
+                            binding.ivNotify.setImageResource(R.drawable.notify)
+                        } else {
+                            binding.ivNotify.setImageResource(R.drawable.notify_close)
+                        }
+                    }
                 )
-                val writeDescriptorCommand = if (isOn.get()) {
-                    WriteDescriptorCommand(
-                        address,
-                        listOf(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE),
-                        descriptorUuid,
-                        characteristic.uuid,
-                        serviceUuid,
-                        5000,
-                        onCompleted = {
-                            isOn.set(false)
-                            binding.ivNotify.setImageResource(R.drawable.notify_close)
-                        },
-                        onError = {
-                            isOn.set(true)
-                            binding.ivNotify.setImageResource(R.drawable.notify)
-                        }
-                    )
-                } else {
-                    WriteDescriptorCommand(
-                        address,
-                        listOf(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE),
-                        descriptorUuid,
-                        characteristic.uuid,
-                        serviceUuid,
-                        5000,
-                        onCompleted = {
-                            isOn.set(true)
-                            binding.ivNotify.setImageResource(R.drawable.notify)
-                        },
-                        onError = {
-                            isOn.set(false)
-                            binding.ivNotify.setImageResource(R.drawable.notify_close)
-                        }
-                    )
-                }
-
-                val multipleAddressCommands = MultipleAddressCommands()
-                // readNotifyCommand 必须第一个添加，类似于设置回调监听。
-                multipleAddressCommands.addCommand(setCharacteristicNotificationCommand, false)
-                multipleAddressCommands.addCommand(writeDescriptorCommand, true)
-                mBleManager.sendCommand(multipleAddressCommands)
+                mBleManager.sendCommand(setCharacteristicNotificationCommand)
             }
         }
         if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_INDICATE != 0) {
             binding.ivIndicate.visibility = View.VISIBLE
             val isOn = AtomicBoolean(false)
             binding.ivIndicate.setOnClickListener {
-                val descriptorUuid = createBleUuidBy16Bit("2902")
                 val setCharacteristicNotificationCommand = SetCharacteristicNotificationCommand(
                     address,
                     characteristic.uuid,
-                    descriptorUuid,
                     serviceUuid,
                     SetCharacteristicNotificationCommand.TYPE_INDICATION,
-                    !isOn.get()
+                    !isOn.get(),
+                    onCompleted = {
+                        isOn.set(!isOn.get())
+                        if (isOn.get()) {
+                            binding.ivNotify.setImageResource(R.drawable.indicate)
+                        } else {
+                            binding.ivNotify.setImageResource(R.drawable.indicate_close)
+                        }
+                    }
                 )
-                val writeDescriptorCommand = if (isOn.get()) {
-                    WriteDescriptorCommand(
-                        address,
-                        listOf(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE),
-                        descriptorUuid,
-                        characteristic.uuid,
-                        serviceUuid,
-                        5000,
-                        onCompleted = {
-                            isOn.set(false)
-                            binding.ivIndicate.setImageResource(R.drawable.indicate_close)
-                        },
-                        onError = {
-                            isOn.set(true)
-                            binding.ivIndicate.setImageResource(R.drawable.indicate)
-                        }
-                    )
-                } else {
-                    WriteDescriptorCommand(
-                        address,
-                        listOf(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE),
-                        descriptorUuid,
-                        characteristic.uuid,
-                        serviceUuid,
-                        5000,
-                        onCompleted = {
-                            isOn.set(true)
-                            binding.ivIndicate.setImageResource(R.drawable.indicate)
-                        },
-                        onError = {
-                            isOn.set(false)
-                            binding.ivIndicate.setImageResource(R.drawable.indicate_close)
-                        }
-                    )
-                }
-
-                val multipleAddressCommands = MultipleAddressCommands()
-                // readNotifyCommand 必须第一个添加，类似于设置回调监听。
-                multipleAddressCommands.addCommand(setCharacteristicNotificationCommand, false)
-                multipleAddressCommands.addCommand(writeDescriptorCommand, true)
-                mBleManager.sendCommand(multipleAddressCommands)
+                mBleManager.sendCommand(setCharacteristicNotificationCommand)
             }
         }
     }
