@@ -227,7 +227,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             WRITE_TYPE_NO_RESPONSE 设置该类型不需要外围设备的回应，可以继续写数据。加快传输速率。
             WRITE_TYPE_SIGNED 写特征携带认证签名，具体作用不太清楚。
             */
-            characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+            characteristic.writeType = command.writeType
             command.data.forEach {
                 characteristic.value = it
                 if (mBluetoothGatt?.writeCharacteristic(characteristic) != true) {
