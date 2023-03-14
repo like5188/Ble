@@ -160,6 +160,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             bluetoothDevice.connectGatt(mActivity, false, mGattCallback)// 第二个参数表示是否自动重连
         }
 
+        if (command.timeout <= 0) return
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
             close()
@@ -196,6 +197,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             return
         }
 
+        if (command.timeout <= 0) return
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
             command.error("读取特征值超时：${command.characteristicUuid.getValidString()}")
@@ -239,6 +241,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             }
         })
 
+        if (command.timeout <= 0) return
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
             command.error("写特征值超时：${command.characteristicUuid.getValidString()}")
@@ -272,6 +275,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             return
         }
 
+        if (command.timeout <= 0) return
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
             command.error("读取描述值超时：${command.descriptorUuid.getValidString()}")
@@ -319,6 +323,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             }
         })
 
+        if (command.timeout <= 0) return
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
             command.error("写描述值超时：${command.descriptorUuid.getValidString()}")
@@ -343,6 +348,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             return
         }
 
+        if (command.timeout <= 0) return
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
             command.error("读取通知传来的数据超时：${command.characteristicUuid.getValidString()}")
@@ -366,6 +372,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             return
         }
 
+        if (command.timeout <= 0) return
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
             command.error("设置MTU超时：${command.address}")
@@ -383,6 +390,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             return
         }
 
+        if (command.timeout <= 0) return
         command.addJob(mActivity.lifecycleScope.launch(Dispatchers.IO) {
             delay(command.timeout)
             command.error("读RSSI超时：${command.address}")
