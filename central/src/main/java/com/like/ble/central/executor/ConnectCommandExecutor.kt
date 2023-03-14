@@ -439,15 +439,16 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             return
         }
 
+        // cccd : clinet characteristic configuration descriptor
         // 服务端一开始是无法直接发送Indication和Notification。
         // 首先必须是客户端通过往服务端的CCCD特征（clinet characteristic configuration descriptor）
         // 写入值来使能服务端的这两个功能Notification/Indication，这样服务端才能发送。
-        val descriptor = characteristic.getDescriptor(createBleUuidBy16Bit("2902"))
-        if (descriptor == null) {
+        val cccd = characteristic.getDescriptor(createBleUuidBy16Bit("2902"))
+        if (cccd == null) {
             command.error("descriptor equals null")
             return
         }
-        descriptor.value = when (command.type) {
+        cccd.value = when (command.type) {
             SetCharacteristicNotificationCommand.TYPE_NOTIFICATION -> {
                 if (command.enable) {
                     BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
@@ -464,7 +465,7 @@ class ConnectCommandExecutor(private val mActivity: ComponentActivity) : Central
             }
             else -> return
         }
-        if (mBluetoothGatt?.writeDescriptor(descriptor) != true) {
+        if (mBluetoothGatt?.writeDescriptor(cccd) != true) {
             command.error("gatt writeDescriptor fail")
             return
         }
