@@ -63,7 +63,7 @@ class MultipleAddressCommands : Command("组合命令") {
                 })
             }
             command.mCommandExecutor = mCommandExecutor
-            command.execute()
+            command.execute()// 直接执行，避免放入队列中造成阻塞
             while (command != mCallbackCommand && !command.isCompleted()) {
                 delay(20)
             }
