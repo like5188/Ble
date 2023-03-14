@@ -21,7 +21,6 @@ import com.like.ble.util.getValidString
 import com.like.recyclerview.adapter.BaseListAdapter
 import com.like.recyclerview.viewholder.BindingViewHolder
 import java.util.*
-import java.util.concurrent.atomic.AtomicBoolean
 
 class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBleManager: BleManager) :
     BaseListAdapter<ItemBleConnectBinding, BleConnectInfo>(DIFF) {
@@ -174,17 +173,17 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
         }
         if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY != 0) {
             binding.ivNotify.visibility = View.VISIBLE
-            val isOn = AtomicBoolean(false)
+            var isOn = false
             binding.ivNotify.setOnClickListener {
                 val setCharacteristicNotificationCommand = SetCharacteristicNotificationCommand(
                     address,
                     characteristic.uuid,
                     serviceUuid,
                     SetCharacteristicNotificationCommand.TYPE_NOTIFICATION,
-                    !isOn.get(),
+                    !isOn,
                     onCompleted = {
-                        isOn.set(!isOn.get())
-                        if (isOn.get()) {
+                        isOn = !isOn
+                        if (isOn) {
                             binding.ivNotify.setImageResource(R.drawable.notify)
                         } else {
                             binding.ivNotify.setImageResource(R.drawable.notify_close)
@@ -196,20 +195,20 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
         }
         if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_INDICATE != 0) {
             binding.ivIndicate.visibility = View.VISIBLE
-            val isOn = AtomicBoolean(false)
+            var isOn = false
             binding.ivIndicate.setOnClickListener {
                 val setCharacteristicNotificationCommand = SetCharacteristicNotificationCommand(
                     address,
                     characteristic.uuid,
                     serviceUuid,
                     SetCharacteristicNotificationCommand.TYPE_INDICATION,
-                    !isOn.get(),
+                    !isOn,
                     onCompleted = {
-                        isOn.set(!isOn.get())
-                        if (isOn.get()) {
-                            binding.ivNotify.setImageResource(R.drawable.indicate)
+                        isOn = !isOn
+                        if (isOn) {
+                            binding.ivIndicate.setImageResource(R.drawable.indicate)
                         } else {
-                            binding.ivNotify.setImageResource(R.drawable.indicate_close)
+                            binding.ivIndicate.setImageResource(R.drawable.indicate_close)
                         }
                     }
                 )
