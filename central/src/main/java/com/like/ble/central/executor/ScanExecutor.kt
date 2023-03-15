@@ -12,6 +12,7 @@ import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import com.like.ble.central.result.ScanResult
 import com.like.ble.central.util.PermissionUtils
+import com.like.ble.exception.BleException
 import com.like.ble.result.BleResult
 import com.like.ble.util.BleBroadcastReceiverManager
 import com.like.ble.util.enableBluetooth
@@ -130,10 +131,10 @@ class ScanExecutor(private val activity: ComponentActivity) : ICentralExecutor {
 
     override suspend fun stopScan() {
         if (!activity.enableBluetooth()) {
-            return
+            throw BleException("蓝牙功能未打开")
         }
         if (!PermissionUtils.checkPermissions(activity, true)) {
-            return
+            throw BleException("蓝牙权限被拒绝")
         }
         if (mScanning.compareAndSet(true, false)) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
