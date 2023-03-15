@@ -36,6 +36,9 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
         // 获取远端的蓝牙设备
         val bluetoothDevice = activity.getBluetoothAdapter()?.getRemoteDevice(address) ?: throw BleException("连接蓝牙失败：$address 未找到")
         return suspendCancellableCoroutineWithTimeout(timeout, "连接蓝牙设备超时：$address") { continuation ->
+            continuation.invokeOnCancellation {
+                disconnect()
+            }
             // 蓝牙Gatt回调方法中都不可以进行耗时操作，需要将其方法内进行的操作丢进另一个线程，尽快返回。
             mConnectCallbackManager.connectCallback = object : ConnectCallback {
                 override fun onSuccess(services: List<BluetoothGattService>?) {
