@@ -118,6 +118,7 @@ class ScanExecutor(private val activity: ComponentActivity) : ICentralExecutor {
 
     override suspend fun stopScan() {
         if (mScanning.compareAndSet(true, false)) {
+            // 下面两个条件判断不能放到外面去，因为会导致 mScanning 标记不能正常改变。造成下次启动扫描失败。
             if (!activity.isBluetoothEnable()) {
                 return
             }
