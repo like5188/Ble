@@ -28,9 +28,6 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 @SuppressLint("MissingPermission")
 class ScanExecutor(private val activity: ComponentActivity) : ICentralExecutor {
-    private val _scanFlow: MutableSharedFlow<BleResult> by lazy {
-        MutableSharedFlow(extraBufferCapacity = Int.MAX_VALUE)
-    }
     private val mScanning = AtomicBoolean(false)
     private val mBleBroadcastReceiverManager: BleBroadcastReceiverManager by lazy {
         BleBroadcastReceiverManager(activity.applicationContext,
@@ -42,7 +39,7 @@ class ScanExecutor(private val activity: ComponentActivity) : ICentralExecutor {
     }
     private val mScanCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: android.bluetooth.le.ScanResult) {
-            filterScanResult(result.device, result.rssi, result.scanRecord?.bytes)
+            emitResult(result.device, result.rssi, result.scanRecord?.bytes)
         }
 
         override fun onScanFailed(errorCode: Int) {
@@ -71,22 +68,15 @@ class ScanExecutor(private val activity: ComponentActivity) : ICentralExecutor {
         }
     }
     private val mLeScanCallback: BluetoothAdapter.LeScanCallback = BluetoothAdapter.LeScanCallback { device, rssi, scanRecord ->
-        filterScanResult(device, rssi, scanRecord)
+        emitResult(device, rssi, scanRecord)
     }
-    private var filterDeviceName: String = ""
-    private var fuzzyMatchingDeviceName: Boolean = false
-    private var filterDeviceAddress: String = ""
-    private var filterServiceUuid: UUID? = null
 
-
+    private val _scanFlow: MutableSharedFlow<BleResult> by lazy {
+        MutableSharedFlow(extraBufferCapacity = Int.MAX_VALUE)
+    }
     override val scanFlow: Flow<BleResult> = _scanFlow
-    override suspend fun startScan(
-        filterDeviceName: String,
-        fuzzyMatchingDeviceName: Boolean,
-        filterDeviceAddress: String,
-        filterServiceUuid: UUID?,
-        duration: Long
-    ) {
+
+    override suspend fun startScan(filterServiceUuid: UUID?, duration: Long) {
         if (!activity.enableBluetooth()) {
             emitError("蓝牙未打开")
             return
@@ -96,10 +86,6 @@ class ScanExecutor(private val activity: ComponentActivity) : ICentralExecutor {
             return
         }
         if (mScanning.compareAndSet(false, true)) {
-            this.filterDeviceName = filterDeviceName
-            this.fuzzyMatchingDeviceName = fuzzyMatchingDeviceName
-            this.filterDeviceAddress = filterDeviceAddress
-            this.filterServiceUuid = filterServiceUuid
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 if (filterServiceUuid == null) {
                     activity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(mScanCallback)
@@ -156,28 +142,6 @@ class ScanExecutor(private val activity: ComponentActivity) : ICentralExecutor {
 
     init {
         mBleBroadcastReceiverManager.register()
-    }
-
-    @Synchronized
-    private fun filterScanResult(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
-        // 设备名字匹配
-        if (filterDeviceName.isNotEmpty()) {
-            val deviceName = device.name ?: ""
-            if (fuzzyMatchingDeviceName) {// 模糊匹配
-                if (!deviceName.contains(filterDeviceName)) {
-                    return
-                }
-            } else {
-                if (deviceName != filterDeviceName) {
-                    return
-                }
-            }
-        }
-        // 设备地址匹配
-        if (filterDeviceAddress.isNotEmpty() && device.address != filterDeviceAddress) {
-            return
-        }
-        emitResult(device, rssi, scanRecord)
     }
 
     private fun emitResult(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
