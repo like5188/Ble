@@ -9,13 +9,15 @@ import java.util.*
  * 中心设备蓝牙命令执行者。
  */
 interface ICentralExecutor : IExecutor {
+    val scanFlow: Flow<BleResult>
 
-    fun startScan(
+    suspend fun startScan(
         filterDeviceName: String = "",
         fuzzyMatchingDeviceName: Boolean = true,
         filterDeviceAddress: String = "",
         filterServiceUuid: UUID? = null,
-    ): Flow<BleResult>
+        duration: Long = 10000,
+    )
 
     suspend fun stopScan()
 

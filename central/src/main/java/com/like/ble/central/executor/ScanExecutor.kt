@@ -15,6 +15,8 @@ import com.like.ble.result.BleResult
 import com.like.ble.util.BleBroadcastReceiverManager
 import com.like.ble.util.getBluetoothAdapter
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
@@ -27,9 +29,10 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 @SuppressLint("MissingPermission")
 class ScanExecutor(private val context: Context, private val lifecycleScope: CoroutineScope) : ICentralExecutor {
-    private val scanFlow by lazy {
-        MutableSharedFlow<BleResult>()
+    private val _scanFlow: MutableSharedFlow<BleResult> by lazy {
+        MutableSharedFlow()
     }
+    override val scanFlow: Flow<BleResult> = _scanFlow
     private val mScanning = AtomicBoolean(false)
     private val mBleBroadcastReceiverManager: BleBroadcastReceiverManager by lazy {
         BleBroadcastReceiverManager(context,
@@ -104,29 +107,29 @@ class ScanExecutor(private val context: Context, private val lifecycleScope: Cor
     }
 
     private fun emit(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
-        lifecycleScope.launch {
-            scanFlow.emit(BleResult.Success(ScanResult(device, rssi, scanRecord)))
+        lifecycleScope.launch(Dispatchers.Main) {
+            _scanFlow.emit(BleResult.Success(ScanResult(device, rssi, scanRecord)))
         }
     }
 
     private fun emit(msg: String, code: Int = -1) {
-        lifecycleScope.launch {
-            scanFlow.emit(BleResult.Error(msg))
+        lifecycleScope.launch(Dispatchers.Main) {
+            _scanFlow.emit(BleResult.Error(msg, code))
         }
     }
 
-    override fun startScan(
+    override suspend fun startScan(
         filterDeviceName: String,
         fuzzyMatchingDeviceName: Boolean,
         filterDeviceAddress: String,
         filterServiceUuid: UUID?,
-    ): Flow<BleResult> {
-        this.filterDeviceName = filterDeviceName
-        this.fuzzyMatchingDeviceName = fuzzyMatchingDeviceName
-        this.filterDeviceAddress = filterDeviceAddress
-        this.filterServiceUuid = filterServiceUuid
-
+        duration: Long,
+    ) {
         if (mScanning.compareAndSet(false, true)) {
+            this.filterDeviceName = filterDeviceName
+            this.fuzzyMatchingDeviceName = fuzzyMatchingDeviceName
+            this.filterDeviceAddress = filterDeviceAddress
+            this.filterServiceUuid = filterServiceUuid
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 if (filterServiceUuid == null) {
                     context.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(mScanCallback)
@@ -160,9 +163,9 @@ class ScanExecutor(private val context: Context, private val lifecycleScope: Cor
                     }
                 }
             }
+            delay(duration)
+            stopScan()
         }
-
-        return scanFlow
     }
 
     override suspend fun stopScan() {
