@@ -77,13 +77,13 @@ class AdvertisingExecutor(private val activity: ComponentActivity) : IPeripheral
     }
 
     override suspend fun stopAdvertising() {
+        val callback = mAdvertiseCallback ?: return
         if (!activity.enableBluetooth()) {
             throw BleException("蓝牙功能未打开")
         }
         if (!PermissionUtils.checkPermissions(activity)) {
             throw BleException("蓝牙权限被拒绝")
         }
-        val callback = mAdvertiseCallback ?: return
         if (mIsSending.compareAndSet(true, false)) {
             activity.getBluetoothAdapter()?.bluetoothLeAdvertiser?.stopAdvertising(callback)
             mAdvertiseCallback = null
