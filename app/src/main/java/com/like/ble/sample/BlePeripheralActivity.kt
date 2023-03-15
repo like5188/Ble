@@ -267,14 +267,6 @@ class BlePeripheralActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_red))
                 mBinding.tvAdvertisingStatus.text = e.message
-                if (!isBluetoothEnable()) {// 说明关闭了蓝牙
-                    getBluetoothManager()?.getConnectedDevices(BluetoothProfile.GATT)?.forEach { device ->
-                        mBluetoothGattServer?.cancelConnection(device)
-                    }
-                    mBluetoothGattServer?.clearServices()
-                    mBluetoothGattServer?.close()
-                    mBluetoothGattServer = null
-                }
             }
         }
     }

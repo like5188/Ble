@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import com.like.ble.exception.BleException
 import com.like.ble.peripheral.util.PermissionUtils
 import com.like.ble.util.getBluetoothAdapter
+import com.like.ble.util.isBluetoothEnable
 import com.like.ble.util.isBluetoothEnableAndSettingIfDisabled
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
@@ -40,7 +41,7 @@ class AdvertisingExecutor(private val activity: ComponentActivity) : IPeripheral
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
-        if (!PermissionUtils.checkPermissions(activity)) {
+        if (!PermissionUtils.requestPermissions(activity)) {
             throw BleException("蓝牙权限被拒绝")
         }
         val bluetoothLeAdvertiser = activity.getBluetoothAdapter()?.bluetoothLeAdvertiser
@@ -77,16 +78,16 @@ class AdvertisingExecutor(private val activity: ComponentActivity) : IPeripheral
     }
 
     override suspend fun stopAdvertising() {
-        val callback = mAdvertiseCallback ?: return
-        if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
-            return
-        }
-        if (!PermissionUtils.checkPermissions(activity)) {
-            return
-        }
         if (mIsSending.compareAndSet(true, false)) {
-            activity.getBluetoothAdapter()?.bluetoothLeAdvertiser?.stopAdvertising(callback)
+            val callback = mAdvertiseCallback ?: return
             mAdvertiseCallback = null
+            if (!activity.isBluetoothEnable()) {
+                return
+            }
+            if (!PermissionUtils.checkPermissions(activity)) {
+                return
+            }
+            activity.getBluetoothAdapter()?.bluetoothLeAdvertiser?.stopAdvertising(callback)
         }
     }
 
