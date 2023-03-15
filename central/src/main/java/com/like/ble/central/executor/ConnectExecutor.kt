@@ -10,10 +10,9 @@ import androidx.activity.ComponentActivity
 import com.like.ble.exception.BleException
 import com.like.ble.util.getBluetoothAdapter
 import com.like.ble.util.isBleDeviceConnected
-import kotlinx.coroutines.withTimeout
+import com.like.ble.util.suspendCancellableCoroutineWithTimeout
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 /**
  * 蓝牙连接及连接成功后的命令执行者
@@ -29,7 +28,7 @@ class ConnectExecutor(private val mActivity: ComponentActivity) : IConnectExecut
         // 获取远端的蓝牙设备
         val bluetoothDevice = mActivity.getBluetoothAdapter()?.getRemoteDevice(address) ?: throw BleException("连接蓝牙失败：$address 未找到")
 
-        suspend fun con(): List<BluetoothGattService>? = suspendCoroutine { continuation ->
+        return suspendCancellableCoroutineWithTimeout(timeout) { continuation ->
             // 蓝牙Gatt回调方法中都不可以进行耗时操作，需要将其方法内进行的操作丢进另一个线程，尽快返回。
             val callback = object : BluetoothGattCallback() {
                 // 当连接状态改变
@@ -64,14 +63,6 @@ class ConnectExecutor(private val mActivity: ComponentActivity) : IConnectExecut
                 bluetoothDevice.connectGatt(mActivity, false, callback)// 第二个参数表示是否自动重连
             }
             mGattCallback = callback
-        }
-
-        return if (timeout > 0) {
-            withTimeout(timeout) {
-                con()
-            }
-        } else {
-            con()
         }
     }
 
