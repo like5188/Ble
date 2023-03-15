@@ -76,6 +76,10 @@ class ScanExecutor(private val activity: ComponentActivity) : ICentralExecutor {
     }
     override val scanFlow: Flow<BleResult> = _scanFlow
 
+    init {
+        mBleBroadcastReceiverManager.register()
+    }
+
     override suspend fun startScan(filterServiceUuid: UUID?, duration: Long) {
         if (!activity.enableBluetooth()) {
             emitError("蓝牙未打开")
@@ -138,10 +142,6 @@ class ScanExecutor(private val activity: ComponentActivity) : ICentralExecutor {
                 activity.getBluetoothAdapter()?.stopLeScan(mLeScanCallback)
             }
         }
-    }
-
-    init {
-        mBleBroadcastReceiverManager.register()
     }
 
     private fun emitResult(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
