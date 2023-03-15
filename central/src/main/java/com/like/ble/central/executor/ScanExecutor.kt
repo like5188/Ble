@@ -15,6 +15,7 @@ import com.like.ble.central.util.PermissionUtils
 import com.like.ble.result.BleResult
 import com.like.ble.util.BleBroadcastReceiverManager
 import com.like.ble.util.getBluetoothAdapter
+import com.like.ble.util.isBluetoothEnable
 import com.like.ble.util.isBluetoothEnableAndSettingIfDisabled
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -85,7 +86,7 @@ class ScanExecutor(private val activity: ComponentActivity) : ICentralExecutor {
             emitError("蓝牙未打开")
             return
         }
-        if (!PermissionUtils.checkPermissions(activity, true)) {
+        if (!PermissionUtils.requestPermissions(activity, true)) {
             emitError("蓝牙权限被拒绝")
             return
         }
@@ -129,7 +130,7 @@ class ScanExecutor(private val activity: ComponentActivity) : ICentralExecutor {
     }
 
     override suspend fun stopScan() {
-        if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
+        if (!activity.isBluetoothEnable()) {
             return
         }
         if (!PermissionUtils.checkPermissions(activity, true)) {

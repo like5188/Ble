@@ -1,12 +1,37 @@
 package com.like.ble.central.util
 
 import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.ComponentActivity
+import androidx.core.content.ContextCompat
 import com.like.common.util.activityresultlauncher.requestMultiplePermissions
 
 object PermissionUtils {
-    suspend fun checkPermissions(activity: ComponentActivity, isScan: Boolean): Boolean {
+    fun checkPermissions(context: Context, isScan: Boolean): Boolean = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        // Android 12 中的新蓝牙权限
+        // https://developer.android.google.cn/about/versions/12/features/bluetooth-permissions?hl=zh-cn
+        if (isScan) {
+            ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
+        }
+    } else if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+        ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH) == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_ADMIN) == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+    } else {
+        ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH) == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_ADMIN) == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+    }
+
+    suspend fun requestPermissions(activity: ComponentActivity, isScan: Boolean): Boolean {
         val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             // Android 12 中的新蓝牙权限
             // https://developer.android.google.cn/about/versions/12/features/bluetooth-permissions?hl=zh-cn
