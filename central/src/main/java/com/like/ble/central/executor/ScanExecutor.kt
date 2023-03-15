@@ -13,7 +13,6 @@ import androidx.annotation.RequiresApi
 import com.like.ble.central.result.ScanResult
 import com.like.ble.central.util.PermissionUtils
 import com.like.ble.result.BleResult
-import com.like.ble.util.BleBroadcastReceiverManager
 import com.like.ble.util.getBluetoothAdapter
 import com.like.ble.util.isBluetoothEnable
 import com.like.ble.util.isBluetoothEnableAndSettingIfDisabled
@@ -30,14 +29,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 @SuppressLint("MissingPermission")
 class ScanExecutor(private val activity: ComponentActivity) : ICentralExecutor {
     private val mScanning = AtomicBoolean(false)
-    private val mBleBroadcastReceiverManager: BleBroadcastReceiverManager by lazy {
-        BleBroadcastReceiverManager(activity.applicationContext,
-            onBleOff = {
-                mScanning.set(false)
-                emitError("蓝牙功能已关闭")
-            }
-        )
-    }
     private val mScanCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: android.bluetooth.le.ScanResult) {
             emitResult(result.device, result.rssi, result.scanRecord?.bytes)
@@ -76,10 +67,6 @@ class ScanExecutor(private val activity: ComponentActivity) : ICentralExecutor {
         MutableSharedFlow(extraBufferCapacity = Int.MAX_VALUE)
     }
     override val scanFlow: Flow<BleResult> = _scanFlow
-
-    init {
-        mBleBroadcastReceiverManager.register()
-    }
 
     override suspend fun startScan(filterServiceUuid: UUID?, duration: Long) {
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
@@ -130,13 +117,13 @@ class ScanExecutor(private val activity: ComponentActivity) : ICentralExecutor {
     }
 
     override suspend fun stopScan() {
-        if (!activity.isBluetoothEnable()) {
-            return
-        }
-        if (!PermissionUtils.checkPermissions(activity, true)) {
-            return
-        }
         if (mScanning.compareAndSet(true, false)) {
+            if (!activity.isBluetoothEnable()) {
+                return
+            }
+            if (!PermissionUtils.checkPermissions(activity, true)) {
+                return
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 activity.getBluetoothAdapter()?.bluetoothLeScanner?.stopScan(mScanCallback)
             } else {
@@ -155,7 +142,6 @@ class ScanExecutor(private val activity: ComponentActivity) : ICentralExecutor {
 
     override suspend fun close() {
         stopScan()
-        mBleBroadcastReceiverManager.unregister()
     }
 
 }
