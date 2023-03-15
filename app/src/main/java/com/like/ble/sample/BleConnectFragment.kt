@@ -7,11 +7,17 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.lifecycleScope
 import com.like.ble.BleManager
-import com.like.ble.central.command.*
+import com.like.ble.central.command.ReadRemoteRssiCommand
+import com.like.ble.central.command.RequestConnectionPriorityCommand
+import com.like.ble.central.command.RequestMtuCommand
+import com.like.ble.central.executor.ConnectExecutor
+import com.like.ble.central.executor.IConnectExecutor
 import com.like.ble.sample.databinding.FragmentBleConnectBinding
 import com.like.common.base.BaseLazyFragment
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
+import kotlinx.coroutines.launch
 
 /**
  * 连接设备界面
@@ -21,6 +27,9 @@ class BleConnectFragment : BaseLazyFragment() {
     private lateinit var mData: BleScanInfo
     private val mBleManager: BleManager by lazy { (requireActivity() as BleCentralActivity).mBleManager }
     private val mAdapter: BleConnectAdapter by lazy { BleConnectAdapter(requireActivity(), mBleManager) }
+    private val connectExecutor: IConnectExecutor by lazy {
+        ConnectExecutor(requireActivity())
+    }
 
     companion object {
         fun newInstance(bleScanInfo: BleScanInfo?): BleConnectFragment {
@@ -61,52 +70,44 @@ class BleConnectFragment : BaseLazyFragment() {
     }
 
     private fun connect() {
-        val ctx = context ?: return
-        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_black_1))
+        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_black_1))
         mBinding.tvConnectStatus.text = "连接中……"
-        mBleManager.sendCommand(
-            ConnectCommand(
-                mData.address,
-                10000L,
-                onResult = {
-                    val ctx = context ?: return@ConnectCommand
-                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
-                    mBinding.tvConnectStatus.text = "连接成功"
-                    if (it.isNotEmpty()) {
-                        val bleGattServiceInfos = it.map { bluetoothGattService ->
-                            BleConnectInfo(mData.address, bluetoothGattService)
-                        }
-                        mAdapter.submitList(bleGattServiceInfos)
-                    } else {
-                        mAdapter.submitList(null)
+        mAdapter.submitList(null)
+        lifecycleScope.launch {
+            try {
+                val services = connectExecutor.connect(mData.address, 10000L)
+                mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
+                mBinding.tvConnectStatus.text = "连接成功"
+                if (!services.isNullOrEmpty()) {
+                    val bleGattServiceInfos = services.map { bluetoothGattService ->
+                        BleConnectInfo(mData.address, bluetoothGattService)
                     }
-                },
-                onError = {
-                    val ctx = context ?: return@ConnectCommand
-                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
-                    mBinding.tvConnectStatus.text = it.message
+                    mAdapter.submitList(bleGattServiceInfos)
+                } else {
                     mAdapter.submitList(null)
-                    mBinding.etRequestMtu.setText("")
-                    mBinding.etReadRemoteRssi.setText("")
-                    mBinding.etRequestConnectionPriority.setText("")
                 }
-            ))
+            } catch (e: Exception) {
+                mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_red))
+                mBinding.tvConnectStatus.text = e.message
+                mAdapter.submitList(null)
+                mBinding.etRequestMtu.setText("")
+                mBinding.etReadRemoteRssi.setText("")
+                mBinding.etRequestConnectionPriority.setText("")
+            }
+        }
     }
 
     fun disconnect() {
-        mBleManager.sendCommand(
-            DisconnectCommand(mData.address,
-                onCompleted = {
-                    val ctx = context ?: return@DisconnectCommand
-                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
-                    mBinding.tvConnectStatus.text = "连接停止了"
-                },
-                onError = {
-                    val ctx = context ?: return@DisconnectCommand
-                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
-                    mBinding.tvConnectStatus.text = it.message
-                })
-        )
+        lifecycleScope.launch {
+            try {
+                connectExecutor.disconnect()
+                mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_red))
+                mBinding.tvConnectStatus.text = "连接停止了"
+            } catch (e: Exception) {
+                mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_red))
+                mBinding.tvConnectStatus.text = e.message
+            }
+        }
     }
 
     private fun requestMtu() {
