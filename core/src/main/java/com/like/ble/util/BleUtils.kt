@@ -1,9 +1,13 @@
 package com.like.ble.util
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.bluetooth.*
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import androidx.activity.ComponentActivity
+import com.like.common.util.activityresultlauncher.startActivityForResult
 import java.nio.ByteBuffer
 import java.util.*
 import java.util.regex.Pattern
@@ -34,10 +38,16 @@ fun Context.isBluetoothEnable(): Boolean = getBluetoothAdapter()?.isEnabled ?: f
 fun Context.isSupportBluetooth(): Boolean = packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
 
 /**
+ * 蓝牙是否打开。
+ * 如果没打开，就去打开
  * 打开蓝牙
  */
-@SuppressLint("MissingPermission")
-fun Context.enableBluetooth(): Boolean = getBluetoothAdapter()?.enable() ?: false
+suspend fun ComponentActivity.isBluetoothEnableAndSettingIfDisabled(): Boolean = if (isBluetoothEnable()) {
+    true
+} else {// 蓝牙功能未打开
+    // 弹出开启蓝牙的对话框
+    startActivityForResult(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)).resultCode == Activity.RESULT_OK
+}
 
 /**
  * 查找远程设备的特征

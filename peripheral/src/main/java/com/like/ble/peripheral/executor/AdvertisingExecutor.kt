@@ -7,8 +7,8 @@ import android.bluetooth.le.AdvertiseSettings
 import androidx.activity.ComponentActivity
 import com.like.ble.exception.BleException
 import com.like.ble.peripheral.util.PermissionUtils
-import com.like.ble.util.enableBluetooth
 import com.like.ble.util.getBluetoothAdapter
+import com.like.ble.util.isBluetoothEnableAndSettingIfDisabled
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -37,8 +37,8 @@ class AdvertisingExecutor(private val activity: ComponentActivity) : IPeripheral
         scanResponse: AdvertiseData?,
         deviceName: String
     ) {
-        if (!activity.enableBluetooth()) {
-            throw BleException("蓝牙功能未打开")
+        if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
+            throw BleException("蓝牙未打开")
         }
         if (!PermissionUtils.checkPermissions(activity)) {
             throw BleException("蓝牙权限被拒绝")
@@ -78,11 +78,11 @@ class AdvertisingExecutor(private val activity: ComponentActivity) : IPeripheral
 
     override suspend fun stopAdvertising() {
         val callback = mAdvertiseCallback ?: return
-        if (!activity.enableBluetooth()) {
-            throw BleException("蓝牙功能未打开")
+        if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
+            return
         }
         if (!PermissionUtils.checkPermissions(activity)) {
-            throw BleException("蓝牙权限被拒绝")
+            return
         }
         if (mIsSending.compareAndSet(true, false)) {
             activity.getBluetoothAdapter()?.bluetoothLeAdvertiser?.stopAdvertising(callback)

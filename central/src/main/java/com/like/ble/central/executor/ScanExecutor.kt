@@ -12,11 +12,10 @@ import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import com.like.ble.central.result.ScanResult
 import com.like.ble.central.util.PermissionUtils
-import com.like.ble.exception.BleException
 import com.like.ble.result.BleResult
 import com.like.ble.util.BleBroadcastReceiverManager
-import com.like.ble.util.enableBluetooth
 import com.like.ble.util.getBluetoothAdapter
+import com.like.ble.util.isBluetoothEnableAndSettingIfDisabled
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -82,7 +81,7 @@ class ScanExecutor(private val activity: ComponentActivity) : ICentralExecutor {
     }
 
     override suspend fun startScan(filterServiceUuid: UUID?, duration: Long) {
-        if (!activity.enableBluetooth()) {
+        if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             emitError("蓝牙未打开")
             return
         }
@@ -130,11 +129,11 @@ class ScanExecutor(private val activity: ComponentActivity) : ICentralExecutor {
     }
 
     override suspend fun stopScan() {
-        if (!activity.enableBluetooth()) {
-            throw BleException("蓝牙功能未打开")
+        if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
+            return
         }
         if (!PermissionUtils.checkPermissions(activity, true)) {
-            throw BleException("蓝牙权限被拒绝")
+            return
         }
         if (mScanning.compareAndSet(true, false)) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
