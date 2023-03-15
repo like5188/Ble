@@ -17,7 +17,6 @@ import com.like.ble.sample.databinding.FragmentBleScanBinding
 import com.like.common.base.BaseLazyFragment
 import com.like.common.util.Logger
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 /**
@@ -28,7 +27,7 @@ class BleScanFragment : BaseLazyFragment() {
     private lateinit var mBinding: FragmentBleScanBinding
     private val mAdapter: BleScanAdapter by lazy { BleScanAdapter(requireActivity()) }
     private val centralExecutor: ICentralExecutor by lazy {
-        ScanExecutor(requireContext(), lifecycleScope)
+        ScanExecutor(requireActivity(), lifecycleScope)
     }
 
     companion object {
@@ -48,7 +47,7 @@ class BleScanFragment : BaseLazyFragment() {
             stopScan()
         }
         lifecycleScope.launch {
-            centralExecutor.scanFlow.collectLatest {
+            centralExecutor.scanFlow.collect {
                 Logger.e(it)
                 when (it) {
                     is BleResult.Success<*> -> {
@@ -80,7 +79,7 @@ class BleScanFragment : BaseLazyFragment() {
         mBinding.tvScanStatus.text = "扫描中……"
         mAdapter.submitList(null)
         lifecycleScope.launch {
-            centralExecutor.startScan(duration = 1000)
+            centralExecutor.startScan(duration = 30000)
             mBinding.tvScanStatus.text = "扫描完成"
         }
     }

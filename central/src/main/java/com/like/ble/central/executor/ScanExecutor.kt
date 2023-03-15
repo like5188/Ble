@@ -6,14 +6,16 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanSettings
-import android.content.Context
 import android.os.Build
 import android.os.ParcelUuid
+import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import com.like.ble.central.result.ScanResult
+import com.like.ble.central.util.PermissionUtils
 import com.like.ble.result.BleResult
 import com.like.ble.util.BleBroadcastReceiverManager
 import com.like.ble.util.getBluetoothAdapter
+import com.like.ble.util.isBluetoothEnableAndSettingIfDisabled
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -28,14 +30,13 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 可以进行扫描、停止扫描操作
  */
 @SuppressLint("MissingPermission")
-class ScanExecutor(private val context: Context, private val lifecycleScope: CoroutineScope) : ICentralExecutor {
+class ScanExecutor(private val activity: ComponentActivity, private val lifecycleScope: CoroutineScope) : ICentralExecutor {
     private val _scanFlow: MutableSharedFlow<BleResult> by lazy {
-        MutableSharedFlow()
+        MutableSharedFlow(extraBufferCapacity = Int.MAX_VALUE)
     }
-    override val scanFlow: Flow<BleResult> = _scanFlow
     private val mScanning = AtomicBoolean(false)
     private val mBleBroadcastReceiverManager: BleBroadcastReceiverManager by lazy {
-        BleBroadcastReceiverManager(context,
+        BleBroadcastReceiverManager(activity.applicationContext,
             onBleOff = {
                 mScanning.set(false)
                 emit("蓝牙功能已关闭")
@@ -80,6 +81,82 @@ class ScanExecutor(private val context: Context, private val lifecycleScope: Cor
     private var filterDeviceAddress: String = ""
     private var filterServiceUuid: UUID? = null
 
+
+    override val scanFlow: Flow<BleResult> = _scanFlow
+    override suspend fun startScan(
+        filterDeviceName: String,
+        fuzzyMatchingDeviceName: Boolean,
+        filterDeviceAddress: String,
+        filterServiceUuid: UUID?,
+        duration: Long
+    ) {
+        if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
+            emit("蓝牙未打开")
+            return
+        }
+        if (!PermissionUtils.checkPermissions(activity, true)) {
+            emit("蓝牙权限被拒绝")
+            return
+        }
+        if (mScanning.compareAndSet(false, true)) {
+            this.filterDeviceName = filterDeviceName
+            this.fuzzyMatchingDeviceName = fuzzyMatchingDeviceName
+            this.filterDeviceAddress = filterDeviceAddress
+            this.filterServiceUuid = filterServiceUuid
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                if (filterServiceUuid == null) {
+                    activity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(mScanCallback)
+                } else {
+                    // serviceUuid 只能在这里过滤，不能放到 filterScanResult() 方法中去，因为只有 gatt.discoverServices() 过后，device.getUuids() 方法才不会返回 null。
+                    activity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(
+                        listOf(ScanFilter.Builder().setServiceUuid(ParcelUuid(filterServiceUuid)).build()),
+                        // setScanMode() 设置扫描模式。可选择的模式有三种：
+                        // ScanSettings.SCAN_MODE_LOW_POWER 低功耗模式
+                        // ScanSettings.SCAN_MODE_BALANCED 平衡模式
+                        // ScanSettings.SCAN_MODE_LOW_LATENCY 高功耗模式
+                        // 从上到下，会越来越耗电,但扫描间隔越来越短，即扫描速度会越来越快。
+                        // setCallbackType() 设置回调类型，可选择的类型有三种：
+                        // ScanSettings.CALLBACK_TYPE_ALL_MATCHES 数值: 1 寻找符合过滤条件的蓝牙广播，如果没有设置过滤条件，则返回全部广播包
+                        // ScanSettings.CALLBACK_TYPE_FIRST_MATCH 数值: 2 仅针对与筛选条件匹配的第一个广播包触发结果回调。
+                        // ScanSettings.CALLBACK_TYPE_MATCH_LOST 数值: 4
+                        // 回调类型一般设置ScanSettings.CALLBACK_TYPE_ALL_MATCHES，有过滤条件时过滤，返回符合过滤条件的蓝牙广播。无过滤条件时，返回全部蓝牙广播。
+                        // setMatchMode() 设置蓝牙LE扫描滤波器硬件匹配的匹配模式，一般设置ScanSettings.MATCH_MODE_STICKY
+                        ScanSettings.Builder().build(),
+                        mScanCallback
+                    )
+                }
+            } else {
+                if (filterServiceUuid == null) {
+                    if (activity.getBluetoothAdapter()?.startLeScan(mLeScanCallback) != true) {
+                        emit("扫描失败")
+                    }
+                } else {
+                    if (activity.getBluetoothAdapter()?.startLeScan(arrayOf(filterServiceUuid), mLeScanCallback) != true) {
+                        emit("扫描失败")
+                    }
+                }
+            }
+            delay(duration)
+            stopScan()
+        }
+    }
+
+    override suspend fun stopScan() {
+        if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
+            return
+        }
+        if (!PermissionUtils.checkPermissions(activity, true)) {
+            return
+        }
+        if (mScanning.compareAndSet(true, false)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                activity.getBluetoothAdapter()?.bluetoothLeScanner?.stopScan(mScanCallback)
+            } else {
+                activity.getBluetoothAdapter()?.stopLeScan(mLeScanCallback)
+            }
+        }
+    }
+
     init {
         mBleBroadcastReceiverManager.register()
     }
@@ -115,66 +192,6 @@ class ScanExecutor(private val context: Context, private val lifecycleScope: Cor
     private fun emit(msg: String, code: Int = -1) {
         lifecycleScope.launch(Dispatchers.Main) {
             _scanFlow.emit(BleResult.Error(msg, code))
-        }
-    }
-
-    override suspend fun startScan(
-        filterDeviceName: String,
-        fuzzyMatchingDeviceName: Boolean,
-        filterDeviceAddress: String,
-        filterServiceUuid: UUID?,
-        duration: Long,
-    ) {
-        if (mScanning.compareAndSet(false, true)) {
-            this.filterDeviceName = filterDeviceName
-            this.fuzzyMatchingDeviceName = fuzzyMatchingDeviceName
-            this.filterDeviceAddress = filterDeviceAddress
-            this.filterServiceUuid = filterServiceUuid
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                if (filterServiceUuid == null) {
-                    context.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(mScanCallback)
-                } else {
-                    // serviceUuid 只能在这里过滤，不能放到 filterScanResult() 方法中去，因为只有 gatt.discoverServices() 过后，device.getUuids() 方法才不会返回 null。
-                    context.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(
-                        listOf(ScanFilter.Builder().setServiceUuid(ParcelUuid(filterServiceUuid)).build()),
-                        // setScanMode() 设置扫描模式。可选择的模式有三种：
-                        // ScanSettings.SCAN_MODE_LOW_POWER 低功耗模式
-                        // ScanSettings.SCAN_MODE_BALANCED 平衡模式
-                        // ScanSettings.SCAN_MODE_LOW_LATENCY 高功耗模式
-                        // 从上到下，会越来越耗电,但扫描间隔越来越短，即扫描速度会越来越快。
-                        // setCallbackType() 设置回调类型，可选择的类型有三种：
-                        // ScanSettings.CALLBACK_TYPE_ALL_MATCHES 数值: 1 寻找符合过滤条件的蓝牙广播，如果没有设置过滤条件，则返回全部广播包
-                        // ScanSettings.CALLBACK_TYPE_FIRST_MATCH 数值: 2 仅针对与筛选条件匹配的第一个广播包触发结果回调。
-                        // ScanSettings.CALLBACK_TYPE_MATCH_LOST 数值: 4
-                        // 回调类型一般设置ScanSettings.CALLBACK_TYPE_ALL_MATCHES，有过滤条件时过滤，返回符合过滤条件的蓝牙广播。无过滤条件时，返回全部蓝牙广播。
-                        // setMatchMode() 设置蓝牙LE扫描滤波器硬件匹配的匹配模式，一般设置ScanSettings.MATCH_MODE_STICKY
-                        ScanSettings.Builder().build(),
-                        mScanCallback
-                    )
-                }
-            } else {
-                if (filterServiceUuid == null) {
-                    if (context.getBluetoothAdapter()?.startLeScan(mLeScanCallback) != true) {
-                        emit("扫描失败")
-                    }
-                } else {
-                    if (context.getBluetoothAdapter()?.startLeScan(arrayOf(filterServiceUuid), mLeScanCallback) != true) {
-                        emit("扫描失败")
-                    }
-                }
-            }
-            delay(duration)
-            stopScan()
-        }
-    }
-
-    override suspend fun stopScan() {
-        if (mScanning.compareAndSet(true, false)) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                context.getBluetoothAdapter()?.bluetoothLeScanner?.stopScan(mScanCallback)
-            } else {
-                context.getBluetoothAdapter()?.stopLeScan(mLeScanCallback)
-            }
         }
     }
 
