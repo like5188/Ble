@@ -1,10 +1,7 @@
 package com.like.ble.central.executor
 
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCallback
-import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.BluetoothGattService
+import android.bluetooth.*
 import com.like.ble.exception.BleException
 import com.like.ble.util.getValidString
 
@@ -12,6 +9,7 @@ import com.like.ble.util.getValidString
 class ConnectCallbackManager {
     internal var connectCallback: ConnectCallback? = null
     internal var readCharacteristicCallback: ReadCharacteristicCallback? = null
+    internal var readDescriptorCallback: ReadDescriptorCallback? = null
 
     // 蓝牙Gatt回调方法中都不可以进行耗时操作，需要将其方法内进行的操作丢进另一个线程，尽快返回。
     internal val gattCallback = object : BluetoothGattCallback() {
@@ -43,6 +41,14 @@ class ConnectCallbackManager {
             }
         }
 
+        override fun onDescriptorRead(gatt: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                readDescriptorCallback?.onSuccess(descriptor.value)
+            } else {
+                readDescriptorCallback?.onError("读取描述失败：${descriptor.uuid.getValidString()}")
+            }
+        }
+
     }
 
 }
@@ -59,5 +65,9 @@ interface ConnectCallback : BleCallback {
 }
 
 interface ReadCharacteristicCallback : BleCallback {
+    fun onSuccess(data: ByteArray?)
+}
+
+interface ReadDescriptorCallback : BleCallback {
     fun onSuccess(data: ByteArray?)
 }

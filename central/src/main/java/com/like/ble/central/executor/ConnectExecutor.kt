@@ -35,7 +35,7 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
         if (isConnected()) return mBluetoothGatt?.services
         // 获取远端的蓝牙设备
         val bluetoothDevice = activity.getBluetoothAdapter()?.getRemoteDevice(address) ?: throw BleException("连接蓝牙失败：$address 未找到")
-        return suspendCancellableCoroutineWithTimeout(timeout) { continuation ->
+        return suspendCancellableCoroutineWithTimeout(timeout, "连接蓝牙设备超时：$address") { continuation ->
             // 蓝牙Gatt回调方法中都不可以进行耗时操作，需要将其方法内进行的操作丢进另一个线程，尽快返回。
             mConnectCallbackManager.connectCallback = object : ConnectCallback {
                 override fun onSuccess(services: List<BluetoothGattService>?) {
@@ -94,7 +94,7 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
             throw BleException("this characteristic not support read!")
         }
 
-        return suspendCancellableCoroutineWithTimeout(timeout) { continuation ->
+        return suspendCancellableCoroutineWithTimeout(timeout, "读取特征值超时：${characteristicUuid.getValidString()}") { continuation ->
             // 蓝牙Gatt回调方法中都不可以进行耗时操作，需要将其方法内进行的操作丢进另一个线程，尽快返回。
             mConnectCallbackManager.readCharacteristicCallback = object : ReadCharacteristicCallback {
                 override fun onSuccess(data: ByteArray?) {
@@ -107,6 +107,52 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
             }
             if (mBluetoothGatt?.readCharacteristic(characteristic) != true) {
                 continuation.resumeWithException(BleException("读取特征值失败：${characteristicUuid.getValidString()}"))
+            }
+        }
+    }
+
+    override suspend fun readDescriptor(
+        address: String,
+        descriptorUuid: UUID,
+        characteristicUuid: UUID?,
+        serviceUuid: UUID?,
+        timeout: Long
+    ): ByteArray? {
+        if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
+            throw BleException("蓝牙未打开")
+        }
+        if (!PermissionUtils.requestPermissions(activity, false)) {
+            throw BleException("蓝牙权限被拒绝")
+        }
+        if (!isConnected()) {
+            throw BleException("蓝牙未连接：$address")
+        }
+
+        val descriptor = mBluetoothGatt?.findDescriptor(
+            descriptorUuid,
+            characteristicUuid,
+            serviceUuid
+        ) ?: throw BleException("描述不存在：${descriptorUuid.getValidString()}")
+
+        // 由于descriptor.permissions永远为0x0000，所以无法判断，但是如果权限不允许，还是会操作失败的。
+//        if (descriptor.permissions and (BluetoothGattDescriptor.PERMISSION_READ or BluetoothGattDescriptor.PERMISSION_READ_ENCRYPTED or BluetoothGattDescriptor.PERMISSION_READ_ENCRYPTED_MITM) == 0) {
+//            command.error("this descriptor not support read!")
+//            return
+//        }
+
+        return suspendCancellableCoroutineWithTimeout(timeout, "读取描述值超时：${descriptorUuid.getValidString()}") { continuation ->
+            // 蓝牙Gatt回调方法中都不可以进行耗时操作，需要将其方法内进行的操作丢进另一个线程，尽快返回。
+            mConnectCallbackManager.readDescriptorCallback = object : ReadDescriptorCallback {
+                override fun onSuccess(data: ByteArray?) {
+                    continuation.resume(data)
+                }
+
+                override fun onError(exception: BleException) {
+                    continuation.resumeWithException(exception)
+                }
+            }
+            if (mBluetoothGatt?.readDescriptor(descriptor) != true) {
+                continuation.resumeWithException(BleException("读取描述失败：${descriptorUuid.getValidString()}"))
             }
         }
     }
