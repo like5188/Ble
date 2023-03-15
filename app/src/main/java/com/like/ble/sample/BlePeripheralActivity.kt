@@ -14,10 +14,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.widget.NestedScrollView
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
-import com.like.ble.BleManager
-import com.like.ble.peripheral.command.StartAdvertisingCommand
-import com.like.ble.peripheral.command.StopAdvertisingCommand
-import com.like.ble.peripheral.handler.PeripheralCommandHandler
+import com.like.ble.peripheral.executor.AdvertisingExecutor
+import com.like.ble.peripheral.executor.IPeripheralExecutor
 import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
 import com.like.ble.util.*
 import kotlinx.coroutines.delay
@@ -50,7 +48,6 @@ class BlePeripheralActivity : AppCompatActivity() {
     private val mBinding: ActivityBlePeripheralBinding by lazy {
         DataBindingUtil.setContentView(this, R.layout.activity_ble_peripheral)
     }
-    private val mBleManager: BleManager by lazy { BleManager(PeripheralCommandHandler(this)) }
     private var mBluetoothGattServer: BluetoothGattServer? = null
     private val mBluetoothGattServerCallback = object : BluetoothGattServerCallback() {
         private val mResponseData: ByteArray by lazy {
@@ -246,6 +243,9 @@ class BlePeripheralActivity : AppCompatActivity() {
         }
 
     }
+    private val peripheralExecutor: IPeripheralExecutor by lazy {
+        AdvertisingExecutor(this)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -253,44 +253,43 @@ class BlePeripheralActivity : AppCompatActivity() {
     }
 
     fun startAdvertising(view: View) {
-        mBleManager.sendCommand(
-            StartAdvertisingCommand(
-                createAdvertiseSettings(),
-                createAdvertiseData(),
-                createScanResponseAdvertiseData(byteArrayOf(0x34, 0x56)),// 外设必须广播广播包，扫描包是可选。但添加扫描包也意味着广播更多得数据，即可广播 广播包31+扫描包31=62个字节。
-                "BLE测试设备",
-                onCompleted = {
-                    mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_blue))
-                    mBinding.tvAdvertisingStatus.text = "广播已开启"
-                    initServices()//该方法是添加一个服务，在此处调用即将服务广播出去
-                },
-                onError = {
-                    mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
-                    mBinding.tvAdvertisingStatus.text = it.message
-                    if (!isBluetoothEnable()) {// 说明关闭了蓝牙
-                        getBluetoothManager()?.getConnectedDevices(BluetoothProfile.GATT)?.forEach { device ->
-                            mBluetoothGattServer?.cancelConnection(device)
-                        }
-                        mBluetoothGattServer?.clearServices()
-                        mBluetoothGattServer?.close()
-                        mBluetoothGattServer = null
+        lifecycleScope.launch {
+            try {
+                peripheralExecutor.startAdvertising(
+                    createAdvertiseSettings(),
+                    createAdvertiseData(),
+                    createScanResponseAdvertiseData(byteArrayOf(0x34, 0x56)),// 外设必须广播广播包，扫描包是可选。但添加扫描包也意味着广播更多得数据，即可广播 广播包31+扫描包31=62个字节。
+                    "BLE测试设备",
+                )
+                mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_blue))
+                mBinding.tvAdvertisingStatus.text = "广播已开启"
+                initServices()//该方法是添加一个服务，在此处调用即将服务广播出去
+            } catch (e: Exception) {
+                mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_red))
+                mBinding.tvAdvertisingStatus.text = e.message
+                if (!isBluetoothEnable()) {// 说明关闭了蓝牙
+                    getBluetoothManager()?.getConnectedDevices(BluetoothProfile.GATT)?.forEach { device ->
+                        mBluetoothGattServer?.cancelConnection(device)
                     }
+                    mBluetoothGattServer?.clearServices()
+                    mBluetoothGattServer?.close()
+                    mBluetoothGattServer = null
                 }
-            )
-        )
+            }
+        }
     }
 
     fun stopAdvertising(view: View) {
-        mBleManager.sendCommand(StopAdvertisingCommand(
-            onCompleted = {
-                mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
+        lifecycleScope.launch {
+            try {
+                peripheralExecutor.stopAdvertising()
+                mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_blue))
                 mBinding.tvAdvertisingStatus.text = "广播停止了"
-            },
-            onError = {
-                mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this, R.color.ble_text_red))
-                mBinding.tvAdvertisingStatus.text = it.message
+            } catch (e: Exception) {
+                mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_red))
+                mBinding.tvAdvertisingStatus.text = e.message
             }
-        ))
+        }
     }
 
     @Synchronized
@@ -445,7 +444,6 @@ class BlePeripheralActivity : AppCompatActivity() {
         mBluetoothGattServer?.clearServices()
         mBluetoothGattServer?.close()
         mBluetoothGattServer = null
-        mBleManager.close()
         super.onDestroy()
     }
 }

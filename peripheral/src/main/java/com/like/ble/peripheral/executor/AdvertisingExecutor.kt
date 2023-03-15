@@ -5,14 +5,14 @@ import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import androidx.activity.ComponentActivity
+import com.like.ble.exception.BleException
 import com.like.ble.peripheral.util.PermissionUtils
-import com.like.ble.result.BleResult
-import com.like.ble.util.BleBroadcastReceiverManager
 import com.like.ble.util.enableBluetooth
 import com.like.ble.util.getBluetoothAdapter
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 /**
  * 蓝牙广播相关的命令执行者
@@ -29,41 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 @SuppressLint("MissingPermission")
 class AdvertisingExecutor(private val activity: ComponentActivity) : IPeripheralExecutor {
     private val mIsSending = AtomicBoolean(false)
-    private val mBleBroadcastReceiverManager: BleBroadcastReceiverManager by lazy {
-        BleBroadcastReceiverManager(activity,
-            onBleOff = {
-                mIsSending.set(false)
-                emitError("蓝牙功能已关闭")
-            }
-        )
-    }
-    private val mAdvertiseCallback: AdvertiseCallback = object : AdvertiseCallback() {
-        override fun onStartFailure(errorCode: Int) {
-            val errorMsg = when (errorCode) {
-                ADVERTISE_FAILED_DATA_TOO_LARGE -> "Failed to start advertising as the advertise data to be broadcasted is larger than 31 bytes."
-                ADVERTISE_FAILED_TOO_MANY_ADVERTISERS -> "Failed to start advertising because no advertising instance is available."
-                ADVERTISE_FAILED_ALREADY_STARTED -> "Failed to start advertising as the advertising is already started"
-                ADVERTISE_FAILED_INTERNAL_ERROR -> "Operation failed due to an internal error"
-                ADVERTISE_FAILED_FEATURE_UNSUPPORTED -> "This feature is not supported on this platform"
-                else -> "errorCode=$errorCode"
-            }
-            mIsSending.set(false)
-            emitError(errorMsg, errorCode)
-        }
-
-        override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
-            emitSuccess()
-        }
-    }
-    private val _scanFlow: MutableSharedFlow<BleResult> by lazy {
-        MutableSharedFlow(extraBufferCapacity = Int.MAX_VALUE)
-    }
-
-    override val advertisingFlow: Flow<BleResult> = _scanFlow
-
-    init {
-        mBleBroadcastReceiverManager.register()
-    }
+    private var mAdvertiseCallback: AdvertiseCallback? = null
 
     override suspend fun startAdvertising(
         settings: AdvertiseSettings,
@@ -72,54 +38,60 @@ class AdvertisingExecutor(private val activity: ComponentActivity) : IPeripheral
         deviceName: String
     ) {
         if (!activity.enableBluetooth()) {
-            emitError("蓝牙未打开")
-            return
+            throw BleException("蓝牙功能未打开")
         }
         if (!PermissionUtils.checkPermissions(activity)) {
-            emitError("蓝牙权限被拒绝")
-            return
+            throw BleException("蓝牙权限被拒绝")
         }
+        val bluetoothLeAdvertiser = activity.getBluetoothAdapter()?.bluetoothLeAdvertiser
+            ?: throw BleException("phone does not support Bluetooth Advertiser")
         if (mIsSending.compareAndSet(false, true)) {
-            val bluetoothLeAdvertiser = activity.getBluetoothAdapter()?.bluetoothLeAdvertiser
-            if (bluetoothLeAdvertiser == null) {
-                emitError("phone does not support Bluetooth Advertiser")
-                return
-            }
+            return suspendCoroutine { continuation ->
+                // 设置设备名字
+                if (deviceName.isNotEmpty()) {
+                    activity.getBluetoothAdapter()?.name = deviceName
+                }
 
-            // 设置设备名字
-            if (deviceName.isNotEmpty()) {
-                activity.getBluetoothAdapter()?.name = deviceName
-            }
+                val callback = object : AdvertiseCallback() {
+                    override fun onStartFailure(errorCode: Int) {
+                        val errorMsg = when (errorCode) {
+                            ADVERTISE_FAILED_DATA_TOO_LARGE -> "Failed to start advertising as the advertise data to be broadcasted is larger than 31 bytes."
+                            ADVERTISE_FAILED_TOO_MANY_ADVERTISERS -> "Failed to start advertising because no advertising instance is available."
+                            ADVERTISE_FAILED_ALREADY_STARTED -> "Failed to start advertising as the advertising is already started"
+                            ADVERTISE_FAILED_INTERNAL_ERROR -> "Operation failed due to an internal error"
+                            ADVERTISE_FAILED_FEATURE_UNSUPPORTED -> "This feature is not supported on this platform"
+                            else -> "errorCode=$errorCode"
+                        }
+                        mIsSending.set(false)
+                        continuation.resumeWithException(BleException(errorMsg, errorCode))
+                    }
 
-            bluetoothLeAdvertiser.startAdvertising(settings, advertiseData, scanResponse, mAdvertiseCallback)
+                    override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
+                        continuation.resume(Unit)
+                    }
+                }
+                bluetoothLeAdvertiser.startAdvertising(settings, advertiseData, scanResponse, callback)
+                mAdvertiseCallback = callback
+            }
         }
     }
 
     override suspend fun stopAdvertising() {
         if (!activity.enableBluetooth()) {
-            emitError("蓝牙未打开")
-            return
+            throw BleException("蓝牙功能未打开")
         }
         if (!PermissionUtils.checkPermissions(activity)) {
-            emitError("蓝牙权限被拒绝")
-            return
+            throw BleException("蓝牙权限被拒绝")
         }
+        val callback = mAdvertiseCallback ?: return
         if (mIsSending.compareAndSet(true, false)) {
-            activity.getBluetoothAdapter()?.bluetoothLeAdvertiser?.stopAdvertising(mAdvertiseCallback)
+            activity.getBluetoothAdapter()?.bluetoothLeAdvertiser?.stopAdvertising(callback)
+            mAdvertiseCallback = null
         }
-    }
-
-    private fun emitSuccess() {
-        _scanFlow.tryEmit(BleResult.Success(true))
-    }
-
-    private fun emitError(msg: String, code: Int = -1) {
-        _scanFlow.tryEmit(BleResult.Error(msg, code))
     }
 
     override suspend fun close() {
         stopAdvertising()
-        mBleBroadcastReceiverManager.unregister()
     }
 
 }

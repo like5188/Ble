@@ -3,14 +3,11 @@ package com.like.ble.peripheral.executor
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import com.like.ble.executor.IExecutor
-import com.like.ble.result.BleResult
-import kotlinx.coroutines.flow.Flow
 
 /**
  * 外围设备蓝牙命令执行者。
  */
 interface IPeripheralExecutor : IExecutor {
-    val advertisingFlow: Flow<BleResult>
 
     /**
      * 开始广播
