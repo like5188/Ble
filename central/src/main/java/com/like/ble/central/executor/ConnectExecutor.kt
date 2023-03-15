@@ -45,7 +45,7 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
             continuation.invokeOnCancellation {
                 disconnect()
             }
-            mConnectCallbackManager.connectCallback = object : ConnectCallback {
+            mConnectCallbackManager.connectCallback = object : ConnectCallback() {
                 override fun onSuccess(services: List<BluetoothGattService>?) {
                     continuation.resume(services)
                 }
@@ -103,7 +103,7 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
         }
 
         return suspendCancellableCoroutineWithTimeout(timeout, "读取特征值超时：${characteristicUuid.getValidString()}") { continuation ->
-            mConnectCallbackManager.readCharacteristicCallback = object : ReadCharacteristicCallback {
+            mConnectCallbackManager.readCharacteristicCallback = object : ByteArrayCallback() {
                 override fun onSuccess(data: ByteArray?) {
                     continuation.resume(data)
                 }
@@ -148,7 +148,7 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
 //        }
 
         return suspendCancellableCoroutineWithTimeout(timeout, "读取描述值超时：${descriptorUuid.getValidString()}") { continuation ->
-            mConnectCallbackManager.readDescriptorCallback = object : ReadDescriptorCallback {
+            mConnectCallbackManager.readDescriptorCallback = object : ByteArrayCallback() {
                 override fun onSuccess(data: ByteArray?) {
                     continuation.resume(data)
                 }
@@ -181,12 +181,9 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
             throw BleException("this characteristic not support indicate or notify!")
         }
 
-        mConnectCallbackManager.readNotifyCallback = object : ReadNotifyCallback {
+        mConnectCallbackManager.readNotifyCallback = object : ByteArrayCallback() {
             override fun onSuccess(data: ByteArray?) {
                 _notifyFlow.tryEmit(data)
-            }
-
-            override fun onError(exception: BleException) {
             }
         }
     }

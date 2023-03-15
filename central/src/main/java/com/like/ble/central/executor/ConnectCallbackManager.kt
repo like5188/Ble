@@ -8,9 +8,9 @@ import com.like.ble.util.getValidString
 @SuppressLint("MissingPermission")
 class ConnectCallbackManager {
     internal var connectCallback: ConnectCallback? = null
-    internal var readCharacteristicCallback: ReadCharacteristicCallback? = null
-    internal var readDescriptorCallback: ReadDescriptorCallback? = null
-    internal var readNotifyCallback: ReadNotifyCallback? = null
+    internal var readCharacteristicCallback: ByteArrayCallback? = null
+    internal var readDescriptorCallback: ByteArrayCallback? = null
+    internal var readNotifyCallback: ByteArrayCallback? = null
 
     // 蓝牙Gatt回调方法中都不可以进行耗时操作，需要将其方法内进行的操作丢进另一个线程，尽快返回。
     internal val gattCallback = object : BluetoothGattCallback() {
@@ -59,25 +59,19 @@ class ConnectCallbackManager {
 
 }
 
-interface BleCallback {
-    fun onError(exception: BleException)
+abstract class BleCallback {
+    abstract fun onError(exception: BleException)
     fun onError(msg: String) {
         onError(BleException(msg))
     }
 }
 
-interface ConnectCallback : BleCallback {
-    fun onSuccess(services: List<BluetoothGattService>?)
+abstract class ConnectCallback : BleCallback() {
+    abstract fun onSuccess(services: List<BluetoothGattService>?)
 }
 
-interface ReadCharacteristicCallback : BleCallback {
-    fun onSuccess(data: ByteArray?)
-}
-
-interface ReadDescriptorCallback : BleCallback {
-    fun onSuccess(data: ByteArray?)
-}
-
-interface ReadNotifyCallback : BleCallback {
-    fun onSuccess(data: ByteArray?)
+abstract class ByteArrayCallback : BleCallback() {
+    abstract fun onSuccess(data: ByteArray?)
+    override fun onError(exception: BleException) {
+    }
 }
