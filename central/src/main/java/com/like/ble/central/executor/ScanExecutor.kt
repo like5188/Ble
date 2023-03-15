@@ -16,12 +16,9 @@ import com.like.ble.result.BleResult
 import com.like.ble.util.BleBroadcastReceiverManager
 import com.like.ble.util.enableBluetooth
 import com.like.ble.util.getBluetoothAdapter
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -30,7 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 可以进行扫描、停止扫描操作
  */
 @SuppressLint("MissingPermission")
-class ScanExecutor(private val activity: ComponentActivity, private val lifecycleScope: CoroutineScope) : ICentralExecutor {
+class ScanExecutor(private val activity: ComponentActivity) : ICentralExecutor {
     private val _scanFlow: MutableSharedFlow<BleResult> by lazy {
         MutableSharedFlow(extraBufferCapacity = Int.MAX_VALUE)
     }
@@ -39,7 +36,7 @@ class ScanExecutor(private val activity: ComponentActivity, private val lifecycl
         BleBroadcastReceiverManager(activity.applicationContext,
             onBleOff = {
                 mScanning.set(false)
-                emit("蓝牙功能已关闭")
+                emitError("蓝牙功能已关闭")
             }
         )
     }
@@ -59,7 +56,7 @@ class ScanExecutor(private val activity: ComponentActivity, private val lifecycl
                 else -> "unknown scan error"
             }
             mScanning.set(false)
-            emit(errorMsg, errorCode)
+            emitError(errorMsg, errorCode)
         }
 
         // Bluetoothadapter.isOffloadedScanBatchingSupported()</br>
@@ -91,11 +88,11 @@ class ScanExecutor(private val activity: ComponentActivity, private val lifecycl
         duration: Long
     ) {
         if (!activity.enableBluetooth()) {
-            emit("蓝牙未打开")
+            emitError("蓝牙未打开")
             return
         }
         if (!PermissionUtils.checkPermissions(activity, true)) {
-            emit("蓝牙权限被拒绝")
+            emitError("蓝牙权限被拒绝")
             return
         }
         if (mScanning.compareAndSet(false, true)) {
@@ -128,11 +125,11 @@ class ScanExecutor(private val activity: ComponentActivity, private val lifecycl
             } else {
                 if (filterServiceUuid == null) {
                     if (activity.getBluetoothAdapter()?.startLeScan(mLeScanCallback) != true) {
-                        emit("扫描失败")
+                        emitError("扫描失败")
                     }
                 } else {
                     if (activity.getBluetoothAdapter()?.startLeScan(arrayOf(filterServiceUuid), mLeScanCallback) != true) {
-                        emit("扫描失败")
+                        emitError("扫描失败")
                     }
                 }
             }
@@ -180,19 +177,15 @@ class ScanExecutor(private val activity: ComponentActivity, private val lifecycl
         if (filterDeviceAddress.isNotEmpty() && device.address != filterDeviceAddress) {
             return
         }
-        emit(device, rssi, scanRecord)
+        emitResult(device, rssi, scanRecord)
     }
 
-    private fun emit(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
-        lifecycleScope.launch(Dispatchers.Main) {
-            _scanFlow.emit(BleResult.Success(ScanResult(device, rssi, scanRecord)))
-        }
+    private fun emitResult(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
+        _scanFlow.tryEmit(BleResult.Success(ScanResult(device, rssi, scanRecord)))
     }
 
-    private fun emit(msg: String, code: Int = -1) {
-        lifecycleScope.launch(Dispatchers.Main) {
-            _scanFlow.emit(BleResult.Error(msg, code))
-        }
+    private fun emitError(msg: String, code: Int = -1) {
+        _scanFlow.tryEmit(BleResult.Error(msg, code))
     }
 
     override suspend fun close() {

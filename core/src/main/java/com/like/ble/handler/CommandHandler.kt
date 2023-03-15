@@ -4,7 +4,7 @@ import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.command.Command
 import com.like.ble.invoker.CommandLooper
-import com.like.ble.util.isBluetoothEnableAndSettingIfDisabled
+import com.like.ble.util.enableBluetooth
 import com.like.ble.util.isSupportBluetooth
 import kotlinx.coroutines.launch
 
@@ -25,7 +25,7 @@ abstract class CommandHandler(val mActivity: ComponentActivity) {
 
     fun execute(command: Command) {
         mActivity.lifecycleScope.launch {
-            if (!mActivity.isBluetoothEnableAndSettingIfDisabled()) {
+            if (!mActivity.enableBluetooth()) {
                 command.error("蓝牙未打开")
                 return@launch
             }

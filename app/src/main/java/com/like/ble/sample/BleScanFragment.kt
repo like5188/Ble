@@ -27,7 +27,7 @@ class BleScanFragment : BaseLazyFragment() {
     private lateinit var mBinding: FragmentBleScanBinding
     private val mAdapter: BleScanAdapter by lazy { BleScanAdapter(requireActivity()) }
     private val centralExecutor: ICentralExecutor by lazy {
-        ScanExecutor(requireActivity(), lifecycleScope)
+        ScanExecutor(requireActivity())
     }
 
     companion object {
@@ -79,7 +79,7 @@ class BleScanFragment : BaseLazyFragment() {
         mBinding.tvScanStatus.text = "扫描中……"
         mAdapter.submitList(null)
         lifecycleScope.launch {
-            centralExecutor.startScan(duration = 30000)
+            centralExecutor.startScan(duration = 10000)
             mBinding.tvScanStatus.text = "扫描完成"
         }
     }
