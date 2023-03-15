@@ -10,6 +10,8 @@ import androidx.activity.ComponentActivity
 import com.like.ble.central.util.PermissionUtils
 import com.like.ble.exception.BleException
 import com.like.ble.util.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import java.util.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -24,6 +26,10 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
     private val mConnectCallbackManager: ConnectCallbackManager by lazy {
         ConnectCallbackManager()
     }
+    private val _notifyFlow: MutableSharedFlow<ByteArray?> by lazy {
+        MutableSharedFlow(extraBufferCapacity = Int.MAX_VALUE)
+    }
+    override val notifyFlow: Flow<ByteArray?> = _notifyFlow
 
     override suspend fun connect(address: String, timeout: Long): List<BluetoothGattService>? {
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
@@ -32,14 +38,13 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
         if (!PermissionUtils.requestPermissions(activity, false)) {
             throw BleException("蓝牙权限被拒绝")
         }
-        if (isConnected()) return mBluetoothGatt?.services
+        if (activity.isBleDeviceConnected(mBluetoothGatt?.device)) return mBluetoothGatt?.services
         // 获取远端的蓝牙设备
         val bluetoothDevice = activity.getBluetoothAdapter()?.getRemoteDevice(address) ?: throw BleException("连接蓝牙失败：$address 未找到")
         return suspendCancellableCoroutineWithTimeout(timeout, "连接蓝牙设备超时：$address") { continuation ->
             continuation.invokeOnCancellation {
                 disconnect()
             }
-            // 蓝牙Gatt回调方法中都不可以进行耗时操作，需要将其方法内进行的操作丢进另一个线程，尽快返回。
             mConnectCallbackManager.connectCallback = object : ConnectCallback {
                 override fun onSuccess(services: List<BluetoothGattService>?) {
                     continuation.resume(services)
@@ -71,7 +76,7 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
         if (!PermissionUtils.checkPermissions(activity, false)) {
             return
         }
-        if (isConnected()) {
+        if (activity.isBleDeviceConnected(mBluetoothGatt?.device)) {
             mBluetoothGatt?.disconnect()
         }
         // 这里的close()方法会清空BluetoothGatt中的mGattCallback，导致收不到回调，但是可以使用本地缓存的各个命令来回调
@@ -86,7 +91,7 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
         if (!PermissionUtils.requestPermissions(activity, false)) {
             throw BleException("蓝牙权限被拒绝")
         }
-        if (!isConnected()) {
+        if (!activity.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
         }
 
@@ -98,7 +103,6 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
         }
 
         return suspendCancellableCoroutineWithTimeout(timeout, "读取特征值超时：${characteristicUuid.getValidString()}") { continuation ->
-            // 蓝牙Gatt回调方法中都不可以进行耗时操作，需要将其方法内进行的操作丢进另一个线程，尽快返回。
             mConnectCallbackManager.readCharacteristicCallback = object : ReadCharacteristicCallback {
                 override fun onSuccess(data: ByteArray?) {
                     continuation.resume(data)
@@ -127,7 +131,7 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
         if (!PermissionUtils.requestPermissions(activity, false)) {
             throw BleException("蓝牙权限被拒绝")
         }
-        if (!isConnected()) {
+        if (!activity.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
         }
 
@@ -144,7 +148,6 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
 //        }
 
         return suspendCancellableCoroutineWithTimeout(timeout, "读取描述值超时：${descriptorUuid.getValidString()}") { continuation ->
-            // 蓝牙Gatt回调方法中都不可以进行耗时操作，需要将其方法内进行的操作丢进另一个线程，尽快返回。
             mConnectCallbackManager.readDescriptorCallback = object : ReadDescriptorCallback {
                 override fun onSuccess(data: ByteArray?) {
                     continuation.resume(data)
@@ -160,9 +163,32 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
         }
     }
 
-    private fun isConnected(): Boolean {
-        val device = mBluetoothGatt?.device ?: return false
-        return activity.isBleDeviceConnected(device)
+    override suspend fun readNotify(address: String, characteristicUuid: UUID, serviceUuid: UUID?) {
+        if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
+            throw BleException("蓝牙未打开")
+        }
+        if (!PermissionUtils.requestPermissions(activity, false)) {
+            throw BleException("蓝牙权限被拒绝")
+        }
+        if (!activity.isBleDeviceConnected(mBluetoothGatt?.device)) {
+            throw BleException("蓝牙未连接：$address")
+        }
+
+        val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
+            ?: throw BleException("特征值不存在：${characteristicUuid.getValidString()}")
+
+        if (characteristic.properties and (BluetoothGattCharacteristic.PROPERTY_INDICATE or BluetoothGattCharacteristic.PROPERTY_NOTIFY) == 0) {
+            throw BleException("this characteristic not support indicate or notify!")
+        }
+
+        mConnectCallbackManager.readNotifyCallback = object : ReadNotifyCallback {
+            override fun onSuccess(data: ByteArray?) {
+                _notifyFlow.tryEmit(data)
+            }
+
+            override fun onError(exception: BleException) {
+            }
+        }
     }
 
     override suspend fun close() {

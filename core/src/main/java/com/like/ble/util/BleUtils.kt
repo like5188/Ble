@@ -14,8 +14,12 @@ import java.util.regex.Pattern
 import kotlin.math.ceil
 
 @SuppressLint("MissingPermission")
-fun Context.isBleDeviceConnected(device: BluetoothDevice): Boolean =
-    getBluetoothManager()?.getConnectionState(device, BluetoothProfile.GATT) == BluetoothProfile.STATE_CONNECTED
+fun Context.isBleDeviceConnected(device: BluetoothDevice?): Boolean =
+    if (device == null) {
+        false
+    } else {
+        getBluetoothManager()?.getConnectionState(device, BluetoothProfile.GATT) == BluetoothProfile.STATE_CONNECTED
+    }
 
 /**
  * Context生命周期内不会改变

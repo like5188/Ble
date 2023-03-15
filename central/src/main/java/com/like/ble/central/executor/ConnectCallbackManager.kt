@@ -10,6 +10,7 @@ class ConnectCallbackManager {
     internal var connectCallback: ConnectCallback? = null
     internal var readCharacteristicCallback: ReadCharacteristicCallback? = null
     internal var readDescriptorCallback: ReadDescriptorCallback? = null
+    internal var readNotifyCallback: ReadNotifyCallback? = null
 
     // 蓝牙Gatt回调方法中都不可以进行耗时操作，需要将其方法内进行的操作丢进另一个线程，尽快返回。
     internal val gattCallback = object : BluetoothGattCallback() {
@@ -49,6 +50,11 @@ class ConnectCallbackManager {
             }
         }
 
+        // 为某个特征启用通知后，如果远程设备上的特征发生更改，则会触发
+        override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
+            readNotifyCallback?.onSuccess(characteristic.value)
+        }
+
     }
 
 }
@@ -69,5 +75,9 @@ interface ReadCharacteristicCallback : BleCallback {
 }
 
 interface ReadDescriptorCallback : BleCallback {
+    fun onSuccess(data: ByteArray?)
+}
+
+interface ReadNotifyCallback : BleCallback {
     fun onSuccess(data: ByteArray?)
 }
