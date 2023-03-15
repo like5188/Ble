@@ -6,9 +6,9 @@ import kotlinx.coroutines.flow.Flow
 import java.util.*
 
 /**
- * 中心设备蓝牙命令执行者。
+ * 中心设备蓝牙扫描执行者。
  */
-interface ICentralExecutor : IExecutor {
+interface IScanExecutor : IExecutor {
     val scanFlow: Flow<BleResult>
 
     /**

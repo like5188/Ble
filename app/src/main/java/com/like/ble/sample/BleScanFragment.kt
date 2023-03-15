@@ -9,7 +9,7 @@ import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableInt
 import androidx.lifecycle.lifecycleScope
-import com.like.ble.central.executor.ICentralExecutor
+import com.like.ble.central.executor.IScanExecutor
 import com.like.ble.central.executor.ScanExecutor
 import com.like.ble.central.result.ScanResult
 import com.like.ble.result.BleResult
@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
 class BleScanFragment : BaseLazyFragment() {
     private lateinit var mBinding: FragmentBleScanBinding
     private val mAdapter: BleScanAdapter by lazy { BleScanAdapter(requireActivity()) }
-    private val centralExecutor: ICentralExecutor by lazy {
+    private val scanExecutor: IScanExecutor by lazy {
         ScanExecutor(requireActivity())
     }
 
@@ -47,7 +47,7 @@ class BleScanFragment : BaseLazyFragment() {
             stopScan()
         }
         lifecycleScope.launch {
-            centralExecutor.scanFlow.collect {
+            scanExecutor.scanFlow.collect {
                 Logger.e(it)
                 when (it) {
                     is BleResult.Success<*> -> {
@@ -79,7 +79,7 @@ class BleScanFragment : BaseLazyFragment() {
         mBinding.tvScanStatus.text = "扫描中……"
         mAdapter.submitList(null)
         lifecycleScope.launch {
-            centralExecutor.startScan(duration = 10000)
+            scanExecutor.startScan(duration = 10000)
             if (mBinding.tvScanStatus.text != "扫描停止了") {
                 mBinding.tvScanStatus.text = "扫描完成"
             }
@@ -89,7 +89,7 @@ class BleScanFragment : BaseLazyFragment() {
     private fun stopScan() {
         lifecycleScope.launch {
             try {
-                centralExecutor.stopScan()
+                scanExecutor.stopScan()
                 mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
                 mBinding.tvScanStatus.text = "扫描停止了"
             } catch (e: Exception) {
@@ -101,7 +101,7 @@ class BleScanFragment : BaseLazyFragment() {
 
     override fun onDestroy() {
         lifecycleScope.launch {
-            centralExecutor.close()
+            scanExecutor.close()
         }
         super.onDestroy()
     }

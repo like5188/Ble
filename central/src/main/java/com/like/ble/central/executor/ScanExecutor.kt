@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 可以进行扫描、停止扫描操作
  */
 @SuppressLint("MissingPermission")
-class ScanExecutor(private val activity: ComponentActivity) : ICentralExecutor {
+class ScanExecutor(private val activity: ComponentActivity) : IScanExecutor {
     private val mScanning = AtomicBoolean(false)
     private val mScanCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: android.bluetooth.le.ScanResult) {
