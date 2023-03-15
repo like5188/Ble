@@ -80,7 +80,9 @@ class BleScanFragment : BaseLazyFragment() {
         mAdapter.submitList(null)
         lifecycleScope.launch {
             centralExecutor.startScan(duration = 10000)
-            mBinding.tvScanStatus.text = "扫描完成"
+            if (mBinding.tvScanStatus.text != "扫描停止了") {
+                mBinding.tvScanStatus.text = "扫描完成"
+            }
         }
     }
 
