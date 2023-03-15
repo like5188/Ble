@@ -60,10 +60,11 @@ class ConnectCallbackManager {
 }
 
 abstract class BleCallback {
-    abstract fun onError(exception: BleException)
     fun onError(msg: String) {
         onError(BleException(msg))
     }
+
+    open fun onError(exception: BleException) {}
 }
 
 abstract class ConnectCallback : BleCallback() {
@@ -72,6 +73,4 @@ abstract class ConnectCallback : BleCallback() {
 
 abstract class ByteArrayCallback : BleCallback() {
     abstract fun onSuccess(data: ByteArray?)
-    override fun onError(exception: BleException) {
-    }
 }
