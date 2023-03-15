@@ -98,15 +98,13 @@ class BleConnectFragment : BaseLazyFragment() {
     }
 
     fun disconnect() {
-        lifecycleScope.launch {
-            try {
-                connectExecutor.disconnect()
-                mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_red))
-                mBinding.tvConnectStatus.text = "连接停止了"
-            } catch (e: Exception) {
-                mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_red))
-                mBinding.tvConnectStatus.text = e.message
-            }
+        try {
+            connectExecutor.disconnect()
+            mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_red))
+            mBinding.tvConnectStatus.text = "连接停止了"
+        } catch (e: Exception) {
+            mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_red))
+            mBinding.tvConnectStatus.text = e.message
         }
     }
 

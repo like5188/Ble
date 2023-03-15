@@ -272,15 +272,13 @@ class BlePeripheralActivity : AppCompatActivity() {
     }
 
     fun stopAdvertising(view: View) {
-        lifecycleScope.launch {
-            try {
-                peripheralExecutor.stopAdvertising()
-                mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_blue))
-                mBinding.tvAdvertisingStatus.text = "广播停止了"
-            } catch (e: Exception) {
-                mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_red))
-                mBinding.tvAdvertisingStatus.text = e.message
-            }
+        try {
+            peripheralExecutor.stopAdvertising()
+            mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_blue))
+            mBinding.tvAdvertisingStatus.text = "广播停止了"
+        } catch (e: Exception) {
+            mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_red))
+            mBinding.tvAdvertisingStatus.text = e.message
         }
     }
 

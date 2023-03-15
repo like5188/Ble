@@ -87,15 +87,13 @@ class BleScanFragment : BaseLazyFragment() {
     }
 
     private fun stopScan() {
-        lifecycleScope.launch {
-            try {
-                scanExecutor.stopScan()
-                mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
-                mBinding.tvScanStatus.text = "扫描停止了"
-            } catch (e: Exception) {
-                mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_red))
-                mBinding.tvScanStatus.text = e.message
-            }
+        try {
+            scanExecutor.stopScan()
+            mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
+            mBinding.tvScanStatus.text = "扫描停止了"
+        } catch (e: Exception) {
+            mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_red))
+            mBinding.tvScanStatus.text = e.message
         }
     }
 

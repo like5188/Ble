@@ -3,14 +3,14 @@ package com.like.ble.central.executor
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCallback
+import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattService
 import android.os.Build
 import androidx.activity.ComponentActivity
+import com.like.ble.central.util.PermissionUtils
 import com.like.ble.exception.BleException
-import com.like.ble.util.getBluetoothAdapter
-import com.like.ble.util.isBleDeviceConnected
-import com.like.ble.util.suspendCancellableCoroutineWithTimeout
+import com.like.ble.util.*
+import java.util.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -19,58 +19,55 @@ import kotlin.coroutines.resumeWithException
  * 可以进行连接、断开连接、操作数据等等操作
  */
 @SuppressLint("MissingPermission")
-class ConnectExecutor(private val mActivity: ComponentActivity) : IConnectExecutor {
+class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecutor {
     private var mBluetoothGatt: BluetoothGatt? = null
-    private var mGattCallback: BluetoothGattCallback? = null
+    private val mConnectCallbackManager: ConnectCallbackManager by lazy {
+        ConnectCallbackManager()
+    }
 
     override suspend fun connect(address: String, timeout: Long): List<BluetoothGattService>? {
+        if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
+            throw BleException("蓝牙未打开")
+        }
+        if (!PermissionUtils.requestPermissions(activity, false)) {
+            throw BleException("蓝牙权限被拒绝")
+        }
         if (isConnected()) return mBluetoothGatt?.services
         // 获取远端的蓝牙设备
-        val bluetoothDevice = mActivity.getBluetoothAdapter()?.getRemoteDevice(address) ?: throw BleException("连接蓝牙失败：$address 未找到")
-
+        val bluetoothDevice = activity.getBluetoothAdapter()?.getRemoteDevice(address) ?: throw BleException("连接蓝牙失败：$address 未找到")
         return suspendCancellableCoroutineWithTimeout(timeout) { continuation ->
             // 蓝牙Gatt回调方法中都不可以进行耗时操作，需要将其方法内进行的操作丢进另一个线程，尽快返回。
-            val callback = object : BluetoothGattCallback() {
-                // 当连接状态改变
-                override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-                    if (newState == BluetoothGatt.STATE_CONNECTED) {
-                        // 连接蓝牙设备成功
-                        gatt.discoverServices()
-                    } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
-                        disconnectAndCloseBluetoothGatt()
-                        continuation.resumeWithException(BleException("连接蓝牙失败：${gatt.device.address}"))
-                    }
+            mConnectCallbackManager.connectCallback = object : ConnectCallback {
+                override fun onSuccess(services: List<BluetoothGattService>?) {
+                    continuation.resume(services)
                 }
 
-                // 发现蓝牙服务
-                override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-                    if (status == BluetoothGatt.GATT_SUCCESS) {// 发现了蓝牙服务后，才算真正的连接成功。
-                        continuation.resume(gatt.services)
-                    } else {
-                        disconnectAndCloseBluetoothGatt()
-                        continuation.resumeWithException(BleException("发现服务失败：${gatt.device.address}"))
-                    }
+                override fun onError(exception: BleException) {
+                    disconnect()
+                    continuation.resumeWithException(exception)
                 }
+
             }
             mBluetoothGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 bluetoothDevice.connectGatt(
-                    mActivity,
+                    activity,
                     false,
-                    callback,
+                    mConnectCallbackManager.gattCallback,
                     BluetoothDevice.TRANSPORT_LE
                 )// 第二个参数表示是否自动重连
             } else {
-                bluetoothDevice.connectGatt(mActivity, false, callback)// 第二个参数表示是否自动重连
+                bluetoothDevice.connectGatt(activity, false, mConnectCallbackManager.gattCallback)// 第二个参数表示是否自动重连
             }
-            mGattCallback = callback
         }
     }
 
-    override suspend fun disconnect() {
-        disconnectAndCloseBluetoothGatt()
-    }
-
-    private fun disconnectAndCloseBluetoothGatt() {
+    override fun disconnect() {
+        if (!activity.isBluetoothEnable()) {
+            return
+        }
+        if (!PermissionUtils.checkPermissions(activity, false)) {
+            return
+        }
         if (isConnected()) {
             mBluetoothGatt?.disconnect()
         }
@@ -79,12 +76,47 @@ class ConnectExecutor(private val mActivity: ComponentActivity) : IConnectExecut
         mBluetoothGatt = null
     }
 
+    override suspend fun readCharacteristic(address: String, characteristicUuid: UUID, serviceUuid: UUID?, timeout: Long): ByteArray? {
+        if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
+            throw BleException("蓝牙未打开")
+        }
+        if (!PermissionUtils.requestPermissions(activity, false)) {
+            throw BleException("蓝牙权限被拒绝")
+        }
+        if (!isConnected()) {
+            throw BleException("蓝牙未连接：$address")
+        }
+
+        val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
+            ?: throw BleException("特征值不存在：${characteristicUuid.getValidString()}")
+
+        if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_READ == 0) {
+            throw BleException("this characteristic not support read!")
+        }
+
+        return suspendCancellableCoroutineWithTimeout(timeout) { continuation ->
+            // 蓝牙Gatt回调方法中都不可以进行耗时操作，需要将其方法内进行的操作丢进另一个线程，尽快返回。
+            mConnectCallbackManager.readCharacteristicCallback = object : ReadCharacteristicCallback {
+                override fun onSuccess(data: ByteArray?) {
+                    continuation.resume(data)
+                }
+
+                override fun onError(exception: BleException) {
+                    continuation.resumeWithException(exception)
+                }
+            }
+            if (mBluetoothGatt?.readCharacteristic(characteristic) != true) {
+                continuation.resumeWithException(BleException("读取特征值失败：${characteristicUuid.getValidString()}"))
+            }
+        }
+    }
+
     private fun isConnected(): Boolean {
         val device = mBluetoothGatt?.device ?: return false
-        return mActivity.isBleDeviceConnected(device)
+        return activity.isBleDeviceConnected(device)
     }
 
     override suspend fun close() {
-        disconnectAndCloseBluetoothGatt()
+        disconnect()
     }
 }

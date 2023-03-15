@@ -77,7 +77,7 @@ class AdvertisingExecutor(private val activity: ComponentActivity) : IPeripheral
         }
     }
 
-    override suspend fun stopAdvertising() {
+    override fun stopAdvertising() {
         if (mIsSending.compareAndSet(true, false)) {
             val callback = mAdvertiseCallback ?: return
             mAdvertiseCallback = null

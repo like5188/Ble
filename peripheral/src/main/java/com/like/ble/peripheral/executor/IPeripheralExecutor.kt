@@ -27,6 +27,6 @@ interface IPeripheralExecutor : IExecutor {
     /**
      * 停止广播
      */
-    suspend fun stopAdvertising()
+    fun stopAdvertising()
 
 }

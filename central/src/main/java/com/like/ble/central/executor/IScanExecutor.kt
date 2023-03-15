@@ -23,6 +23,6 @@ interface IScanExecutor : IExecutor {
     /**
      * 停止扫描蓝牙设备
      */
-    suspend fun stopScan()
+    fun stopScan()
 
 }
