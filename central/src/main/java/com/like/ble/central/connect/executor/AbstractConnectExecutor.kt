@@ -32,7 +32,7 @@ abstract class AbstractConnectExecutor(activity: ComponentActivity) : BaseExecut
      *
      * @return 服务列表
      */
-    abstract suspend fun connect(timeout: Long = 10000L): List<BluetoothGattService>?
+    abstract suspend fun connect(timeout: Long = 10000L, autoConnect: Boolean = false): List<BluetoothGattService>?
 
     /**
      * 断开蓝牙设备

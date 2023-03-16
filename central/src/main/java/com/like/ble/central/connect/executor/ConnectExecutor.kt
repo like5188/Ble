@@ -42,7 +42,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         }
     }
 
-    override suspend fun connect(timeout: Long): List<BluetoothGattService>? {
+    override suspend fun connect(timeout: Long, autoConnect: Boolean): List<BluetoothGattService>? {
         checkEnvironmentOrThrowBleException()
         if (context.isBleDeviceConnected(mBluetoothGatt?.device)) return mBluetoothGatt?.services
         // 获取远端的蓝牙设备
@@ -65,12 +65,12 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
             mBluetoothGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 bluetoothDevice.connectGatt(
                     context,
-                    false,
+                    autoConnect,
                     mConnectCallbackManager.getBluetoothGattCallback(),
                     BluetoothDevice.TRANSPORT_LE
                 )// 第二个参数表示是否自动重连
             } else {
-                bluetoothDevice.connectGatt(context, false, mConnectCallbackManager.getBluetoothGattCallback())// 第二个参数表示是否自动重连
+                bluetoothDevice.connectGatt(context, autoConnect, mConnectCallbackManager.getBluetoothGattCallback())// 第二个参数表示是否自动重连
             }
         }
     }
@@ -82,7 +82,6 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         if (context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             mBluetoothGatt?.disconnect()
         }
-        // 这里的close()方法会清空BluetoothGatt中的mGattCallback，导致收不到回调，但是可以使用本地缓存的各个命令来回调
         mBluetoothGatt?.close()
         mBluetoothGatt = null
     }

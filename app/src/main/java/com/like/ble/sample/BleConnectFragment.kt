@@ -82,7 +82,7 @@ class BleConnectFragment : BaseLazyFragment() {
         mAdapter.submitList(null)
         lifecycleScope.launch {
             try {
-                val services = connectExecutor.connect(10000L)
+                val services = connectExecutor.connect(10000L, false)
                 mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
                 mBinding.tvConnectStatus.text = "连接成功"
                 if (!services.isNullOrEmpty()) {
