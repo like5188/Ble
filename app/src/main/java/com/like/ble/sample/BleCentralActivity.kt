@@ -6,8 +6,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import com.google.android.material.tabs.TabLayoutMediator
-import com.like.ble.BleManager
-import com.like.ble.central.handler.CentralCommandHandler
 import com.like.ble.sample.databinding.ActivityBleCentralBinding
 import com.like.ble.sample.databinding.ViewConnectTabBinding
 
@@ -18,7 +16,6 @@ class BleCentralActivity : AppCompatActivity() {
     private val mBinding: ActivityBleCentralBinding by lazy {
         DataBindingUtil.setContentView(this, R.layout.activity_ble_central)
     }
-    val mBleManager: BleManager by lazy { BleManager(CentralCommandHandler(this)) }
     private val mFragments = mutableListOf<Fragment>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,11 +61,6 @@ class BleCentralActivity : AppCompatActivity() {
         val bleConnectFragment = mFragments.removeAt(position) as BleConnectFragment
         bleConnectFragment.disconnect()
         mBinding.vp.adapter?.notifyItemRemoved(position)
-    }
-
-    override fun onDestroy() {
-        mBleManager.close()
-        super.onDestroy()
     }
 
 }

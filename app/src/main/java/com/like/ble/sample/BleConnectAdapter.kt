@@ -8,9 +8,9 @@ import android.view.View
 import android.widget.LinearLayout
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DiffUtil
-import com.like.ble.BleManager
-import com.like.ble.central.command.*
+import com.like.ble.central.executor.IConnectExecutor
 import com.like.ble.sample.databinding.ItemBleConnectBinding
 import com.like.ble.sample.databinding.ItemBleConnectCharacteristicBinding
 import com.like.ble.sample.databinding.ItemBleConnectDescriptorsBinding
@@ -20,9 +20,10 @@ import com.like.ble.util.getTypeString
 import com.like.ble.util.getValidString
 import com.like.recyclerview.adapter.BaseListAdapter
 import com.like.recyclerview.viewholder.BindingViewHolder
+import kotlinx.coroutines.launch
 import java.util.*
 
-class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBleManager: BleManager) :
+class BleConnectAdapter(private val mActivity: FragmentActivity, private val connectExecutor: IConnectExecutor) :
     BaseListAdapter<ItemBleConnectBinding, BleConnectInfo>(DIFF) {
     private val mLayoutInflater: LayoutInflater by lazy { LayoutInflater.from(mActivity) }
     private val mWriteDataFragment: WriteDataFragment by lazy { WriteDataFragment() }
@@ -102,18 +103,14 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
         if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_READ != 0) {
             binding.ivRead.visibility = View.VISIBLE
             binding.ivRead.setOnClickListener {
-                mBleManager.sendCommand(ReadCharacteristicCommand(
-                    address,
-                    characteristic.uuid,
-                    serviceUuid,
-                    10000,
-                    onResult = {
-                        mActivity.longToastBottom("读特征成功。数据长度：${it?.size} ${it?.contentToString()}")
-                    },
-                    onError = {
-                        mActivity.longToastBottom(it.message)
+                mActivity.lifecycleScope.launch {
+                    try {
+                        val data = connectExecutor.readCharacteristic(address, characteristic.uuid, serviceUuid, 10000)
+                        mActivity.longToastBottom("读特征成功。数据长度：${data?.size} ${data?.contentToString()}")
+                    } catch (e: Exception) {
+                        mActivity.longToastBottom(e.message)
                     }
-                ))
+                }
             }
         }
         if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE != 0 ||
@@ -124,45 +121,18 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
                 mWriteDataFragment.arguments = Bundle().apply {
                     putSerializable("callback", object : WriteDataFragment.Callback {
                         override fun onData(data: ByteArray) {
-                            val readNotifyCommand = ReadNotifyCommand(
-                                address,
-                                characteristic.uuid,
-                                serviceUuid,
-                                5000,
-                                1024,
-                                {
-                                    it.get(it.position() - 1) == Byte.MAX_VALUE
-                                },
-                                onResult = {
-                                    mActivity.longToastBottom("读取通知传来的数据成功。数据长度：${it?.size} ${it?.contentToString()}")
-                                },
-                                onError = {
-                                    mActivity.longToastBottom(it.message)
-                                }
-                            )
-                            val writeCharacteristicCommand = WriteCharacteristicCommand(
-                                address,
-                                data.batch(20),
-                                characteristic.uuid,
-                                serviceUuid,
-                                5000,
-                                onCompleted = {
+                            mActivity.lifecycleScope.launch {
+                                try {
+                                    connectExecutor.writeCharacteristic(
+                                        address,
+                                        data.batch(20),
+                                        characteristic.uuid,
+                                        serviceUuid,
+                                        5000,
+                                    )
                                     mActivity.longToastBottom("写特征成功")
-                                },
-                                onError = {
-                                    mActivity.longToastBottom(it.message)
-                                }
-                            )
-                            when (data[0]) {
-                                0x1.toByte() -> {
-                                    val multipleAddressCommands = MultipleAddressCommands()
-                                    // readNotifyCommand 必须第一个添加，类似于设置回调监听。
-                                    multipleAddressCommands.addCommand(readNotifyCommand, true)
-                                    multipleAddressCommands.addCommand(writeCharacteristicCommand, false)
-                                    mBleManager.sendCommand(multipleAddressCommands)
-                                }
-                                else -> {
-                                    mBleManager.sendCommand(writeCharacteristicCommand)
+                                } catch (e: Exception) {
+                                    mActivity.longToastBottom(e.message)
                                 }
                             }
                         }
@@ -175,44 +145,52 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
             binding.ivNotify.visibility = View.VISIBLE
             var isOn = false
             binding.ivNotify.setOnClickListener {
-                val setCharacteristicNotificationCommand = SetCharacteristicNotificationCommand(
-                    address,
-                    characteristic.uuid,
-                    serviceUuid,
-                    SetCharacteristicNotificationCommand.TYPE_NOTIFICATION,
-                    !isOn,
-                    onCompleted = {
-                        isOn = !isOn
-                        if (isOn) {
-                            binding.ivNotify.setImageResource(R.drawable.notify)
-                        } else {
-                            binding.ivNotify.setImageResource(R.drawable.notify_close)
+                mActivity.lifecycleScope.launch {
+                    try {
+                        val data = connectExecutor.setCharacteristicNotification(
+                            address,
+                            characteristic.uuid,
+                            serviceUuid,
+                            0,
+                            !isOn,
+                        )
+                        if (data) {
+                            isOn = !isOn
+                            if (isOn) {
+                                binding.ivNotify.setImageResource(R.drawable.notify)
+                            } else {
+                                binding.ivNotify.setImageResource(R.drawable.notify_close)
+                            }
                         }
+                    } catch (e: Exception) {
                     }
-                )
-                mBleManager.sendCommand(setCharacteristicNotificationCommand)
+                }
             }
         }
         if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_INDICATE != 0) {
             binding.ivIndicate.visibility = View.VISIBLE
             var isOn = false
             binding.ivIndicate.setOnClickListener {
-                val setCharacteristicNotificationCommand = SetCharacteristicNotificationCommand(
-                    address,
-                    characteristic.uuid,
-                    serviceUuid,
-                    SetCharacteristicNotificationCommand.TYPE_INDICATION,
-                    !isOn,
-                    onCompleted = {
-                        isOn = !isOn
-                        if (isOn) {
-                            binding.ivIndicate.setImageResource(R.drawable.indicate)
-                        } else {
-                            binding.ivIndicate.setImageResource(R.drawable.indicate_close)
+                mActivity.lifecycleScope.launch {
+                    try {
+                        val data = connectExecutor.setCharacteristicNotification(
+                            address,
+                            characteristic.uuid,
+                            serviceUuid,
+                            1,
+                            !isOn,
+                        )
+                        if (data) {
+                            isOn = !isOn
+                            if (isOn) {
+                                binding.ivIndicate.setImageResource(R.drawable.indicate)
+                            } else {
+                                binding.ivIndicate.setImageResource(R.drawable.indicate_close)
+                            }
                         }
+                    } catch (e: Exception) {
                     }
-                )
-                mBleManager.sendCommand(setCharacteristicNotificationCommand)
+                }
             }
         }
     }
@@ -242,38 +220,40 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val mBl
 
         // 无法判断描述的权限，只能同时显示读和写两个操作。设置只读权限的描述，nRF也全部显示的（即显示写入和读取按钮）。
         binding.ivRead.setOnClickListener {
-            mBleManager.sendCommand(ReadDescriptorCommand(
-                address,
-                descriptor.uuid,
-                characteristic.uuid,
-                serviceUuid,
-                10000,
-                onResult = {
-                    mActivity.longToastBottom("读描述成功。数据长度：${it?.size} ${it?.contentToString()}")
-                },
-                onError = {
-                    mActivity.longToastBottom(it.message)
+            mActivity.lifecycleScope.launch {
+                try {
+                    val data = connectExecutor.readDescriptor(
+                        address,
+                        descriptor.uuid,
+                        characteristic.uuid,
+                        serviceUuid,
+                        10000,
+                    )
+                    mActivity.longToastBottom("读描述成功。数据长度：${data?.size} ${data?.contentToString()}")
+                } catch (e: Exception) {
+                    mActivity.longToastBottom(e.message)
                 }
-            ))
+            }
         }
         binding.ivWrite.setOnClickListener {
             mWriteDataFragment.arguments = Bundle().apply {
                 putSerializable("callback", object : WriteDataFragment.Callback {
                     override fun onData(data: ByteArray) {
-                        mBleManager.sendCommand(WriteDescriptorCommand(
-                            address,
-                            data.batch(20),
-                            descriptor.uuid,
-                            characteristic.uuid,
-                            serviceUuid,
-                            5000,
-                            onCompleted = {
+                        mActivity.lifecycleScope.launch {
+                            try {
+                                connectExecutor.writeDescriptor(
+                                    address,
+                                    data.batch(20),
+                                    descriptor.uuid,
+                                    characteristic.uuid,
+                                    serviceUuid,
+                                    5000,
+                                )
                                 mActivity.longToastBottom("写描述成功")
-                            },
-                            onError = {
-                                mActivity.longToastBottom(it.message)
+                            } catch (e: Exception) {
+                                mActivity.longToastBottom(e.message)
                             }
-                        ))
+                        }
                     }
                 })
             }

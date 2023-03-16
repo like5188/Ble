@@ -8,15 +8,13 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
-import com.like.ble.BleManager
-import com.like.ble.central.command.ReadRemoteRssiCommand
-import com.like.ble.central.command.RequestConnectionPriorityCommand
-import com.like.ble.central.command.RequestMtuCommand
 import com.like.ble.central.executor.ConnectExecutor
 import com.like.ble.central.executor.IConnectExecutor
 import com.like.ble.sample.databinding.FragmentBleConnectBinding
 import com.like.common.base.BaseLazyFragment
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 /**
@@ -25,11 +23,10 @@ import kotlinx.coroutines.launch
 class BleConnectFragment : BaseLazyFragment() {
     private lateinit var mBinding: FragmentBleConnectBinding
     private lateinit var mData: BleScanInfo
-    private val mBleManager: BleManager by lazy { (requireActivity() as BleCentralActivity).mBleManager }
-    private val mAdapter: BleConnectAdapter by lazy { BleConnectAdapter(requireActivity(), mBleManager) }
     private val connectExecutor: IConnectExecutor by lazy {
         ConnectExecutor(requireActivity())
     }
+    private val mAdapter: BleConnectAdapter by lazy { BleConnectAdapter(requireActivity(), connectExecutor) }
 
     companion object {
         fun newInstance(bleScanInfo: BleScanInfo?): BleConnectFragment {
@@ -65,6 +62,15 @@ class BleConnectFragment : BaseLazyFragment() {
         }
         mBinding.tvRequestConnectionPriority.setOnClickListener {
             requestConnectionPriority()
+        }
+        lifecycleScope.launch {
+            connectExecutor.notifyFlow
+                .catch {
+                    longToastBottom(it.message)
+                }
+                .collectLatest {
+                longToastBottom("读取通知传来的数据成功。数据长度：${it?.size} ${it?.contentToString()}")
+            }
         }
         return mBinding.root
     }
@@ -114,30 +120,25 @@ class BleConnectFragment : BaseLazyFragment() {
             return
         }
         val mtu = mBinding.etRequestMtu.text.toString().trim().toInt()
-        mBleManager.sendCommand(RequestMtuCommand(
-            mData.address,
-            mtu,
-            3000,
-            onResult = {
+        lifecycleScope.launch {
+            try {
+                connectExecutor.requestMtu(mData.address, mtu, 3000)
                 shortToastBottom("设置成功")
-            },
-            onError = {
-                shortToastBottom(it.message)
+            } catch (e: Exception) {
+                shortToastBottom(e.message)
             }
-        ))
+        }
     }
 
     private fun readRemoteRssi() {
-        mBleManager.sendCommand(ReadRemoteRssiCommand(
-            mData.address,
-            3000,
-            onResult = {
-                mBinding.etReadRemoteRssi.setText(it.toString())
-            },
-            onError = {
-                shortToastBottom(it.message)
+        lifecycleScope.launch {
+            try {
+                val rssi = connectExecutor.readRemoteRssi(mData.address, 3000)
+                mBinding.etReadRemoteRssi.setText(rssi.toString())
+            } catch (e: Exception) {
+                shortToastBottom(e.message)
             }
-        ))
+        }
     }
 
     private fun requestConnectionPriority() {
@@ -147,21 +148,19 @@ class BleConnectFragment : BaseLazyFragment() {
         }
         val connectionPriority = mBinding.etRequestConnectionPriority.text.toString().trim().toInt()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mBleManager.sendCommand(RequestConnectionPriorityCommand(
-                mData.address,
-                connectionPriority,
-                onResult = {
+            lifecycleScope.launch {
+                try {
+                    connectExecutor.requestConnectionPriority(mData.address, connectionPriority)
                     shortToastBottom("设置成功")
-                },
-                onError = {
-                    shortToastBottom(it.message)
+                } catch (e: Exception) {
+                    shortToastBottom(e.message)
                 }
-            ))
+            }
         }
     }
 
     override fun onDestroy() {
-        mBleManager.closeConnect(mData.address)
+        lifecycleScope.launch { connectExecutor.close() }
         super.onDestroy()
     }
 
