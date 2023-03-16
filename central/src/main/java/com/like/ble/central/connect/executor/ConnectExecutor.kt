@@ -11,11 +11,9 @@ import com.like.ble.central.connect.callback.ConnectCallbackManager
 import com.like.ble.central.connect.callback.IntCallback
 import com.like.ble.exception.BleException
 import com.like.ble.util.*
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.withTimeout
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
@@ -42,12 +40,12 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         }
     }
 
-    override suspend fun connect(timeout: Long, autoConnect: Boolean): List<BluetoothGattService>? {
+    override suspend fun connect(timeout: Long, autoConnect: Boolean): List<BluetoothGattService>? = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrowBleException()
-        if (context.isBleDeviceConnected(mBluetoothGatt?.device)) return mBluetoothGatt?.services
+        if (context.isBleDeviceConnected(mBluetoothGatt?.device)) return@withContext mBluetoothGatt?.services
         // 获取远端的蓝牙设备
         val bluetoothDevice = context.getBluetoothAdapter()?.getRemoteDevice(address) ?: throw BleException("连接蓝牙失败：$address 未找到")
-        return suspendCancellableCoroutineWithTimeout(timeout, "连接蓝牙设备超时：$address") { continuation ->
+        suspendCancellableCoroutineWithTimeout(timeout, "连接蓝牙设备超时：$address") { continuation ->
             continuation.invokeOnCancellation {
                 disconnect()
             }
@@ -86,41 +84,42 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         mBluetoothGatt = null
     }
 
-    override suspend fun readCharacteristic(characteristicUuid: UUID, serviceUuid: UUID?, timeout: Long): ByteArray? {
-        checkEnvironmentOrThrowBleException()
-        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleException("蓝牙未连接：$address")
-        }
+    override suspend fun readCharacteristic(characteristicUuid: UUID, serviceUuid: UUID?, timeout: Long): ByteArray? =
+        withContext(Dispatchers.IO) {
+            checkEnvironmentOrThrowBleException()
+            if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
+                throw BleException("蓝牙未连接：$address")
+            }
 
-        val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
-            ?: throw BleException("特征值不存在：${characteristicUuid.getValidString()}")
+            val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
+                ?: throw BleException("特征值不存在：${characteristicUuid.getValidString()}")
 
-        if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_READ == 0) {
-            throw BleException("this characteristic not support read!")
-        }
+            if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_READ == 0) {
+                throw BleException("this characteristic not support read!")
+            }
 
-        return suspendCancellableCoroutineWithTimeout(timeout, "读取特征值超时：${characteristicUuid.getValidString()}") { continuation ->
-            mConnectCallbackManager.setReadCharacteristicCallback(object : ByteArrayCallback() {
-                override fun onSuccess(data: ByteArray?) {
-                    continuation.resume(data)
+            suspendCancellableCoroutineWithTimeout(timeout, "读取特征值超时：${characteristicUuid.getValidString()}") { continuation ->
+                mConnectCallbackManager.setReadCharacteristicCallback(object : ByteArrayCallback() {
+                    override fun onSuccess(data: ByteArray?) {
+                        continuation.resume(data)
+                    }
+
+                    override fun onError(exception: BleException) {
+                        continuation.resumeWithException(exception)
+                    }
+                })
+                if (mBluetoothGatt?.readCharacteristic(characteristic) != true) {
+                    continuation.resumeWithException(BleException("读取特征值失败：${characteristicUuid.getValidString()}"))
                 }
-
-                override fun onError(exception: BleException) {
-                    continuation.resumeWithException(exception)
-                }
-            })
-            if (mBluetoothGatt?.readCharacteristic(characteristic) != true) {
-                continuation.resumeWithException(BleException("读取特征值失败：${characteristicUuid.getValidString()}"))
             }
         }
-    }
 
     override suspend fun readDescriptor(
         descriptorUuid: UUID,
         characteristicUuid: UUID?,
         serviceUuid: UUID?,
         timeout: Long
-    ): ByteArray? {
+    ): ByteArray? = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
@@ -138,7 +137,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
 //            return
 //        }
 
-        return suspendCancellableCoroutineWithTimeout(timeout, "读取描述值超时：${descriptorUuid.getValidString()}") { continuation ->
+        suspendCancellableCoroutineWithTimeout(timeout, "读取描述值超时：${descriptorUuid.getValidString()}") { continuation ->
             mConnectCallbackManager.setReadDescriptorCallback(object : ByteArrayCallback() {
                 override fun onSuccess(data: ByteArray?) {
                     continuation.resume(data)
@@ -154,7 +153,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         }
     }
 
-    override suspend fun readNotify(characteristicUuid: UUID, serviceUuid: UUID?) {
+    override suspend fun readNotify(characteristicUuid: UUID, serviceUuid: UUID?) = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
@@ -174,13 +173,13 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         })
     }
 
-    override suspend fun readRemoteRssi(timeout: Long): Int {
+    override suspend fun readRemoteRssi(timeout: Long): Int = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
         }
 
-        return suspendCancellableCoroutineWithTimeout(timeout, "读RSSI超时：$address") { continuation ->
+        suspendCancellableCoroutineWithTimeout(timeout, "读RSSI超时：$address") { continuation ->
             mConnectCallbackManager.setReadRemoteRssiCallback(object : IntCallback() {
                 override fun onSuccess(data: Int) {
                     continuation.resume(data)
@@ -195,10 +194,9 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
                 continuation.resumeWithException(BleException("读RSSI失败：$address"))
             }
         }
-
     }
 
-    override suspend fun requestConnectionPriority(connectionPriority: Int): Boolean {
+    override suspend fun requestConnectionPriority(connectionPriority: Int): Boolean = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
@@ -208,10 +206,10 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
             throw BleException("android 5.0及其以上才支持requestConnectionPriority：$address")
         }
 
-        return mBluetoothGatt?.requestConnectionPriority(connectionPriority) ?: false
+        mBluetoothGatt?.requestConnectionPriority(connectionPriority) ?: false
     }
 
-    override suspend fun requestMtu(mtu: Int, timeout: Long): Int {
+    override suspend fun requestMtu(mtu: Int, timeout: Long): Int = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
@@ -221,7 +219,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
             throw BleException("android 5.0及其以上才支持设置MTU：$address")
         }
 
-        return suspendCancellableCoroutineWithTimeout(timeout, "设置MTU超时：$address") { continuation ->
+        suspendCancellableCoroutineWithTimeout(timeout, "设置MTU超时：$address") { continuation ->
             mConnectCallbackManager.setRequestMtuCallback(object : IntCallback() {
                 override fun onSuccess(data: Int) {
                     continuation.resume(data)
@@ -243,7 +241,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         serviceUuid: UUID?,
         type: Int,
         enable: Boolean
-    ): Boolean {
+    ): Boolean = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
@@ -281,9 +279,9 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
                     BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
                 }
             }
-            else -> return false
+            else -> return@withContext false
         }
-        return mBluetoothGatt?.writeDescriptor(cccd) ?: false
+        mBluetoothGatt?.writeDescriptor(cccd) ?: false
     }
 
     override suspend fun writeCharacteristic(
@@ -292,7 +290,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         serviceUuid: UUID?,
         timeout: Long,
         writeType: Int
-    ) {
+    ) = withContext(Dispatchers.IO) {
         if (data.isEmpty()) {
             throw BleException("data is empty")
         }
@@ -351,7 +349,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         characteristicUuid: UUID?,
         serviceUuid: UUID?,
         timeout: Long
-    ) {
+    ) = withContext(Dispatchers.IO) {
         if (data.isEmpty()) {
             throw BleException("data is empty")
         }

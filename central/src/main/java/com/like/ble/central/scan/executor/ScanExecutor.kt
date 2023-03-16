@@ -13,9 +13,11 @@ import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.BleException
 import com.like.ble.result.BleResult
 import com.like.ble.util.getBluetoothAdapter
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.withContext
 import java.util.*
 
 /**
@@ -33,7 +35,7 @@ class ScanExecutor(activity: ComponentActivity) : AbstractScanExecutor(activity)
     }
     override val scanFlow: Flow<BleResult> = _scanFlow
 
-    override suspend fun startScan(filterServiceUuid: UUID?, duration: Long) {
+    override suspend fun startScan(filterServiceUuid: UUID?, duration: Long) = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrowBleException()
         scanCallbackManager.setScanCallback(object : ScanCallback() {
             override fun onSuccess(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
