@@ -98,9 +98,7 @@ class BleScanFragment : BaseLazyFragment() {
     }
 
     override fun onDestroy() {
-        lifecycleScope.launch {
-            scanExecutor.close()
-        }
+        scanExecutor.close()
         super.onDestroy()
     }
 

@@ -428,6 +428,7 @@ class BlePeripheralActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        peripheralExecutor.close()
         getBluetoothManager()?.getConnectedDevices(BluetoothProfile.GATT)?.forEach {
             mBluetoothGattServer?.cancelConnection(it)
         }

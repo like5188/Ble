@@ -91,7 +91,7 @@ class AdvertisingExecutor(private val activity: ComponentActivity) : IPeripheral
         }
     }
 
-    override suspend fun close() {
+    override fun close() {
         stopAdvertising()
     }
 

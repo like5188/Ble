@@ -486,7 +486,7 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
 
     }
 
-    override suspend fun close() {
+    override fun close() {
         disconnect()
     }
 }

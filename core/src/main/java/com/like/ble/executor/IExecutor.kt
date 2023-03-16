@@ -7,6 +7,6 @@ interface IExecutor {
     /**
      * 释放资源
      */
-    suspend fun close()
+    fun close()
 
 }

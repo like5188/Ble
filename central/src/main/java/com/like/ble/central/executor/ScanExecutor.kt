@@ -122,7 +122,7 @@ class ScanExecutor(private val activity: ComponentActivity) : IScanExecutor {
         _scanFlow.tryEmit(BleResult.Error(msg, code))
     }
 
-    override suspend fun close() {
+    override fun close() {
         stopScan()
     }
 
