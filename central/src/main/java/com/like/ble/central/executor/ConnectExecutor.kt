@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.os.Build
 import androidx.activity.ComponentActivity
-import com.like.ble.central.command.SetCharacteristicNotificationCommand
 import com.like.ble.central.util.PermissionUtils
 import com.like.ble.exception.BleException
 import com.like.ble.util.*
@@ -328,14 +327,14 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
             ?: throw BleException("getDescriptor fail")
 
         cccd.value = when (type) {
-            SetCharacteristicNotificationCommand.TYPE_NOTIFICATION -> {
+            0 -> {
                 if (enable) {
                     BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
                 } else {
                     BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
                 }
             }
-            SetCharacteristicNotificationCommand.TYPE_INDICATION -> {
+            1 -> {
                 if (enable) {
                     BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
                 } else {
