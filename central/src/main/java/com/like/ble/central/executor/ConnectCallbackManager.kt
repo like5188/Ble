@@ -66,6 +66,19 @@ class ConnectCallbackManager {
             }
         }
 
+        // 写特征值，注意，这里的characteristic.value中的数据是你写入的数据，而不是外围设备sendResponse返回的。
+        override fun onCharacteristicWrite(
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic,
+            status: Int
+        ) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                writeCharacteristicCallback?.onSuccess()
+            } else {
+                writeCharacteristicCallback?.onError("写特征值失败：${characteristic.uuid.getValidString()}")
+            }
+        }
+
     }
 
     private var connectCallback: ConnectCallback? = null
@@ -74,6 +87,7 @@ class ConnectCallbackManager {
     private var readNotifyCallback: ByteArrayCallback? = null
     private var readRemoteRssiCallback: IntCallback? = null
     private var requestMtuCallback: IntCallback? = null
+    private var writeCharacteristicCallback: BleCallback? = null
 
     fun getBluetoothGattCallback(): BluetoothGattCallback {
         return gattCallback
@@ -103,9 +117,15 @@ class ConnectCallbackManager {
         requestMtuCallback = callback
     }
 
+    fun setWriteCharacteristicCallback(callback: BleCallback?) {
+        writeCharacteristicCallback = callback
+    }
+
 }
 
 abstract class BleCallback {
+    open fun onSuccess() {}
+
     fun onError(msg: String) {
         onError(BleException(msg))
     }
