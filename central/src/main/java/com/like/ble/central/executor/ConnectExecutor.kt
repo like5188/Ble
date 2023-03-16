@@ -331,6 +331,9 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
         timeout: Long,
         writeType: Int
     ) {
+        if (data.isEmpty()) {
+            throw BleException("data is empty")
+        }
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
@@ -373,14 +376,82 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
                     if (mBluetoothGatt?.writeCharacteristic(characteristic) != true) {
                         throw BleException("写特征值失败：${characteristicUuid.getValidString()}")
                     }
-                    while (!nextFlag.get()) {
+                    do {
                         delay(20)
-                    }
+                    } while (!nextFlag.get())
                     nextFlag.set(false)
                 }
             }
         } catch (e: TimeoutCancellationException) {
             throw BleException("写特征值超时：${characteristicUuid.getValidString()}")
+        }
+
+    }
+
+    override suspend fun writeDescriptor(
+        address: String,
+        data: List<ByteArray>,
+        descriptorUuid: UUID,
+        characteristicUuid: UUID?,
+        serviceUuid: UUID?,
+        timeout: Long
+    ) {
+        if (data.isEmpty()) {
+            throw BleException("data is empty")
+        }
+        if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
+            throw BleException("蓝牙未打开")
+        }
+        if (!PermissionUtils.requestPermissions(activity, false)) {
+            throw BleException("蓝牙权限被拒绝")
+        }
+        if (!activity.isBleDeviceConnected(mBluetoothGatt?.device)) {
+            throw BleException("蓝牙未连接：$address")
+        }
+
+        val descriptor = mBluetoothGatt?.findDescriptor(descriptorUuid, characteristicUuid, serviceUuid)
+            ?: throw BleException("描述值不存在：${descriptorUuid.getValidString()}")
+
+        // 由于descriptor.permissions永远为0x0000，所以无法判断，但是如果权限不允许，还是会操作失败的。
+//        if (descriptor.permissions and
+//            (BluetoothGattDescriptor.PERMISSION_WRITE or
+//                    BluetoothGattDescriptor.PERMISSION_WRITE_ENCRYPTED or
+//                    BluetoothGattDescriptor.PERMISSION_WRITE_ENCRYPTED_MITM or
+//                    BluetoothGattDescriptor.PERMISSION_WRITE_SIGNED or
+//                    BluetoothGattDescriptor.PERMISSION_WRITE_SIGNED_MITM
+//                    ) == 0
+//        ) {
+//            command.error("this descriptor not support write!")
+//            return
+//        }
+
+        try {
+            withTimeout(timeout) {
+                // 是否可以进行下一批次的写入操作
+                val nextFlag = AtomicBoolean(false)
+                mConnectCallbackManager.setWriteDescriptorCallback(object : BleCallback() {
+                    override fun onSuccess() {
+                        nextFlag.set(true)
+                    }
+
+                    override fun onError(exception: BleException) {
+                        throw exception
+                    }
+                })
+
+                data.forEach {
+                    descriptor.value = it
+                    if (mBluetoothGatt?.writeDescriptor(descriptor) != true) {
+                        throw BleException("写描述值失败：${descriptorUuid.getValidString()}")
+                    }
+                    do {
+                        delay(20)
+                    } while (!nextFlag.get())
+                    nextFlag.set(false)
+                }
+            }
+        } catch (e: TimeoutCancellationException) {
+            throw BleException("写描述值超时：${descriptorUuid.getValidString()}")
         }
 
     }
