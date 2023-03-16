@@ -70,35 +70,27 @@ interface IConnectExecutor : IExecutor {
         serviceUuid: UUID? = null,
     )
 
-    /**
-     * readRemoteRssi命令
-     */
     suspend fun readRemoteRssi(
         address: String,
         timeout: Long = 3000L,
     ): Int
 
     /**
-     * requestConnectionPriority命令
-     *
      * 快速传输大量数据时设置[android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_HIGH]，完成后要设置成默认的: [android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_BALANCED]
      *
      * @param connectionPriority    需要设置的priority。[android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_BALANCED]、[android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_HIGH]、[android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_LOW_POWER]
      */
-    suspend fun requestConnectionPriorityCommand(
+    suspend fun requestConnectionPriority(
         address: String,
         connectionPriority: Int,
     ): Boolean
 
-    /**
-     * requestMtu命令
-     *
-     * @param mtu               需要设置的MTU值
-     */
-    suspend fun requestMtuCommand(
+    suspend fun requestMtu(
         address: String,
         mtu: Int,
         timeout: Long = 3000L,
     ): Int
+
+    suspend fun setCharacteristicNotification()
 
 }

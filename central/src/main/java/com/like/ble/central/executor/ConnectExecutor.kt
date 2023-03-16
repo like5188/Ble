@@ -217,7 +217,7 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
 
     }
 
-    override suspend fun requestConnectionPriorityCommand(address: String, connectionPriority: Int): Boolean {
+    override suspend fun requestConnectionPriority(address: String, connectionPriority: Int): Boolean {
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
@@ -235,7 +235,7 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
         return mBluetoothGatt?.requestConnectionPriority(connectionPriority) ?: false
     }
 
-    override suspend fun requestMtuCommand(address: String, mtu: Int, timeout: Long): Int {
+    override suspend fun requestMtu(address: String, mtu: Int, timeout: Long): Int {
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
