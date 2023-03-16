@@ -13,6 +13,7 @@ object PermissionUtils {
         // Android 12 中的新蓝牙权限
         // https://developer.android.google.cn/about/versions/12/features/bluetooth-permissions?hl=zh-cn
         ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED &&
                 ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
     } else if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
         ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH) == PackageManager.PERMISSION_GRANTED &&
@@ -28,6 +29,7 @@ object PermissionUtils {
             // https://developer.android.google.cn/about/versions/12/features/bluetooth-permissions?hl=zh-cn
             arrayOf(
                 Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_CONNECT,
                 Manifest.permission.ACCESS_FINE_LOCATION
             )
         } else if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
