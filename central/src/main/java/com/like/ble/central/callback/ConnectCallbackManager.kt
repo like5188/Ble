@@ -1,4 +1,4 @@
-package com.like.ble.central.executor
+package com.like.ble.central.callback
 
 import android.annotation.SuppressLint
 import android.bluetooth.*
