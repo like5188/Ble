@@ -15,7 +15,6 @@ import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.result.BleResult
 import com.like.ble.sample.databinding.FragmentBleScanBinding
 import com.like.common.base.BaseLazyFragment
-import com.like.common.util.Logger
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
 import kotlinx.coroutines.launch
 
@@ -48,7 +47,6 @@ class BleScanFragment : BaseLazyFragment() {
         }
         lifecycleScope.launch {
             scanExecutor.scanFlow.collect {
-                Logger.e(it)
                 when (it) {
                     is BleResult.Success<*> -> {
                         val scanResult: ScanResult = it.data as ScanResult
