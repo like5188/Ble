@@ -25,7 +25,7 @@ import kotlin.coroutines.suspendCoroutine
  * 扫描回复是可选的，中心设备可以向外设请求扫描回复，这里包含一些设备额外的信息。
  */
 @SuppressLint("MissingPermission")
-class AdvertisingExecutor(private val activity: ComponentActivity) : AbstractAdvertisingExecutor() {
+class AdvertisingExecutor(activity: ComponentActivity) : AbstractAdvertisingExecutor(activity) {
     private val mIsSending = AtomicBoolean(false)
     private var mAdvertiseCallback: AdvertiseCallback? = null
 
@@ -35,7 +35,7 @@ class AdvertisingExecutor(private val activity: ComponentActivity) : AbstractAdv
         scanResponse: AdvertiseData?,
         deviceName: String
     ) {
-        checkEnvironmentOrThrowBleException(activity, *permissions)
+        checkEnvironmentOrThrowBleException()
         val bluetoothLeAdvertiser = activity.getBluetoothAdapter()?.bluetoothLeAdvertiser
             ?: throw BleException("phone does not support Bluetooth Advertiser")
         if (mIsSending.compareAndSet(false, true)) {
@@ -73,7 +73,7 @@ class AdvertisingExecutor(private val activity: ComponentActivity) : AbstractAdv
         if (mIsSending.compareAndSet(true, false)) {
             val callback = mAdvertiseCallback ?: return
             mAdvertiseCallback = null
-            if (!checkEnvironment(activity, *permissions)) {
+            if (!checkEnvironment()) {
                 return
             }
             activity.getBluetoothAdapter()?.bluetoothLeAdvertiser?.stopAdvertising(callback)

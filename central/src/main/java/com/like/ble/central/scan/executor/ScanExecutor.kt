@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 可以进行扫描、停止扫描操作
  */
 @SuppressLint("MissingPermission")
-class ScanExecutor(private val activity: ComponentActivity) : AbstractScanExecutor() {
+class ScanExecutor(activity: ComponentActivity) : AbstractScanExecutor(activity) {
     private val mScanning = AtomicBoolean(false)
     private val scanCallbackManager: ScanCallbackManager by lazy {
         ScanCallbackManager()
@@ -36,7 +36,7 @@ class ScanExecutor(private val activity: ComponentActivity) : AbstractScanExecut
     override val scanFlow: Flow<BleResult> = _scanFlow
 
     override suspend fun startScan(filterServiceUuid: UUID?, duration: Long) {
-        checkEnvironmentOrThrowBleException(activity, *permissions)
+        checkEnvironmentOrThrowBleException()
         if (mScanning.compareAndSet(false, true)) {
             scanCallbackManager.setScanCallback(object : ScanCallback() {
                 override fun onSuccess(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
@@ -91,7 +91,7 @@ class ScanExecutor(private val activity: ComponentActivity) : AbstractScanExecut
     override fun stopScan() {
         if (mScanning.compareAndSet(true, false)) {
             // 下面的条件判断不能放到外面去，因为会导致 mScanning 标记不能正常改变。造成下次启动扫描失败。
-            if (!checkEnvironment(activity, *permissions)) {
+            if (!checkEnvironment()) {
                 return
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

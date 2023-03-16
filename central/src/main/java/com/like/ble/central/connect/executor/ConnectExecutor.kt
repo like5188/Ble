@@ -26,8 +26,7 @@ import kotlin.coroutines.resumeWithException
  * 可以进行连接、断开连接、操作数据等等操作
  */
 @SuppressLint("MissingPermission")
-class ConnectExecutor(private val activity: ComponentActivity, private val address: String?) : AbstractConnectExecutor() {
-    private val context = activity.applicationContext
+class ConnectExecutor(activity: ComponentActivity, private val address: String?) : AbstractConnectExecutor(activity) {
     private var mBluetoothGatt: BluetoothGatt? = null
     private val mConnectCallbackManager: ConnectCallbackManager by lazy {
         ConnectCallbackManager()
@@ -44,7 +43,7 @@ class ConnectExecutor(private val activity: ComponentActivity, private val addre
     }
 
     override suspend fun connect(timeout: Long): List<BluetoothGattService>? {
-        checkEnvironmentOrThrowBleException(activity, *permissions)
+        checkEnvironmentOrThrowBleException()
         if (context.isBleDeviceConnected(mBluetoothGatt?.device)) return mBluetoothGatt?.services
         // 获取远端的蓝牙设备
         val bluetoothDevice = context.getBluetoothAdapter()?.getRemoteDevice(address) ?: throw BleException("连接蓝牙失败：$address 未找到")
@@ -77,7 +76,7 @@ class ConnectExecutor(private val activity: ComponentActivity, private val addre
     }
 
     override fun disconnect() {
-        if (!checkEnvironment(activity, *permissions)) {
+        if (!checkEnvironment()) {
             return
         }
         if (context.isBleDeviceConnected(mBluetoothGatt?.device)) {
@@ -89,7 +88,7 @@ class ConnectExecutor(private val activity: ComponentActivity, private val addre
     }
 
     override suspend fun readCharacteristic(characteristicUuid: UUID, serviceUuid: UUID?, timeout: Long): ByteArray? {
-        checkEnvironmentOrThrowBleException(activity, *permissions)
+        checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
         }
@@ -123,7 +122,7 @@ class ConnectExecutor(private val activity: ComponentActivity, private val addre
         serviceUuid: UUID?,
         timeout: Long
     ): ByteArray? {
-        checkEnvironmentOrThrowBleException(activity, *permissions)
+        checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
         }
@@ -157,7 +156,7 @@ class ConnectExecutor(private val activity: ComponentActivity, private val addre
     }
 
     override suspend fun readNotify(characteristicUuid: UUID, serviceUuid: UUID?) {
-        checkEnvironmentOrThrowBleException(activity, *permissions)
+        checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
         }
@@ -177,7 +176,7 @@ class ConnectExecutor(private val activity: ComponentActivity, private val addre
     }
 
     override suspend fun readRemoteRssi(timeout: Long): Int {
-        checkEnvironmentOrThrowBleException(activity, *permissions)
+        checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
         }
@@ -201,7 +200,7 @@ class ConnectExecutor(private val activity: ComponentActivity, private val addre
     }
 
     override suspend fun requestConnectionPriority(connectionPriority: Int): Boolean {
-        checkEnvironmentOrThrowBleException(activity, *permissions)
+        checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
         }
@@ -214,7 +213,7 @@ class ConnectExecutor(private val activity: ComponentActivity, private val addre
     }
 
     override suspend fun requestMtu(mtu: Int, timeout: Long): Int {
-        checkEnvironmentOrThrowBleException(activity, *permissions)
+        checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
         }
@@ -246,7 +245,7 @@ class ConnectExecutor(private val activity: ComponentActivity, private val addre
         type: Int,
         enable: Boolean
     ): Boolean {
-        checkEnvironmentOrThrowBleException(activity, *permissions)
+        checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
         }
@@ -298,7 +297,7 @@ class ConnectExecutor(private val activity: ComponentActivity, private val addre
         if (data.isEmpty()) {
             throw BleException("data is empty")
         }
-        checkEnvironmentOrThrowBleException(activity, *permissions)
+        checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
         }
@@ -357,7 +356,7 @@ class ConnectExecutor(private val activity: ComponentActivity, private val addre
         if (data.isEmpty()) {
             throw BleException("data is empty")
         }
-        checkEnvironmentOrThrowBleException(activity, *permissions)
+        checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
         }

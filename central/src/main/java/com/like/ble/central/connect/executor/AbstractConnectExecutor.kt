@@ -4,6 +4,7 @@ import android.Manifest
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattService
 import android.os.Build
+import androidx.activity.ComponentActivity
 import androidx.annotation.IntRange
 import com.like.ble.executor.BaseExecutor
 import kotlinx.coroutines.flow.Flow
@@ -12,8 +13,9 @@ import java.util.*
 /**
  * 中心设备蓝牙命令执行者。
  */
-abstract class AbstractConnectExecutor : BaseExecutor() {
-    val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+abstract class AbstractConnectExecutor(activity: ComponentActivity) : BaseExecutor(
+    activity,
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         // Android 12 中的新蓝牙权限
         // https://developer.android.google.cn/about/versions/12/features/bluetooth-permissions?hl=zh-cn
         arrayOf(Manifest.permission.BLUETOOTH_CONNECT)
@@ -22,6 +24,7 @@ abstract class AbstractConnectExecutor : BaseExecutor() {
     } else {
         arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)
     }
+) {
     abstract val notifyFlow: Flow<ByteArray?>
 
     /**
