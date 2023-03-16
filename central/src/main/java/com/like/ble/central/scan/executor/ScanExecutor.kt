@@ -84,8 +84,10 @@ class ScanExecutor(activity: ComponentActivity) : AbstractScanExecutor(activity)
                 }
             }
         }
-        delay(duration)
-        stopScan()
+        if (duration > 0) {
+            delay(duration)
+            stopScan()
+        }
     }
 
     override fun stopScan() {
