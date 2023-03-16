@@ -34,6 +34,9 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
     override val notifyFlow: Flow<ByteArray?> = _notifyFlow
 
     override suspend fun connect(address: String, timeout: Long): List<BluetoothGattService>? {
+        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
+            throw BleException("invalid address：$address")
+        }
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
@@ -87,6 +90,9 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
     }
 
     override suspend fun readCharacteristic(address: String, characteristicUuid: UUID, serviceUuid: UUID?, timeout: Long): ByteArray? {
+        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
+            throw BleException("invalid address：$address")
+        }
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
@@ -127,6 +133,9 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
         serviceUuid: UUID?,
         timeout: Long
     ): ByteArray? {
+        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
+            throw BleException("invalid address：$address")
+        }
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
@@ -166,6 +175,9 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
     }
 
     override suspend fun readNotify(address: String, characteristicUuid: UUID, serviceUuid: UUID?) {
+        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
+            throw BleException("invalid address：$address")
+        }
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
@@ -191,6 +203,9 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
     }
 
     override suspend fun readRemoteRssi(address: String, timeout: Long): Int {
+        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
+            throw BleException("invalid address：$address")
+        }
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
@@ -220,6 +235,9 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
     }
 
     override suspend fun requestConnectionPriority(address: String, connectionPriority: Int): Boolean {
+        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
+            throw BleException("invalid address：$address")
+        }
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
@@ -238,6 +256,9 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
     }
 
     override suspend fun requestMtu(address: String, mtu: Int, timeout: Long): Int {
+        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
+            throw BleException("invalid address：$address")
+        }
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
@@ -276,6 +297,9 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
         type: Int,
         enable: Boolean
     ): Boolean {
+        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
+            throw BleException("invalid address：$address")
+        }
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
@@ -331,6 +355,9 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
         timeout: Long,
         writeType: Int
     ) {
+        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
+            throw BleException("invalid address：$address")
+        }
         if (data.isEmpty()) {
             throw BleException("data is empty")
         }
@@ -396,6 +423,9 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
         serviceUuid: UUID?,
         timeout: Long
     ) {
+        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
+            throw BleException("invalid address：$address")
+        }
         if (data.isEmpty()) {
             throw BleException("data is empty")
         }
