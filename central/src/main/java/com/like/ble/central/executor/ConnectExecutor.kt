@@ -188,6 +188,85 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
         })
     }
 
+    override suspend fun readRemoteRssi(address: String, timeout: Long): Int {
+        if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
+            throw BleException("蓝牙未打开")
+        }
+        if (!PermissionUtils.requestPermissions(activity, false)) {
+            throw BleException("蓝牙权限被拒绝")
+        }
+        if (!activity.isBleDeviceConnected(mBluetoothGatt?.device)) {
+            throw BleException("蓝牙未连接：$address")
+        }
+
+        return suspendCancellableCoroutineWithTimeout(timeout, "读RSSI超时：$address") { continuation ->
+            mConnectCallbackManager.setReadRemoteRssiCallback(object : IntCallback() {
+                override fun onSuccess(data: Int) {
+                    continuation.resume(data)
+                }
+
+                override fun onError(exception: BleException) {
+                    continuation.resumeWithException(exception)
+                }
+            })
+
+            if (mBluetoothGatt?.readRemoteRssi() != true) {
+                continuation.resumeWithException(BleException("读RSSI失败：$address"))
+            }
+        }
+
+    }
+
+    override suspend fun requestConnectionPriorityCommand(address: String, connectionPriority: Int): Boolean {
+        if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
+            throw BleException("蓝牙未打开")
+        }
+        if (!PermissionUtils.requestPermissions(activity, false)) {
+            throw BleException("蓝牙权限被拒绝")
+        }
+        if (!activity.isBleDeviceConnected(mBluetoothGatt?.device)) {
+            throw BleException("蓝牙未连接：$address")
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            throw BleException("android 5.0及其以上才支持requestConnectionPriority：$address")
+        }
+
+        return mBluetoothGatt?.requestConnectionPriority(connectionPriority) ?: false
+    }
+
+    override suspend fun requestMtuCommand(address: String, mtu: Int, timeout: Long): Int {
+        if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
+            throw BleException("蓝牙未打开")
+        }
+        if (!PermissionUtils.requestPermissions(activity, false)) {
+            throw BleException("蓝牙权限被拒绝")
+        }
+        if (!activity.isBleDeviceConnected(mBluetoothGatt?.device)) {
+            throw BleException("蓝牙未连接：$address")
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            throw BleException("android 5.0及其以上才支持设置MTU：$address")
+        }
+
+        return suspendCancellableCoroutineWithTimeout(timeout, "设置MTU超时：$address") { continuation ->
+            mConnectCallbackManager.setReadRemoteRssiCallback(object : IntCallback() {
+                override fun onSuccess(data: Int) {
+                    continuation.resume(data)
+                }
+
+                override fun onError(exception: BleException) {
+                    continuation.resumeWithException(exception)
+                }
+            })
+
+            if (mBluetoothGatt?.requestMtu(mtu) != true) {
+                continuation.resumeWithException(BleException("设置MTU失败：$address"))
+            }
+        }
+    }
+
     override suspend fun close() {
         disconnect()
     }

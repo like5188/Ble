@@ -7,11 +7,6 @@ import com.like.ble.util.getValidString
 
 @SuppressLint("MissingPermission")
 class ConnectCallbackManager {
-    private var connectCallback: ConnectCallback? = null
-    private var readCharacteristicCallback: ByteArrayCallback? = null
-    private var readDescriptorCallback: ByteArrayCallback? = null
-    private var readNotifyCallback: ByteArrayCallback? = null
-
     // 蓝牙Gatt回调方法中都不可以进行耗时操作，需要将其方法内进行的操作丢进另一个线程，尽快返回。
     private val gattCallback = object : BluetoothGattCallback() {
         // 当连接状态改变
@@ -55,6 +50,33 @@ class ConnectCallbackManager {
             readNotifyCallback?.onSuccess(characteristic.value)
         }
 
+        override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                requestMtuCallback?.onSuccess(mtu)
+            } else {
+                requestMtuCallback?.onError("failed to set mtu")
+            }
+        }
+
+        override fun onReadRemoteRssi(gatt: BluetoothGatt?, rssi: Int, status: Int) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                readRemoteRssiCallback?.onSuccess(rssi)
+            } else {
+                readRemoteRssiCallback?.onError("failed to read remote rssi")
+            }
+        }
+
+    }
+
+    private var connectCallback: ConnectCallback? = null
+    private var readCharacteristicCallback: ByteArrayCallback? = null
+    private var readDescriptorCallback: ByteArrayCallback? = null
+    private var readNotifyCallback: ByteArrayCallback? = null
+    private var readRemoteRssiCallback: IntCallback? = null
+    private var requestMtuCallback: IntCallback? = null
+
+    fun getBluetoothGattCallback(): BluetoothGattCallback {
+        return gattCallback
     }
 
     fun setConnectCallback(callback: ConnectCallback?) {
@@ -73,8 +95,12 @@ class ConnectCallbackManager {
         readNotifyCallback = callback
     }
 
-    fun getBluetoothGattCallback(): BluetoothGattCallback {
-        return gattCallback
+    fun setReadRemoteRssiCallback(callback: IntCallback?) {
+        readRemoteRssiCallback = callback
+    }
+
+    fun setRequestMtuCallback(callback: IntCallback?) {
+        requestMtuCallback = callback
     }
 
 }
@@ -93,4 +119,8 @@ abstract class ConnectCallback : BleCallback() {
 
 abstract class ByteArrayCallback : BleCallback() {
     abstract fun onSuccess(data: ByteArray?)
+}
+
+abstract class IntCallback : BleCallback() {
+    abstract fun onSuccess(data: Int)
 }
