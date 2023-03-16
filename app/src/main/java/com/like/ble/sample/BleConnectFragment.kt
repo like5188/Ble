@@ -8,10 +8,11 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
-import com.like.ble.central.connect.executor.ConnectExecutor
 import com.like.ble.central.connect.executor.AbstractConnectExecutor
+import com.like.ble.central.connect.executor.ConnectExecutor
 import com.like.ble.sample.databinding.FragmentBleConnectBinding
 import com.like.common.base.BaseLazyFragment
+import com.like.common.util.Logger
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
@@ -69,7 +70,7 @@ class BleConnectFragment : BaseLazyFragment() {
                     longToastBottom(it.message)
                 }
                 .collectLatest {
-                    shortToastBottom("读取通知传来的数据成功。数据长度：${it?.size} ${it?.contentToString()}")
+                    Logger.d("读取通知传来的数据成功。数据长度：${it?.size} ${it?.contentToString()}")
                 }
         }
         return mBinding.root

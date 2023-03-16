@@ -121,17 +121,36 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                 mWriteDataFragment.arguments = Bundle().apply {
                     putSerializable("callback", object : WriteDataFragment.Callback {
                         override fun onData(data: ByteArray) {
-                            mActivity.lifecycleScope.launch {
-                                try {
-                                    connectExecutor.writeCharacteristic(
-                                        data.batch(20),
-                                        characteristic.uuid,
-                                        serviceUuid,
-                                        5000,
-                                    )
-                                    mActivity.longToastBottom("写特征成功")
-                                } catch (e: Exception) {
-                                    mActivity.longToastBottom(e.message)
+                            when (data[0]) {
+                                0x1.toByte() -> {
+                                    mActivity.lifecycleScope.launch {
+                                        try {
+                                            connectExecutor.readNotify(characteristic.uuid, serviceUuid)
+                                            connectExecutor.writeCharacteristic(
+                                                data.batch(20),
+                                                characteristic.uuid,
+                                                serviceUuid,
+                                                5000,
+                                            )
+                                        } catch (e: Exception) {
+                                            mActivity.longToastBottom(e.message)
+                                        }
+                                    }
+                                }
+                                else -> {
+                                    mActivity.lifecycleScope.launch {
+                                        try {
+                                            connectExecutor.writeCharacteristic(
+                                                data.batch(20),
+                                                characteristic.uuid,
+                                                serviceUuid,
+                                                5000,
+                                            )
+                                            mActivity.longToastBottom("写特征成功")
+                                        } catch (e: Exception) {
+                                            mActivity.longToastBottom(e.message)
+                                        }
+                                    }
                                 }
                             }
                         }

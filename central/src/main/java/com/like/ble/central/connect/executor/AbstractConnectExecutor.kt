@@ -40,7 +40,7 @@ abstract class AbstractConnectExecutor(activity: ComponentActivity) : BaseExecut
     abstract fun disconnect()
 
     /**
-     * 读特征值，一次最多可以读取600字节
+     * 读特征值，一次最多可以读取600字节，不用组包
      *
      * @param characteristicUuid        特征UUID
      * @param serviceUuid               服务UUID，如果不为null，则会在此服务下查找[characteristicUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
@@ -67,8 +67,8 @@ abstract class AbstractConnectExecutor(activity: ComponentActivity) : BaseExecut
     ): ByteArray?
 
     /**
-     * 读取通知传来的数据（通过notify或者indicate的方式），数据从[notifyFlow]获取
-     * 使用后相当于设置了一个回调监听，再配合[writeCharacteristic]发送命令并接收通知数据，注意必须要开启通知才能接收数据。这样比单独使用[readCharacteristic]命令来读取数据快很多。
+     * 读取通知传来的数据（通过notify或者indicate的方式），数据从[notifyFlow]获取，需要组包
+     * 使用后相当于设置了一个回调监听，再配合[writeCharacteristic]发送命令并接收通知数据，注意必须要开启通知才能接收数据。
      *
      * @param characteristicUuid        特征UUID
      * @param serviceUuid               服务UUID，如果不为null，则会在此服务下查找[characteristicUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
