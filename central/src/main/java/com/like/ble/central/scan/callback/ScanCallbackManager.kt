@@ -1,12 +1,10 @@
 package com.like.ble.central.scan.callback
 
-import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.le.ScanCallback
 import android.os.Build
 import androidx.annotation.RequiresApi
 
-@SuppressLint("MissingPermission")
 class ScanCallbackManager {
     private val mScanCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: android.bluetooth.le.ScanResult) {
