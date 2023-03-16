@@ -45,7 +45,7 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
             continuation.invokeOnCancellation {
                 disconnect()
             }
-            mConnectCallbackManager.connectCallback = object : ConnectCallback() {
+            mConnectCallbackManager.setConnectCallback(object : ConnectCallback() {
                 override fun onSuccess(services: List<BluetoothGattService>?) {
                     continuation.resume(services)
                 }
@@ -55,16 +55,16 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
                     continuation.resumeWithException(exception)
                 }
 
-            }
+            })
             mBluetoothGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 bluetoothDevice.connectGatt(
                     activity,
                     false,
-                    mConnectCallbackManager.gattCallback,
+                    mConnectCallbackManager.getBluetoothGattCallback(),
                     BluetoothDevice.TRANSPORT_LE
                 )// 第二个参数表示是否自动重连
             } else {
-                bluetoothDevice.connectGatt(activity, false, mConnectCallbackManager.gattCallback)// 第二个参数表示是否自动重连
+                bluetoothDevice.connectGatt(activity, false, mConnectCallbackManager.getBluetoothGattCallback())// 第二个参数表示是否自动重连
             }
         }
     }
@@ -103,7 +103,7 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
         }
 
         return suspendCancellableCoroutineWithTimeout(timeout, "读取特征值超时：${characteristicUuid.getValidString()}") { continuation ->
-            mConnectCallbackManager.readCharacteristicCallback = object : ByteArrayCallback() {
+            mConnectCallbackManager.setReadCharacteristicCallback(object : ByteArrayCallback() {
                 override fun onSuccess(data: ByteArray?) {
                     continuation.resume(data)
                 }
@@ -111,7 +111,7 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
                 override fun onError(exception: BleException) {
                     continuation.resumeWithException(exception)
                 }
-            }
+            })
             if (mBluetoothGatt?.readCharacteristic(characteristic) != true) {
                 continuation.resumeWithException(BleException("读取特征值失败：${characteristicUuid.getValidString()}"))
             }
@@ -148,7 +148,7 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
 //        }
 
         return suspendCancellableCoroutineWithTimeout(timeout, "读取描述值超时：${descriptorUuid.getValidString()}") { continuation ->
-            mConnectCallbackManager.readDescriptorCallback = object : ByteArrayCallback() {
+            mConnectCallbackManager.setReadDescriptorCallback(object : ByteArrayCallback() {
                 override fun onSuccess(data: ByteArray?) {
                     continuation.resume(data)
                 }
@@ -156,7 +156,7 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
                 override fun onError(exception: BleException) {
                     continuation.resumeWithException(exception)
                 }
-            }
+            })
             if (mBluetoothGatt?.readDescriptor(descriptor) != true) {
                 continuation.resumeWithException(BleException("读取描述失败：${descriptorUuid.getValidString()}"))
             }
@@ -181,11 +181,11 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
             throw BleException("this characteristic not support indicate or notify!")
         }
 
-        mConnectCallbackManager.readNotifyCallback = object : ByteArrayCallback() {
+        mConnectCallbackManager.setReadNotifyCallback(object : ByteArrayCallback() {
             override fun onSuccess(data: ByteArray?) {
                 _notifyFlow.tryEmit(data)
             }
-        }
+        })
     }
 
     override suspend fun close() {

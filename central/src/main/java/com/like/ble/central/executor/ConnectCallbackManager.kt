@@ -7,13 +7,13 @@ import com.like.ble.util.getValidString
 
 @SuppressLint("MissingPermission")
 class ConnectCallbackManager {
-    internal var connectCallback: ConnectCallback? = null
-    internal var readCharacteristicCallback: ByteArrayCallback? = null
-    internal var readDescriptorCallback: ByteArrayCallback? = null
-    internal var readNotifyCallback: ByteArrayCallback? = null
+    private var connectCallback: ConnectCallback? = null
+    private var readCharacteristicCallback: ByteArrayCallback? = null
+    private var readDescriptorCallback: ByteArrayCallback? = null
+    private var readNotifyCallback: ByteArrayCallback? = null
 
     // 蓝牙Gatt回调方法中都不可以进行耗时操作，需要将其方法内进行的操作丢进另一个线程，尽快返回。
-    internal val gattCallback = object : BluetoothGattCallback() {
+    private val gattCallback = object : BluetoothGattCallback() {
         // 当连接状态改变
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             if (newState == BluetoothGatt.STATE_CONNECTED) {
@@ -55,6 +55,26 @@ class ConnectCallbackManager {
             readNotifyCallback?.onSuccess(characteristic.value)
         }
 
+    }
+
+    fun setConnectCallback(callback: ConnectCallback?) {
+        connectCallback = callback
+    }
+
+    fun setReadCharacteristicCallback(callback: ByteArrayCallback?) {
+        readCharacteristicCallback = callback
+    }
+
+    fun setReadDescriptorCallback(callback: ByteArrayCallback?) {
+        readDescriptorCallback = callback
+    }
+
+    fun setReadNotifyCallback(callback: ByteArrayCallback?) {
+        readNotifyCallback = callback
+    }
+
+    fun getBluetoothGattCallback(): BluetoothGattCallback {
+        return gattCallback
     }
 
 }
