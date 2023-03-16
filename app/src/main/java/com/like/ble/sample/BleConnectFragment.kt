@@ -69,7 +69,7 @@ class BleConnectFragment : BaseLazyFragment() {
                     longToastBottom(it.message)
                 }
                 .collectLatest {
-                    longToastBottom("读取通知传来的数据成功。数据长度：${it?.size} ${it?.contentToString()}")
+                    shortToastBottom("读取通知传来的数据成功。数据长度：${it?.size} ${it?.contentToString()}")
                 }
         }
         return mBinding.root
