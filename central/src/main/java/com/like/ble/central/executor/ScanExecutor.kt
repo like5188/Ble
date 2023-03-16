@@ -1,17 +1,16 @@
 package com.like.ble.central.executor
 
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanSettings
 import android.os.Build
 import android.os.ParcelUuid
 import androidx.activity.ComponentActivity
-import androidx.annotation.RequiresApi
+import com.like.ble.central.callback.ScanCallbackManager
 import com.like.ble.central.result.ScanResult
 import com.like.ble.central.util.PermissionUtils
+import com.like.ble.exception.BleException
 import com.like.ble.result.BleResult
 import com.like.ble.util.getBluetoothAdapter
 import com.like.ble.util.isBluetoothEnable
@@ -29,38 +28,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 @SuppressLint("MissingPermission")
 class ScanExecutor(private val activity: ComponentActivity) : IScanExecutor {
     private val mScanning = AtomicBoolean(false)
-    private val mScanCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : ScanCallback() {
-        override fun onScanResult(callbackType: Int, result: android.bluetooth.le.ScanResult) {
-            emitResult(result.device, result.rssi, result.scanRecord?.bytes)
-        }
-
-        override fun onScanFailed(errorCode: Int) {
-            val errorMsg = when (errorCode) {
-                SCAN_FAILED_ALREADY_STARTED -> "Fails to start scan as BLE scan with the same settings is already started by the app."
-                SCAN_FAILED_APPLICATION_REGISTRATION_FAILED -> "Fails to start scan as app cannot be registered."
-                SCAN_FAILED_INTERNAL_ERROR -> "Fails to start scan due an internal error"
-                SCAN_FAILED_FEATURE_UNSUPPORTED -> "Fails to start power optimized scan as this feature is not supported."
-                5 -> "Fails to start scan as it is out of hardware resources."
-                6 -> "Fails to start scan as application tries to scan too frequently."
-                else -> "unknown scan error"
-            }
-            mScanning.set(false)
-            emitError(errorMsg, errorCode)
-        }
-
-        // Bluetoothadapter.isOffloadedScanBatchingSupported()</br>
-        // 判断当前设备蓝牙芯片是否支持批处理扫描。如果支持则使用批处理扫描，可通过ScanSettings.Builder对象调用setReportDelay(Long)方法来设置蓝牙LE扫描的报告延迟的时间（以毫秒为单位）来启动批处理扫描模式。
-        //
-        // ScanSettings.Builder.setReportDelay(Long);
-        // 当设备蓝牙芯片支持批处理扫描时，用来设置蓝牙LE扫描的报告延迟的时间（以毫秒为单位）。</br>
-        // 该参数默认为 0，如果不修改它的值，则默认只会在onScanResult(int,ScanResult)中返回扫描到的蓝牙设备，不会触发onBatchScanResults(List)方法。
-        // 设置为0以立即通知结果,不开启批处理扫描模式。即ScanCallback蓝牙回调中，不会触发onBatchScanResults(List)方法，但会触发onScanResult(int,ScanResult)方法，返回扫描到的蓝牙设备。
-        // 当设置的时间大于0L时，则会开启批处理扫描模式。即触发onBatchScanResults(List)方法，返回扫描到的蓝牙设备列表。但不会触发onScanResult(int,ScanResult)方法。</br>
-        override fun onBatchScanResults(results: MutableList<android.bluetooth.le.ScanResult>?) {
-        }
-    }
-    private val mLeScanCallback: BluetoothAdapter.LeScanCallback = BluetoothAdapter.LeScanCallback { device, rssi, scanRecord ->
-        emitResult(device, rssi, scanRecord)
+    private val scanCallbackManager: ScanCallbackManager by lazy {
+        ScanCallbackManager()
     }
 
     private val _scanFlow: MutableSharedFlow<BleResult> by lazy {
@@ -78,9 +47,19 @@ class ScanExecutor(private val activity: ComponentActivity) : IScanExecutor {
             return
         }
         if (mScanning.compareAndSet(false, true)) {
+            scanCallbackManager.setScanCallback(object : com.like.ble.central.callback.ScanCallback() {
+                override fun onSuccess(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
+                    emitResult(device, rssi, scanRecord)
+                }
+
+                override fun onError(exception: BleException) {
+                    mScanning.set(false)
+                    emitError(exception.msg, exception.code)
+                }
+            })
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 if (filterServiceUuid == null) {
-                    activity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(mScanCallback)
+                    activity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(scanCallbackManager.getScanCallback())
                 } else {
                     // serviceUuid 只能在这里过滤，不能放到 filterScanResult() 方法中去，因为只有 gatt.discoverServices() 过后，device.getUuids() 方法才不会返回 null。
                     activity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(
@@ -97,16 +76,18 @@ class ScanExecutor(private val activity: ComponentActivity) : IScanExecutor {
                         // 回调类型一般设置ScanSettings.CALLBACK_TYPE_ALL_MATCHES，有过滤条件时过滤，返回符合过滤条件的蓝牙广播。无过滤条件时，返回全部蓝牙广播。
                         // setMatchMode() 设置蓝牙LE扫描滤波器硬件匹配的匹配模式，一般设置ScanSettings.MATCH_MODE_STICKY
                         ScanSettings.Builder().build(),
-                        mScanCallback
+                        scanCallbackManager.getScanCallback()
                     )
                 }
             } else {
                 if (filterServiceUuid == null) {
-                    if (activity.getBluetoothAdapter()?.startLeScan(mLeScanCallback) != true) {
+                    if (activity.getBluetoothAdapter()?.startLeScan(scanCallbackManager.getLeScanCallback()) != true) {
                         emitError("扫描失败")
                     }
                 } else {
-                    if (activity.getBluetoothAdapter()?.startLeScan(arrayOf(filterServiceUuid), mLeScanCallback) != true) {
+                    if (activity.getBluetoothAdapter()
+                            ?.startLeScan(arrayOf(filterServiceUuid), scanCallbackManager.getLeScanCallback()) != true
+                    ) {
                         emitError("扫描失败")
                     }
                 }
@@ -126,9 +107,9 @@ class ScanExecutor(private val activity: ComponentActivity) : IScanExecutor {
                 return
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                activity.getBluetoothAdapter()?.bluetoothLeScanner?.stopScan(mScanCallback)
+                activity.getBluetoothAdapter()?.bluetoothLeScanner?.stopScan(scanCallbackManager.getScanCallback())
             } else {
-                activity.getBluetoothAdapter()?.stopLeScan(mLeScanCallback)
+                activity.getBluetoothAdapter()?.stopLeScan(scanCallbackManager.getLeScanCallback())
             }
         }
     }
