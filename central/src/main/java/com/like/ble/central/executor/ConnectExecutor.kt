@@ -1,12 +1,10 @@
 package com.like.ble.central.executor
 
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.BluetoothGattService
+import android.bluetooth.*
 import android.os.Build
 import androidx.activity.ComponentActivity
+import com.like.ble.central.command.SetCharacteristicNotificationCommand
 import com.like.ble.central.util.PermissionUtils
 import com.like.ble.exception.BleException
 import com.like.ble.util.*
@@ -265,6 +263,60 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
                 continuation.resumeWithException(BleException("设置MTU失败：$address"))
             }
         }
+    }
+
+    override suspend fun setCharacteristicNotification(
+        address: String,
+        characteristicUuid: UUID,
+        serviceUuid: UUID?,
+        type: Int,
+        enable: Boolean
+    ): Boolean {
+        if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
+            throw BleException("蓝牙未打开")
+        }
+        if (!PermissionUtils.requestPermissions(activity, false)) {
+            throw BleException("蓝牙权限被拒绝")
+        }
+        if (!activity.isBleDeviceConnected(mBluetoothGatt?.device)) {
+            throw BleException("蓝牙未连接：$address")
+        }
+
+        val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
+            ?: throw BleException("特征值不存在：${characteristicUuid.getValidString()}")
+
+        if (characteristic.properties and (BluetoothGattCharacteristic.PROPERTY_NOTIFY or BluetoothGattCharacteristic.PROPERTY_INDICATE) == 0) {
+            throw BleException("this characteristic not support notify or indicate")
+        }
+        if (mBluetoothGatt?.setCharacteristicNotification(characteristic, enable) != true) {
+            throw BleException("setCharacteristicNotification fail")
+        }
+
+        // cccd : clinet characteristic configuration descriptor
+        // 服务端一开始是无法直接发送Indication和Notification。
+        // 首先必须是客户端通过往服务端的CCCD特征（clinet characteristic configuration descriptor）
+        // 写入值来使能服务端的这两个功能Notification/Indication，这样服务端才能发送。
+        val cccd = characteristic.getDescriptor(createBleUuidBy16Bit("2902"))
+            ?: throw BleException("getDescriptor fail")
+
+        cccd.value = when (type) {
+            SetCharacteristicNotificationCommand.TYPE_NOTIFICATION -> {
+                if (enable) {
+                    BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                } else {
+                    BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
+                }
+            }
+            SetCharacteristicNotificationCommand.TYPE_INDICATION -> {
+                if (enable) {
+                    BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
+                } else {
+                    BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
+                }
+            }
+            else -> return false
+        }
+        return mBluetoothGatt?.writeDescriptor(cccd) ?: false
     }
 
     override suspend fun close() {

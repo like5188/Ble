@@ -1,6 +1,7 @@
 package com.like.ble.central.executor
 
 import android.bluetooth.BluetoothGattService
+import androidx.annotation.IntRange
 import com.like.ble.central.command.ReadCharacteristicCommand
 import com.like.ble.central.command.WriteCharacteristicCommand
 import com.like.ble.executor.IExecutor
@@ -82,15 +83,32 @@ interface IConnectExecutor : IExecutor {
      */
     suspend fun requestConnectionPriority(
         address: String,
+        @IntRange(from = 0, to = 2)
         connectionPriority: Int,
     ): Boolean
 
     suspend fun requestMtu(
         address: String,
+        @IntRange(from = 23, to = 517)
         mtu: Int,
         timeout: Long = 3000L,
     ): Int
 
-    suspend fun setCharacteristicNotification()
+    /**
+     * 设置特征的notification或者indication
+     *
+     * @param characteristicUuid            特征UUID
+     * @param serviceUuid                   服务UUID，如果不为null，则会在此服务下查找[characteristicUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
+     * @param type                          类型：0 (notification 不需要应答)；1 (indication 需要客户端应答)
+     * @param enable                        true：开启；false：关闭
+     */
+    suspend fun setCharacteristicNotification(
+        address: String,
+        characteristicUuid: UUID,
+        serviceUuid: UUID? = null,
+        @IntRange(from = 0, to = 1)
+        type: Int = 0,
+        enable: Boolean = true,
+    ): Boolean
 
 }
