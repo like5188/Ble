@@ -1,6 +1,7 @@
 package com.like.ble.peripheral.executor
 
 import android.annotation.SuppressLint
+import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import androidx.activity.ComponentActivity
@@ -10,7 +11,6 @@ import com.like.ble.peripheral.callback.AdvertisingCallbackManager
 import com.like.ble.util.getBluetoothAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -29,7 +29,6 @@ import kotlin.coroutines.suspendCoroutine
  */
 @SuppressLint("MissingPermission")
 class AdvertisingExecutor(activity: ComponentActivity) : AbstractAdvertisingExecutor(activity) {
-    private val mIsSending = AtomicBoolean(false)
     private val advertisingCallbackManager: AdvertisingCallbackManager by lazy {
         AdvertisingCallbackManager()
     }
@@ -43,39 +42,39 @@ class AdvertisingExecutor(activity: ComponentActivity) : AbstractAdvertisingExec
         checkEnvironmentOrThrowBleException()
         val bluetoothLeAdvertiser = activity.getBluetoothAdapter()?.bluetoothLeAdvertiser
             ?: throw BleException("phone does not support Bluetooth Advertiser")
-        if (mIsSending.compareAndSet(false, true)) {
-            suspendCoroutine { continuation ->
-                // 设置设备名字
-                if (deviceName.isNotEmpty()) {
-                    activity.getBluetoothAdapter()?.name = deviceName
+        suspendCoroutine { continuation ->
+            // 设置设备名字
+            if (deviceName.isNotEmpty()) {
+                activity.getBluetoothAdapter()?.name = deviceName
+            }
+            advertisingCallbackManager.setAdvertisingCallback(object : BleCallback() {
+                override fun onSuccess() {
+                    continuation.resume(Unit)
                 }
-                advertisingCallbackManager.setAdvertisingCallback(object : BleCallback() {
-                    override fun onSuccess() {
-                        continuation.resume(Unit)
-                    }
 
-                    override fun onError(exception: BleException) {
-                        mIsSending.set(false)
+                override fun onError(exception: BleException) {
+                    if (exception.code == AdvertiseCallback.ADVERTISE_FAILED_ALREADY_STARTED) {
+                        // 如果正在广播，直接返回，不返回错误造成显示错误信息。
+                        continuation.resume(Unit)
+                    } else {
                         continuation.resumeWithException(exception)
                     }
-                })
-                bluetoothLeAdvertiser.startAdvertising(
-                    settings,
-                    advertiseData,
-                    scanResponse,
-                    advertisingCallbackManager.getAdvertiseCallback()
-                )
-            }
+                }
+            })
+            bluetoothLeAdvertiser.startAdvertising(
+                settings,
+                advertiseData,
+                scanResponse,
+                advertisingCallbackManager.getAdvertiseCallback()
+            )
         }
     }
 
     override fun stopAdvertising() {
-        if (mIsSending.compareAndSet(true, false)) {
-            if (!checkEnvironment()) {
-                return
-            }
-            activity.getBluetoothAdapter()?.bluetoothLeAdvertiser?.stopAdvertising(advertisingCallbackManager.getAdvertiseCallback())
+        if (!checkEnvironment()) {
+            return
         }
+        activity.getBluetoothAdapter()?.bluetoothLeAdvertiser?.stopAdvertising(advertisingCallbackManager.getAdvertiseCallback())
     }
 
     override fun close() {
