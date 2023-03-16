@@ -59,7 +59,7 @@ interface IConnectExecutor : IExecutor {
     ): ByteArray?
 
     /**
-     * 读取通知传来的数据（通过notify或者indicate的方式）
+     * 读取通知传来的数据（通过notify或者indicate的方式），数据从[notifyFlow]获取
      * 使用后相当于设置了一个回调监听，再配合[WriteCharacteristicCommand]发送命令并接收通知数据，注意必须要开启通知才能接收数据。这样比单独使用[ReadCharacteristicCommand]命令来读取数据快很多。
      *
      * @param characteristicUuid        特征UUID
