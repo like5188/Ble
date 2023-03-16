@@ -7,15 +7,12 @@ import android.bluetooth.le.ScanSettings
 import android.os.Build
 import android.os.ParcelUuid
 import androidx.activity.ComponentActivity
-import com.like.ble.central.scan.PermissionUtils
 import com.like.ble.central.scan.callback.ScanCallback
 import com.like.ble.central.scan.callback.ScanCallbackManager
 import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.BleException
 import com.like.ble.result.BleResult
 import com.like.ble.util.getBluetoothAdapter
-import com.like.ble.util.isBluetoothEnable
-import com.like.ble.util.isBluetoothEnableAndSettingIfDisabled
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -27,7 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 可以进行扫描、停止扫描操作
  */
 @SuppressLint("MissingPermission")
-class ScanExecutor(private val activity: ComponentActivity) : IScanExecutor {
+class ScanExecutor(private val activity: ComponentActivity) : AbstractScanExecutor() {
     private val mScanning = AtomicBoolean(false)
     private val scanCallbackManager: ScanCallbackManager by lazy {
         ScanCallbackManager()
@@ -39,14 +36,7 @@ class ScanExecutor(private val activity: ComponentActivity) : IScanExecutor {
     override val scanFlow: Flow<BleResult> = _scanFlow
 
     override suspend fun startScan(filterServiceUuid: UUID?, duration: Long) {
-        if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
-            emitError("蓝牙未打开")
-            return
-        }
-        if (!PermissionUtils.requestPermissions(activity)) {
-            emitError("蓝牙权限被拒绝")
-            return
-        }
+        checkEnvironmentOrThrowBleException(activity, *permissions)
         if (mScanning.compareAndSet(false, true)) {
             scanCallbackManager.setScanCallback(object : ScanCallback() {
                 override fun onSuccess(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
@@ -100,11 +90,8 @@ class ScanExecutor(private val activity: ComponentActivity) : IScanExecutor {
 
     override fun stopScan() {
         if (mScanning.compareAndSet(true, false)) {
-            // 下面两个条件判断不能放到外面去，因为会导致 mScanning 标记不能正常改变。造成下次启动扫描失败。
-            if (!activity.isBluetoothEnable()) {
-                return
-            }
-            if (!PermissionUtils.checkPermissions(activity)) {
+            // 下面的条件判断不能放到外面去，因为会导致 mScanning 标记不能正常改变。造成下次启动扫描失败。
+            if (!checkEnvironment(activity, *permissions)) {
                 return
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

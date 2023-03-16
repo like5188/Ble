@@ -1,29 +1,40 @@
 package com.like.ble.central.connect.executor
 
+import android.Manifest
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattService
+import android.os.Build
 import androidx.annotation.IntRange
-import com.like.ble.executor.IExecutor
+import com.like.ble.executor.BaseExecutor
 import kotlinx.coroutines.flow.Flow
 import java.util.*
 
 /**
  * 中心设备蓝牙命令执行者。
  */
-interface IConnectExecutor : IExecutor {
-    val notifyFlow: Flow<ByteArray?>
+abstract class AbstractConnectExecutor : BaseExecutor() {
+    val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        // Android 12 中的新蓝牙权限
+        // https://developer.android.google.cn/about/versions/12/features/bluetooth-permissions?hl=zh-cn
+        arrayOf(Manifest.permission.BLUETOOTH_CONNECT)
+    } else if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+    } else {
+        arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)
+    }
+    abstract val notifyFlow: Flow<ByteArray?>
 
     /**
      * 连接蓝牙设备
      *
      * @return 服务列表
      */
-    suspend fun connect(timeout: Long = 10000L): List<BluetoothGattService>?
+    abstract suspend fun connect(timeout: Long = 10000L): List<BluetoothGattService>?
 
     /**
      * 断开蓝牙设备
      */
-    fun disconnect()
+    abstract fun disconnect()
 
     /**
      * 读特征值，一次最多可以读取600字节
@@ -32,7 +43,7 @@ interface IConnectExecutor : IExecutor {
      * @param serviceUuid               服务UUID，如果不为null，则会在此服务下查找[characteristicUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
      * @return 特征值
      */
-    suspend fun readCharacteristic(
+    abstract suspend fun readCharacteristic(
         characteristicUuid: UUID,
         serviceUuid: UUID? = null,
         timeout: Long = 3000L,
@@ -45,7 +56,7 @@ interface IConnectExecutor : IExecutor {
      * @param characteristicUuid        特征UUID，如果不为null，则会在此特征下查找[descriptorUuid]；如果为null，则会遍历所有特征查找第一个匹配的[descriptorUuid]
      * @param serviceUuid               服务UUID，如果不为null，则会在此服务下查找[characteristicUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
      */
-    suspend fun readDescriptor(
+    abstract suspend fun readDescriptor(
         descriptorUuid: UUID,
         characteristicUuid: UUID? = null,
         serviceUuid: UUID? = null,
@@ -59,18 +70,18 @@ interface IConnectExecutor : IExecutor {
      * @param characteristicUuid        特征UUID
      * @param serviceUuid               服务UUID，如果不为null，则会在此服务下查找[characteristicUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
      */
-    suspend fun readNotify(characteristicUuid: UUID, serviceUuid: UUID? = null)
+    abstract suspend fun readNotify(characteristicUuid: UUID, serviceUuid: UUID? = null)
 
-    suspend fun readRemoteRssi(timeout: Long = 3000L): Int
+    abstract suspend fun readRemoteRssi(timeout: Long = 3000L): Int
 
     /**
      * 快速传输大量数据时设置[android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_HIGH]，完成后要设置成默认的: [android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_BALANCED]
      *
      * @param connectionPriority    需要设置的priority。[android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_BALANCED]、[android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_HIGH]、[android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_LOW_POWER]
      */
-    suspend fun requestConnectionPriority(@IntRange(from = 0, to = 2) connectionPriority: Int): Boolean
+    abstract suspend fun requestConnectionPriority(@IntRange(from = 0, to = 2) connectionPriority: Int): Boolean
 
-    suspend fun requestMtu(@IntRange(from = 23, to = 517) mtu: Int, timeout: Long = 3000L): Int
+    abstract suspend fun requestMtu(@IntRange(from = 23, to = 517) mtu: Int, timeout: Long = 3000L): Int
 
     /**
      * 设置特征的notification或者indication
@@ -80,7 +91,7 @@ interface IConnectExecutor : IExecutor {
      * @param type                          类型：0 (notification 不需要应答)；1 (indication 需要客户端应答)
      * @param enable                        true：开启；false：关闭
      */
-    suspend fun setCharacteristicNotification(
+    abstract suspend fun setCharacteristicNotification(
         characteristicUuid: UUID,
         serviceUuid: UUID? = null,
         @IntRange(from = 0, to = 1)
@@ -99,7 +110,7 @@ interface IConnectExecutor : IExecutor {
      * WRITE_TYPE_NO_RESPONSE 设置该类型不需要外围设备的回应，可以继续写数据。加快传输速率。
      * WRITE_TYPE_SIGNED 写特征携带认证签名，具体作用不太清楚。
      */
-    suspend fun writeCharacteristic(
+    abstract suspend fun writeCharacteristic(
         data: List<ByteArray>,
         characteristicUuid: UUID,
         serviceUuid: UUID? = null,
@@ -115,7 +126,7 @@ interface IConnectExecutor : IExecutor {
      * @param characteristicUuid        特征UUID，如果不为null，则会在此特征下查找[descriptorUuid]；如果为null，则会遍历所有特征查找第一个匹配的[descriptorUuid]
      * @param serviceUuid               服务UUID，如果不为null，则会在此服务下查找[characteristicUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
      */
-    suspend fun writeDescriptor(
+    abstract suspend fun writeDescriptor(
         data: List<ByteArray>,
         descriptorUuid: UUID,
         characteristicUuid: UUID? = null,

@@ -6,10 +6,7 @@ import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import androidx.activity.ComponentActivity
 import com.like.ble.exception.BleException
-import com.like.ble.peripheral.util.PermissionUtils
 import com.like.ble.util.getBluetoothAdapter
-import com.like.ble.util.isBluetoothEnable
-import com.like.ble.util.isBluetoothEnableAndSettingIfDisabled
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -28,7 +25,7 @@ import kotlin.coroutines.suspendCoroutine
  * 扫描回复是可选的，中心设备可以向外设请求扫描回复，这里包含一些设备额外的信息。
  */
 @SuppressLint("MissingPermission")
-class AdvertisingExecutor(private val activity: ComponentActivity) : IPeripheralExecutor {
+class AdvertisingExecutor(private val activity: ComponentActivity) : AbstractAdvertisingExecutor() {
     private val mIsSending = AtomicBoolean(false)
     private var mAdvertiseCallback: AdvertiseCallback? = null
 
@@ -38,12 +35,7 @@ class AdvertisingExecutor(private val activity: ComponentActivity) : IPeripheral
         scanResponse: AdvertiseData?,
         deviceName: String
     ) {
-        if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
-            throw BleException("蓝牙未打开")
-        }
-        if (!PermissionUtils.requestPermissions(activity)) {
-            throw BleException("蓝牙权限被拒绝")
-        }
+        checkEnvironmentOrThrowBleException(activity, *permissions)
         val bluetoothLeAdvertiser = activity.getBluetoothAdapter()?.bluetoothLeAdvertiser
             ?: throw BleException("phone does not support Bluetooth Advertiser")
         if (mIsSending.compareAndSet(false, true)) {
@@ -81,10 +73,7 @@ class AdvertisingExecutor(private val activity: ComponentActivity) : IPeripheral
         if (mIsSending.compareAndSet(true, false)) {
             val callback = mAdvertiseCallback ?: return
             mAdvertiseCallback = null
-            if (!activity.isBluetoothEnable()) {
-                return
-            }
-            if (!PermissionUtils.checkPermissions(activity)) {
+            if (!checkEnvironment(activity, *permissions)) {
                 return
             }
             activity.getBluetoothAdapter()?.bluetoothLeAdvertiser?.stopAdvertising(callback)

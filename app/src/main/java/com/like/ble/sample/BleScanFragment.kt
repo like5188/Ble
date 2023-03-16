@@ -9,7 +9,7 @@ import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableInt
 import androidx.lifecycle.lifecycleScope
-import com.like.ble.central.scan.executor.IScanExecutor
+import com.like.ble.central.scan.executor.AbstractScanExecutor
 import com.like.ble.central.scan.executor.ScanExecutor
 import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.result.BleResult
@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
 class BleScanFragment : BaseLazyFragment() {
     private lateinit var mBinding: FragmentBleScanBinding
     private val mAdapter: BleScanAdapter by lazy { BleScanAdapter(requireActivity()) }
-    private val scanExecutor: IScanExecutor by lazy {
+    private val scanExecutor: AbstractScanExecutor by lazy {
         ScanExecutor(requireActivity())
     }
 

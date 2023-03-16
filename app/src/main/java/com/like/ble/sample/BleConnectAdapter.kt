@@ -10,7 +10,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DiffUtil
-import com.like.ble.central.connect.executor.IConnectExecutor
+import com.like.ble.central.connect.executor.AbstractConnectExecutor
 import com.like.ble.sample.databinding.ItemBleConnectBinding
 import com.like.ble.sample.databinding.ItemBleConnectCharacteristicBinding
 import com.like.ble.sample.databinding.ItemBleConnectDescriptorsBinding
@@ -23,7 +23,7 @@ import com.like.recyclerview.viewholder.BindingViewHolder
 import kotlinx.coroutines.launch
 import java.util.*
 
-class BleConnectAdapter(private val mActivity: FragmentActivity, private val connectExecutor: IConnectExecutor) :
+class BleConnectAdapter(private val mActivity: FragmentActivity, private val connectExecutor: AbstractConnectExecutor) :
     BaseListAdapter<ItemBleConnectBinding, BleConnectInfo>(DIFF) {
     private val mLayoutInflater: LayoutInflater by lazy { LayoutInflater.from(mActivity) }
     private val mWriteDataFragment: WriteDataFragment by lazy { WriteDataFragment() }

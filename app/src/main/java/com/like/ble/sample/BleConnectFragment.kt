@@ -9,7 +9,7 @@ import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.central.connect.executor.ConnectExecutor
-import com.like.ble.central.connect.executor.IConnectExecutor
+import com.like.ble.central.connect.executor.AbstractConnectExecutor
 import com.like.ble.sample.databinding.FragmentBleConnectBinding
 import com.like.common.base.BaseLazyFragment
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 class BleConnectFragment : BaseLazyFragment() {
     private lateinit var mBinding: FragmentBleConnectBinding
     private lateinit var mData: BleScanInfo
-    private val connectExecutor: IConnectExecutor by lazy {
+    private val connectExecutor: AbstractConnectExecutor by lazy {
         ConnectExecutor(requireActivity(), mData.address)
     }
     private val mAdapter: BleConnectAdapter by lazy { BleConnectAdapter(requireActivity(), connectExecutor) }

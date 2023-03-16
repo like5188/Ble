@@ -15,7 +15,7 @@ import androidx.core.widget.NestedScrollView
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.peripheral.executor.AdvertisingExecutor
-import com.like.ble.peripheral.executor.IPeripheralExecutor
+import com.like.ble.peripheral.executor.AbstractAdvertisingExecutor
 import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
 import com.like.ble.util.*
 import kotlinx.coroutines.delay
@@ -243,7 +243,7 @@ class BlePeripheralActivity : AppCompatActivity() {
         }
 
     }
-    private val peripheralExecutor: IPeripheralExecutor by lazy {
+    private val peripheralExecutor: AbstractAdvertisingExecutor by lazy {
         AdvertisingExecutor(this)
     }
 
