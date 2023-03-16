@@ -7,6 +7,8 @@ import android.bluetooth.le.AdvertiseSettings
 import androidx.activity.ComponentActivity
 import com.like.ble.exception.BleException
 import com.like.ble.util.getBluetoothAdapter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -34,12 +36,12 @@ class AdvertisingExecutor(activity: ComponentActivity) : AbstractAdvertisingExec
         advertiseData: AdvertiseData,
         scanResponse: AdvertiseData?,
         deviceName: String
-    ) {
+    ) = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrowBleException()
         val bluetoothLeAdvertiser = activity.getBluetoothAdapter()?.bluetoothLeAdvertiser
             ?: throw BleException("phone does not support Bluetooth Advertiser")
         if (mIsSending.compareAndSet(false, true)) {
-            return suspendCoroutine { continuation ->
+            suspendCoroutine { continuation ->
                 // 设置设备名字
                 if (deviceName.isNotEmpty()) {
                     activity.getBluetoothAdapter()?.name = deviceName
