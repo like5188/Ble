@@ -16,7 +16,7 @@ object PermissionUtils {
             ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED &&
                     ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_ADVERTISE) == PackageManager.PERMISSION_GRANTED
         } else {
-            ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH) == PackageManager.PERMISSION_GRANTED
+            true
         }
 
     suspend fun requestPermissions(activity: ComponentActivity): Boolean {
@@ -28,9 +28,7 @@ object PermissionUtils {
                 Manifest.permission.BLUETOOTH_ADVERTISE
             )
         } else {
-            arrayOf(
-                Manifest.permission.BLUETOOTH,
-            )
+            return true
         }
         return activity.requestMultiplePermissions(*permissions).all { it.value }
     }

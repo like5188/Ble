@@ -16,11 +16,9 @@ object PermissionUtils {
                 ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED &&
                 ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
     } else if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-        ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH) == PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
     } else {
-        ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH) == PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
     }
 
     suspend fun requestPermissions(activity: ComponentActivity): Boolean {
@@ -33,15 +31,9 @@ object PermissionUtils {
                 Manifest.permission.ACCESS_FINE_LOCATION
             )
         } else if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-            arrayOf(
-                Manifest.permission.BLUETOOTH,
-                Manifest.permission.ACCESS_FINE_LOCATION,
-            )
+            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
         } else {
-            arrayOf(
-                Manifest.permission.BLUETOOTH,
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-            )
+            arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)
         }
         return activity.requestMultiplePermissions(*permissions).all { it.value }
     }
