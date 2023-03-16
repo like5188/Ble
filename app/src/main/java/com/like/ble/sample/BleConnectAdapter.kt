@@ -105,7 +105,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
             binding.ivRead.setOnClickListener {
                 mActivity.lifecycleScope.launch {
                     try {
-                        val data = connectExecutor.readCharacteristic(address, characteristic.uuid, serviceUuid, 10000)
+                        val data = connectExecutor.readCharacteristic(characteristic.uuid, serviceUuid, 10000)
                         mActivity.longToastBottom("读特征成功。数据长度：${data?.size} ${data?.contentToString()}")
                     } catch (e: Exception) {
                         mActivity.longToastBottom(e.message)
@@ -124,7 +124,6 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                             mActivity.lifecycleScope.launch {
                                 try {
                                     connectExecutor.writeCharacteristic(
-                                        address,
                                         data.batch(20),
                                         characteristic.uuid,
                                         serviceUuid,
@@ -148,7 +147,6 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                 mActivity.lifecycleScope.launch {
                     try {
                         val data = connectExecutor.setCharacteristicNotification(
-                            address,
                             characteristic.uuid,
                             serviceUuid,
                             0,
@@ -174,7 +172,6 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                 mActivity.lifecycleScope.launch {
                     try {
                         val data = connectExecutor.setCharacteristicNotification(
-                            address,
                             characteristic.uuid,
                             serviceUuid,
                             1,
@@ -223,7 +220,6 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
             mActivity.lifecycleScope.launch {
                 try {
                     val data = connectExecutor.readDescriptor(
-                        address,
                         descriptor.uuid,
                         characteristic.uuid,
                         serviceUuid,
@@ -242,7 +238,6 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                         mActivity.lifecycleScope.launch {
                             try {
                                 connectExecutor.writeDescriptor(
-                                    address,
                                     data.batch(20),
                                     descriptor.uuid,
                                     characteristic.uuid,

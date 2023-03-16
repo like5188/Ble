@@ -23,7 +23,8 @@ import kotlin.coroutines.resumeWithException
  * 可以进行连接、断开连接、操作数据等等操作
  */
 @SuppressLint("MissingPermission")
-class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecutor {
+class ConnectExecutor(private val activity: ComponentActivity, private val address: String?) : IConnectExecutor {
+    private val context = activity.applicationContext
     private var mBluetoothGatt: BluetoothGatt? = null
     private val mConnectCallbackManager: ConnectCallbackManager by lazy {
         ConnectCallbackManager()
@@ -33,19 +34,22 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
     }
     override val notifyFlow: Flow<ByteArray?> = _notifyFlow
 
-    override suspend fun connect(address: String, timeout: Long): List<BluetoothGattService>? {
-        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
+    init {
+        if (address.isNullOrEmpty() || !BluetoothAdapter.checkBluetoothAddress(address)) {
             throw BleException("invalid address：$address")
         }
+    }
+
+    override suspend fun connect(timeout: Long): List<BluetoothGattService>? {
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
         if (!PermissionUtils.requestPermissions(activity, false)) {
             throw BleException("蓝牙权限被拒绝")
         }
-        if (activity.isBleDeviceConnected(mBluetoothGatt?.device)) return mBluetoothGatt?.services
+        if (context.isBleDeviceConnected(mBluetoothGatt?.device)) return mBluetoothGatt?.services
         // 获取远端的蓝牙设备
-        val bluetoothDevice = activity.getBluetoothAdapter()?.getRemoteDevice(address) ?: throw BleException("连接蓝牙失败：$address 未找到")
+        val bluetoothDevice = context.getBluetoothAdapter()?.getRemoteDevice(address) ?: throw BleException("连接蓝牙失败：$address 未找到")
         return suspendCancellableCoroutineWithTimeout(timeout, "连接蓝牙设备超时：$address") { continuation ->
             continuation.invokeOnCancellation {
                 disconnect()
@@ -63,25 +67,25 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
             })
             mBluetoothGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 bluetoothDevice.connectGatt(
-                    activity,
+                    context,
                     false,
                     mConnectCallbackManager.getBluetoothGattCallback(),
                     BluetoothDevice.TRANSPORT_LE
                 )// 第二个参数表示是否自动重连
             } else {
-                bluetoothDevice.connectGatt(activity, false, mConnectCallbackManager.getBluetoothGattCallback())// 第二个参数表示是否自动重连
+                bluetoothDevice.connectGatt(context, false, mConnectCallbackManager.getBluetoothGattCallback())// 第二个参数表示是否自动重连
             }
         }
     }
 
     override fun disconnect() {
-        if (!activity.isBluetoothEnable()) {
+        if (!context.isBluetoothEnable()) {
             return
         }
-        if (!PermissionUtils.checkPermissions(activity, false)) {
+        if (!PermissionUtils.checkPermissions(context, false)) {
             return
         }
-        if (activity.isBleDeviceConnected(mBluetoothGatt?.device)) {
+        if (context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             mBluetoothGatt?.disconnect()
         }
         // 这里的close()方法会清空BluetoothGatt中的mGattCallback，导致收不到回调，但是可以使用本地缓存的各个命令来回调
@@ -89,17 +93,14 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
         mBluetoothGatt = null
     }
 
-    override suspend fun readCharacteristic(address: String, characteristicUuid: UUID, serviceUuid: UUID?, timeout: Long): ByteArray? {
-        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
-            throw BleException("invalid address：$address")
-        }
+    override suspend fun readCharacteristic(characteristicUuid: UUID, serviceUuid: UUID?, timeout: Long): ByteArray? {
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
         if (!PermissionUtils.requestPermissions(activity, false)) {
             throw BleException("蓝牙权限被拒绝")
         }
-        if (!activity.isBleDeviceConnected(mBluetoothGatt?.device)) {
+        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
         }
 
@@ -127,22 +128,18 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
     }
 
     override suspend fun readDescriptor(
-        address: String,
         descriptorUuid: UUID,
         characteristicUuid: UUID?,
         serviceUuid: UUID?,
         timeout: Long
     ): ByteArray? {
-        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
-            throw BleException("invalid address：$address")
-        }
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
         if (!PermissionUtils.requestPermissions(activity, false)) {
             throw BleException("蓝牙权限被拒绝")
         }
-        if (!activity.isBleDeviceConnected(mBluetoothGatt?.device)) {
+        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
         }
 
@@ -174,17 +171,14 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
         }
     }
 
-    override suspend fun readNotify(address: String, characteristicUuid: UUID, serviceUuid: UUID?) {
-        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
-            throw BleException("invalid address：$address")
-        }
+    override suspend fun readNotify(characteristicUuid: UUID, serviceUuid: UUID?) {
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
         if (!PermissionUtils.requestPermissions(activity, false)) {
             throw BleException("蓝牙权限被拒绝")
         }
-        if (!activity.isBleDeviceConnected(mBluetoothGatt?.device)) {
+        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
         }
 
@@ -202,17 +196,14 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
         })
     }
 
-    override suspend fun readRemoteRssi(address: String, timeout: Long): Int {
-        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
-            throw BleException("invalid address：$address")
-        }
+    override suspend fun readRemoteRssi(timeout: Long): Int {
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
         if (!PermissionUtils.requestPermissions(activity, false)) {
             throw BleException("蓝牙权限被拒绝")
         }
-        if (!activity.isBleDeviceConnected(mBluetoothGatt?.device)) {
+        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
         }
 
@@ -234,17 +225,14 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
 
     }
 
-    override suspend fun requestConnectionPriority(address: String, connectionPriority: Int): Boolean {
-        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
-            throw BleException("invalid address：$address")
-        }
+    override suspend fun requestConnectionPriority(connectionPriority: Int): Boolean {
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
         if (!PermissionUtils.requestPermissions(activity, false)) {
             throw BleException("蓝牙权限被拒绝")
         }
-        if (!activity.isBleDeviceConnected(mBluetoothGatt?.device)) {
+        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
         }
 
@@ -255,17 +243,14 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
         return mBluetoothGatt?.requestConnectionPriority(connectionPriority) ?: false
     }
 
-    override suspend fun requestMtu(address: String, mtu: Int, timeout: Long): Int {
-        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
-            throw BleException("invalid address：$address")
-        }
+    override suspend fun requestMtu(mtu: Int, timeout: Long): Int {
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
         if (!PermissionUtils.requestPermissions(activity, false)) {
             throw BleException("蓝牙权限被拒绝")
         }
-        if (!activity.isBleDeviceConnected(mBluetoothGatt?.device)) {
+        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
         }
 
@@ -291,22 +276,18 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
     }
 
     override suspend fun setCharacteristicNotification(
-        address: String,
         characteristicUuid: UUID,
         serviceUuid: UUID?,
         type: Int,
         enable: Boolean
     ): Boolean {
-        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
-            throw BleException("invalid address：$address")
-        }
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
         if (!PermissionUtils.requestPermissions(activity, false)) {
             throw BleException("蓝牙权限被拒绝")
         }
-        if (!activity.isBleDeviceConnected(mBluetoothGatt?.device)) {
+        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
         }
 
@@ -348,16 +329,12 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
     }
 
     override suspend fun writeCharacteristic(
-        address: String,
         data: List<ByteArray>,
         characteristicUuid: UUID,
         serviceUuid: UUID?,
         timeout: Long,
         writeType: Int
     ) {
-        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
-            throw BleException("invalid address：$address")
-        }
         if (data.isEmpty()) {
             throw BleException("data is empty")
         }
@@ -367,7 +344,7 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
         if (!PermissionUtils.requestPermissions(activity, false)) {
             throw BleException("蓝牙权限被拒绝")
         }
-        if (!activity.isBleDeviceConnected(mBluetoothGatt?.device)) {
+        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
         }
 
@@ -416,16 +393,12 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
     }
 
     override suspend fun writeDescriptor(
-        address: String,
         data: List<ByteArray>,
         descriptorUuid: UUID,
         characteristicUuid: UUID?,
         serviceUuid: UUID?,
         timeout: Long
     ) {
-        if (!BluetoothAdapter.checkBluetoothAddress(address)) {
-            throw BleException("invalid address：$address")
-        }
         if (data.isEmpty()) {
             throw BleException("data is empty")
         }
@@ -435,7 +408,7 @@ class ConnectExecutor(private val activity: ComponentActivity) : IConnectExecuto
         if (!PermissionUtils.requestPermissions(activity, false)) {
             throw BleException("蓝牙权限被拒绝")
         }
-        if (!activity.isBleDeviceConnected(mBluetoothGatt?.device)) {
+        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
         }
 

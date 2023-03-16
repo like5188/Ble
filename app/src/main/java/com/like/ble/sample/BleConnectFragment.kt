@@ -24,7 +24,7 @@ class BleConnectFragment : BaseLazyFragment() {
     private lateinit var mBinding: FragmentBleConnectBinding
     private lateinit var mData: BleScanInfo
     private val connectExecutor: IConnectExecutor by lazy {
-        ConnectExecutor(requireActivity())
+        ConnectExecutor(requireActivity(), mData.address)
     }
     private val mAdapter: BleConnectAdapter by lazy { BleConnectAdapter(requireActivity(), connectExecutor) }
 
@@ -81,7 +81,7 @@ class BleConnectFragment : BaseLazyFragment() {
         mAdapter.submitList(null)
         lifecycleScope.launch {
             try {
-                val services = connectExecutor.connect(mData.address, 10000L)
+                val services = connectExecutor.connect(10000L)
                 mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
                 mBinding.tvConnectStatus.text = "连接成功"
                 if (!services.isNullOrEmpty()) {
@@ -122,7 +122,7 @@ class BleConnectFragment : BaseLazyFragment() {
         val mtu = mBinding.etRequestMtu.text.toString().trim().toInt()
         lifecycleScope.launch {
             try {
-                connectExecutor.requestMtu(mData.address, mtu, 3000)
+                connectExecutor.requestMtu(mtu, 3000)
                 shortToastBottom("设置成功")
             } catch (e: Exception) {
                 shortToastBottom(e.message)
@@ -133,7 +133,7 @@ class BleConnectFragment : BaseLazyFragment() {
     private fun readRemoteRssi() {
         lifecycleScope.launch {
             try {
-                val rssi = connectExecutor.readRemoteRssi(mData.address, 3000)
+                val rssi = connectExecutor.readRemoteRssi(3000)
                 mBinding.etReadRemoteRssi.setText(rssi.toString())
             } catch (e: Exception) {
                 shortToastBottom(e.message)
@@ -150,7 +150,7 @@ class BleConnectFragment : BaseLazyFragment() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             lifecycleScope.launch {
                 try {
-                    connectExecutor.requestConnectionPriority(mData.address, connectionPriority)
+                    connectExecutor.requestConnectionPriority(connectionPriority)
                     shortToastBottom("设置成功")
                 } catch (e: Exception) {
                     shortToastBottom(e.message)
