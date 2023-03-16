@@ -1,10 +1,11 @@
-package com.like.ble.central.callback
+package com.like.ble.central.connect.callback
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
+import com.like.ble.callback.BleCallback
 import com.like.ble.util.getValidString
 
 @SuppressLint("MissingPermission")

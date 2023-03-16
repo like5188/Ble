@@ -1,4 +1,4 @@
-package com.like.ble.central.result
+package com.like.ble.central.scan.result
 
 import android.bluetooth.BluetoothDevice
 

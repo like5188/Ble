@@ -1,4 +1,4 @@
-package com.like.ble.central.executor
+package com.like.ble.central.connect.executor
 
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattService

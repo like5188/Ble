@@ -8,8 +8,8 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
-import com.like.ble.central.executor.ConnectExecutor
-import com.like.ble.central.executor.IConnectExecutor
+import com.like.ble.central.connect.executor.ConnectExecutor
+import com.like.ble.central.connect.executor.IConnectExecutor
 import com.like.ble.sample.databinding.FragmentBleConnectBinding
 import com.like.common.base.BaseLazyFragment
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager

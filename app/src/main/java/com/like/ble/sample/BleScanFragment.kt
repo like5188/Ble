@@ -9,9 +9,9 @@ import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableInt
 import androidx.lifecycle.lifecycleScope
-import com.like.ble.central.executor.IScanExecutor
-import com.like.ble.central.executor.ScanExecutor
-import com.like.ble.central.result.ScanResult
+import com.like.ble.central.scan.executor.IScanExecutor
+import com.like.ble.central.scan.executor.ScanExecutor
+import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.result.BleResult
 import com.like.ble.sample.databinding.FragmentBleScanBinding
 import com.like.common.base.BaseLazyFragment

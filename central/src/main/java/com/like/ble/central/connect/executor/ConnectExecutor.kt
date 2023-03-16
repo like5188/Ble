@@ -1,11 +1,15 @@
-package com.like.ble.central.executor
+package com.like.ble.central.connect.executor
 
 import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.os.Build
 import androidx.activity.ComponentActivity
-import com.like.ble.central.callback.*
-import com.like.ble.central.util.PermissionUtils
+import com.like.ble.callback.BleCallback
+import com.like.ble.central.connect.PermissionUtils
+import com.like.ble.central.connect.callback.ByteArrayCallback
+import com.like.ble.central.connect.callback.ConnectCallback
+import com.like.ble.central.connect.callback.ConnectCallbackManager
+import com.like.ble.central.connect.callback.IntCallback
 import com.like.ble.exception.BleException
 import com.like.ble.util.*
 import kotlinx.coroutines.TimeoutCancellationException
@@ -44,7 +48,7 @@ class ConnectExecutor(private val activity: ComponentActivity, private val addre
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
-        if (!PermissionUtils.requestPermissions(activity, false)) {
+        if (!PermissionUtils.requestPermissions(activity)) {
             throw BleException("蓝牙权限被拒绝")
         }
         if (context.isBleDeviceConnected(mBluetoothGatt?.device)) return mBluetoothGatt?.services
@@ -82,7 +86,7 @@ class ConnectExecutor(private val activity: ComponentActivity, private val addre
         if (!context.isBluetoothEnable()) {
             return
         }
-        if (!PermissionUtils.checkPermissions(context, false)) {
+        if (!PermissionUtils.checkPermissions(context)) {
             return
         }
         if (context.isBleDeviceConnected(mBluetoothGatt?.device)) {
@@ -97,7 +101,7 @@ class ConnectExecutor(private val activity: ComponentActivity, private val addre
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
-        if (!PermissionUtils.requestPermissions(activity, false)) {
+        if (!PermissionUtils.requestPermissions(activity)) {
             throw BleException("蓝牙权限被拒绝")
         }
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
@@ -136,7 +140,7 @@ class ConnectExecutor(private val activity: ComponentActivity, private val addre
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
-        if (!PermissionUtils.requestPermissions(activity, false)) {
+        if (!PermissionUtils.requestPermissions(activity)) {
             throw BleException("蓝牙权限被拒绝")
         }
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
@@ -175,7 +179,7 @@ class ConnectExecutor(private val activity: ComponentActivity, private val addre
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
-        if (!PermissionUtils.requestPermissions(activity, false)) {
+        if (!PermissionUtils.requestPermissions(activity)) {
             throw BleException("蓝牙权限被拒绝")
         }
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
@@ -200,7 +204,7 @@ class ConnectExecutor(private val activity: ComponentActivity, private val addre
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
-        if (!PermissionUtils.requestPermissions(activity, false)) {
+        if (!PermissionUtils.requestPermissions(activity)) {
             throw BleException("蓝牙权限被拒绝")
         }
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
@@ -229,7 +233,7 @@ class ConnectExecutor(private val activity: ComponentActivity, private val addre
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
-        if (!PermissionUtils.requestPermissions(activity, false)) {
+        if (!PermissionUtils.requestPermissions(activity)) {
             throw BleException("蓝牙权限被拒绝")
         }
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
@@ -247,7 +251,7 @@ class ConnectExecutor(private val activity: ComponentActivity, private val addre
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
-        if (!PermissionUtils.requestPermissions(activity, false)) {
+        if (!PermissionUtils.requestPermissions(activity)) {
             throw BleException("蓝牙权限被拒绝")
         }
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
@@ -284,7 +288,7 @@ class ConnectExecutor(private val activity: ComponentActivity, private val addre
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
-        if (!PermissionUtils.requestPermissions(activity, false)) {
+        if (!PermissionUtils.requestPermissions(activity)) {
             throw BleException("蓝牙权限被拒绝")
         }
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
@@ -341,7 +345,7 @@ class ConnectExecutor(private val activity: ComponentActivity, private val addre
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
-        if (!PermissionUtils.requestPermissions(activity, false)) {
+        if (!PermissionUtils.requestPermissions(activity)) {
             throw BleException("蓝牙权限被拒绝")
         }
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
@@ -405,7 +409,7 @@ class ConnectExecutor(private val activity: ComponentActivity, private val addre
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleException("蓝牙未打开")
         }
-        if (!PermissionUtils.requestPermissions(activity, false)) {
+        if (!PermissionUtils.requestPermissions(activity)) {
             throw BleException("蓝牙权限被拒绝")
         }
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {

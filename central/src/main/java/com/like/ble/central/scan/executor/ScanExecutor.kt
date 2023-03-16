@@ -1,4 +1,4 @@
-package com.like.ble.central.executor
+package com.like.ble.central.scan.executor
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
@@ -7,9 +7,10 @@ import android.bluetooth.le.ScanSettings
 import android.os.Build
 import android.os.ParcelUuid
 import androidx.activity.ComponentActivity
-import com.like.ble.central.callback.ScanCallbackManager
-import com.like.ble.central.result.ScanResult
-import com.like.ble.central.util.PermissionUtils
+import com.like.ble.central.scan.PermissionUtils
+import com.like.ble.central.scan.callback.ScanCallback
+import com.like.ble.central.scan.callback.ScanCallbackManager
+import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.BleException
 import com.like.ble.result.BleResult
 import com.like.ble.util.getBluetoothAdapter
@@ -42,12 +43,12 @@ class ScanExecutor(private val activity: ComponentActivity) : IScanExecutor {
             emitError("蓝牙未打开")
             return
         }
-        if (!PermissionUtils.requestPermissions(activity, true)) {
+        if (!PermissionUtils.requestPermissions(activity)) {
             emitError("蓝牙权限被拒绝")
             return
         }
         if (mScanning.compareAndSet(false, true)) {
-            scanCallbackManager.setScanCallback(object : com.like.ble.central.callback.ScanCallback() {
+            scanCallbackManager.setScanCallback(object : ScanCallback() {
                 override fun onSuccess(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
                     emitResult(device, rssi, scanRecord)
                 }
@@ -103,7 +104,7 @@ class ScanExecutor(private val activity: ComponentActivity) : IScanExecutor {
             if (!activity.isBluetoothEnable()) {
                 return
             }
-            if (!PermissionUtils.checkPermissions(activity, true)) {
+            if (!PermissionUtils.checkPermissions(activity)) {
                 return
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

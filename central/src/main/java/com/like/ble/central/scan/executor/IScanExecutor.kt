@@ -1,4 +1,4 @@
-package com.like.ble.central.executor
+package com.like.ble.central.scan.executor
 
 import com.like.ble.executor.IExecutor
 import com.like.ble.result.BleResult

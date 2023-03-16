@@ -1,11 +1,10 @@
-package com.like.ble.central.callback
+package com.like.ble.central.scan.callback
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.le.ScanCallback
 import android.os.Build
 import androidx.annotation.RequiresApi
-import com.like.ble.exception.BleException
 
 @SuppressLint("MissingPermission")
 class ScanCallbackManager {
@@ -42,7 +41,7 @@ class ScanCallbackManager {
         scanCallback?.onSuccess(device, rssi, scanRecord)
     }
 
-    private var scanCallback: com.like.ble.central.callback.ScanCallback? = null
+    private var scanCallback: com.like.ble.central.scan.callback.ScanCallback? = null
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun getScanCallback(): ScanCallback {
@@ -53,7 +52,7 @@ class ScanCallbackManager {
         return mLeScanCallback
     }
 
-    fun setScanCallback(callback: com.like.ble.central.callback.ScanCallback?) {
+    fun setScanCallback(callback: com.like.ble.central.scan.callback.ScanCallback?) {
         scanCallback = callback
     }
 

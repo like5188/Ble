@@ -1,4 +1,4 @@
-package com.like.ble.central.callback
+package com.like.ble.callback
 
 import com.like.ble.exception.BleException
 
