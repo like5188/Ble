@@ -11,9 +11,12 @@ import com.like.ble.central.connect.callback.ConnectCallbackManager
 import com.like.ble.central.connect.callback.IntCallback
 import com.like.ble.exception.BleException
 import com.like.ble.util.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
@@ -319,39 +322,38 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
             throw BleException("this characteristic not support write!")
         }
 
-        try {
-            withTimeout(timeout) {
-                // 是否可以进行下一批次的写入操作
-                val nextFlag = AtomicBoolean(false)
-                mConnectCallbackManager.setWriteCharacteristicCallback(object : BleCallback() {
-                    override fun onSuccess() {
-                        nextFlag.set(true)
-                    }
+        suspendCancellableCoroutineWithTimeout.execute(timeout, "写特征值超时：${characteristicUuid.getValidString()}") { continuation ->
+            // 是否可以进行下一批次的写入操作
+            val nextFlag = AtomicBoolean(false)
+            mConnectCallbackManager.setWriteCharacteristicCallback(object : BleCallback() {
+                override fun onSuccess() {
+                    nextFlag.set(true)
+                }
 
-                    override fun onError(exception: BleException) {
-                        throw exception
-                    }
-                })
-                /*
-                    写特征值前可以设置写的类型setWriteType()，写类型有三种，如下：
-                    WRITE_TYPE_DEFAULT 默认类型，需要外围设备的确认，也就是需要外围设备的回应，这样才能继续发送写。
-                    WRITE_TYPE_NO_RESPONSE 设置该类型不需要外围设备的回应，可以继续写数据。加快传输速率。
-                    WRITE_TYPE_SIGNED 写特征携带认证签名，具体作用不太清楚。
-                */
-                characteristic.writeType = writeType
+                override fun onError(exception: BleException) {
+                    continuation.resumeWithException(exception)
+                }
+            })
+            /*
+                写特征值前可以设置写的类型setWriteType()，写类型有三种，如下：
+                WRITE_TYPE_DEFAULT 默认类型，需要外围设备的确认，也就是需要外围设备的回应，这样才能继续发送写。
+                WRITE_TYPE_NO_RESPONSE 设置该类型不需要外围设备的回应，可以继续写数据。加快传输速率。
+                WRITE_TYPE_SIGNED 写特征携带认证签名，具体作用不太清楚。
+            */
+            characteristic.writeType = writeType
+            launch {
                 data.forEach {
                     characteristic.value = it
                     if (mBluetoothGatt?.writeCharacteristic(characteristic) != true) {
-                        throw BleException("写特征值失败：${characteristicUuid.getValidString()}")
+                        continuation.resumeWithException(BleException("写特征值失败：${characteristicUuid.getValidString()}"))
                     }
                     do {
                         delay(20)
                     } while (!nextFlag.get())
                     nextFlag.set(false)
                 }
+                continuation.resume(Unit)
             }
-        } catch (e: TimeoutCancellationException) {
-            throw BleException("写特征值超时：${characteristicUuid.getValidString()}")
         }
 
     }
@@ -387,35 +389,33 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
 //            return
 //        }
 
-        try {
-            withTimeout(timeout) {
-                // 是否可以进行下一批次的写入操作
-                val nextFlag = AtomicBoolean(false)
-                mConnectCallbackManager.setWriteDescriptorCallback(object : BleCallback() {
-                    override fun onSuccess() {
-                        nextFlag.set(true)
-                    }
+        suspendCancellableCoroutineWithTimeout.execute(timeout, "写描述值超时：${descriptorUuid.getValidString()}") { continuation ->
+            // 是否可以进行下一批次的写入操作
+            val nextFlag = AtomicBoolean(false)
+            mConnectCallbackManager.setWriteDescriptorCallback(object : BleCallback() {
+                override fun onSuccess() {
+                    nextFlag.set(true)
+                }
 
-                    override fun onError(exception: BleException) {
-                        throw exception
-                    }
-                })
+                override fun onError(exception: BleException) {
+                    continuation.resumeWithException(exception)
+                }
+            })
 
+            launch {
                 data.forEach {
                     descriptor.value = it
                     if (mBluetoothGatt?.writeDescriptor(descriptor) != true) {
-                        throw BleException("写描述值失败：${descriptorUuid.getValidString()}")
+                        continuation.resumeWithException(BleException("写描述值失败：${descriptorUuid.getValidString()}"))
                     }
                     do {
                         delay(20)
                     } while (!nextFlag.get())
                     nextFlag.set(false)
                 }
+                continuation.resume(Unit)
             }
-        } catch (e: TimeoutCancellationException) {
-            throw BleException("写描述值超时：${descriptorUuid.getValidString()}")
         }
-
     }
 
     override fun close() {
