@@ -81,9 +81,6 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
             return
         }
         suspendCancellableCoroutineWithTimeout.cancel()
-        if (context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            mBluetoothGatt?.disconnect()
-        }
         // close()时会清空BluetoothGatt内部的mCallback回调。导致收不到断开连接的消息。
         mBluetoothGatt?.close()
         mBluetoothGatt = null
