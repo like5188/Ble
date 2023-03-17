@@ -35,7 +35,5 @@ dependencies {
     // viewModel 支持
     implementation 'androidx.fragment:fragment-ktx:1.5.5'
 
-    implementation 'com.github.like5188:Common:7.0.6'
-
     implementation project(':core')
 }

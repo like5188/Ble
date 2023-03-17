@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import androidx.activity.ComponentActivity
 import androidx.core.content.ContextCompat
-import com.like.common.util.activityresultlauncher.requestMultiplePermissions
 
 object PermissionUtils {
 

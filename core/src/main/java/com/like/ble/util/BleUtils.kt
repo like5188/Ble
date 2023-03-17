@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.activity.ComponentActivity
-import com.like.common.util.activityresultlauncher.startActivityForResult
 import java.nio.ByteBuffer
 import java.util.*
 import java.util.regex.Pattern

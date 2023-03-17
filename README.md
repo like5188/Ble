@@ -83,5 +83,4 @@
     compileOnly 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
     // Activity 或 Fragment 对协程的支持：lifecycleScope
     compileOnly 'androidx.fragment:fragment-ktx:1.5.5'
-    compileOnly 'com.github.like5188:Common:7.0.6'
 ```
