@@ -201,7 +201,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         }
     }
 
-    override suspend fun requestConnectionPriority(connectionPriority: Int): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun requestConnectionPriority(connectionPriority: Int, timeout: Long) = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
@@ -211,7 +211,12 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
             throw BleException("android 5.0及其以上才支持requestConnectionPriority：$address")
         }
 
-        mBluetoothGatt?.requestConnectionPriority(connectionPriority) ?: false
+        suspendCancellableCoroutineWithTimeout.execute(timeout, "设置ConnectionPriority超时：$address") { continuation ->
+            if (mBluetoothGatt?.requestConnectionPriority(connectionPriority) != true) {
+                continuation.resumeWithException(BleException("设置ConnectionPriority失败：$address"))
+            }
+            continuation.resume(Unit)
+        }
     }
 
     override suspend fun requestMtu(mtu: Int, timeout: Long): Int = withContext(Dispatchers.IO) {

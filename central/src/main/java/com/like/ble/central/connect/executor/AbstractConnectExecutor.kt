@@ -82,7 +82,7 @@ abstract class AbstractConnectExecutor(activity: ComponentActivity) : BaseExecut
      *
      * @param connectionPriority    需要设置的priority。[android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_BALANCED]、[android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_HIGH]、[android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_LOW_POWER]
      */
-    abstract suspend fun requestConnectionPriority(@IntRange(from = 0, to = 2) connectionPriority: Int): Boolean
+    abstract suspend fun requestConnectionPriority(@IntRange(from = 0, to = 2) connectionPriority: Int, timeout: Long = 3000L)
 
     abstract suspend fun requestMtu(@IntRange(from = 23, to = 517) mtu: Int, timeout: Long = 3000L): Int
 
