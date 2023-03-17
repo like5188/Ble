@@ -46,7 +46,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         }
     }
 
-    override suspend fun connect(timeout: Long, autoConnect: Boolean): List<BluetoothGattService>? = withContext(Dispatchers.IO) {
+    override suspend fun connect(timeout: Long): List<BluetoothGattService>? = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrowBleException()
         if (context.isBleDeviceConnected(mBluetoothGatt?.device)) return@withContext mBluetoothGatt?.services
         // 获取远端的蓝牙设备
@@ -66,12 +66,12 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
             mBluetoothGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 bluetoothDevice.connectGatt(
                     context,
-                    autoConnect,
+                    false,// 不知道为什么，设置为true时会导致连接不上
                     mConnectCallbackManager.getBluetoothGattCallback(),
                     BluetoothDevice.TRANSPORT_LE
                 )// 第二个参数表示是否自动重连
             } else {
-                bluetoothDevice.connectGatt(context, autoConnect, mConnectCallbackManager.getBluetoothGattCallback())// 第二个参数表示是否自动重连
+                bluetoothDevice.connectGatt(context, false, mConnectCallbackManager.getBluetoothGattCallback())// 第二个参数表示是否自动重连
             }
         }
     }
