@@ -23,6 +23,7 @@ class BleCentralActivity : AppCompatActivity() {
         mFragments.add(BleScanFragment.newInstance())
         mBinding.vp.adapter = ViewPagerAdapter(mFragments, this)
         TabLayoutMediator(mBinding.tabLayout, mBinding.vp) { tab, position ->
+            // 为新创建的tab设置文本和样式
             if (position == 0) {
                 tab.text = "扫描"
             } else {
