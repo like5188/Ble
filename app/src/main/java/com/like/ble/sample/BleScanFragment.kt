@@ -50,8 +50,11 @@ class BleScanFragment : BaseLazyFragment() {
                 when (it) {
                     is BleResult.Success<*> -> {
                         val scanResult: ScanResult = it.data as ScanResult
-                        val address = scanResult.device.address ?: ""
                         val name = scanResult.device.name ?: "N/A"
+                        if (name != "BLE测试设备") {
+                            return@collect
+                        }
+                        val address = scanResult.device.address ?: ""
                         val item: BleScanInfo? = mAdapter.currentList.firstOrNull { it?.address == address }
                         if (item == null) {// 防止重复添加
                             val newItems = mAdapter.currentList.toMutableList()
