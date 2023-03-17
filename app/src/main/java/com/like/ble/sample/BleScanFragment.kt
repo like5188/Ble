@@ -64,6 +64,9 @@ class BleScanFragment : BaseLazyFragment() {
                             item.updateRssi(scanResult.rssi)
                         }
                     }
+                    is BleResult.Completed -> {
+                        mBinding.tvScanStatus.text = "扫描完成"
+                    }
                     is BleResult.Error -> {
                         val ctx = context ?: return@collect
                         mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
@@ -81,9 +84,6 @@ class BleScanFragment : BaseLazyFragment() {
         mAdapter.submitList(null)
         lifecycleScope.launch {
             scanExecutor.startScan(duration = 10000)
-            if (mBinding.tvScanStatus.text != "扫描停止了") {
-                mBinding.tvScanStatus.text = "扫描完成"
-            }
         }
     }
 

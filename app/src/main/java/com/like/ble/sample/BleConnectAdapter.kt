@@ -165,19 +165,17 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
             binding.ivNotify.setOnClickListener {
                 mActivity.lifecycleScope.launch {
                     try {
-                        val data = connectExecutor.setCharacteristicNotification(
+                        connectExecutor.setCharacteristicNotification(
                             characteristic.uuid,
                             serviceUuid,
                             0,
                             !isOn,
                         )
-                        if (data) {
-                            isOn = !isOn
-                            if (isOn) {
-                                binding.ivNotify.setImageResource(R.drawable.notify)
-                            } else {
-                                binding.ivNotify.setImageResource(R.drawable.notify_close)
-                            }
+                        isOn = !isOn
+                        if (isOn) {
+                            binding.ivNotify.setImageResource(R.drawable.notify)
+                        } else {
+                            binding.ivNotify.setImageResource(R.drawable.notify_close)
                         }
                     } catch (e: Exception) {
                     }
@@ -190,19 +188,17 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
             binding.ivIndicate.setOnClickListener {
                 mActivity.lifecycleScope.launch {
                     try {
-                        val data = connectExecutor.setCharacteristicNotification(
+                        connectExecutor.setCharacteristicNotification(
                             characteristic.uuid,
                             serviceUuid,
                             1,
                             !isOn,
                         )
-                        if (data) {
-                            isOn = !isOn
-                            if (isOn) {
-                                binding.ivIndicate.setImageResource(R.drawable.indicate)
-                            } else {
-                                binding.ivIndicate.setImageResource(R.drawable.indicate_close)
-                            }
+                        isOn = !isOn
+                        if (isOn) {
+                            binding.ivIndicate.setImageResource(R.drawable.indicate)
+                        } else {
+                            binding.ivIndicate.setImageResource(R.drawable.indicate_close)
                         }
                     } catch (e: Exception) {
                     }

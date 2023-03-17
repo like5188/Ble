@@ -13,11 +13,9 @@ import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.BleException
 import com.like.ble.result.BleResult
 import com.like.ble.util.getBluetoothAdapter
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.withContext
 import java.util.*
 
 /**
@@ -29,7 +27,7 @@ class ScanExecutor(activity: ComponentActivity) : AbstractScanExecutor(activity)
     private val scanCallbackManager: ScanCallbackManager by lazy {
         ScanCallbackManager()
     }
-
+    private var delayJob: Job? = null
     private val _scanFlow: MutableSharedFlow<BleResult> by lazy {
         MutableSharedFlow(extraBufferCapacity = Int.MAX_VALUE)
     }
@@ -85,8 +83,11 @@ class ScanExecutor(activity: ComponentActivity) : AbstractScanExecutor(activity)
             }
         }
         if (duration > 0) {
-            delay(duration)
-            stopScan()
+            delayJob = launch {
+                delay(duration)
+                emitCompleted()
+                stopScan()
+            }
         }
     }
 
@@ -94,11 +95,16 @@ class ScanExecutor(activity: ComponentActivity) : AbstractScanExecutor(activity)
         if (!checkEnvironment()) {
             return
         }
+        delayJob?.cancel()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             activity.getBluetoothAdapter()?.bluetoothLeScanner?.stopScan(scanCallbackManager.getScanCallback())
         } else {
             activity.getBluetoothAdapter()?.stopLeScan(scanCallbackManager.getLeScanCallback())
         }
+    }
+
+    private fun emitCompleted() {
+        _scanFlow.tryEmit(BleResult.Completed)
     }
 
     private fun emitResult(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
