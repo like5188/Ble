@@ -130,7 +130,6 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                                                 data.batch(20),
                                                 characteristic.uuid,
                                                 serviceUuid,
-                                                5000,
                                             )
                                         } catch (e: Exception) {
                                             mActivity.longToastBottom(e.message)
@@ -144,7 +143,6 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                                                 data.batch(20),
                                                 characteristic.uuid,
                                                 serviceUuid,
-                                                5000,
                                             )
                                             mActivity.longToastBottom("写特征成功")
                                         } catch (e: Exception) {
