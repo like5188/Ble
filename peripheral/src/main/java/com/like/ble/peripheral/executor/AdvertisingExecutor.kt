@@ -10,10 +10,10 @@ import com.like.ble.exception.BleException
 import com.like.ble.peripheral.callback.AdvertisingCallbackManager
 import com.like.ble.util.getBluetoothAdapter
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 /**
  * 蓝牙广播相关的命令执行者
@@ -42,7 +42,7 @@ class AdvertisingExecutor(activity: ComponentActivity) : AbstractAdvertisingExec
         checkEnvironmentOrThrowBleException()
         val bluetoothLeAdvertiser = activity.getBluetoothAdapter()?.bluetoothLeAdvertiser
             ?: throw BleException("phone does not support Bluetooth Advertiser")
-        suspendCoroutine { continuation ->
+        suspendCancellableCoroutine { continuation ->
             // 设置设备名字
             if (deviceName.isNotEmpty()) {
                 activity.getBluetoothAdapter()?.name = deviceName
