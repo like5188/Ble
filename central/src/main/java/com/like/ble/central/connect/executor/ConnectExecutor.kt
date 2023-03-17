@@ -247,7 +247,8 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         characteristicUuid: UUID,
         serviceUuid: UUID?,
         type: Int,
-        enable: Boolean
+        enable: Boolean,
+        timeout: Long
     ) = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
@@ -259,9 +260,6 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
 
         if (characteristic.properties and (BluetoothGattCharacteristic.PROPERTY_NOTIFY or BluetoothGattCharacteristic.PROPERTY_INDICATE) == 0) {
             throw BleException("this characteristic not support notify or indicate")
-        }
-        if (mBluetoothGatt?.setCharacteristicNotification(characteristic, enable) != true) {
-            throw BleException("setCharacteristicNotification fail")
         }
 
         // cccd : clinet characteristic configuration descriptor
@@ -288,9 +286,17 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
             }
             else -> throw BleException("type can only be 0 or 1")
         }
-        if (mBluetoothGatt?.writeDescriptor(cccd) != true) {
-            throw BleException("writeDescriptor fail")
+
+        suspendCancellableCoroutineWithTimeout.execute(timeout, "设置通知超时：$address") { continuation ->
+            if (mBluetoothGatt?.setCharacteristicNotification(characteristic, enable) != true) {
+                continuation.resumeWithException(BleException("setCharacteristicNotification fail"))
+            }
+            if (mBluetoothGatt?.writeDescriptor(cccd) != true) {
+                continuation.resumeWithException(BleException("writeDescriptor fail"))
+            }
+            continuation.resume(Unit)
         }
+
     }
 
     override suspend fun writeCharacteristic(

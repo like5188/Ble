@@ -100,6 +100,7 @@ abstract class AbstractConnectExecutor(activity: ComponentActivity) : BaseExecut
         @IntRange(from = 0, to = 1)
         type: Int = 0,
         enable: Boolean = true,
+        timeout: Long = 3000L,
     )
 
     /**
