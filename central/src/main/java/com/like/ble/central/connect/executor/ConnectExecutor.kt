@@ -158,7 +158,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         }
     }
 
-    override suspend fun readNotify(characteristicUuid: UUID, serviceUuid: UUID?) = withContext(Dispatchers.IO) {
+    override suspend fun setReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?) = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")

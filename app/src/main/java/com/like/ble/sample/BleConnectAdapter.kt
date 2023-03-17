@@ -125,7 +125,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                                 0x1.toByte() -> {
                                     mActivity.lifecycleScope.launch {
                                         try {
-                                            connectExecutor.readNotify(characteristic.uuid, serviceUuid)
+                                            connectExecutor.setReadNotifyCallback(characteristic.uuid, serviceUuid)
                                             connectExecutor.writeCharacteristic(
                                                 data.batch(20),
                                                 characteristic.uuid,
