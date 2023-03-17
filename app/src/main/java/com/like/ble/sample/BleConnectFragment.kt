@@ -81,7 +81,10 @@ class BleConnectFragment : BaseLazyFragment() {
         mBinding.tvConnectStatus.text = "连接中……"
         mAdapter.submitList(null)
         lifecycleScope.launch {
+            val ctx = context ?: return@launch
             try {
+                mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
+                mBinding.tvConnectStatus.text = "连接成功"
                 val services = connectExecutor.connect(10000L, false)
                 if (!services.isNullOrEmpty()) {
                     val bleGattServiceInfos = services.map { bluetoothGattService ->
@@ -91,28 +94,25 @@ class BleConnectFragment : BaseLazyFragment() {
                 } else {
                     mAdapter.submitList(null)
                 }
-                mBinding.tvConnectStatus.text = "连接成功"
-                val ctx = context ?: return@launch
-                mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
             } catch (e: Exception) {
+                mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
+                mBinding.tvConnectStatus.text = e.message
                 mAdapter.submitList(null)
                 mBinding.etRequestMtu.setText("")
                 mBinding.etReadRemoteRssi.setText("")
                 mBinding.etRequestConnectionPriority.setText("")
-                mBinding.tvConnectStatus.text = e.message
-                val ctx = context ?: return@launch
-                mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
             }
         }
     }
 
     fun disconnect() {
+        val ctx = context ?: return
         try {
             connectExecutor.disconnect()
-            mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_red))
+            mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
             mBinding.tvConnectStatus.text = "连接停止了"
         } catch (e: Exception) {
-            mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_red))
+            mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
             mBinding.tvConnectStatus.text = e.message
         }
     }

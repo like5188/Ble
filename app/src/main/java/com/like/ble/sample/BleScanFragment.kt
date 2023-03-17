@@ -65,9 +65,9 @@ class BleScanFragment : BaseLazyFragment() {
                         }
                     }
                     is BleResult.Error -> {
-                        mBinding.tvScanStatus.text = it.msg
                         val ctx = context ?: return@collect
                         mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
+                        mBinding.tvScanStatus.text = it.msg
                     }
                 }
             }
@@ -76,8 +76,7 @@ class BleScanFragment : BaseLazyFragment() {
     }
 
     private fun startScan() {
-        val ctx = context ?: return
-        mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
+        mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
         mBinding.tvScanStatus.text = "扫描中……"
         mAdapter.submitList(null)
         lifecycleScope.launch {
@@ -89,12 +88,13 @@ class BleScanFragment : BaseLazyFragment() {
     }
 
     private fun stopScan() {
+        val ctx = context ?: return
         try {
             scanExecutor.stopScan()
-            mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
+            mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
             mBinding.tvScanStatus.text = "扫描停止了"
         } catch (e: Exception) {
-            mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_red))
+            mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
             mBinding.tvScanStatus.text = e.message
         }
     }
