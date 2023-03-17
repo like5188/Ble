@@ -29,6 +29,9 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     private val mConnectCallbackManager: ConnectCallbackManager by lazy {
         ConnectCallbackManager()
     }
+    private val suspendCancellableCoroutineWithTimeout by lazy {
+        SuspendCancellableCoroutineWithTimeout()
+    }
     private val _notifyFlow: MutableSharedFlow<ByteArray?> by lazy {
         MutableSharedFlow(extraBufferCapacity = Int.MAX_VALUE)
     }
@@ -45,7 +48,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         if (context.isBleDeviceConnected(mBluetoothGatt?.device)) return@withContext mBluetoothGatt?.services
         // 获取远端的蓝牙设备
         val bluetoothDevice = context.getBluetoothAdapter()?.getRemoteDevice(address) ?: throw BleException("连接蓝牙失败：$address 未找到")
-        suspendCancellableCoroutineWithTimeout(timeout, "连接蓝牙设备超时：$address") { continuation ->
+        suspendCancellableCoroutineWithTimeout.execute(timeout, "连接蓝牙设备超时：$address") { continuation ->
             continuation.invokeOnCancellation {
                 disconnect()
             }
@@ -77,6 +80,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         if (!checkEnvironment()) {
             return
         }
+        suspendCancellableCoroutineWithTimeout.cancel()
         if (context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             mBluetoothGatt?.disconnect()
         }
