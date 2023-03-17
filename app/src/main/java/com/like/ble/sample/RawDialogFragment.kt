@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.*
 import android.widget.TableRow
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.view.setPadding
 import androidx.databinding.DataBindingUtil
 import com.like.ble.sample.databinding.DialogFragmentRawBinding
@@ -57,7 +58,7 @@ class RawDialogFragment : BaseDialogFragment() {
             val clipboard = activity?.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager ?: return@setOnClickListener
             val clip = ClipData.newPlainText("daqi", mBinding.tvRawData.text)
             clipboard.setPrimaryClip(clip)
-            activity?.shortToastBottom("复制成功")
+            Toast.makeText(activity, "复制成功", Toast.LENGTH_SHORT).show()
         }
     }
 

@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.LinearLayout
+import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
@@ -106,9 +107,9 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                 mActivity.lifecycleScope.launch {
                     try {
                         val data = connectExecutor.readCharacteristic(characteristic.uuid, serviceUuid, 10000)
-                        mActivity.shortToastBottom("读特征成功。数据长度：${data?.size} ${data?.contentToString()}")
+                        Toast.makeText(mActivity, "读特征成功。数据长度：${data?.size} ${data?.contentToString()}", Toast.LENGTH_SHORT).show()
                     } catch (e: Exception) {
-                        mActivity.longToastBottom(e.message)
+                        Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -132,7 +133,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                                                 serviceUuid,
                                             )
                                         } catch (e: Exception) {
-                                            mActivity.longToastBottom(e.message)
+                                            Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
                                         }
                                     }
                                 }
@@ -144,9 +145,9 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                                                 characteristic.uuid,
                                                 serviceUuid,
                                             )
-                                            mActivity.longToastBottom("写特征成功")
+                                            Toast.makeText(mActivity, "写特征成功", Toast.LENGTH_SHORT).show()
                                         } catch (e: Exception) {
-                                            mActivity.longToastBottom(e.message)
+                                            Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
                                         }
                                     }
                                 }
@@ -238,9 +239,9 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                         serviceUuid,
                         10000,
                     )
-                    mActivity.shortToastBottom("读描述成功。数据长度：${data?.size} ${data?.contentToString()}")
+                    Toast.makeText(mActivity, "读描述成功。数据长度：${data?.size} ${data?.contentToString()}", Toast.LENGTH_SHORT).show()
                 } catch (e: Exception) {
-                    mActivity.longToastBottom(e.message)
+                    Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -257,9 +258,9 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                                     serviceUuid,
                                     5000,
                                 )
-                                mActivity.longToastBottom("写描述成功")
+                                Toast.makeText(mActivity, "写描述成功", Toast.LENGTH_SHORT).show()
                             } catch (e: Exception) {
-                                mActivity.longToastBottom(e.message)
+                                Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
                             }
                         }
                     }

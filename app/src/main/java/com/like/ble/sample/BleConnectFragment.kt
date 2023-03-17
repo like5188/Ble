@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
@@ -67,7 +68,7 @@ class BleConnectFragment : BaseLazyFragment() {
         lifecycleScope.launch {
             connectExecutor.notifyFlow
                 .catch {
-                    longToastBottom(it.message)
+                    Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
                 }
                 .collectLatest {
                     Logger.d("读取通知传来的数据成功。数据长度：${it?.size} ${it?.contentToString()}")
@@ -119,16 +120,16 @@ class BleConnectFragment : BaseLazyFragment() {
 
     private fun requestMtu() {
         if (mBinding.etRequestMtu.text.trim().isEmpty()) {
-            shortToastBottom("请输入MTU的值")
+            Toast.makeText(context, "请输入MTU的值", Toast.LENGTH_SHORT).show()
             return
         }
         val mtu = mBinding.etRequestMtu.text.toString().trim().toInt()
         lifecycleScope.launch {
             try {
                 connectExecutor.requestMtu(mtu, 3000)
-                shortToastBottom("设置成功")
+                Toast.makeText(context, "设置成功", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
-                shortToastBottom(e.message)
+                Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -139,14 +140,14 @@ class BleConnectFragment : BaseLazyFragment() {
                 val rssi = connectExecutor.readRemoteRssi(3000)
                 mBinding.etReadRemoteRssi.setText(rssi.toString())
             } catch (e: Exception) {
-                shortToastBottom(e.message)
+                Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     private fun requestConnectionPriority() {
         if (mBinding.etRequestConnectionPriority.text.trim().isEmpty()) {
-            shortToastBottom("请输入connection priority的值")
+            Toast.makeText(context, "请输入connection priority的值", Toast.LENGTH_SHORT).show()
             return
         }
         val connectionPriority = mBinding.etRequestConnectionPriority.text.toString().trim().toInt()
@@ -154,9 +155,9 @@ class BleConnectFragment : BaseLazyFragment() {
             lifecycleScope.launch {
                 try {
                     connectExecutor.requestConnectionPriority(connectionPriority)
-                    shortToastBottom("设置成功")
+                    Toast.makeText(context, "设置成功", Toast.LENGTH_SHORT).show()
                 } catch (e: Exception) {
-                    shortToastBottom(e.message)
+                    Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
                 }
             }
         }

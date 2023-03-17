@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import com.like.ble.sample.databinding.DialogFragmentWriteDataBinding
 import com.like.ble.util.hexStringToByteArray
@@ -29,7 +30,7 @@ class WriteDataFragment : BaseDialogFragment() {
                 callback?.onData(data.hexStringToByteArray())
                 dismiss()
             } else {
-                longToastBottom("只能输入16进制的数据")
+                Toast.makeText(context, "只能输入16进制的数据", Toast.LENGTH_SHORT).show()
             }
         }
     }
