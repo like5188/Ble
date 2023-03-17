@@ -251,7 +251,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         serviceUuid: UUID?,
         type: Int,
         enable: Boolean
-    ): Boolean = withContext(Dispatchers.IO) {
+    ) = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
@@ -289,9 +289,11 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
                     BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
                 }
             }
-            else -> return@withContext false
+            else -> throw BleException("type can only be 0 or 1")
         }
-        mBluetoothGatt?.writeDescriptor(cccd) ?: false
+        if (mBluetoothGatt?.writeDescriptor(cccd) != true) {
+            throw BleException("writeDescriptor fail")
+        }
     }
 
     override suspend fun writeCharacteristic(
