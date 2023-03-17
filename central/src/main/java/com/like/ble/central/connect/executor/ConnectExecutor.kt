@@ -84,6 +84,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         if (context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             mBluetoothGatt?.disconnect()
         }
+        // close()时会清空BluetoothGatt内部的mCallback回调。导致收不到断开连接的消息。
         mBluetoothGatt?.close()
         mBluetoothGatt = null
     }
@@ -102,7 +103,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
                 throw BleException("this characteristic not support read!")
             }
 
-            suspendCancellableCoroutineWithTimeout(timeout, "读取特征值超时：${characteristicUuid.getValidString()}") { continuation ->
+            suspendCancellableCoroutineWithTimeout.execute(timeout, "读取特征值超时：${characteristicUuid.getValidString()}") { continuation ->
                 mConnectCallbackManager.setReadCharacteristicCallback(object : ByteArrayCallback() {
                     override fun onSuccess(data: ByteArray?) {
                         continuation.resume(data)
@@ -141,7 +142,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
 //            return
 //        }
 
-        suspendCancellableCoroutineWithTimeout(timeout, "读取描述值超时：${descriptorUuid.getValidString()}") { continuation ->
+        suspendCancellableCoroutineWithTimeout.execute(timeout, "读取描述值超时：${descriptorUuid.getValidString()}") { continuation ->
             mConnectCallbackManager.setReadDescriptorCallback(object : ByteArrayCallback() {
                 override fun onSuccess(data: ByteArray?) {
                     continuation.resume(data)
@@ -183,7 +184,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
             throw BleException("蓝牙未连接：$address")
         }
 
-        suspendCancellableCoroutineWithTimeout(timeout, "读RSSI超时：$address") { continuation ->
+        suspendCancellableCoroutineWithTimeout.execute(timeout, "读RSSI超时：$address") { continuation ->
             mConnectCallbackManager.setReadRemoteRssiCallback(object : IntCallback() {
                 override fun onSuccess(data: Int) {
                     continuation.resume(data)
@@ -223,7 +224,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
             throw BleException("android 5.0及其以上才支持设置MTU：$address")
         }
 
-        suspendCancellableCoroutineWithTimeout(timeout, "设置MTU超时：$address") { continuation ->
+        suspendCancellableCoroutineWithTimeout.execute(timeout, "设置MTU超时：$address") { continuation ->
             mConnectCallbackManager.setRequestMtuCallback(object : IntCallback() {
                 override fun onSuccess(data: Int) {
                     continuation.resume(data)
