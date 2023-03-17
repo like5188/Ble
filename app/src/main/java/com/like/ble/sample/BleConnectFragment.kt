@@ -84,7 +84,7 @@ class BleConnectFragment : BaseLazyFragment() {
         lifecycleScope.launch {
             val ctx = context ?: return@launch
             try {
-                val services = connectExecutor.connect(10000L, false)
+                val services = connectExecutor.connect()
                 mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
                 mBinding.tvConnectStatus.text = "连接成功"
                 if (!services.isNullOrEmpty()) {
@@ -126,7 +126,7 @@ class BleConnectFragment : BaseLazyFragment() {
         val mtu = mBinding.etRequestMtu.text.toString().trim().toInt()
         lifecycleScope.launch {
             try {
-                connectExecutor.requestMtu(mtu, 3000)
+                connectExecutor.requestMtu(mtu)
                 Toast.makeText(context, "设置成功", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()

@@ -106,7 +106,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
             binding.ivRead.setOnClickListener {
                 mActivity.lifecycleScope.launch {
                     try {
-                        val data = connectExecutor.readCharacteristic(characteristic.uuid, serviceUuid, 10000)
+                        val data = connectExecutor.readCharacteristic(characteristic.uuid, serviceUuid)
                         Toast.makeText(mActivity, "读特征成功。数据长度：${data?.size} ${data?.contentToString()}", Toast.LENGTH_SHORT).show()
                     } catch (e: Exception) {
                         Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
@@ -132,6 +132,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                                                 characteristic.uuid,
                                                 serviceUuid,
                                             )
+                                            Toast.makeText(mActivity, "设置通知监听并写特征成功", Toast.LENGTH_SHORT).show()
                                         } catch (e: Exception) {
                                             Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
                                         }
@@ -177,6 +178,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                             binding.ivNotify.setImageResource(R.drawable.notify_close)
                         }
                     } catch (e: Exception) {
+                        Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -200,6 +202,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                             binding.ivIndicate.setImageResource(R.drawable.indicate_close)
                         }
                     } catch (e: Exception) {
+                        Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -236,8 +239,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                     val data = connectExecutor.readDescriptor(
                         descriptor.uuid,
                         characteristic.uuid,
-                        serviceUuid,
-                        10000,
+                        serviceUuid
                     )
                     Toast.makeText(mActivity, "读描述成功。数据长度：${data?.size} ${data?.contentToString()}", Toast.LENGTH_SHORT).show()
                 } catch (e: Exception) {
