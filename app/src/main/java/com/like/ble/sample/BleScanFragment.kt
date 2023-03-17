@@ -62,8 +62,9 @@ class BleScanFragment : BaseLazyFragment() {
                         }
                     }
                     is BleResult.Error -> {
-                        mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_red))
                         mBinding.tvScanStatus.text = it.msg
+                        val ctx = context ?: return@collect
+                        mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
                     }
                 }
             }

@@ -83,8 +83,6 @@ class BleConnectFragment : BaseLazyFragment() {
         lifecycleScope.launch {
             try {
                 val services = connectExecutor.connect(10000L, false)
-                mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
-                mBinding.tvConnectStatus.text = "连接成功"
                 if (!services.isNullOrEmpty()) {
                     val bleGattServiceInfos = services.map { bluetoothGattService ->
                         BleConnectInfo(mData.address, bluetoothGattService)
@@ -93,13 +91,17 @@ class BleConnectFragment : BaseLazyFragment() {
                 } else {
                     mAdapter.submitList(null)
                 }
+                mBinding.tvConnectStatus.text = "连接成功"
+                val ctx = context ?: return@launch
+                mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
             } catch (e: Exception) {
-                mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_red))
-                mBinding.tvConnectStatus.text = e.message
                 mAdapter.submitList(null)
                 mBinding.etRequestMtu.setText("")
                 mBinding.etReadRemoteRssi.setText("")
                 mBinding.etRequestConnectionPriority.setText("")
+                mBinding.tvConnectStatus.text = e.message
+                val ctx = context ?: return@launch
+                mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
             }
         }
     }
