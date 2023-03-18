@@ -2,6 +2,7 @@ package com.like.ble.central.scan.executor
 
 import androidx.activity.ComponentActivity
 import com.like.ble.exception.BleExceptionBusy
+import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.exception.BleExceptionTimeout
 import com.like.ble.result.BleResult
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
@@ -32,6 +33,7 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
             _scanFlow.tryEmit(BleResult.Error(BleExceptionBusy("正在扫描中……，请耐心等待！")))
             return
         }
+        _scanFlow.tryEmit(BleResult.Start)
         try {
             withContext(Dispatchers.IO) {
                 checkEnvironmentOrThrow()
@@ -40,10 +42,17 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
                 }
             }
         } catch (e: Exception) {
-            if (e is BleExceptionTimeout) {
-                stopScan()
+            when (e) {
+                is BleExceptionCancelTimeout -> {
+                }
+                is BleExceptionTimeout -> {
+                    stopScan()
+                    _scanFlow.tryEmit(BleResult.Completed)
+                }
+                else -> {
+                    _scanFlow.tryEmit(BleResult.Error(e))
+                }
             }
-            _scanFlow.tryEmit(BleResult.Error(e))
         } finally {
             mutex.unlock()
         }

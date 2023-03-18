@@ -14,7 +14,6 @@ import com.like.ble.central.scan.executor.AbstractScanExecutor
 import com.like.ble.central.scan.executor.ScanExecutor
 import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.BleExceptionBusy
-import com.like.ble.exception.BleExceptionTimeout
 import com.like.ble.result.BleResult
 import com.like.ble.sample.databinding.FragmentBleScanBinding
 import com.like.common.base.BaseLazyFragment
@@ -51,6 +50,26 @@ class BleScanFragment : BaseLazyFragment() {
         lifecycleScope.launch {
             scanExecutor.scanFlow.collect {
                 when (it) {
+                    is BleResult.Start -> {
+                        mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
+                        mBinding.tvScanStatus.text = "扫描中……"
+                        mAdapter.submitList(null)
+                    }
+                    is BleResult.Completed -> {
+                        mBinding.tvScanStatus.text = "扫描完成"
+                    }
+                    is BleResult.Error -> {
+                        val ctx = context ?: return@collect
+                        when (val e = it.throwable) {
+                            is BleExceptionBusy -> {
+                                Toast.makeText(ctx, e.message, Toast.LENGTH_SHORT).show()
+                            }
+                            else -> {
+                                mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
+                                mBinding.tvScanStatus.text = it.throwable.message
+                            }
+                        }
+                    }
                     is BleResult.Result<*> -> {
                         val scanResult: ScanResult = it.data as ScanResult
                         val name = scanResult.device.name ?: "N/A"
@@ -67,22 +86,6 @@ class BleScanFragment : BaseLazyFragment() {
                             item.updateRssi(scanResult.rssi)
                         }
                     }
-                    is BleResult.Error -> {
-                        when (val e = it.throwable) {
-                            is BleExceptionBusy -> {
-                                val ctx = context ?: return@collect
-                                Toast.makeText(ctx, e.message, Toast.LENGTH_SHORT).show()
-                            }
-                            is BleExceptionTimeout -> {
-                                mBinding.tvScanStatus.text = "扫描完成"
-                            }
-                            else -> {
-                                val ctx = context ?: return@collect
-                                mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
-                                mBinding.tvScanStatus.text = e.message
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -90,9 +93,6 @@ class BleScanFragment : BaseLazyFragment() {
     }
 
     private fun startScan() {
-        mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
-        mBinding.tvScanStatus.text = "扫描中……"
-        mAdapter.submitList(null)
         lifecycleScope.launch {
             scanExecutor.startScan()
         }
