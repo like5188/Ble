@@ -83,7 +83,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, private val addr
         } catch (e: Exception) {
             when (e) {
                 is BleExceptionCancelTimeout -> {
-                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，所以这里不做处理
+                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
                     null
                 }
                 else -> throw e
@@ -113,7 +113,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, private val addr
         } catch (e: Exception) {
             when (e) {
                 is BleExceptionCancelTimeout -> {
-                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，所以这里不做处理
+                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
                     null
                 }
                 else -> throw e
@@ -142,7 +142,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, private val addr
         } catch (e: Exception) {
             when (e) {
                 is BleExceptionCancelTimeout -> {
-                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，所以这里不做处理
+                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
                     -1
                 }
                 else -> throw e
@@ -167,7 +167,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, private val addr
         } catch (e: Exception) {
             when (e) {
                 is BleExceptionCancelTimeout -> {
-                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，所以这里不做处理
+                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
                 }
                 else -> throw e
             }
@@ -191,7 +191,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, private val addr
         } catch (e: Exception) {
             when (e) {
                 is BleExceptionCancelTimeout -> {
-                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，所以这里不做处理
+                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
                     -1
                 }
                 else -> throw e
@@ -206,7 +206,27 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, private val addr
         enable: Boolean,
         timeout: Long
     ) {
-        onSetCharacteristicNotification(characteristicUuid, serviceUuid, type, enable, timeout)
+        try {
+            // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
+            // 所以不会产生 BleExceptionBusy 异常。
+            mutexUtils.withTryLock("正在设置通知……") {
+                checkEnvironmentOrThrow()
+                withContext(Dispatchers.IO) {
+                    suspendCancellableCoroutineWithTimeout.execute(
+                        timeout, "设置通知超时：$address"
+                    ) { continuation ->
+                        onSetCharacteristicNotification(continuation, characteristicUuid, serviceUuid, type, enable, timeout)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            when (e) {
+                is BleExceptionCancelTimeout -> {
+                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
+                }
+                else -> throw e
+            }
+        }
     }
 
     final override suspend fun writeCharacteristic(

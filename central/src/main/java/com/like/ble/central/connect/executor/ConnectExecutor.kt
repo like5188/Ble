@@ -14,8 +14,6 @@ import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionDeviceDisconnected
 import com.like.ble.util.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
@@ -30,13 +28,6 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     private val mConnectCallbackManager: ConnectCallbackManager by lazy {
         ConnectCallbackManager()
     }
-    private val suspendCancellableCoroutineWithTimeout by lazy {
-        SuspendCancellableCoroutineWithTimeout()
-    }
-    private val _notifyFlow: MutableSharedFlow<ByteArray?> by lazy {
-        MutableSharedFlow(extraBufferCapacity = Int.MAX_VALUE)
-    }
-    override val notifyFlow: Flow<ByteArray?> = _notifyFlow
 
     init {
         if (address.isNullOrEmpty() || !BluetoothAdapter.checkBluetoothAddress(address)) {
@@ -62,62 +53,6 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
                 _notifyFlow.tryEmit(data)
             }
         })
-    }
-
-    override suspend fun setCharacteristicNotification(
-        characteristicUuid: UUID,
-        serviceUuid: UUID?,
-        type: Int,
-        enable: Boolean,
-        timeout: Long
-    ) = withContext(Dispatchers.IO) {
-        checkEnvironmentOrThrow()
-        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleExceptionDeviceDisconnected(address)
-        }
-
-        val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
-            ?: throw BleException("特征值不存在：${characteristicUuid.getValidString()}")
-
-        if (characteristic.properties and (BluetoothGattCharacteristic.PROPERTY_NOTIFY or BluetoothGattCharacteristic.PROPERTY_INDICATE) == 0) {
-            throw BleException("this characteristic not support notify or indicate")
-        }
-
-        // cccd : clinet characteristic configuration descriptor
-        // 服务端一开始是无法直接发送Indication和Notification。
-        // 首先必须是客户端通过往服务端的CCCD特征（clinet characteristic configuration descriptor）
-        // 写入值来使能服务端的这两个功能Notification/Indication，这样服务端才能发送。
-        val cccd = characteristic.getDescriptor(createBleUuidBy16Bit("2902"))
-            ?: throw BleException("getDescriptor fail")
-
-        cccd.value = when (type) {
-            0 -> {
-                if (enable) {
-                    BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-                } else {
-                    BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
-                }
-            }
-            1 -> {
-                if (enable) {
-                    BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
-                } else {
-                    BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
-                }
-            }
-            else -> throw BleException("type can only be 0 or 1")
-        }
-
-        suspendCancellableCoroutineWithTimeout.execute(timeout, "设置通知超时：$address") { continuation ->
-            if (mBluetoothGatt?.setCharacteristicNotification(characteristic, enable) != true) {
-                continuation.resumeWithException(BleException("setCharacteristicNotification fail"))
-            }
-            if (mBluetoothGatt?.writeDescriptor(cccd) != true) {
-                continuation.resumeWithException(BleException("writeDescriptor fail"))
-            }
-            continuation.resume(Unit)
-        }
-
     }
 
     override suspend fun writeCharacteristic(
@@ -424,7 +359,54 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         enable: Boolean,
         timeout: Long
     ) {
-        TODO("Not yet implemented")
+        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
+            continuation.resumeWithException(BleExceptionDeviceDisconnected(address))
+        }
+
+        val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
+        if (characteristic == null) {
+            continuation.resumeWithException(BleException("特征值不存在：${characteristicUuid.getValidString()}"))
+            return
+        }
+
+        if (characteristic.properties and (BluetoothGattCharacteristic.PROPERTY_NOTIFY or BluetoothGattCharacteristic.PROPERTY_INDICATE) == 0) {
+            continuation.resumeWithException(BleException("this characteristic not support notify or indicate"))
+        }
+
+        // cccd : clinet characteristic configuration descriptor
+        // 服务端一开始是无法直接发送Indication和Notification。
+        // 首先必须是客户端通过往服务端的CCCD特征（clinet characteristic configuration descriptor）
+        // 写入值来使能服务端的这两个功能Notification/Indication，这样服务端才能发送。
+        val cccd = characteristic.getDescriptor(createBleUuidBy16Bit("2902"))
+        if (cccd == null) {
+            continuation.resumeWithException(throw BleException("getDescriptor fail"))
+        }
+
+        cccd.value = when (type) {
+            0 -> {
+                if (enable) {
+                    BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                } else {
+                    BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
+                }
+            }
+            1 -> {
+                if (enable) {
+                    BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
+                } else {
+                    BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
+                }
+            }
+            else -> continuation.resumeWithException(BleException("type can only be 0 or 1"))
+        }
+
+        if (mBluetoothGatt?.setCharacteristicNotification(characteristic, enable) != true) {
+            continuation.resumeWithException(BleException("setCharacteristicNotification fail"))
+        }
+        if (mBluetoothGatt?.writeDescriptor(cccd) != true) {
+            continuation.resumeWithException(BleException("writeDescriptor fail"))
+        }
+        continuation.resume(Unit)
     }
 
     override fun onWriteCharacteristic(
