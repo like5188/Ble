@@ -37,7 +37,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, private val addr
 
     final override suspend fun connect(timeout: Long): List<BluetoothGattService>? {
         return try {
-            mutexUtils.withTryLock("正在连接中……") {
+            mutexUtils.withTryLock("正在建立连接，请稍后！") {
                 checkEnvironmentOrThrow()
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(timeout, "连接蓝牙设备超时：$address") { continuation ->
@@ -70,7 +70,9 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, private val addr
             mutexUtils.withTryLock("正在读取特征值……") {
                 checkEnvironmentOrThrow()
                 withContext(Dispatchers.IO) {
-                    suspendCancellableCoroutineWithTimeout.execute(timeout, "读取特征值超时：${characteristicUuid.getValidString()}") { continuation ->
+                    suspendCancellableCoroutineWithTimeout.execute(
+                        timeout, "读取特征值超时：${characteristicUuid.getValidString()}"
+                    ) { continuation ->
                         onReadCharacteristic(continuation, characteristicUuid, serviceUuid, timeout)
                     }
                 }

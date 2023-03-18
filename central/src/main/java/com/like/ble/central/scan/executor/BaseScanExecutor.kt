@@ -29,13 +29,14 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
 
     final override suspend fun startScan(filterServiceUuid: UUID?, duration: Long) {
         try {
-            // withTryLock 方法会一直持续到调用 stopScan 或者 suspendCancellableCoroutineWithTimeout 超时，
+            // withTryLock 方法会一直持续到调用 stopScan 或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以这里无需像外围设备处理 AdvertiseCallback.ADVERTISE_FAILED_ALREADY_STARTED 异常那样处理 ScanCallback.SCAN_FAILED_ALREADY_STARTED 异常。
-            mutexUtils.withTryLock("正在扫描中……") {
+            mutexUtils.withTryLock("正在开启扫描，请稍后！") {
                 checkEnvironmentOrThrow()
                 _scanFlow.tryEmit(ScanResult.Ready)
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(duration) { continuation ->
+                        // onStartScan 如果不报错，会一直挂起，直到调用 stopScan 或者 suspendCancellableCoroutineWithTimeout 超时
                         onStartScan(continuation, filterServiceUuid, duration)
                     }
                 }

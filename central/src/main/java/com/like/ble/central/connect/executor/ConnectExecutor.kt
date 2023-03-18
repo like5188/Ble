@@ -401,7 +401,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         }
 
         if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_READ == 0) {
-            throw BleException("this characteristic not support read!")
+            continuation.resumeWithException(BleException("this characteristic not support read!"))
         }
 
         mConnectCallbackManager.setReadCharacteristicCallback(object : ByteArrayCallback() {
