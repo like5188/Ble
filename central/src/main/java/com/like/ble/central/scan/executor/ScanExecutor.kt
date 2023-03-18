@@ -37,13 +37,13 @@ class ScanExecutor(activity: ComponentActivity) : AbstractScanExecutor(activity)
         checkEnvironmentOrThrowBleException()
         scanCallbackManager.setScanCallback(object : ScanCallback() {
             override fun onSuccess(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
-                emitResult(device, rssi, scanRecord)
+                _scanFlow.tryEmit(BleResult.Result(ScanResult(device, rssi, scanRecord)))
             }
 
             override fun onError(exception: BleException) {
                 // 如果正在扫描，直接返回，不返回错误造成显示错误信息。
                 if (exception.code != android.bluetooth.le.ScanCallback.SCAN_FAILED_ALREADY_STARTED) {
-                    emitError(exception.msg, exception.code)
+                    _scanFlow.tryEmit(BleResult.Error(exception))
                 }
             }
         })
@@ -72,20 +72,20 @@ class ScanExecutor(activity: ComponentActivity) : AbstractScanExecutor(activity)
         } else {
             if (filterServiceUuid == null) {
                 if (activity.getBluetoothAdapter()?.startLeScan(scanCallbackManager.getLeScanCallback()) != true) {
-                    emitError("扫描失败")
+                    _scanFlow.tryEmit(BleResult.Error("扫描失败"))
                 }
             } else {
                 if (activity.getBluetoothAdapter()
                         ?.startLeScan(arrayOf(filterServiceUuid), scanCallbackManager.getLeScanCallback()) != true
                 ) {
-                    emitError("扫描失败")
+                    _scanFlow.tryEmit(BleResult.Error("扫描失败"))
                 }
             }
         }
         if (duration > 0) {
             delayJob = launch {
                 delay(duration)
-                emitCompleted()
+                _scanFlow.tryEmit(BleResult.Completed)
                 stopScan()
             }
         }
@@ -101,18 +101,6 @@ class ScanExecutor(activity: ComponentActivity) : AbstractScanExecutor(activity)
         } else {
             activity.getBluetoothAdapter()?.stopLeScan(scanCallbackManager.getLeScanCallback())
         }
-    }
-
-    private fun emitCompleted() {
-        _scanFlow.tryEmit(BleResult.Completed)
-    }
-
-    private fun emitResult(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
-        _scanFlow.tryEmit(BleResult.Success(ScanResult(device, rssi, scanRecord)))
-    }
-
-    private fun emitError(msg: String, code: Int = -1) {
-        _scanFlow.tryEmit(BleResult.Error(msg, code))
     }
 
     override fun close() {

@@ -48,7 +48,7 @@ class BleScanFragment : BaseLazyFragment() {
         lifecycleScope.launch {
             scanExecutor.scanFlow.collect {
                 when (it) {
-                    is BleResult.Success<*> -> {
+                    is BleResult.Result<*> -> {
                         val scanResult: ScanResult = it.data as ScanResult
                         val name = scanResult.device.name ?: "N/A"
                         if (name != "BLE测试设备") {
