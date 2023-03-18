@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import java.util.*
 
 /**
- * 中心设备蓝牙命令执行者。
+ * 中心设备蓝牙连接及数据操作的执行者。
  */
 abstract class AbstractConnectExecutor(activity: ComponentActivity) : BleExecutor(
     activity,

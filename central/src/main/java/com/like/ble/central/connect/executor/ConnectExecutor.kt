@@ -24,8 +24,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 /**
- * 蓝牙连接及连接成功后的命令执行者
- * 可以进行连接、断开连接、操作数据等等操作
+ * 蓝牙连接及数据操作的真正逻辑
  */
 @SuppressLint("MissingPermission")
 class ConnectExecutor(activity: ComponentActivity, private val address: String?) : AbstractConnectExecutor(activity) {
