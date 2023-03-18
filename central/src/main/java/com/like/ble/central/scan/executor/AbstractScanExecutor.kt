@@ -42,6 +42,7 @@ abstract class AbstractScanExecutor(activity: ComponentActivity) : BaseExecutor(
     /**
      * 停止扫描蓝牙设备
      */
+    @Throws
     abstract fun stopScan()
 
 }
