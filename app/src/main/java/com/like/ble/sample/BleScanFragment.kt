@@ -71,11 +71,11 @@ class BleScanFragment : BaseLazyFragment() {
                     }
                     is BleResult.Error -> {
                         val ctx = context ?: return@collect
-                        if (it.code == BleExceptionBusy.code) {
-                            Toast.makeText(ctx, it.msg, Toast.LENGTH_SHORT).show()
+                        if (it.exception is BleExceptionBusy) {
+                            Toast.makeText(ctx, it.exception.msg, Toast.LENGTH_SHORT).show()
                         } else {
                             mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
-                            mBinding.tvScanStatus.text = it.msg
+                            mBinding.tvScanStatus.text = it.exception.msg
                         }
                     }
                 }

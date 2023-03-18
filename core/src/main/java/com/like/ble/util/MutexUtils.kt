@@ -17,7 +17,7 @@ class MutexUtils {
             callsInPlace(action, InvocationKind.EXACTLY_ONCE)
         }
 
-        if (!mutex.tryLock(owner)) throw BleExceptionBusy
+        if (!mutex.tryLock(owner)) throw BleExceptionBusy()
         try {
             return action()
         } finally {

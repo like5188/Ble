@@ -38,7 +38,7 @@ class ScanExecutor(activity: ComponentActivity) : AbstractScanExecutor(activity)
 
     override suspend fun startScan(filterServiceUuid: UUID?, duration: Long) {
         if (!mutex.tryLock()) {
-            _scanFlow.tryEmit(BleResult.Error(BleExceptionBusy))
+            _scanFlow.tryEmit(BleResult.Error(BleExceptionBusy("正在扫描中……，请耐心等待！")))
             return
         }
         withContext(Dispatchers.IO) {

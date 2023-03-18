@@ -92,7 +92,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         withContext(Dispatchers.IO) {
             checkEnvironmentOrThrow()
             if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-                throw BleExceptionDeviceDisconnected
+                throw BleExceptionDeviceDisconnected(address)
             }
 
             val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
@@ -126,7 +126,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     ): ByteArray? = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrow()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleExceptionDeviceDisconnected
+            throw BleExceptionDeviceDisconnected(address)
         }
 
         val descriptor = mBluetoothGatt?.findDescriptor(
@@ -160,7 +160,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     override suspend fun setReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?) = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrow()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleExceptionDeviceDisconnected
+            throw BleExceptionDeviceDisconnected(address)
         }
 
         val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
@@ -180,7 +180,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     override suspend fun readRemoteRssi(timeout: Long): Int = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrow()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleExceptionDeviceDisconnected
+            throw BleExceptionDeviceDisconnected(address)
         }
 
         suspendCancellableCoroutineWithTimeout.execute(timeout, "读RSSI超时：$address") { continuation ->
@@ -203,7 +203,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     override suspend fun requestConnectionPriority(connectionPriority: Int, timeout: Long) = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrow()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleExceptionDeviceDisconnected
+            throw BleExceptionDeviceDisconnected(address)
         }
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
@@ -221,7 +221,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     override suspend fun requestMtu(mtu: Int, timeout: Long): Int = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrow()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleExceptionDeviceDisconnected
+            throw BleExceptionDeviceDisconnected(address)
         }
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
@@ -254,7 +254,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     ) = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrow()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleExceptionDeviceDisconnected
+            throw BleExceptionDeviceDisconnected(address)
         }
 
         val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
@@ -313,7 +313,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         }
         checkEnvironmentOrThrow()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleExceptionDeviceDisconnected
+            throw BleExceptionDeviceDisconnected(address)
         }
 
         val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
@@ -371,7 +371,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         }
         checkEnvironmentOrThrow()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleExceptionDeviceDisconnected
+            throw BleExceptionDeviceDisconnected(address)
         }
 
         val descriptor = mBluetoothGatt?.findDescriptor(descriptorUuid, characteristicUuid, serviceUuid)
