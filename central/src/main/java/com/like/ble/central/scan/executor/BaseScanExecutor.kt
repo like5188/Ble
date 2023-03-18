@@ -14,8 +14,8 @@ import kotlinx.coroutines.withContext
 import java.util.*
 
 /**
- * 蓝牙扫描相关的命令执行者
- * 可以进行扫描、停止扫描操作
+ * 蓝牙扫描的前提条件
+ * 包括：并发处理、超时处理、蓝牙相关的前置条件检查、错误处理。
  */
 abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecutor(activity) {
     private val mutexUtils = MutexUtils()

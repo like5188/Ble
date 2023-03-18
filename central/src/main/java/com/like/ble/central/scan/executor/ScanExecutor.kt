@@ -18,8 +18,7 @@ import java.util.*
 import kotlin.coroutines.resumeWithException
 
 /**
- * 蓝牙扫描相关的命令执行者
- * 可以进行扫描、停止扫描操作
+ * 蓝牙扫描的真正逻辑
  */
 @SuppressLint("MissingPermission")
 class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
