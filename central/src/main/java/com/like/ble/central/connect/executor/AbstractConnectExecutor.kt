@@ -75,6 +75,9 @@ abstract class AbstractConnectExecutor(activity: ComponentActivity) : BleExecuto
      */
     abstract suspend fun setReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID? = null)
 
+    /**
+     * 失败返回-1
+     */
     abstract suspend fun readRemoteRssi(timeout: Long = 3000L): Int
 
     /**

@@ -64,29 +64,6 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         })
     }
 
-    override suspend fun readRemoteRssi(timeout: Long): Int = withContext(Dispatchers.IO) {
-        checkEnvironmentOrThrow()
-        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleExceptionDeviceDisconnected(address)
-        }
-
-        suspendCancellableCoroutineWithTimeout.execute(timeout, "读RSSI超时：$address") { continuation ->
-            mConnectCallbackManager.setReadRemoteRssiCallback(object : IntCallback() {
-                override fun onSuccess(data: Int) {
-                    continuation.resume(data)
-                }
-
-                override fun onError(exception: BleException) {
-                    continuation.resumeWithException(exception)
-                }
-            })
-
-            if (mBluetoothGatt?.readRemoteRssi() != true) {
-                continuation.resumeWithException(BleException("读RSSI失败：$address"))
-            }
-        }
-    }
-
     override suspend fun requestConnectionPriority(connectionPriority: Int, timeout: Long) = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrow()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
@@ -424,7 +401,23 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     }
 
     override fun onReadRemoteRssi(continuation: CancellableContinuation<Int>, timeout: Long) {
-        TODO("Not yet implemented")
+        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
+            continuation.resumeWithException(BleExceptionDeviceDisconnected(address))
+        }
+
+        mConnectCallbackManager.setReadRemoteRssiCallback(object : IntCallback() {
+            override fun onSuccess(data: Int) {
+                continuation.resume(data)
+            }
+
+            override fun onError(exception: BleException) {
+                continuation.resumeWithException(exception)
+            }
+        })
+
+        if (mBluetoothGatt?.readRemoteRssi() != true) {
+            continuation.resumeWithException(BleException("读取 Rssi 值失败：$address"))
+        }
     }
 
     override fun onRequestConnectionPriority(continuation: CancellableContinuation<Unit>, connectionPriority: Int, timeout: Long) {
