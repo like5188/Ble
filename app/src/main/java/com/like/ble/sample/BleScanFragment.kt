@@ -14,6 +14,7 @@ import com.like.ble.central.scan.executor.AbstractScanExecutor
 import com.like.ble.central.scan.executor.ScanExecutor
 import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.BleExceptionBusy
+import com.like.ble.exception.BleExceptionTimeout
 import com.like.ble.result.BleResult
 import com.like.ble.sample.databinding.FragmentBleScanBinding
 import com.like.common.base.BaseLazyFragment
@@ -66,16 +67,20 @@ class BleScanFragment : BaseLazyFragment() {
                             item.updateRssi(scanResult.rssi)
                         }
                     }
-                    is BleResult.Completed -> {
-                        mBinding.tvScanStatus.text = "扫描完成"
-                    }
                     is BleResult.Error -> {
-                        val ctx = context ?: return@collect
-                        if (it.exception is BleExceptionBusy) {
-                            Toast.makeText(ctx, it.exception.msg, Toast.LENGTH_SHORT).show()
-                        } else {
-                            mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
-                            mBinding.tvScanStatus.text = it.exception.msg
+                        when (val e = it.throwable) {
+                            is BleExceptionBusy -> {
+                                val ctx = context ?: return@collect
+                                Toast.makeText(ctx, e.message, Toast.LENGTH_SHORT).show()
+                            }
+                            is BleExceptionTimeout -> {
+                                mBinding.tvScanStatus.text = "扫描完成"
+                            }
+                            else -> {
+                                val ctx = context ?: return@collect
+                                mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
+                                mBinding.tvScanStatus.text = e.message
+                            }
                         }
                     }
                 }
