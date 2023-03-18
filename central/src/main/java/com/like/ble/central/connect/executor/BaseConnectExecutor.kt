@@ -2,10 +2,8 @@ package com.like.ble.central.connect.executor
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothGattService
-import android.bluetooth.le.AdvertiseCallback
 import androidx.activity.ComponentActivity
 import com.like.ble.exception.BleException
-import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.util.MutexUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
@@ -41,20 +39,16 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, private val addr
             mutexUtils.withTryLock("正在连接中……") {
                 checkEnvironmentOrThrow()
                 withContext(Dispatchers.IO) {
-                    suspendCancellableCoroutineWithTimeout.execute(timeout) { continuation ->
+                    suspendCancellableCoroutineWithTimeout.execute(timeout, "连接蓝牙设备超时：$address") { continuation ->
                         onConnect(continuation, timeout)
                     }
                 }
             }
         } catch (e: Exception) {
-            when {
-                e is BleExceptionCancelTimeout -> {
+            when (e) {
+                is BleExceptionCancelTimeout -> {
                     // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用着可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
                     null
-                }
-                e is BleException && e.code == AdvertiseCallback.ADVERTISE_FAILED_ALREADY_STARTED -> {
-                    // 如果正在广播，则抛出 BleExceptionBusy 异常，使得调用者可以和 withTryLock 方法抛出的异常一起统一处理。
-                    throw BleExceptionBusy("设备已经连接")
                 }
                 else -> throw e
             }

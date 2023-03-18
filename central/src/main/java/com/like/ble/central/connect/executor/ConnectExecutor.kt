@@ -10,14 +10,12 @@ import com.like.ble.central.connect.callback.ConnectCallback
 import com.like.ble.central.connect.callback.ConnectCallbackManager
 import com.like.ble.central.connect.callback.IntCallback
 import com.like.ble.exception.BleException
+import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionDeviceDisconnected
 import com.like.ble.util.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
@@ -27,7 +25,7 @@ import kotlin.coroutines.resumeWithException
  * 蓝牙连接及数据操作的真正逻辑
  */
 @SuppressLint("MissingPermission")
-class ConnectExecutor(activity: ComponentActivity, private val address: String?) : AbstractConnectExecutor(activity) {
+class ConnectExecutor(activity: ComponentActivity, private val address: String?) : BaseConnectExecutor(activity) {
     private var mBluetoothGatt: BluetoothGatt? = null
     private val mConnectCallbackManager: ConnectCallbackManager by lazy {
         ConnectCallbackManager()
@@ -43,36 +41,6 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     init {
         if (address.isNullOrEmpty() || !BluetoothAdapter.checkBluetoothAddress(address)) {
             throw BleException("invalid address：$address")
-        }
-    }
-
-    override suspend fun connect(timeout: Long): List<BluetoothGattService>? = withContext(Dispatchers.IO) {
-        checkEnvironmentOrThrow()
-        if (context.isBleDeviceConnected(mBluetoothGatt?.device)) return@withContext mBluetoothGatt?.services
-        // 获取远端的蓝牙设备
-        val bluetoothDevice = context.getBluetoothAdapter()?.getRemoteDevice(address) ?: throw BleException("连接蓝牙失败：$address 未找到")
-        suspendCancellableCoroutineWithTimeout.execute(timeout, "连接蓝牙设备超时：$address") { continuation ->
-            mConnectCallbackManager.setConnectCallback(object : ConnectCallback() {
-                override fun onSuccess(services: List<BluetoothGattService>?) {
-                    continuation.resume(services)
-                }
-
-                override fun onError(exception: BleException) {
-                    disconnect()
-                    continuation.resumeWithException(exception)
-                }
-
-            })
-            mBluetoothGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                bluetoothDevice.connectGatt(
-                    context,
-                    false,// 不知道为什么，设置为true时会导致连接不上
-                    mConnectCallbackManager.getBluetoothGattCallback(),
-                    BluetoothDevice.TRANSPORT_LE
-                )// 第二个参数表示是否自动重连
-            } else {
-                bluetoothDevice.connectGatt(context, false, mConnectCallbackManager.getBluetoothGattCallback())// 第二个参数表示是否自动重连
-            }
         }
     }
 
@@ -418,7 +386,107 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         }
     }
 
-    override fun close() {
-        disconnect()
+    override fun onConnect(continuation: CancellableContinuation<List<BluetoothGattService>?>, timeout: Long) {
+        if (context.isBleDeviceConnected(mBluetoothGatt?.device)) {
+            continuation.resumeWithException(BleExceptionBusy("设备已经连接"))
+        }
+        // 获取远端的蓝牙设备
+        val bluetoothDevice = context.getBluetoothAdapter()?.getRemoteDevice(address)
+        if (bluetoothDevice == null) {
+            continuation.resumeWithException(BleException("连接蓝牙失败：$address 未找到"))
+        }
+        mConnectCallbackManager.setConnectCallback(object : ConnectCallback() {
+            override fun onSuccess(services: List<BluetoothGattService>?) {
+                continuation.resume(services)
+            }
+
+            override fun onError(exception: BleException) {
+                disconnect()
+                continuation.resumeWithException(exception)
+            }
+
+        })
+        mBluetoothGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            bluetoothDevice?.connectGatt(
+                context,
+                false,// 是否自动重连。不知道为什么，设置为true时会导致连接不上
+                mConnectCallbackManager.getBluetoothGattCallback(),
+                BluetoothDevice.TRANSPORT_LE
+            )
+        } else {
+            bluetoothDevice?.connectGatt(context, false, mConnectCallbackManager.getBluetoothGattCallback())
+        }
+    }
+
+    override fun onDisconnect() {
+        TODO("Not yet implemented")
+    }
+
+    override fun onReadCharacteristic(
+        continuation: CancellableContinuation<ByteArray?>,
+        characteristicUuid: UUID,
+        serviceUuid: UUID?,
+        timeout: Long
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onReadDescriptor(
+        continuation: CancellableContinuation<ByteArray?>,
+        descriptorUuid: UUID,
+        characteristicUuid: UUID?,
+        serviceUuid: UUID?,
+        timeout: Long
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onSetReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onReadRemoteRssi(continuation: CancellableContinuation<Int>, timeout: Long) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onRequestConnectionPriority(continuation: CancellableContinuation<Unit>, connectionPriority: Int, timeout: Long) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onRequestMtu(continuation: CancellableContinuation<Int>, mtu: Int, timeout: Long) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onSetCharacteristicNotification(
+        continuation: CancellableContinuation<Unit>,
+        characteristicUuid: UUID,
+        serviceUuid: UUID?,
+        type: Int,
+        enable: Boolean,
+        timeout: Long
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onWriteCharacteristic(
+        continuation: CancellableContinuation<Unit>,
+        data: List<ByteArray>,
+        characteristicUuid: UUID,
+        serviceUuid: UUID?,
+        timeout: Long,
+        writeType: Int
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onWriteDescriptor(
+        continuation: CancellableContinuation<Unit>,
+        data: List<ByteArray>,
+        descriptorUuid: UUID,
+        characteristicUuid: UUID?,
+        serviceUuid: UUID?,
+        timeout: Long
+    ) {
+        TODO("Not yet implemented")
     }
 }
