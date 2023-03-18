@@ -6,7 +6,7 @@ import com.like.ble.exception.BleException
 
 sealed class ScanResult {
     /**
-     * 准备好启动扫描了
+     * 准备好开始扫描了
      */
     object Ready : ScanResult()
 
