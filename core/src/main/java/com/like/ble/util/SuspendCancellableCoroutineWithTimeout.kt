@@ -1,6 +1,7 @@
 package com.like.ble.util
 
 import com.like.ble.exception.BleException
+import com.like.ble.exception.BleExceptionTimeout
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -14,9 +15,9 @@ class SuspendCancellableCoroutineWithTimeout {
      *
      * @param timeout           超时时间。如果<=0，则表示不设置超时限制。和[withTimeout]方法的参数不一样。
      * @param timeoutErrorMsg   超时错误提示信息。
-     * @throws [TimeoutCancellationException]会被转换成[BleException]
+     * @throws [TimeoutCancellationException]会被转换成[BleExceptionTimeout]
      */
-    @Throws(BleException::class)
+    @Throws(BleExceptionTimeout::class)
     suspend inline fun <T> execute(
         timeout: Long, timeoutErrorMsg: String, crossinline block: (CancellableContinuation<T>) -> Unit
     ): T = if (timeout > 0) {
@@ -29,7 +30,7 @@ class SuspendCancellableCoroutineWithTimeout {
                 }
             }
         } catch (e: TimeoutCancellationException) {
-            throw BleException(e)
+            throw BleExceptionTimeout(timeoutErrorMsg)
         }
     } else {
         suspendCancellableCoroutine {
