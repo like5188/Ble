@@ -10,11 +10,12 @@ import android.util.SparseArray;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 复制的 ScanRecord 的代码，因为 ScanRecord.parseFromBytes() 方法是 @UnsupportedAppUsage，无法使用
+ * 复制的 ScanRecord 的代码，因为 ScanRecord 的构造函数是私有的，只能通过 ScanRecord.parseFromBytes() 方法获得其实例，但是这个方法又是 @UnsupportedAppUsage，无法使用。
  * Represents a scan record from Bluetooth LE scan.
  */
 public final class ScanRecordBelow21 {
@@ -191,7 +192,7 @@ public final class ScanRecordBelow21 {
         int txPowerLevel = Integer.MIN_VALUE;
 
         SparseArray<byte[]> manufacturerData = new SparseArray<byte[]>();
-        Map<ParcelUuid, byte[]> serviceData = new ArrayMap<ParcelUuid, byte[]>();
+        Map<ParcelUuid, byte[]> serviceData = new HashMap<ParcelUuid, byte[]>();
 
         try {
             while (currentPos < scanRecord.length) {
