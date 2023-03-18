@@ -408,9 +408,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     }
 
     override fun onDisconnect() {
-        // 此处如果不取消，那么还会把超时错误传递出去的。
-        suspendCancellableCoroutineWithTimeout.cancel()
-        // close()时会清空BluetoothGatt内部的mCallback回调。导致收不到断开连接的消息。
+        // close()时会清空BluetoothGatt内部的mCallback回调。导致收不到断开连接的消息。所以就不能在断开连接状态回调时处理 UI。
         mBluetoothGatt?.close()
         mBluetoothGatt = null
     }
