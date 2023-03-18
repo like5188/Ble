@@ -29,7 +29,7 @@ class SuspendCancellableCoroutineWithTimeout {
                 }
             }
         } catch (e: TimeoutCancellationException) {
-            throw BleException(timeoutErrorMsg)
+            throw BleException(e)
         }
     } else {
         suspendCancellableCoroutine {

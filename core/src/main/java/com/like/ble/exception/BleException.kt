@@ -1,6 +1,8 @@
 package com.like.ble.exception
 
-open class BleException(val msg: String, val code: Int = -1) : Exception(msg)
+open class BleException(val throwable: Throwable) : Throwable(throwable.message) {
+    constructor(msg: String, code: Int = -1) : this(BleException(msg, code))
+}
 
 object BleExceptionDisabled : BleException("蓝牙未打开", 0)
 object BleExceptionPermission : BleException("蓝牙权限被拒绝", 1)
