@@ -3,7 +3,6 @@ package com.like.ble.peripheral.executor
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
-import android.util.Log
 import androidx.activity.ComponentActivity
 import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
@@ -37,7 +36,6 @@ abstract class BaseAdvertisingExecutor(activity: ComponentActivity) : AbstractAd
                 }
             }
         } catch (e: Exception) {
-            Log.e("TAG", e.message ?: "")
             when {
                 e is BleExceptionCancelTimeout -> {
                     // 提前取消超时不做处理。因为这是调用 stopAdvertising() 造成的，使用着可以直接在 stopAdvertising() 方法结束后处理 UI 的显示，不需要此回调。
