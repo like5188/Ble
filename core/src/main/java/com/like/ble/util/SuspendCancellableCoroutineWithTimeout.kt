@@ -19,7 +19,7 @@ class SuspendCancellableCoroutineWithTimeout {
      */
     @Throws(BleExceptionTimeout::class)
     suspend inline fun <T> execute(
-        timeout: Long, timeoutErrorMsg: String, crossinline block: (CancellableContinuation<T>) -> Unit
+        timeout: Long, timeoutErrorMsg: String = "", crossinline block: (CancellableContinuation<T>) -> Unit
     ): T = if (timeout > 0) {
         try {
             withTimeout(timeout) {
