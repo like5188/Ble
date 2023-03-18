@@ -41,6 +41,7 @@ abstract class AbstractAdvertisingExecutor(activity: ComponentActivity) : BleExe
      * @param scanResponse      与广播数据相关联的扫描响应数据
      * @param deviceName        设备名称。默认为设备名称。
      */
+    @Throws
     abstract suspend fun startAdvertising(
         settings: AdvertiseSettings,
         advertiseData: AdvertiseData,
@@ -52,6 +53,7 @@ abstract class AbstractAdvertisingExecutor(activity: ComponentActivity) : BleExe
     /**
      * 停止广播
      */
+    @Throws
     abstract fun stopAdvertising()
 
 }
