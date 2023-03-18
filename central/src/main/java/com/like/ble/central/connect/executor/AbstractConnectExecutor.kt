@@ -87,6 +87,9 @@ abstract class AbstractConnectExecutor(activity: ComponentActivity) : BleExecuto
      */
     abstract suspend fun requestConnectionPriority(@IntRange(from = 0, to = 2) connectionPriority: Int, timeout: Long = 3000L)
 
+    /**
+     * 失败返回-1
+     */
     abstract suspend fun requestMtu(@IntRange(from = 23, to = 517) mtu: Int, timeout: Long = 3000L): Int
 
     /**
