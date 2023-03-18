@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 复制的 ScanRecord 的代码
+ * 复制的 ScanRecord 的代码，因为 ScanRecord.parseFromBytes() 方法是 @UnsupportedAppUsage，无法使用
  * Represents a scan record from Bluetooth LE scan.
  */
 public final class ScanRecordBelow21 {
@@ -138,7 +138,7 @@ public final class ScanRecordBelow21 {
     }
 
     /**
-     * Returns the local name of the BLE device. The is a UTF-8 encoded string.
+     * Returns the local name of the BLE device. This is a UTF-8 encoded string.
      */
     @Nullable
     public String getDeviceName() {
@@ -177,7 +177,6 @@ public final class ScanRecordBelow21 {
      * order.
      *
      * @param scanRecord The scan record of Bluetooth LE advertisement and/or scan response.
-     * @hide
      */
     public static ScanRecordBelow21 parseFromBytes(byte[] scanRecord) {
         if (scanRecord == null) {
@@ -303,7 +302,7 @@ public final class ScanRecordBelow21 {
 
     // Parse service UUIDs.
     private static int parseServiceUuid(byte[] scanRecord, int currentPos, int dataLength,
-                                        int uuidLength, List<ParcelUuid> serviceUuids) {
+            int uuidLength, List<ParcelUuid> serviceUuids) {
         while (dataLength > 0) {
             byte[] uuidBytes = extractBytes(scanRecord, currentPos,
                     uuidLength);
@@ -318,7 +317,7 @@ public final class ScanRecordBelow21 {
      * Parse service Solicitation UUIDs.
      */
     private static int parseServiceSolicitationUuid(byte[] scanRecord, int currentPos,
-                                                    int dataLength, int uuidLength, List<ParcelUuid> serviceSolicitationUuids) {
+            int dataLength, int uuidLength, List<ParcelUuid> serviceSolicitationUuids) {
         while (dataLength > 0) {
             byte[] uuidBytes = extractBytes(scanRecord, currentPos, uuidLength);
             serviceSolicitationUuids.add(BluetoothUuid.parseUuidFrom(uuidBytes));
