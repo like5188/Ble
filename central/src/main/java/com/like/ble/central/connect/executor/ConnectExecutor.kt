@@ -44,36 +44,6 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         }
     }
 
-    override suspend fun readCharacteristic(characteristicUuid: UUID, serviceUuid: UUID?, timeout: Long): ByteArray? =
-        withContext(Dispatchers.IO) {
-            checkEnvironmentOrThrow()
-            if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-                throw BleExceptionDeviceDisconnected(address)
-            }
-
-            val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
-                ?: throw BleException("特征值不存在：${characteristicUuid.getValidString()}")
-
-            if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_READ == 0) {
-                throw BleException("this characteristic not support read!")
-            }
-
-            suspendCancellableCoroutineWithTimeout.execute(timeout, "读取特征值超时：${characteristicUuid.getValidString()}") { continuation ->
-                mConnectCallbackManager.setReadCharacteristicCallback(object : ByteArrayCallback() {
-                    override fun onSuccess(data: ByteArray?) {
-                        continuation.resume(data)
-                    }
-
-                    override fun onError(exception: BleException) {
-                        continuation.resumeWithException(exception)
-                    }
-                })
-                if (mBluetoothGatt?.readCharacteristic(characteristic) != true) {
-                    continuation.resumeWithException(BleException("读取特征值失败：${characteristicUuid.getValidString()}"))
-                }
-            }
-        }
-
     override suspend fun readDescriptor(
         descriptorUuid: UUID,
         characteristicUuid: UUID?,
@@ -383,6 +353,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         val bluetoothDevice = context.getBluetoothAdapter()?.getRemoteDevice(address)
         if (bluetoothDevice == null) {
             continuation.resumeWithException(BleException("连接蓝牙失败：$address 未找到"))
+            return// 这里使用 return 是因为如果不用，那么后面的代码还是需要加 ?
         }
         mConnectCallbackManager.setConnectCallback(object : ConnectCallback() {
             override fun onSuccess(services: List<BluetoothGattService>?) {
@@ -396,14 +367,14 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
 
         })
         mBluetoothGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            bluetoothDevice?.connectGatt(
+            bluetoothDevice.connectGatt(
                 context,
                 false,// 是否自动重连。不知道为什么，设置为true时会导致连接不上
                 mConnectCallbackManager.getBluetoothGattCallback(),
                 BluetoothDevice.TRANSPORT_LE
             )
         } else {
-            bluetoothDevice?.connectGatt(context, false, mConnectCallbackManager.getBluetoothGattCallback())
+            bluetoothDevice.connectGatt(context, false, mConnectCallbackManager.getBluetoothGattCallback())
         }
     }
 
@@ -419,7 +390,32 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         serviceUuid: UUID?,
         timeout: Long
     ) {
-        TODO("Not yet implemented")
+        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
+            continuation.resumeWithException(BleExceptionDeviceDisconnected(address))
+        }
+
+        val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
+        if (characteristic == null) {
+            continuation.resumeWithException(BleException("特征值不存在：${characteristicUuid.getValidString()}"))
+            return
+        }
+
+        if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_READ == 0) {
+            throw BleException("this characteristic not support read!")
+        }
+
+        mConnectCallbackManager.setReadCharacteristicCallback(object : ByteArrayCallback() {
+            override fun onSuccess(data: ByteArray?) {
+                continuation.resume(data)
+            }
+
+            override fun onError(exception: BleException) {
+                continuation.resumeWithException(exception)
+            }
+        })
+        if (mBluetoothGatt?.readCharacteristic(characteristic) != true) {
+            continuation.resumeWithException(BleException("读取特征值失败：${characteristicUuid.getValidString()}"))
+        }
     }
 
     override fun onReadDescriptor(

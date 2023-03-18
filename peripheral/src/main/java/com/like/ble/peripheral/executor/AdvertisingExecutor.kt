@@ -31,6 +31,7 @@ class AdvertisingExecutor(activity: ComponentActivity) : BaseAdvertisingExecutor
         val bluetoothLeAdvertiser = activity.getBluetoothAdapter()?.bluetoothLeAdvertiser
         if (bluetoothLeAdvertiser == null) {
             continuation.resumeWithException(BleException("phone does not support Bluetooth Advertiser"))
+            return// 这里使用 return 是因为如果不用，那么后面的代码还是需要加 ?
         }
         // 设置设备名字
         if (deviceName.isNotEmpty()) {
@@ -45,7 +46,7 @@ class AdvertisingExecutor(activity: ComponentActivity) : BaseAdvertisingExecutor
                 continuation.resumeWithException(exception)
             }
         })
-        bluetoothLeAdvertiser?.startAdvertising(
+        bluetoothLeAdvertiser.startAdvertising(
             settings,
             advertiseData,
             scanResponse,

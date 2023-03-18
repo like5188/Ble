@@ -7,6 +7,7 @@ import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.util.MutexUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
+import com.like.ble.util.getValidString
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -65,7 +66,24 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, private val addr
     }
 
     final override suspend fun readCharacteristic(characteristicUuid: UUID, serviceUuid: UUID?, timeout: Long): ByteArray? {
-        return onReadCharacteristic(characteristicUuid, serviceUuid, timeout)
+        return try {
+            mutexUtils.withTryLock("正在读取特征值……") {
+                checkEnvironmentOrThrow()
+                withContext(Dispatchers.IO) {
+                    suspendCancellableCoroutineWithTimeout.execute(timeout, "读取特征值超时：${characteristicUuid.getValidString()}") { continuation ->
+                        onReadCharacteristic(continuation, characteristicUuid, serviceUuid, timeout)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            when (e) {
+                is BleExceptionCancelTimeout -> {
+                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用着可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
+                    null
+                }
+                else -> throw e
+            }
+        }
     }
 
     final override suspend fun readDescriptor(
