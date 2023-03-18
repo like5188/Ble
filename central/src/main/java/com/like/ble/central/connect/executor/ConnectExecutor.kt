@@ -13,7 +13,9 @@ import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionDeviceDisconnected
 import com.like.ble.util.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
@@ -23,7 +25,7 @@ import kotlin.coroutines.resumeWithException
  * 蓝牙连接及数据操作的真正逻辑
  */
 @SuppressLint("MissingPermission")
-class ConnectExecutor(activity: ComponentActivity, private val address: String?) : BaseConnectExecutor(activity) {
+class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConnectExecutor(activity, address) {
     private var mBluetoothGatt: BluetoothGatt? = null
     private val mConnectCallbackManager: ConnectCallbackManager by lazy {
         ConnectCallbackManager()
@@ -33,26 +35,6 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         if (address.isNullOrEmpty() || !BluetoothAdapter.checkBluetoothAddress(address)) {
             throw BleException("invalid address：$address")
         }
-    }
-
-    override suspend fun setReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?) = withContext(Dispatchers.IO) {
-        checkEnvironmentOrThrow()
-        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleExceptionDeviceDisconnected(address)
-        }
-
-        val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
-            ?: throw BleException("特征值不存在：${characteristicUuid.getValidString()}")
-
-        if (characteristic.properties and (BluetoothGattCharacteristic.PROPERTY_INDICATE or BluetoothGattCharacteristic.PROPERTY_NOTIFY) == 0) {
-            throw BleException("this characteristic not support indicate or notify!")
-        }
-
-        mConnectCallbackManager.setReadNotifyCallback(object : ByteArrayCallback() {
-            override fun onSuccess(data: ByteArray?) {
-                _notifyFlow.tryEmit(data)
-            }
-        })
     }
 
     override fun onConnect(continuation: CancellableContinuation<List<BluetoothGattService>?>, timeout: Long) {
@@ -169,7 +151,22 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     }
 
     override fun onSetReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?) {
-        TODO("Not yet implemented")
+        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
+            throw BleExceptionDeviceDisconnected(address)
+        }
+
+        val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
+            ?: throw BleException("特征值不存在：${characteristicUuid.getValidString()}")
+
+        if (characteristic.properties and (BluetoothGattCharacteristic.PROPERTY_INDICATE or BluetoothGattCharacteristic.PROPERTY_NOTIFY) == 0) {
+            throw BleException("this characteristic not support indicate or notify!")
+        }
+
+        mConnectCallbackManager.setReadNotifyCallback(object : ByteArrayCallback() {
+            override fun onSuccess(data: ByteArray?) {
+                _notifyFlow.tryEmit(data)
+            }
+        })
     }
 
     override fun onReadRemoteRssi(continuation: CancellableContinuation<Int>, timeout: Long) {
@@ -279,7 +276,10 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
                     BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
                 }
             }
-            else -> continuation.resumeWithException(BleException("type can only be 0 or 1"))
+            else -> {
+                continuation.resumeWithException(BleException("type can only be 0 or 1"))
+                return
+            }
         }
 
         if (mBluetoothGatt?.setCharacteristicNotification(characteristic, enable) != true) {
