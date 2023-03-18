@@ -29,7 +29,7 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
 
     final override suspend fun startScan(filterServiceUuid: UUID?, duration: Long) {
         try {
-            mutexUtils.withTryLock("正在扫描中……，请耐心等待！") {
+            mutexUtils.withTryLock("正在扫描中……") {
                 checkEnvironmentOrThrow()
                 _scanFlow.tryEmit(ScanResult.Ready)
                 withContext(Dispatchers.IO) {
