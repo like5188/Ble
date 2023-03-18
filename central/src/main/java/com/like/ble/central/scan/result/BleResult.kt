@@ -1,4 +1,4 @@
-package com.like.ble.result
+package com.like.ble.central.scan.result
 
 import com.like.ble.exception.BleException
 

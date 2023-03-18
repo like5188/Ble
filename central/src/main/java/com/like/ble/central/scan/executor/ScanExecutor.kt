@@ -11,7 +11,7 @@ import com.like.ble.central.scan.callback.ScanCallback
 import com.like.ble.central.scan.callback.ScanCallbackManager
 import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.BleException
-import com.like.ble.result.BleResult
+import com.like.ble.central.scan.result.BleResult
 import com.like.ble.util.getBluetoothAdapter
 import com.like.ble.util.scanrecordcompat.ScanRecordBelow21
 import kotlinx.coroutines.CancellableContinuation

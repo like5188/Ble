@@ -14,7 +14,7 @@ import com.like.ble.central.scan.executor.AbstractScanExecutor
 import com.like.ble.central.scan.executor.ScanExecutor
 import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.BleExceptionBusy
-import com.like.ble.result.BleResult
+import com.like.ble.central.scan.result.BleResult
 import com.like.ble.sample.databinding.FragmentBleScanBinding
 import com.like.common.base.BaseLazyFragment
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager

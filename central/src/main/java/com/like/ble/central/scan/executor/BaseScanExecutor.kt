@@ -4,7 +4,7 @@ import androidx.activity.ComponentActivity
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.exception.BleExceptionTimeout
-import com.like.ble.result.BleResult
+import com.like.ble.central.scan.result.BleResult
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.Dispatchers

@@ -4,7 +4,7 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.ComponentActivity
 import com.like.ble.executor.BaseExecutor
-import com.like.ble.result.BleResult
+import com.like.ble.central.scan.result.BleResult
 import kotlinx.coroutines.flow.Flow
 import java.util.*
 
