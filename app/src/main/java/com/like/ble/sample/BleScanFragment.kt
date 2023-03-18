@@ -14,7 +14,6 @@ import com.like.ble.central.scan.executor.AbstractScanExecutor
 import com.like.ble.central.scan.executor.ScanExecutor
 import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.BleExceptionBusy
-import com.like.ble.central.scan.result.BleResult
 import com.like.ble.sample.databinding.FragmentBleScanBinding
 import com.like.common.base.BaseLazyFragment
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
@@ -50,15 +49,15 @@ class BleScanFragment : BaseLazyFragment() {
         lifecycleScope.launch {
             scanExecutor.scanFlow.collect {
                 when (it) {
-                    is BleResult.Start -> {
+                    is ScanResult.Ready -> {
                         mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
                         mBinding.tvScanStatus.text = "扫描中……"
                         mAdapter.submitList(null)
                     }
-                    is BleResult.Completed -> {
+                    is ScanResult.Completed -> {
                         mBinding.tvScanStatus.text = "扫描完成"
                     }
-                    is BleResult.Error -> {
+                    is ScanResult.Error -> {
                         val ctx = context ?: return@collect
                         when (val e = it.throwable) {
                             is BleExceptionBusy -> {
@@ -70,20 +69,19 @@ class BleScanFragment : BaseLazyFragment() {
                             }
                         }
                     }
-                    is BleResult.Result<*> -> {
-                        val scanResult: ScanResult = it.data as ScanResult
-                        val name = scanResult.device.name ?: "N/A"
-                        if (name != "BLE测试设备") {
+                    is ScanResult.Result -> {
+                        val name = it.device.name ?: "N/A"
+                        if (name != "BLE测试设备") {// 过滤需要的外围设备
                             return@collect
                         }
-                        val address = scanResult.device.address ?: ""
+                        val address = it.device.address ?: ""
                         val item: BleScanInfo? = mAdapter.currentList.firstOrNull { it?.address == address }
                         if (item == null) {// 防止重复添加
                             val newItems = mAdapter.currentList.toMutableList()
-                            newItems.add(BleScanInfo(name, address, ObservableInt(scanResult.rssi), scanResult.scanRecord))
+                            newItems.add(BleScanInfo(name, address, ObservableInt(it.rssi), it.scanRecord))
                             mAdapter.submitList(newItems)
                         } else {
-                            item.updateRssi(scanResult.rssi)
+                            item.updateRssi(it.rssi)
                         }
                     }
                 }

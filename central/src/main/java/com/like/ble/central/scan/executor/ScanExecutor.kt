@@ -10,10 +10,9 @@ import androidx.activity.ComponentActivity
 import com.like.ble.central.scan.callback.ScanCallback
 import com.like.ble.central.scan.callback.ScanCallbackManager
 import com.like.ble.central.scan.result.ScanResult
-import com.like.ble.exception.BleException
-import com.like.ble.central.scan.result.BleResult
-import com.like.ble.util.getBluetoothAdapter
 import com.like.ble.central.util.scanrecordcompat.ScanRecordBelow21
+import com.like.ble.exception.BleException
+import com.like.ble.util.getBluetoothAdapter
 import kotlinx.coroutines.CancellableContinuation
 import java.util.*
 import kotlin.coroutines.resumeWithException
@@ -31,7 +30,7 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
     override fun onStartScan(continuation: CancellableContinuation<Unit>, filterServiceUuid: UUID?, duration: Long) {
         scanCallbackManager.setScanCallback(object : ScanCallback() {
             override fun onSuccess(device: BluetoothDevice, rssi: Int, scanRecord: ScanRecordBelow21?) {
-                _scanFlow.tryEmit(BleResult.Result(ScanResult(device, rssi, scanRecord)))
+                _scanFlow.tryEmit(ScanResult.Result(device, rssi, scanRecord))
             }
 
             override fun onError(exception: BleException) {

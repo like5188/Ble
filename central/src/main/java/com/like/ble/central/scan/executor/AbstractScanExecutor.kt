@@ -3,8 +3,8 @@ package com.like.ble.central.scan.executor
 import android.Manifest
 import android.os.Build
 import androidx.activity.ComponentActivity
+import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.executor.BleExecutor
-import com.like.ble.central.scan.result.BleResult
 import kotlinx.coroutines.flow.Flow
 import java.util.*
 
@@ -27,7 +27,7 @@ abstract class AbstractScanExecutor(activity: ComponentActivity) : BleExecutor(
         arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)
     }
 ) {
-    abstract val scanFlow: Flow<BleResult>
+    abstract val scanFlow: Flow<ScanResult>
 
     /**
      * 开始扫描蓝牙设备，数据从[scanFlow]获取

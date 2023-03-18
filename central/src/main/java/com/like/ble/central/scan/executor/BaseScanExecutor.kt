@@ -1,10 +1,10 @@
 package com.like.ble.central.scan.executor
 
 import androidx.activity.ComponentActivity
+import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.exception.BleExceptionTimeout
-import com.like.ble.central.scan.result.BleResult
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.Dispatchers
@@ -23,17 +23,17 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
     private val suspendCancellableCoroutineWithTimeout by lazy {
         SuspendCancellableCoroutineWithTimeout()
     }
-    protected val _scanFlow: MutableSharedFlow<BleResult> by lazy {
+    protected val _scanFlow: MutableSharedFlow<ScanResult> by lazy {
         MutableSharedFlow(extraBufferCapacity = Int.MAX_VALUE)
     }
-    final override val scanFlow: Flow<BleResult> = _scanFlow
+    final override val scanFlow: Flow<ScanResult> = _scanFlow
 
     final override suspend fun startScan(filterServiceUuid: UUID?, duration: Long) {
         if (!mutex.tryLock()) {
-            _scanFlow.tryEmit(BleResult.Error(BleExceptionBusy("正在扫描中……，请耐心等待！")))
+            _scanFlow.tryEmit(ScanResult.Error(BleExceptionBusy("正在扫描中……，请耐心等待！")))
             return
         }
-        _scanFlow.tryEmit(BleResult.Start)
+        _scanFlow.tryEmit(ScanResult.Ready)
         try {
             withContext(Dispatchers.IO) {
                 checkEnvironmentOrThrow()
@@ -47,10 +47,10 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
                 }
                 is BleExceptionTimeout -> {
                     stopScan()
-                    _scanFlow.tryEmit(BleResult.Completed)
+                    _scanFlow.tryEmit(ScanResult.Completed)
                 }
                 else -> {
-                    _scanFlow.tryEmit(BleResult.Error(e))
+                    _scanFlow.tryEmit(ScanResult.Error(e))
                 }
             }
         } finally {
