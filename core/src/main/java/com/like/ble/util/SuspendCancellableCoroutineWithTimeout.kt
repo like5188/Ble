@@ -1,6 +1,7 @@
 package com.like.ble.util
 
 import com.like.ble.exception.BleException
+import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.exception.BleExceptionTimeout
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.TimeoutCancellationException
@@ -30,6 +31,7 @@ class SuspendCancellableCoroutineWithTimeout {
                 }
             }
         } catch (e: TimeoutCancellationException) {
+            // 超时触发 TimeoutCancellationException 异常，用指定的错误信息进行转换。其它异常不管，任其抛出
             throw BleExceptionTimeout(timeoutErrorMsg)
         }
     } else {
@@ -49,7 +51,8 @@ class SuspendCancellableCoroutineWithTimeout {
     fun cancel(cancelMessage: String = "操作被终止") {
         cancellableContinuation?.apply {
             if (!isCancelled) {
-                cancel(BleException(cancelMessage))
+                // 在 suspendCancellableCoroutine 中抛出一个 BleExceptionCancelTimeout 取消超时异常
+                cancel(BleExceptionCancelTimeout(cancelMessage))
             }
         }
     }

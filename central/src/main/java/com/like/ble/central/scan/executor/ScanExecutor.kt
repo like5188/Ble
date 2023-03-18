@@ -111,7 +111,7 @@ class ScanExecutor(activity: ComponentActivity) : AbstractScanExecutor(activity)
         if (!checkEnvironment()) {
             return
         }
-        suspendCancellableCoroutineWithTimeout.cancel()
+        suspendCancellableCoroutineWithTimeout.cancel("扫描已停止")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             activity.getBluetoothAdapter()?.bluetoothLeScanner?.stopScan(scanCallbackManager.getScanCallback())
         } else {
