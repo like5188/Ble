@@ -44,17 +44,6 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         }
     }
 
-    override fun disconnect() {
-        if (!checkEnvironment()) {
-            return
-        }
-        // 此处如果不取消，那么还会把超时错误传递出去的。
-        suspendCancellableCoroutineWithTimeout.cancel()
-        // close()时会清空BluetoothGatt内部的mCallback回调。导致收不到断开连接的消息。
-        mBluetoothGatt?.close()
-        mBluetoothGatt = null
-    }
-
     override suspend fun readCharacteristic(characteristicUuid: UUID, serviceUuid: UUID?, timeout: Long): ByteArray? =
         withContext(Dispatchers.IO) {
             checkEnvironmentOrThrow()
@@ -419,7 +408,11 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     }
 
     override fun onDisconnect() {
-        TODO("Not yet implemented")
+        // 此处如果不取消，那么还会把超时错误传递出去的。
+        suspendCancellableCoroutineWithTimeout.cancel()
+        // close()时会清空BluetoothGatt内部的mCallback回调。导致收不到断开连接的消息。
+        mBluetoothGatt?.close()
+        mBluetoothGatt = null
     }
 
     override fun onReadCharacteristic(
