@@ -41,14 +41,12 @@ class SuspendCancellableCoroutineWithTimeout {
 
     /**
      * 取消[execute]执行的代码
-     *
-     * @param cancelMessage   取消时的提示信息
      */
-    fun cancel(cancelMessage: String = "操作被终止") {
+    fun cancel() {
         cancellableContinuation?.apply {
             if (!isCancelled) {
                 // 在 execute 方法的 suspendCancellableCoroutine 中抛出一个 BleExceptionCancelTimeout 取消超时异常
-                cancel(BleExceptionCancelTimeout(cancelMessage))
+                cancel(BleExceptionCancelTimeout)
             }
         }
     }
