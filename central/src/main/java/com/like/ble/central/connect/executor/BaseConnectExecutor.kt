@@ -2,13 +2,18 @@ package com.like.ble.central.connect.executor
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothGattService
+import android.bluetooth.le.AdvertiseCallback
 import androidx.activity.ComponentActivity
 import com.like.ble.exception.BleException
+import com.like.ble.exception.BleExceptionBusy
+import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.util.MutexUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
 import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.withContext
 import java.util.*
 
 /**
@@ -32,7 +37,28 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, private val addr
     }
 
     final override suspend fun connect(timeout: Long): List<BluetoothGattService>? {
-        return onConnect(timeout)
+        return try {
+            mutexUtils.withTryLock("正在连接中……") {
+                checkEnvironmentOrThrow()
+                withContext(Dispatchers.IO) {
+                    suspendCancellableCoroutineWithTimeout.execute(timeout) { continuation ->
+                        onConnect(continuation, timeout)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            when {
+                e is BleExceptionCancelTimeout -> {
+                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用着可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
+                    null
+                }
+                e is BleException && e.code == AdvertiseCallback.ADVERTISE_FAILED_ALREADY_STARTED -> {
+                    // 如果正在广播，则抛出 BleExceptionBusy 异常，使得调用者可以和 withTryLock 方法抛出的异常一起统一处理。
+                    throw BleExceptionBusy("设备已经连接")
+                }
+                else -> throw e
+            }
+        }
     }
 
     final override fun disconnect() {
@@ -105,7 +131,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, private val addr
     protected abstract fun onConnect(
         continuation: CancellableContinuation<List<BluetoothGattService>?>,
         timeout: Long
-    ): List<BluetoothGattService>?
+    )
 
     protected abstract fun onDisconnect()
 
@@ -114,7 +140,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, private val addr
         characteristicUuid: UUID,
         serviceUuid: UUID?,
         timeout: Long
-    ): ByteArray?
+    )
 
     protected abstract fun onReadDescriptor(
         continuation: CancellableContinuation<ByteArray?>,
@@ -122,15 +148,15 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, private val addr
         characteristicUuid: UUID?,
         serviceUuid: UUID?,
         timeout: Long
-    ): ByteArray?
+    )
 
     protected abstract fun onSetReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?)
 
-    protected abstract fun onReadRemoteRssi(continuation: CancellableContinuation<Int>, timeout: Long): Int
+    protected abstract fun onReadRemoteRssi(continuation: CancellableContinuation<Int>, timeout: Long)
 
     protected abstract fun onRequestConnectionPriority(continuation: CancellableContinuation<Unit>, connectionPriority: Int, timeout: Long)
 
-    protected abstract fun onRequestMtu(continuation: CancellableContinuation<Int>, mtu: Int, timeout: Long): Int
+    protected abstract fun onRequestMtu(continuation: CancellableContinuation<Int>, mtu: Int, timeout: Long)
 
     protected abstract fun onSetCharacteristicNotification(
         continuation: CancellableContinuation<Unit>,
