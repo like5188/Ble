@@ -129,11 +129,11 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, private val addr
         return try {
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
-            mutexUtils.withTryLock("正在读取 Rssi 值……") {
+            mutexUtils.withTryLock("正在读取RSSI……") {
                 checkEnvironmentOrThrow()
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(
-                        timeout, "读取 Rssi 值超时：$address"
+                        timeout, "读取RSSI超时：$address"
                     ) { continuation ->
                         onReadRemoteRssi(continuation, timeout)
                     }
@@ -155,7 +155,28 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, private val addr
     }
 
     final override suspend fun requestMtu(mtu: Int, timeout: Long): Int {
-        return onRequestMtu(mtu, timeout)
+        return try {
+            // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
+            // 所以不会产生 BleExceptionBusy 异常。
+            mutexUtils.withTryLock("正在设置MTU……") {
+                checkEnvironmentOrThrow()
+                withContext(Dispatchers.IO) {
+                    suspendCancellableCoroutineWithTimeout.execute(
+                        timeout, "设置MTU超时：$address"
+                    ) { continuation ->
+                        onRequestMtu(continuation, mtu, timeout)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            when (e) {
+                is BleExceptionCancelTimeout -> {
+                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，所以这里不做处理
+                    -1
+                }
+                else -> throw e
+            }
+        }
     }
 
     final override suspend fun setCharacteristicNotification(

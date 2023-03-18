@@ -82,33 +82,6 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         }
     }
 
-    override suspend fun requestMtu(mtu: Int, timeout: Long): Int = withContext(Dispatchers.IO) {
-        checkEnvironmentOrThrow()
-        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleExceptionDeviceDisconnected(address)
-        }
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            throw BleException("android 5.0及其以上才支持设置MTU：$address")
-        }
-
-        suspendCancellableCoroutineWithTimeout.execute(timeout, "设置MTU超时：$address") { continuation ->
-            mConnectCallbackManager.setRequestMtuCallback(object : IntCallback() {
-                override fun onSuccess(data: Int) {
-                    continuation.resume(data)
-                }
-
-                override fun onError(exception: BleException) {
-                    continuation.resumeWithException(exception)
-                }
-            })
-
-            if (mBluetoothGatt?.requestMtu(mtu) != true) {
-                continuation.resumeWithException(BleException("设置MTU失败：$address"))
-            }
-        }
-    }
-
     override suspend fun setCharacteristicNotification(
         characteristicUuid: UUID,
         serviceUuid: UUID?,
@@ -416,7 +389,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         })
 
         if (mBluetoothGatt?.readRemoteRssi() != true) {
-            continuation.resumeWithException(BleException("读取 Rssi 值失败：$address"))
+            continuation.resumeWithException(BleException("读取RSSI失败：$address"))
         }
     }
 
@@ -425,7 +398,28 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     }
 
     override fun onRequestMtu(continuation: CancellableContinuation<Int>, mtu: Int, timeout: Long) {
-        TODO("Not yet implemented")
+        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
+            continuation.resumeWithException(BleExceptionDeviceDisconnected(address))
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            continuation.resumeWithException(BleException("android 5.0及其以上才支持设置MTU：$address"))
+            return
+        }
+
+        mConnectCallbackManager.setRequestMtuCallback(object : IntCallback() {
+            override fun onSuccess(data: Int) {
+                continuation.resume(data)
+            }
+
+            override fun onError(exception: BleException) {
+                continuation.resumeWithException(exception)
+            }
+        })
+
+        if (mBluetoothGatt?.requestMtu(mtu) != true) {
+            continuation.resumeWithException(BleException("设置MTU失败：$address"))
+        }
     }
 
     override fun onSetCharacteristicNotification(
