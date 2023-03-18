@@ -82,7 +82,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
             return
         }
         // 此处如果不取消，那么还会把超时错误传递出去的。
-        suspendCancellableCoroutineWithTimeout.cancel("连接已断开")
+        suspendCancellableCoroutineWithTimeout.cancel()
         // close()时会清空BluetoothGatt内部的mCallback回调。导致收不到断开连接的消息。
         mBluetoothGatt?.close()
         mBluetoothGatt = null
