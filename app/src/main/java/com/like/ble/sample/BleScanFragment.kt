@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableInt
@@ -12,6 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import com.like.ble.central.scan.executor.AbstractScanExecutor
 import com.like.ble.central.scan.executor.ScanExecutor
 import com.like.ble.central.scan.result.ScanResult
+import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.result.BleResult
 import com.like.ble.sample.databinding.FragmentBleScanBinding
 import com.like.common.base.BaseLazyFragment
@@ -69,8 +71,12 @@ class BleScanFragment : BaseLazyFragment() {
                     }
                     is BleResult.Error -> {
                         val ctx = context ?: return@collect
-                        mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
-                        mBinding.tvScanStatus.text = it.msg
+                        if (it.code == BleExceptionBusy.code) {
+                            Toast.makeText(ctx, it.msg, Toast.LENGTH_SHORT).show()
+                        } else {
+                            mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
+                            mBinding.tvScanStatus.text = it.msg
+                        }
                     }
                 }
             }

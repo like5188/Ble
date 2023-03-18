@@ -10,6 +10,7 @@ import com.like.ble.central.connect.callback.ConnectCallback
 import com.like.ble.central.connect.callback.ConnectCallbackManager
 import com.like.ble.central.connect.callback.IntCallback
 import com.like.ble.exception.BleException
+import com.like.ble.exception.BleExceptionDeviceDisconnected
 import com.like.ble.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -159,7 +160,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     override suspend fun setReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?) = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleException("蓝牙未连接：$address")
+            throw BleExceptionDeviceDisconnected
         }
 
         val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
@@ -179,7 +180,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     override suspend fun readRemoteRssi(timeout: Long): Int = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleException("蓝牙未连接：$address")
+            throw BleExceptionDeviceDisconnected
         }
 
         suspendCancellableCoroutineWithTimeout.execute(timeout, "读RSSI超时：$address") { continuation ->
@@ -202,7 +203,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     override suspend fun requestConnectionPriority(connectionPriority: Int, timeout: Long) = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleException("蓝牙未连接：$address")
+            throw BleExceptionDeviceDisconnected
         }
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
@@ -220,7 +221,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     override suspend fun requestMtu(mtu: Int, timeout: Long): Int = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleException("蓝牙未连接：$address")
+            throw BleExceptionDeviceDisconnected
         }
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
@@ -253,7 +254,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     ) = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleException("蓝牙未连接：$address")
+            throw BleExceptionDeviceDisconnected
         }
 
         val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
@@ -312,7 +313,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         }
         checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleException("蓝牙未连接：$address")
+            throw BleExceptionDeviceDisconnected
         }
 
         val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
@@ -370,7 +371,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         }
         checkEnvironmentOrThrowBleException()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleException("蓝牙未连接：$address")
+            throw BleExceptionDeviceDisconnected
         }
 
         val descriptor = mBluetoothGatt?.findDescriptor(descriptorUuid, characteristicUuid, serviceUuid)

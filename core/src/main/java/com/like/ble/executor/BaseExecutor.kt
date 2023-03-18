@@ -3,6 +3,8 @@ package com.like.ble.executor
 import android.content.Context
 import androidx.activity.ComponentActivity
 import com.like.ble.exception.BleException
+import com.like.ble.exception.BleExceptionDisabled
+import com.like.ble.exception.BleExceptionPermission
 import com.like.ble.util.PermissionUtils
 import com.like.ble.util.isBluetoothEnable
 import com.like.ble.util.isBluetoothEnableAndSettingIfDisabled
@@ -31,10 +33,10 @@ abstract class BaseExecutor(protected val activity: ComponentActivity, private v
     @Throws(BleException::class)
     protected suspend fun checkEnvironmentOrThrowBleException() {
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
-            throw BleException("蓝牙未打开")
+            throw BleExceptionDisabled
         }
         if (!PermissionUtils.requestPermissions(activity, *permissions)) {
-            throw BleException("蓝牙权限被拒绝")
+            throw BleExceptionPermission
         }
     }
 
