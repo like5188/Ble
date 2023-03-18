@@ -68,6 +68,8 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, private val addr
 
     final override suspend fun readCharacteristic(characteristicUuid: UUID, serviceUuid: UUID?, timeout: Long): ByteArray? {
         return try {
+            // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
+            // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLock("正在读取特征值……") {
                 checkEnvironmentOrThrow()
                 withContext(Dispatchers.IO) {
@@ -95,7 +97,28 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, private val addr
         serviceUuid: UUID?,
         timeout: Long
     ): ByteArray? {
-        return onReadDescriptor(descriptorUuid, characteristicUuid, serviceUuid, timeout)
+        return try {
+            // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
+            // 所以不会产生 BleExceptionBusy 异常。
+            mutexUtils.withTryLock("正在读取描述值……") {
+                checkEnvironmentOrThrow()
+                withContext(Dispatchers.IO) {
+                    suspendCancellableCoroutineWithTimeout.execute(
+                        timeout, "读取描述值超时：${descriptorUuid.getValidString()}"
+                    ) { continuation ->
+                        onReadDescriptor(continuation, descriptorUuid, characteristicUuid, serviceUuid, timeout)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            when (e) {
+                is BleExceptionCancelTimeout -> {
+                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用着可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
+                    null
+                }
+                else -> throw e
+            }
+        }
     }
 
     final override suspend fun setReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?) {

@@ -44,45 +44,6 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         }
     }
 
-    override suspend fun readDescriptor(
-        descriptorUuid: UUID,
-        characteristicUuid: UUID?,
-        serviceUuid: UUID?,
-        timeout: Long
-    ): ByteArray? = withContext(Dispatchers.IO) {
-        checkEnvironmentOrThrow()
-        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleExceptionDeviceDisconnected(address)
-        }
-
-        val descriptor = mBluetoothGatt?.findDescriptor(
-            descriptorUuid,
-            characteristicUuid,
-            serviceUuid
-        ) ?: throw BleException("描述不存在：${descriptorUuid.getValidString()}")
-
-        // 由于descriptor.permissions永远为0x0000，所以无法判断，但是如果权限不允许，还是会操作失败的。
-//        if (descriptor.permissions and (BluetoothGattDescriptor.PERMISSION_READ or BluetoothGattDescriptor.PERMISSION_READ_ENCRYPTED or BluetoothGattDescriptor.PERMISSION_READ_ENCRYPTED_MITM) == 0) {
-//            command.error("this descriptor not support read!")
-//            return
-//        }
-
-        suspendCancellableCoroutineWithTimeout.execute(timeout, "读取描述值超时：${descriptorUuid.getValidString()}") { continuation ->
-            mConnectCallbackManager.setReadDescriptorCallback(object : ByteArrayCallback() {
-                override fun onSuccess(data: ByteArray?) {
-                    continuation.resume(data)
-                }
-
-                override fun onError(exception: BleException) {
-                    continuation.resumeWithException(exception)
-                }
-            })
-            if (mBluetoothGatt?.readDescriptor(descriptor) != true) {
-                continuation.resumeWithException(BleException("读取描述失败：${descriptorUuid.getValidString()}"))
-            }
-        }
-    }
-
     override suspend fun setReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?) = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrow()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
@@ -425,7 +386,37 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         serviceUuid: UUID?,
         timeout: Long
     ) {
-        TODO("Not yet implemented")
+        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
+            continuation.resumeWithException(BleExceptionDeviceDisconnected(address))
+        }
+
+        val descriptor = mBluetoothGatt?.findDescriptor(
+            descriptorUuid,
+            characteristicUuid,
+            serviceUuid
+        )
+        if (descriptor == null) {
+            continuation.resumeWithException(BleException("描述不存在：${descriptorUuid.getValidString()}"))
+        }
+
+        // 由于descriptor.permissions永远为0x0000，所以无法判断，但是如果权限不允许，还是会操作失败的。
+//        if (descriptor.permissions and (BluetoothGattDescriptor.PERMISSION_READ or BluetoothGattDescriptor.PERMISSION_READ_ENCRYPTED or BluetoothGattDescriptor.PERMISSION_READ_ENCRYPTED_MITM) == 0) {
+//            command.error("this descriptor not support read!")
+//            return
+//        }
+
+        mConnectCallbackManager.setReadDescriptorCallback(object : ByteArrayCallback() {
+            override fun onSuccess(data: ByteArray?) {
+                continuation.resume(data)
+            }
+
+            override fun onError(exception: BleException) {
+                continuation.resumeWithException(exception)
+            }
+        })
+        if (mBluetoothGatt?.readDescriptor(descriptor) != true) {
+            continuation.resumeWithException(BleException("读取描述值失败：${descriptorUuid.getValidString()}"))
+        }
     }
 
     override fun onSetReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?) {
