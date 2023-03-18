@@ -4,7 +4,7 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.le.ScanCallback
 import android.os.Build
 import androidx.annotation.RequiresApi
-import com.like.ble.util.scanrecordcompat.ScanRecordBelow21
+import com.like.ble.central.util.scanrecordcompat.ScanRecordBelow21
 
 class ScanCallbackManager {
     private val mScanCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : ScanCallback() {

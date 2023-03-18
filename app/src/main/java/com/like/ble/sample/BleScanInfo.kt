@@ -2,8 +2,8 @@ package com.like.ble.sample
 
 import androidx.databinding.ObservableBoolean
 import androidx.databinding.ObservableInt
-import com.like.ble.util.Rssi
-import com.like.ble.util.scanrecordcompat.ScanRecordBelow21
+import com.like.ble.central.util.Rssi
+import com.like.ble.central.util.scanrecordcompat.ScanRecordBelow21
 import com.like.recyclerview.model.IRecyclerViewItem
 import java.io.Serializable
 

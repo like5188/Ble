@@ -1,4 +1,4 @@
-package com.like.ble.util
+package com.like.ble.central.util
 
 /**
  * 广播数据结构体

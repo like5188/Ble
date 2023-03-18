@@ -13,7 +13,7 @@ import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.BleException
 import com.like.ble.central.scan.result.BleResult
 import com.like.ble.util.getBluetoothAdapter
-import com.like.ble.util.scanrecordcompat.ScanRecordBelow21
+import com.like.ble.central.util.scanrecordcompat.ScanRecordBelow21
 import kotlinx.coroutines.CancellableContinuation
 import java.util.*
 import kotlin.coroutines.resumeWithException

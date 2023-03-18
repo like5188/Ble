@@ -11,7 +11,7 @@ import android.widget.Toast
 import androidx.core.view.setPadding
 import androidx.databinding.DataBindingUtil
 import com.like.ble.sample.databinding.DialogFragmentRawBinding
-import com.like.ble.util.ADStructure
+import com.like.ble.central.util.ADStructure
 import com.like.ble.util.toHexString
 import com.like.ble.util.toHexString2
 import com.like.common.base.BaseDialogFragment
