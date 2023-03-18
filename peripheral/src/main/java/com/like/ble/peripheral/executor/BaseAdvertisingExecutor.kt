@@ -34,7 +34,7 @@ abstract class BaseAdvertisingExecutor(activity: ComponentActivity) : AbstractAd
             mutexUtils.withTryLock("正在广播中……") {
                 checkEnvironmentOrThrow()
                 withContext(Dispatchers.IO) {
-                    suspendCancellableCoroutineWithTimeout.execute(timeout) { continuation ->
+                    suspendCancellableCoroutineWithTimeout.execute(timeout, "开启广播超时") { continuation ->
                         onStartAdvertising(continuation, settings, advertiseData, scanResponse, deviceName)
                     }
                 }
