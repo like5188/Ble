@@ -2,7 +2,6 @@ package com.like.ble.executor
 
 import android.content.Context
 import androidx.activity.ComponentActivity
-import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionDisabled
 import com.like.ble.exception.BleExceptionPermission
 import com.like.ble.util.PermissionUtils
@@ -30,7 +29,7 @@ abstract class BleExecutor(protected val activity: ComponentActivity, private va
         return true
     }
 
-    @Throws(BleException::class)
+    @Throws
     protected suspend fun checkEnvironmentOrThrow() {
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleExceptionDisabled
