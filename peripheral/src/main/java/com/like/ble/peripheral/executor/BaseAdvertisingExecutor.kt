@@ -35,7 +35,6 @@ abstract class BaseAdvertisingExecutor(activity: ComponentActivity) : AbstractAd
                 checkEnvironmentOrThrow()
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(timeout, "开启广播超时") { continuation ->
-                        // onStartAdvertising 方法不会挂起，会在广播成功后返回，所以需要处理 AdvertiseCallback.ADVERTISE_FAILED_ALREADY_STARTED 异常
                         onStartAdvertising(continuation, settings, advertiseData, scanResponse, deviceName)
                     }
                 }
@@ -46,7 +45,7 @@ abstract class BaseAdvertisingExecutor(activity: ComponentActivity) : AbstractAd
                     // 提前取消超时不做处理。因为这是调用 stopAdvertising() 造成的，使用着可以直接在 stopAdvertising() 方法结束后处理 UI 的显示，不需要此回调。
                 }
                 e is BleException && e.code == AdvertiseCallback.ADVERTISE_FAILED_ALREADY_STARTED -> {
-                    // 如果正在广播，则抛出 BleExceptionBusy 异常，使得调用者可以和 withTryLock 方法抛出的异常一起统一处理。
+                    // onStartAdvertising 方法不会挂起，会在广播成功后返回，所以如果设备正在广播，则把 AdvertiseCallback.ADVERTISE_FAILED_ALREADY_STARTED 异常转换成 BleExceptionBusy 异常抛出。
                     throw BleExceptionBusy("设备正在广播")
                 }
                 else -> throw e

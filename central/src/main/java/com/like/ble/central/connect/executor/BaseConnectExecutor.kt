@@ -41,6 +41,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, private val addr
                 checkEnvironmentOrThrow()
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(timeout, "连接蓝牙设备超时：$address") { continuation ->
+                        // onConnect 方法不会挂起，会在连接成功后返回，所以如果已经连接了，就抛出 BleExceptionBusy 异常
                         onConnect(continuation, timeout)
                     }
                 }
