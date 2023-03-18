@@ -42,7 +42,8 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
             }
         } catch (e: Exception) {
             when (e) {
-                is BleExceptionCancelTimeout -> {// 提前取消超时不做处理。因为这是调用 stopScan() 造成的，使用着可以直接在 stopScan() 方法结束后处理 UI 的显示，不需要此回调。
+                is BleExceptionCancelTimeout -> {
+                    // 提前取消超时不做处理。因为这是调用 stopScan() 造成的，使用着可以直接在 stopScan() 方法结束后处理 UI 的显示，不需要此回调。
                 }
                 is BleExceptionTimeout -> {
                     stopScan()
