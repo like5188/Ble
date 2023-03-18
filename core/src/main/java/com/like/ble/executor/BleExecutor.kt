@@ -12,7 +12,7 @@ import com.like.ble.util.isBluetoothEnableAndSettingIfDisabled
 /**
  * 蓝牙命令真正的执行者。
  */
-abstract class BaseExecutor(protected val activity: ComponentActivity, private val permissions: Array<String>) {
+abstract class BleExecutor(protected val activity: ComponentActivity, private val permissions: Array<String>) {
     protected val context: Context = activity.applicationContext
 
     /**

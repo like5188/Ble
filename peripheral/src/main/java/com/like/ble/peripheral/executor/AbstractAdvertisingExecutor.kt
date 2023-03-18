@@ -5,12 +5,12 @@ import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import android.os.Build
 import androidx.activity.ComponentActivity
-import com.like.ble.executor.BaseExecutor
+import com.like.ble.executor.BleExecutor
 
 /**
  * 外围设备广播执行者。
  */
-abstract class AbstractAdvertisingExecutor(activity: ComponentActivity) : BaseExecutor(
+abstract class AbstractAdvertisingExecutor(activity: ComponentActivity) : BleExecutor(
     activity,
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         // Android 12 中的新蓝牙权限

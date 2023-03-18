@@ -6,14 +6,14 @@ import android.bluetooth.BluetoothGattService
 import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.annotation.IntRange
-import com.like.ble.executor.BaseExecutor
+import com.like.ble.executor.BleExecutor
 import kotlinx.coroutines.flow.Flow
 import java.util.*
 
 /**
  * 中心设备蓝牙命令执行者。
  */
-abstract class AbstractConnectExecutor(activity: ComponentActivity) : BaseExecutor(
+abstract class AbstractConnectExecutor(activity: ComponentActivity) : BleExecutor(
     activity,
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         // Android 12 中的新蓝牙权限

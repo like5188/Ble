@@ -3,7 +3,7 @@ package com.like.ble.central.scan.executor
 import android.Manifest
 import android.os.Build
 import androidx.activity.ComponentActivity
-import com.like.ble.executor.BaseExecutor
+import com.like.ble.executor.BleExecutor
 import com.like.ble.central.scan.result.BleResult
 import kotlinx.coroutines.flow.Flow
 import java.util.*
@@ -11,7 +11,7 @@ import java.util.*
 /**
  * 中心设备蓝牙扫描执行者。
  */
-abstract class AbstractScanExecutor(activity: ComponentActivity) : BaseExecutor(
+abstract class AbstractScanExecutor(activity: ComponentActivity) : BleExecutor(
     activity,
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         // Android 12 中的新蓝牙权限
