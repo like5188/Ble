@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import android.os.ParcelUuid;
-import android.util.ArrayMap;
 import android.util.Log;
 import android.util.SparseArray;
 
