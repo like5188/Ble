@@ -31,7 +31,7 @@ abstract class BaseExecutor(protected val activity: ComponentActivity, private v
     }
 
     @Throws(BleException::class)
-    protected suspend fun checkEnvironmentOrThrowBleException() {
+    protected suspend fun checkEnvironmentOrThrow() {
         if (!activity.isBluetoothEnableAndSettingIfDisabled()) {
             throw BleExceptionDisabled
         }

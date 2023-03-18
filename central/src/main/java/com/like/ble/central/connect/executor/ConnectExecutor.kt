@@ -48,7 +48,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     }
 
     override suspend fun connect(timeout: Long): List<BluetoothGattService>? = withContext(Dispatchers.IO) {
-        checkEnvironmentOrThrowBleException()
+        checkEnvironmentOrThrow()
         if (context.isBleDeviceConnected(mBluetoothGatt?.device)) return@withContext mBluetoothGatt?.services
         // 获取远端的蓝牙设备
         val bluetoothDevice = context.getBluetoothAdapter()?.getRemoteDevice(address) ?: throw BleException("连接蓝牙失败：$address 未找到")
@@ -90,7 +90,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
 
     override suspend fun readCharacteristic(characteristicUuid: UUID, serviceUuid: UUID?, timeout: Long): ByteArray? =
         withContext(Dispatchers.IO) {
-            checkEnvironmentOrThrowBleException()
+            checkEnvironmentOrThrow()
             if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
                 throw BleException("蓝牙未连接：$address")
             }
@@ -124,7 +124,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         serviceUuid: UUID?,
         timeout: Long
     ): ByteArray? = withContext(Dispatchers.IO) {
-        checkEnvironmentOrThrowBleException()
+        checkEnvironmentOrThrow()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleException("蓝牙未连接：$address")
         }
@@ -158,7 +158,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     }
 
     override suspend fun setReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?) = withContext(Dispatchers.IO) {
-        checkEnvironmentOrThrowBleException()
+        checkEnvironmentOrThrow()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleExceptionDeviceDisconnected
         }
@@ -178,7 +178,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     }
 
     override suspend fun readRemoteRssi(timeout: Long): Int = withContext(Dispatchers.IO) {
-        checkEnvironmentOrThrowBleException()
+        checkEnvironmentOrThrow()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleExceptionDeviceDisconnected
         }
@@ -201,7 +201,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     }
 
     override suspend fun requestConnectionPriority(connectionPriority: Int, timeout: Long) = withContext(Dispatchers.IO) {
-        checkEnvironmentOrThrowBleException()
+        checkEnvironmentOrThrow()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleExceptionDeviceDisconnected
         }
@@ -219,7 +219,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     }
 
     override suspend fun requestMtu(mtu: Int, timeout: Long): Int = withContext(Dispatchers.IO) {
-        checkEnvironmentOrThrowBleException()
+        checkEnvironmentOrThrow()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleExceptionDeviceDisconnected
         }
@@ -252,7 +252,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         enable: Boolean,
         timeout: Long
     ) = withContext(Dispatchers.IO) {
-        checkEnvironmentOrThrowBleException()
+        checkEnvironmentOrThrow()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleExceptionDeviceDisconnected
         }
@@ -311,7 +311,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         if (data.isEmpty()) {
             throw BleException("data is empty")
         }
-        checkEnvironmentOrThrowBleException()
+        checkEnvironmentOrThrow()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleExceptionDeviceDisconnected
         }
@@ -369,7 +369,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         if (data.isEmpty()) {
             throw BleException("data is empty")
         }
-        checkEnvironmentOrThrowBleException()
+        checkEnvironmentOrThrow()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             throw BleExceptionDeviceDisconnected
         }

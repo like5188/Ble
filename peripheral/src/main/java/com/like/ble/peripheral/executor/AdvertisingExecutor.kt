@@ -39,7 +39,7 @@ class AdvertisingExecutor(activity: ComponentActivity) : AbstractAdvertisingExec
         scanResponse: AdvertiseData?,
         deviceName: String
     ) = withContext(Dispatchers.IO) {
-        checkEnvironmentOrThrowBleException()
+        checkEnvironmentOrThrow()
         val bluetoothLeAdvertiser = activity.getBluetoothAdapter()?.bluetoothLeAdvertiser
             ?: throw BleException("phone does not support Bluetooth Advertiser")
         suspendCancellableCoroutine { continuation ->

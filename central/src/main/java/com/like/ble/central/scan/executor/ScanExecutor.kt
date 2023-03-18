@@ -42,7 +42,7 @@ class ScanExecutor(activity: ComponentActivity) : AbstractScanExecutor(activity)
             return
         }
         withContext(Dispatchers.IO) {
-            checkEnvironmentOrThrowBleException()
+            checkEnvironmentOrThrow()
             scanCallbackManager.setScanCallback(object : ScanCallback() {
                 override fun onSuccess(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
                     _scanFlow.tryEmit(BleResult.Result(ScanResult(device, rssi, scanRecord)))
