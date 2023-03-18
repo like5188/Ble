@@ -6,7 +6,6 @@ import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanSettings
 import android.os.Build
 import android.os.ParcelUuid
-import android.util.Log
 import androidx.activity.ComponentActivity
 import com.like.ble.central.scan.callback.ScanCallback
 import com.like.ble.central.scan.callback.ScanCallbackManager
@@ -104,7 +103,6 @@ class ScanExecutor(activity: ComponentActivity) : AbstractScanExecutor(activity)
             }
             _scanFlow.tryEmit(BleResult.Error(e))
         } finally {
-            Log.e("TAG", "unlock")
             mutex.unlock()
         }
     }
