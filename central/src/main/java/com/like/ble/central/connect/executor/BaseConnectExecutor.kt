@@ -151,7 +151,27 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, private val addr
     }
 
     final override suspend fun requestConnectionPriority(connectionPriority: Int, timeout: Long) {
-        onRequestConnectionPriority(connectionPriority, timeout)
+        try {
+            // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
+            // 所以不会产生 BleExceptionBusy 异常。
+            mutexUtils.withTryLock("正在设置ConnectionPriority……") {
+                checkEnvironmentOrThrow()
+                withContext(Dispatchers.IO) {
+                    suspendCancellableCoroutineWithTimeout.execute(
+                        timeout, "设置ConnectionPriority超时：$address"
+                    ) { continuation ->
+                        onRequestConnectionPriority(continuation, connectionPriority, timeout)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            when (e) {
+                is BleExceptionCancelTimeout -> {
+                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，所以这里不做处理
+                }
+                else -> throw e
+            }
+        }
     }
 
     final override suspend fun requestMtu(mtu: Int, timeout: Long): Int {

@@ -64,24 +64,6 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         })
     }
 
-    override suspend fun requestConnectionPriority(connectionPriority: Int, timeout: Long) = withContext(Dispatchers.IO) {
-        checkEnvironmentOrThrow()
-        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleExceptionDeviceDisconnected(address)
-        }
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            throw BleException("android 5.0及其以上才支持requestConnectionPriority：$address")
-        }
-
-        suspendCancellableCoroutineWithTimeout.execute(timeout, "设置ConnectionPriority超时：$address") { continuation ->
-            if (mBluetoothGatt?.requestConnectionPriority(connectionPriority) != true) {
-                continuation.resumeWithException(BleException("设置ConnectionPriority失败：$address"))
-            }
-            continuation.resume(Unit)
-        }
-    }
-
     override suspend fun setCharacteristicNotification(
         characteristicUuid: UUID,
         serviceUuid: UUID?,
@@ -394,7 +376,19 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     }
 
     override fun onRequestConnectionPriority(continuation: CancellableContinuation<Unit>, connectionPriority: Int, timeout: Long) {
-        TODO("Not yet implemented")
+        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
+            continuation.resumeWithException(BleExceptionDeviceDisconnected(address))
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            continuation.resumeWithException(BleException("android 5.0及其以上才支持requestConnectionPriority：$address"))
+            return
+        }
+
+        if (mBluetoothGatt?.requestConnectionPriority(connectionPriority) != true) {
+            continuation.resumeWithException(BleException("设置ConnectionPriority失败：$address"))
+        }
+        continuation.resume(Unit)
     }
 
     override fun onRequestMtu(continuation: CancellableContinuation<Int>, mtu: Int, timeout: Long) {
