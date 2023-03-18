@@ -8,14 +8,16 @@ import android.os.Bundle
 import android.os.ParcelUuid
 import android.text.Html
 import android.view.View
+import android.widget.Toast
 import androidx.annotation.ColorRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.widget.NestedScrollView
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
-import com.like.ble.peripheral.executor.AdvertisingExecutor
+import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.peripheral.executor.AbstractAdvertisingExecutor
+import com.like.ble.peripheral.executor.AdvertisingExecutor
 import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
 import com.like.ble.util.*
 import kotlinx.coroutines.delay
@@ -265,8 +267,15 @@ class BlePeripheralActivity : AppCompatActivity() {
                 mBinding.tvAdvertisingStatus.text = "广播已开启"
                 initServices()//该方法是添加一个服务，在此处调用即将服务广播出去
             } catch (e: Exception) {
-                mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_red))
-                mBinding.tvAdvertisingStatus.text = e.message
+                when (e) {
+                    is BleExceptionBusy -> {
+                        Toast.makeText(this@BlePeripheralActivity, e.message, Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {
+                        mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_red))
+                        mBinding.tvAdvertisingStatus.text = e.message
+                    }
+                }
             }
         }
     }

@@ -1,7 +1,6 @@
 package com.like.ble.peripheral.executor
 
 import android.annotation.SuppressLint
-import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import androidx.activity.ComponentActivity
@@ -9,9 +8,7 @@ import com.like.ble.callback.BleCallback
 import com.like.ble.exception.BleException
 import com.like.ble.peripheral.callback.AdvertisingCallbackManager
 import com.like.ble.util.getBluetoothAdapter
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CancellableContinuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -28,57 +25,45 @@ import kotlin.coroutines.resumeWithException
  * 扫描回复是可选的，中心设备可以向外设请求扫描回复，这里包含一些设备额外的信息。
  */
 @SuppressLint("MissingPermission")
-class AdvertisingExecutor(activity: ComponentActivity) : AbstractAdvertisingExecutor(activity) {
+class AdvertisingExecutor(activity: ComponentActivity) : BaseAdvertisingExecutor(activity) {
     private val advertisingCallbackManager: AdvertisingCallbackManager by lazy {
         AdvertisingCallbackManager()
     }
 
-    override suspend fun startAdvertising(
+    override fun onStartAdvertising(
+        continuation: CancellableContinuation<Unit>,
         settings: AdvertiseSettings,
         advertiseData: AdvertiseData,
         scanResponse: AdvertiseData?,
         deviceName: String
-    ) = withContext(Dispatchers.IO) {
-        checkEnvironmentOrThrow()
+    ) {
         val bluetoothLeAdvertiser = activity.getBluetoothAdapter()?.bluetoothLeAdvertiser
-            ?: throw BleException("phone does not support Bluetooth Advertiser")
-        suspendCancellableCoroutine { continuation ->
-            // 设置设备名字
-            if (deviceName.isNotEmpty()) {
-                activity.getBluetoothAdapter()?.name = deviceName
+        if (bluetoothLeAdvertiser == null) {
+            continuation.resumeWithException(BleException("phone does not support Bluetooth Advertiser"))
+        }
+        // 设置设备名字
+        if (deviceName.isNotEmpty()) {
+            activity.getBluetoothAdapter()?.name = deviceName
+        }
+        advertisingCallbackManager.setAdvertisingCallback(object : BleCallback() {
+            override fun onSuccess() {
+                continuation.resume(Unit)
             }
-            advertisingCallbackManager.setAdvertisingCallback(object : BleCallback() {
-                override fun onSuccess() {
-                    continuation.resume(Unit)
-                }
 
-                override fun onError(exception: BleException) {
-                    if (exception.code == AdvertiseCallback.ADVERTISE_FAILED_ALREADY_STARTED) {
-                        // 如果正在广播，直接返回，不返回错误造成显示错误信息。
-                        continuation.resume(Unit)
-                    } else {
-                        continuation.resumeWithException(exception)
-                    }
-                }
-            })
-            bluetoothLeAdvertiser.startAdvertising(
-                settings,
-                advertiseData,
-                scanResponse,
-                advertisingCallbackManager.getAdvertiseCallback()
-            )
-        }
+            override fun onError(exception: BleException) {
+                continuation.resumeWithException(exception)
+            }
+        })
+        bluetoothLeAdvertiser?.startAdvertising(
+            settings,
+            advertiseData,
+            scanResponse,
+            advertisingCallbackManager.getAdvertiseCallback()
+        )
     }
 
-    override fun stopAdvertising() {
-        if (!checkEnvironment()) {
-            return
-        }
+    override fun onStopAdvertising() {
         activity.getBluetoothAdapter()?.bluetoothLeAdvertiser?.stopAdvertising(advertisingCallbackManager.getAdvertiseCallback())
-    }
-
-    override fun close() {
-        stopAdvertising()
     }
 
 }
