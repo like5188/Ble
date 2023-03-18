@@ -258,7 +258,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         // 写入值来使能服务端的这两个功能Notification/Indication，这样服务端才能发送。
         val cccd = characteristic.getDescriptor(createBleUuidBy16Bit("2902"))
         if (cccd == null) {
-            continuation.resumeWithException(throw BleException("getDescriptor fail"))
+            continuation.resumeWithException(BleException("getDescriptor fail"))
         }
 
         cccd.value = when (type) {
