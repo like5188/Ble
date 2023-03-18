@@ -16,7 +16,12 @@ class MutexUtils {
      * @param action        需要执行的代码块
      */
     @Throws
+    @OptIn(ExperimentalContracts::class)
     inline fun <T> withTryLock(busyMessage: String?, action: () -> T): T {
+        contract {
+            callsInPlace(action, InvocationKind.EXACTLY_ONCE)
+        }
+
         if (!mutex.tryLock()) throw BleExceptionBusy(busyMessage)
         try {
             return action()
