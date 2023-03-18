@@ -92,7 +92,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         withContext(Dispatchers.IO) {
             checkEnvironmentOrThrow()
             if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-                throw BleException("蓝牙未连接：$address")
+                throw BleExceptionDeviceDisconnected
             }
 
             val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
@@ -126,7 +126,7 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
     ): ByteArray? = withContext(Dispatchers.IO) {
         checkEnvironmentOrThrow()
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleException("蓝牙未连接：$address")
+            throw BleExceptionDeviceDisconnected
         }
 
         val descriptor = mBluetoothGatt?.findDescriptor(
