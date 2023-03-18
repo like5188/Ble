@@ -16,6 +16,7 @@ import com.like.ble.exception.BleExceptionTimeout
 import com.like.ble.result.BleResult
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
 import com.like.ble.util.getBluetoothAdapter
+import com.like.ble.util.scanrecordcompat.ScanRecordBelow21
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -52,7 +53,7 @@ class ScanExecutor(activity: ComponentActivity) : AbstractScanExecutor(activity)
                 checkEnvironmentOrThrow()
                 suspendCancellableCoroutineWithTimeout.execute<Unit>(duration) { continuation ->
                     scanCallbackManager.setScanCallback(object : ScanCallback() {
-                        override fun onSuccess(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
+                        override fun onSuccess(device: BluetoothDevice, rssi: Int, scanRecord: ScanRecordBelow21?) {
                             _scanFlow.tryEmit(BleResult.Result(ScanResult(device, rssi, scanRecord)))
                         }
 

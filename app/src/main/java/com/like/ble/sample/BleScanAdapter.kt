@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.DiffUtil
 import com.like.ble.sample.databinding.ItemBleScanBinding
 import com.like.ble.util.deleteLast
 import com.like.ble.util.getValidString
-import com.like.ble.util.scanrecordcompat.ScanRecordBelow21
 import com.like.ble.util.toHexString
 import com.like.ble.util.toHexString4
 import com.like.recyclerview.adapter.BaseListAdapter
@@ -39,46 +38,40 @@ class BleScanAdapter(private val mActivity: FragmentActivity) : BaseListAdapter<
         }
 
         // 单击显示原始数据
-        if (item.scanRecord != null) {
-            binding.tvRaw.setOnClickListener {
-                mRawDialogFragment.arguments = Bundle().apply {
-                    putByteArray("data", item.scanRecord)
-                }
-                mRawDialogFragment.show(mActivity)
+        val scanRecord = item.scanRecord ?: return
+        binding.tvRaw.setOnClickListener {
+            mRawDialogFragment.arguments = Bundle().apply {
+                putByteArray("data", item.scanRecord.bytes)
             }
+            mRawDialogFragment.show(mActivity)
         }
 
-        val scanRecordCompat = ScanRecordBelow21.parseFromBytes(item.scanRecord) ?: return
         val textColor = ContextCompat.getColor(mActivity, R.color.ble_text_black_1)
         val textColorHexString = Integer.toHexString(textColor).substring(2)
 
         // 判断是厂商类型
-        if (item.scanRecord != null) {
-            when {
-                scanRecordCompat.getManufacturerSpecificData(0x4C) != null -> binding.ivManufacturerType.setImageResource(R.drawable.apple)
-                scanRecordCompat.getManufacturerSpecificData(0x06) != null -> binding.ivManufacturerType.setImageResource(R.drawable.windows)
-                else -> binding.ivManufacturerType.setImageResource(R.drawable.bluetooth)
-            }
-        } else {
-            binding.ivManufacturerType.setImageResource(R.drawable.bluetooth)
+        when {
+            scanRecord.getManufacturerSpecificData(0x4C) != null -> binding.ivManufacturerType.setImageResource(R.drawable.apple)
+            scanRecord.getManufacturerSpecificData(0x06) != null -> binding.ivManufacturerType.setImageResource(R.drawable.windows)
+            else -> binding.ivManufacturerType.setImageResource(R.drawable.bluetooth)
         }
 
-        if (scanRecordCompat.txPowerLevel == Integer.MIN_VALUE) {
+        if (scanRecord.txPowerLevel == Integer.MIN_VALUE) {
             binding.tvTxPowerLevel.visibility = View.GONE
             binding.tvTxPowerLevel.text = ""
         } else {
             binding.tvTxPowerLevel.visibility = View.VISIBLE
             binding.tvTxPowerLevel.text =
-                Html.fromHtml(String.format("""<font color="#$textColorHexString">Tx Power Level：</font>${scanRecordCompat.txPowerLevel} dBm"""))
+                Html.fromHtml(String.format("""<font color="#$textColorHexString">Tx Power Level：</font>${scanRecord.txPowerLevel} dBm"""))
         }
 
-        if (scanRecordCompat.serviceUuids.isNullOrEmpty()) {
+        if (scanRecord.serviceUuids.isNullOrEmpty()) {
             binding.tvServiceUuids.visibility = View.GONE
             binding.tvServiceUuids.text = ""
         } else {
             binding.tvServiceUuids.visibility = View.VISIBLE
             val sb = StringBuilder()
-            scanRecordCompat.serviceUuids.forEach {
+            scanRecord.serviceUuids.forEach {
                 sb.append(it.uuid.getValidString()).append("；")
             }
             sb.deleteLast()
@@ -86,13 +79,13 @@ class BleScanAdapter(private val mActivity: FragmentActivity) : BaseListAdapter<
                 Html.fromHtml(String.format("""<font color="#$textColorHexString">16-bit Service UUIDs：</font>$sb"""))
         }
 
-        if (scanRecordCompat.manufacturerSpecificData == null || scanRecordCompat.manufacturerSpecificData.isEmpty()) {
+        if (scanRecord.manufacturerSpecificData == null || scanRecord.manufacturerSpecificData.isEmpty()) {
             binding.tvManufacturerData.visibility = View.GONE
             binding.tvManufacturerData.text = ""
         } else {
             binding.tvManufacturerData.visibility = View.VISIBLE
             val sb = StringBuilder()
-            scanRecordCompat.manufacturerSpecificData.forEach { key, value ->
+            scanRecord.manufacturerSpecificData.forEach { key, value ->
                 sb.append("id:0x${key.toHexString4()}，Data:0x${value.toHexString()}").append("；")
             }
             sb.deleteLast()
@@ -100,13 +93,13 @@ class BleScanAdapter(private val mActivity: FragmentActivity) : BaseListAdapter<
                 Html.fromHtml(String.format("""<font color="#$textColorHexString">Manufacturer Data：</font>$sb"""))
         }
 
-        if (scanRecordCompat.serviceData.isNullOrEmpty()) {
+        if (scanRecord.serviceData.isNullOrEmpty()) {
             binding.tvServiceData.visibility = View.GONE
             binding.tvServiceData.text = ""
         } else {
             binding.tvServiceData.visibility = View.VISIBLE
             val sb = StringBuilder()
-            scanRecordCompat.serviceData.forEach {
+            scanRecord.serviceData.forEach {
                 sb.append("UUID:${it.key.uuid.getValidString()}，Data:0x${it.value.toHexString()}").append("；")
             }
             sb.deleteLast()
@@ -124,7 +117,7 @@ class BleScanAdapter(private val mActivity: FragmentActivity) : BaseListAdapter<
             override fun areContentsTheSame(oldItem: BleScanInfo, newItem: BleScanInfo): Boolean {
                 return oldItem.name == newItem.name &&
                         oldItem.rssi == newItem.rssi &&
-                        oldItem.scanRecord.contentEquals(newItem.scanRecord) &&
+                        oldItem.scanRecord?.bytes.contentEquals(newItem.scanRecord?.bytes) &&
                         oldItem.distance == newItem.distance &&
                         oldItem.isShowDetails == newItem.isShowDetails
             }

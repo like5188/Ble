@@ -61,7 +61,7 @@ class BleScanFragment : BaseLazyFragment() {
                         val item: BleScanInfo? = mAdapter.currentList.firstOrNull { it?.address == address }
                         if (item == null) {// 防止重复添加
                             val newItems = mAdapter.currentList.toMutableList()
-                            newItems.add(BleScanInfo(name, address, ObservableInt(scanResult.rssi), scanResult.data))
+                            newItems.add(BleScanInfo(name, address, ObservableInt(scanResult.rssi), scanResult.scanRecord))
                             mAdapter.submitList(newItems)
                         } else {
                             item.updateRssi(scanResult.rssi)

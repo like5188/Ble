@@ -11,8 +11,6 @@
 
 3、支持一个central设备同时连接多个peripheral设备。
 
-4、如果版本低于API 21，那么可以用ScanRecordBelow21类来解析扫描结果。
-
 ## 使用方法：
 
 1、引用
