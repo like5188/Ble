@@ -16,7 +16,6 @@ class SuspendCancellableCoroutineWithTimeout {
      * @param timeout           超时时间。如果<=0，则表示不设置超时限制。和[withTimeout]方法的参数不一样。
      * @param timeoutErrorMsg   超时错误提示信息。
      */
-    @Throws
     suspend inline fun <T> execute(
         timeout: Long, timeoutErrorMsg: String = "", crossinline block: (CancellableContinuation<T>) -> Unit
     ): T = if (timeout > 0) {

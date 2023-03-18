@@ -15,7 +15,6 @@ class MutexUtils {
      * @param busyMessage   繁忙异常的提示信息
      * @param action        需要执行的代码块
      */
-    @Throws
     @OptIn(ExperimentalContracts::class)
     inline fun <T> withTryLock(busyMessage: String?, action: () -> T): T {
         contract {
