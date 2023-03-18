@@ -55,124 +55,6 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         })
     }
 
-    override suspend fun writeCharacteristic(
-        data: List<ByteArray>,
-        characteristicUuid: UUID,
-        serviceUuid: UUID?,
-        timeout: Long,
-        writeType: Int
-    ) = withContext(Dispatchers.IO) {
-        if (data.isEmpty()) {
-            throw BleException("data is empty")
-        }
-        checkEnvironmentOrThrow()
-        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleExceptionDeviceDisconnected(address)
-        }
-
-        val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
-            ?: throw BleException("特征值不存在：${characteristicUuid.getValidString()}")
-
-        if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_WRITE == 0) {
-            throw BleException("this characteristic not support write!")
-        }
-
-        suspendCancellableCoroutineWithTimeout.execute(timeout, "写特征值超时：${characteristicUuid.getValidString()}") { continuation ->
-            // 是否可以进行下一批次的写入操作
-            val nextFlag = AtomicBoolean(false)
-            mConnectCallbackManager.setWriteCharacteristicCallback(object : BleCallback() {
-                override fun onSuccess() {
-                    nextFlag.set(true)
-                }
-
-                override fun onError(exception: BleException) {
-                    continuation.resumeWithException(exception)
-                }
-            })
-            /*
-                写特征值前可以设置写的类型setWriteType()，写类型有三种，如下：
-                WRITE_TYPE_DEFAULT 默认类型，需要外围设备的确认，也就是需要外围设备的回应，这样才能继续发送写。
-                WRITE_TYPE_NO_RESPONSE 设置该类型不需要外围设备的回应，可以继续写数据。加快传输速率。
-                WRITE_TYPE_SIGNED 写特征携带认证签名，具体作用不太清楚。
-            */
-            characteristic.writeType = writeType
-            launch {
-                data.forEach {
-                    characteristic.value = it
-                    if (mBluetoothGatt?.writeCharacteristic(characteristic) != true) {
-                        continuation.resumeWithException(BleException("写特征值失败：${characteristicUuid.getValidString()}"))
-                    }
-                    do {
-                        delay(20)
-                    } while (!nextFlag.get())
-                    nextFlag.set(false)
-                }
-                continuation.resume(Unit)
-            }
-        }
-
-    }
-
-    override suspend fun writeDescriptor(
-        data: List<ByteArray>,
-        descriptorUuid: UUID,
-        characteristicUuid: UUID?,
-        serviceUuid: UUID?,
-        timeout: Long
-    ) = withContext(Dispatchers.IO) {
-        if (data.isEmpty()) {
-            throw BleException("data is empty")
-        }
-        checkEnvironmentOrThrow()
-        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleExceptionDeviceDisconnected(address)
-        }
-
-        val descriptor = mBluetoothGatt?.findDescriptor(descriptorUuid, characteristicUuid, serviceUuid)
-            ?: throw BleException("描述值不存在：${descriptorUuid.getValidString()}")
-
-        // 由于descriptor.permissions永远为0x0000，所以无法判断，但是如果权限不允许，还是会操作失败的。
-//        if (descriptor.permissions and
-//            (BluetoothGattDescriptor.PERMISSION_WRITE or
-//                    BluetoothGattDescriptor.PERMISSION_WRITE_ENCRYPTED or
-//                    BluetoothGattDescriptor.PERMISSION_WRITE_ENCRYPTED_MITM or
-//                    BluetoothGattDescriptor.PERMISSION_WRITE_SIGNED or
-//                    BluetoothGattDescriptor.PERMISSION_WRITE_SIGNED_MITM
-//                    ) == 0
-//        ) {
-//            command.error("this descriptor not support write!")
-//            return
-//        }
-
-        suspendCancellableCoroutineWithTimeout.execute(timeout, "写描述值超时：${descriptorUuid.getValidString()}") { continuation ->
-            // 是否可以进行下一批次的写入操作
-            val nextFlag = AtomicBoolean(false)
-            mConnectCallbackManager.setWriteDescriptorCallback(object : BleCallback() {
-                override fun onSuccess() {
-                    nextFlag.set(true)
-                }
-
-                override fun onError(exception: BleException) {
-                    continuation.resumeWithException(exception)
-                }
-            })
-
-            launch {
-                data.forEach {
-                    descriptor.value = it
-                    if (mBluetoothGatt?.writeDescriptor(descriptor) != true) {
-                        continuation.resumeWithException(BleException("写描述值失败：${descriptorUuid.getValidString()}"))
-                    }
-                    do {
-                        delay(20)
-                    } while (!nextFlag.get())
-                    nextFlag.set(false)
-                }
-                continuation.resume(Unit)
-            }
-        }
-    }
-
     override fun onConnect(continuation: CancellableContinuation<List<BluetoothGattService>?>, timeout: Long) {
         if (context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             continuation.resumeWithException(BleExceptionBusy("设备已经连接"))
@@ -417,7 +299,54 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         timeout: Long,
         writeType: Int
     ) {
-        TODO("Not yet implemented")
+        if (data.isEmpty()) {
+            continuation.resumeWithException(BleException("data is empty"))
+        }
+        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
+            continuation.resumeWithException(BleExceptionDeviceDisconnected(address))
+        }
+
+        val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
+        if (characteristic == null) {
+            continuation.resumeWithException(BleException("特征值不存在：${characteristicUuid.getValidString()}"))
+            return
+        }
+
+        if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_WRITE == 0) {
+            continuation.resumeWithException(BleException("this characteristic not support write!"))
+        }
+
+        // 是否可以进行下一批次的写入操作
+        val nextFlag = AtomicBoolean(false)
+        mConnectCallbackManager.setWriteCharacteristicCallback(object : BleCallback() {
+            override fun onSuccess() {
+                nextFlag.set(true)
+            }
+
+            override fun onError(exception: BleException) {
+                continuation.resumeWithException(exception)
+            }
+        })
+        /*
+            写特征值前可以设置写的类型setWriteType()，写类型有三种，如下：
+            WRITE_TYPE_DEFAULT 默认类型，需要外围设备的确认，也就是需要外围设备的回应，这样才能继续发送写。
+            WRITE_TYPE_NO_RESPONSE 设置该类型不需要外围设备的回应，可以继续写数据。加快传输速率。
+            WRITE_TYPE_SIGNED 写特征携带认证签名，具体作用不太清楚。
+        */
+        characteristic.writeType = writeType
+        launch {
+            data.forEach {
+                characteristic.value = it
+                if (mBluetoothGatt?.writeCharacteristic(characteristic) != true) {
+                    continuation.resumeWithException(BleException("写特征值失败：${characteristicUuid.getValidString()}"))
+                }
+                do {
+                    delay(20)
+                } while (!nextFlag.get())
+                nextFlag.set(false)
+            }
+            continuation.resume(Unit)
+        }
     }
 
     override fun onWriteDescriptor(
@@ -428,6 +357,56 @@ class ConnectExecutor(activity: ComponentActivity, private val address: String?)
         serviceUuid: UUID?,
         timeout: Long
     ) {
-        TODO("Not yet implemented")
+        if (data.isEmpty()) {
+            continuation.resumeWithException(BleException("data is empty"))
+        }
+        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
+            continuation.resumeWithException(BleExceptionDeviceDisconnected(address))
+        }
+
+        val descriptor = mBluetoothGatt?.findDescriptor(descriptorUuid, characteristicUuid, serviceUuid)
+        if (descriptor == null) {
+            continuation.resumeWithException(BleException("描述值不存在：${descriptorUuid.getValidString()}"))
+            return
+        }
+
+        // 由于descriptor.permissions永远为0x0000，所以无法判断，但是如果权限不允许，还是会操作失败的。
+//        if (descriptor.permissions and
+//            (BluetoothGattDescriptor.PERMISSION_WRITE or
+//                    BluetoothGattDescriptor.PERMISSION_WRITE_ENCRYPTED or
+//                    BluetoothGattDescriptor.PERMISSION_WRITE_ENCRYPTED_MITM or
+//                    BluetoothGattDescriptor.PERMISSION_WRITE_SIGNED or
+//                    BluetoothGattDescriptor.PERMISSION_WRITE_SIGNED_MITM
+//                    ) == 0
+//        ) {
+//            command.error("this descriptor not support write!")
+//            return
+//        }
+
+        // 是否可以进行下一批次的写入操作
+        val nextFlag = AtomicBoolean(false)
+        mConnectCallbackManager.setWriteDescriptorCallback(object : BleCallback() {
+            override fun onSuccess() {
+                nextFlag.set(true)
+            }
+
+            override fun onError(exception: BleException) {
+                continuation.resumeWithException(exception)
+            }
+        })
+
+        launch {
+            data.forEach {
+                descriptor.value = it
+                if (mBluetoothGatt?.writeDescriptor(descriptor) != true) {
+                    continuation.resumeWithException(BleException("写描述值失败：${descriptorUuid.getValidString()}"))
+                }
+                do {
+                    delay(20)
+                } while (!nextFlag.get())
+                nextFlag.set(false)
+            }
+            continuation.resume(Unit)
+        }
     }
 }

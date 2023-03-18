@@ -236,7 +236,27 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, private val addr
         timeout: Long,
         writeType: Int
     ) {
-        onWriteCharacteristic(data, characteristicUuid, serviceUuid, timeout, writeType)
+        try {
+            // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
+            // 所以不会产生 BleExceptionBusy 异常。
+            mutexUtils.withTryLock("正在写特征值……") {
+                checkEnvironmentOrThrow()
+                withContext(Dispatchers.IO) {
+                    suspendCancellableCoroutineWithTimeout.execute(
+                        timeout, "写特征值超时：${characteristicUuid.getValidString()}"
+                    ) { continuation ->
+                        onWriteCharacteristic(continuation, data, characteristicUuid, serviceUuid, timeout, writeType)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            when (e) {
+                is BleExceptionCancelTimeout -> {
+                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
+                }
+                else -> throw e
+            }
+        }
     }
 
     final override suspend fun writeDescriptor(
@@ -246,7 +266,27 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, private val addr
         serviceUuid: UUID?,
         timeout: Long
     ) {
-        onWriteDescriptor(data, descriptorUuid, characteristicUuid, serviceUuid, timeout)
+        try {
+            // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
+            // 所以不会产生 BleExceptionBusy 异常。
+            mutexUtils.withTryLock("正在写描述值……") {
+                checkEnvironmentOrThrow()
+                withContext(Dispatchers.IO) {
+                    suspendCancellableCoroutineWithTimeout.execute(
+                        timeout, "写描述值超时：${descriptorUuid.getValidString()}"
+                    ) { continuation ->
+                        onWriteDescriptor(continuation, data, descriptorUuid, characteristicUuid, serviceUuid, timeout)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            when (e) {
+                is BleExceptionCancelTimeout -> {
+                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
+                }
+                else -> throw e
+            }
+        }
     }
 
     final override fun close() {
