@@ -35,6 +35,7 @@ abstract class AbstractAdvertisingExecutor(activity: ComponentActivity) : BleExe
 
     /**
      * 开始广播
+     * 由于发送广播操作不涉及到和其它设备进行交互，所以执行很快，不需要用 flow 来提供各种中间状态的结果。
      *
      * @param settings          广播的设置
      * @param advertiseData     广播的数据
