@@ -46,7 +46,7 @@ abstract class AbstractAdvertisingExecutor(activity: ComponentActivity) : BleExe
         advertiseData: AdvertiseData,
         scanResponse: AdvertiseData? = null,
         deviceName: String = "",
-        timeout: Long = 3000L,
+        timeout: Long = 10000L,
     )
 
     /**

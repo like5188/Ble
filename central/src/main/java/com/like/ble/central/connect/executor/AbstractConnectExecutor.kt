@@ -124,7 +124,7 @@ abstract class AbstractConnectExecutor(activity: ComponentActivity) : BleExecuto
         data: ByteArray,
         characteristicUuid: UUID,
         serviceUuid: UUID? = null,
-        timeout: Long = 3000L,
+        timeout: Long = 10000L,
         writeType: Int = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT,
     )
 
@@ -141,7 +141,7 @@ abstract class AbstractConnectExecutor(activity: ComponentActivity) : BleExecuto
         descriptorUuid: UUID,
         characteristicUuid: UUID? = null,
         serviceUuid: UUID? = null,
-        timeout: Long = 3000L,
+        timeout: Long = 10000L,
     )
 
 }

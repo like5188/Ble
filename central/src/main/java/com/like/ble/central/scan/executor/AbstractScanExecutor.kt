@@ -38,7 +38,7 @@ abstract class AbstractScanExecutor(activity: ComponentActivity) : BleExecutor(
      * @param duration              扫描时长。如果<=0，表示不限制，则不会自动停止扫描。达到时长时。
      * @throws                      此方法不会抛出异常，所有异常都经过[scanFlow]发射出去。
      */
-    abstract suspend fun startScan(filterServiceUuid: UUID? = null, duration: Long = 10000)
+    abstract suspend fun startScan(filterServiceUuid: UUID? = null, duration: Long = 10000L)
 
     /**
      * 停止扫描蓝牙设备
