@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
+import android.util.Log
 import com.like.ble.callback.BleCallback
 import com.like.ble.exception.BleExceptionDeviceDisconnected
 import com.like.ble.exception.BleExceptionDiscoverServices
@@ -16,6 +17,7 @@ class ConnectCallbackManager {
     private val mBluetoothGattCallback = object : BluetoothGattCallback() {
         // 当连接状态改变
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
+            Log.i("TAG", "onConnectionStateChange status=$status newState=$newState")
             if (newState == BluetoothGatt.STATE_CONNECTED) {
                 // 连接蓝牙设备成功
                 gatt.discoverServices()

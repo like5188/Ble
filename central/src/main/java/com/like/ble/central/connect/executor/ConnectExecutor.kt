@@ -53,7 +53,12 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
             override fun onSuccess(services: List<BluetoothGattService>?) {
                 Log.w("TAG", "onSuccess")
                 _connectFlow.tryEmit(ConnectResult.Result(services))
-                continuation.resume(Unit)
+                // 因为在第一次 resume 后，BaseConnectExecutor 的 connect 方法就执行完毕了，continuation.isActive == false 了。
+                // 那么在后续的蓝牙连接状态改变后，就没必要再 resume 了。
+                if (continuation.isActive) {
+                    Log.w("TAG", "1")
+                    continuation.resume(Unit)
+                }
             }
 
             override fun onError(exception: BleException) {
@@ -62,7 +67,16 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
                 if (exception is BleExceptionDiscoverServices) {
                     disconnect()
                 }
-                continuation.resumeWithException(exception)
+                // 因为在第一次 resumeWithException 后，BaseConnectExecutor 的 connect 方法就执行完毕了，continuation.isActive == false 了。
+                // 那么在后续的蓝牙连接状态改变后，就没必要再 resumeWithException 了。
+                if (continuation.isActive) {
+                    Log.e("TAG", "1")
+                    continuation.resumeWithException(exception)
+                } else {
+                    Log.e("TAG", "2")
+                    // 保证蓝牙中途断开能发射
+                    _connectFlow.tryEmit(ConnectResult.Error(exception))
+                }
             }
 
         })
