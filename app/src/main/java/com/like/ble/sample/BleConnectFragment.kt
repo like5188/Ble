@@ -14,7 +14,6 @@ import com.like.ble.central.connect.executor.ConnectExecutor
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.sample.databinding.FragmentBleConnectBinding
 import com.like.common.base.BaseLazyFragment
-import com.like.common.util.Logger
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
@@ -72,7 +71,7 @@ class BleConnectFragment : BaseLazyFragment() {
                     Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
                 }
                 .collectLatest {
-                    Logger.d("读取通知传来的数据成功。数据长度：${it?.size} ${it?.contentToString()}")
+                    Toast.makeText(context, "读取通知传来的数据成功。数据长度：${it?.size} ${it?.contentToString()}", Toast.LENGTH_SHORT).show()
                 }
         }
         return mBinding.root
@@ -99,6 +98,8 @@ class BleConnectFragment : BaseLazyFragment() {
                 when (e) {
                     is BleExceptionBusy -> {
                         Toast.makeText(ctx, e.message, Toast.LENGTH_SHORT).show()
+                        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
+                        mBinding.tvConnectStatus.text = "连接成功"
                     }
                     else -> {
                         mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
