@@ -11,6 +11,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.central.connect.executor.AbstractConnectExecutor
 import com.like.ble.central.connect.executor.ConnectExecutor
+import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.sample.databinding.FragmentBleConnectBinding
 import com.like.common.base.BaseLazyFragment
 import com.like.common.util.Logger
@@ -96,12 +97,19 @@ class BleConnectFragment : BaseLazyFragment() {
                     mAdapter.submitList(null)
                 }
             } catch (e: Exception) {
-                mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
-                mBinding.tvConnectStatus.text = e.message
-                mAdapter.submitList(null)
-                mBinding.etRequestMtu.setText("")
-                mBinding.etReadRemoteRssi.setText("")
-                mBinding.etRequestConnectionPriority.setText("")
+                when (e) {
+                    is BleExceptionBusy -> {
+                        Toast.makeText(ctx, e.message, Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {
+                        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
+                        mBinding.tvConnectStatus.text = e.message
+                        mAdapter.submitList(null)
+                        mBinding.etRequestMtu.setText("")
+                        mBinding.etReadRemoteRssi.setText("")
+                        mBinding.etRequestConnectionPriority.setText("")
+                    }
+                }
             }
         }
     }
