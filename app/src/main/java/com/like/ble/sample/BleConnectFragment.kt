@@ -81,7 +81,6 @@ class BleConnectFragment : BaseLazyFragment() {
     private fun connect() {
         mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_black_1))
         mBinding.tvConnectStatus.text = "连接中……"
-        mAdapter.submitList(null)
         lifecycleScope.launch {
             val ctx = context ?: return@launch
             try {
