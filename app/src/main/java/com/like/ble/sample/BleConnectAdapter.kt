@@ -15,7 +15,6 @@ import com.like.ble.central.connect.executor.AbstractConnectExecutor
 import com.like.ble.sample.databinding.ItemBleConnectBinding
 import com.like.ble.sample.databinding.ItemBleConnectCharacteristicBinding
 import com.like.ble.sample.databinding.ItemBleConnectDescriptorsBinding
-import com.like.ble.util.batch
 import com.like.ble.util.getPropertiesString
 import com.like.ble.util.getTypeString
 import com.like.ble.util.getValidString
@@ -128,7 +127,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                                         try {
                                             connectExecutor.setReadNotifyCallback(characteristic.uuid, serviceUuid)
                                             connectExecutor.writeCharacteristic(
-                                                data.batch(20),
+                                                data,
                                                 characteristic.uuid,
                                                 serviceUuid,
                                             )
@@ -142,7 +141,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                                     mActivity.lifecycleScope.launch {
                                         try {
                                             connectExecutor.writeCharacteristic(
-                                                data.batch(20),
+                                                data,
                                                 characteristic.uuid,
                                                 serviceUuid,
                                             )
@@ -241,7 +240,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                         characteristic.uuid,
                         serviceUuid
                     )
-                    Toast.makeText(mActivity, "读描述成功。数据长度：${data?.size} ${data?.contentToString()}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(mActivity, "读描述值成功。数据长度：${data?.size} ${data?.contentToString()}", Toast.LENGTH_SHORT).show()
                 } catch (e: Exception) {
                     Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
                 }
@@ -254,13 +253,13 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                         mActivity.lifecycleScope.launch {
                             try {
                                 connectExecutor.writeDescriptor(
-                                    data.batch(20),
+                                    data,
                                     descriptor.uuid,
                                     characteristic.uuid,
                                     serviceUuid,
                                     5000,
                                 )
-                                Toast.makeText(mActivity, "写描述成功", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(mActivity, "写描述值成功", Toast.LENGTH_SHORT).show()
                             } catch (e: Exception) {
                                 Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
                             }

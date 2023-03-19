@@ -352,7 +352,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
 
         val descriptor = mBluetoothGatt?.findDescriptor(descriptorUuid, characteristicUuid, serviceUuid)
         if (descriptor == null) {
-            continuation.resumeWithException(BleException("描述值不存在：${descriptorUuid.getValidString()}"))
+            continuation.resumeWithException(BleException("描述不存在：${descriptorUuid.getValidString()}"))
             return
         }
 

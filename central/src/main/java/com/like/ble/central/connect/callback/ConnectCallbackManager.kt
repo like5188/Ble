@@ -44,7 +44,7 @@ class ConnectCallbackManager {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 readDescriptorCallback?.onSuccess(descriptor.value)
             } else {
-                readDescriptorCallback?.onError("读取描述失败：${descriptor.uuid.getValidString()}")
+                readDescriptorCallback?.onError("读取描述值失败：${descriptor.uuid.getValidString()}")
             }
         }
 
