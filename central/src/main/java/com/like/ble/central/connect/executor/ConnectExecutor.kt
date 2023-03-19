@@ -3,15 +3,18 @@ package com.like.ble.central.connect.executor
 import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.os.Build
+import android.util.Log
 import androidx.activity.ComponentActivity
 import com.like.ble.callback.BleCallback
 import com.like.ble.central.connect.callback.ByteArrayCallback
 import com.like.ble.central.connect.callback.ConnectCallback
 import com.like.ble.central.connect.callback.ConnectCallbackManager
 import com.like.ble.central.connect.callback.IntCallback
+import com.like.ble.central.connect.result.ConnectResult
 import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionDeviceDisconnected
+import com.like.ble.exception.BleExceptionDiscoverServices
 import com.like.ble.util.*
 import kotlinx.coroutines.CancellableContinuation
 import java.util.*
@@ -34,11 +37,12 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         }
     }
 
-    override fun onConnect(continuation: CancellableContinuation<List<BluetoothGattService>?>, timeout: Long) {
+    override fun onConnect(continuation: CancellableContinuation<Unit>, timeout: Long) {
         if (context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             continuation.resumeWithException(BleExceptionBusy("设备已经连接"))
             return
         }
+        _connectFlow.tryEmit(ConnectResult.Ready)
         // 获取远端的蓝牙设备
         val bluetoothDevice = context.getBluetoothAdapter()?.getRemoteDevice(address)
         if (bluetoothDevice == null) {
@@ -47,11 +51,17 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         }
         mConnectCallbackManager.setConnectCallback(object : ConnectCallback() {
             override fun onSuccess(services: List<BluetoothGattService>?) {
-                continuation.resume(services)
+                Log.w("TAG", "onSuccess")
+                _connectFlow.tryEmit(ConnectResult.Result(services))
+                continuation.resume(Unit)
             }
 
             override fun onError(exception: BleException) {
-                disconnect()
+                Log.e("TAG", exception.message ?: "")
+                // 只会有两种异常：BleExceptionDeviceDisconnected、BleExceptionDiscoverServices
+                if (exception is BleExceptionDiscoverServices) {
+                    disconnect()
+                }
                 continuation.resumeWithException(exception)
             }
 

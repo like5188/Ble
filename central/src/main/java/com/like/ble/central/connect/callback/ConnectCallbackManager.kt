@@ -6,6 +6,8 @@ import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
 import com.like.ble.callback.BleCallback
+import com.like.ble.exception.BleExceptionDeviceDisconnected
+import com.like.ble.exception.BleExceptionDiscoverServices
 import com.like.ble.util.getValidString
 
 @SuppressLint("MissingPermission")
@@ -18,7 +20,7 @@ class ConnectCallbackManager {
                 // 连接蓝牙设备成功
                 gatt.discoverServices()
             } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
-                connectCallback?.onError("连接蓝牙失败：${gatt.device.address}")
+                connectCallback?.onError(BleExceptionDeviceDisconnected(gatt.device.address))
             }
         }
 
@@ -27,7 +29,7 @@ class ConnectCallbackManager {
             if (status == BluetoothGatt.GATT_SUCCESS) {// 发现了蓝牙服务后，才算真正的连接成功。
                 connectCallback?.onSuccess(gatt.services)
             } else {
-                connectCallback?.onError("发现服务失败：${gatt.device.address}")
+                connectCallback?.onError(BleExceptionDiscoverServices(gatt.device.address))
             }
         }
 

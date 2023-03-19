@@ -1,7 +1,6 @@
 package com.like.ble.central.connect.result
 
 import android.bluetooth.BluetoothGattService
-import com.like.ble.exception.BleException
 
 sealed class ConnectResult {
     /**
@@ -10,25 +9,13 @@ sealed class ConnectResult {
     object Ready : ConnectResult()
 
     /**
-     * 已经连接
-     */
-    object Connected : ConnectResult()
-
-    /**
-     * 已经断开连接
-     */
-    object Disconnected : ConnectResult()
-
-    /**
-     * 连接结果返回
+     * 连接成功，并返回服务列表
      */
     data class Result(val services: List<BluetoothGattService>?) : ConnectResult()
 
     /**
-     * 连接过程出错了
+     * 连接失败
      */
-    class Error(val throwable: Throwable) : ConnectResult() {
-        constructor(message: String, code: Int = -1) : this(BleException(message, code))
-    }
+    class Error(val throwable: Throwable) : ConnectResult()
 
 }

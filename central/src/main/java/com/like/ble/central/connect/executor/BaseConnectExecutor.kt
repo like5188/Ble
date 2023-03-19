@@ -1,8 +1,8 @@
 package com.like.ble.central.connect.executor
 
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothGattService
 import androidx.activity.ComponentActivity
+import com.like.ble.central.connect.result.ConnectResult
 import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.util.MutexUtils
@@ -24,6 +24,10 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, protected val ad
     private val suspendCancellableCoroutineWithTimeout by lazy {
         SuspendCancellableCoroutineWithTimeout()
     }
+    protected val _connectFlow: MutableSharedFlow<ConnectResult> by lazy {
+        MutableSharedFlow(extraBufferCapacity = Int.MAX_VALUE)
+    }
+    final override val connectFlow: Flow<ConnectResult> = _connectFlow
     protected val _notifyFlow: MutableSharedFlow<ByteArray?> by lazy {
         MutableSharedFlow(extraBufferCapacity = Int.MAX_VALUE)
     }
@@ -35,8 +39,8 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, protected val ad
         }
     }
 
-    final override suspend fun connect(timeout: Long): List<BluetoothGattService>? {
-        return try {
+    final override suspend fun connect(timeout: Long) {
+        try {
             mutexUtils.withTryLock("正在建立连接，请稍后！") {
                 checkEnvironmentOrThrow()
                 withContext(Dispatchers.IO) {
@@ -50,9 +54,10 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, protected val ad
             when (e) {
                 is BleExceptionCancelTimeout -> {
                     // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
-                    null
                 }
-                else -> throw e
+                else -> {
+                    _connectFlow.tryEmit(ConnectResult.Error(e))
+                }
             }
         }
     }
@@ -295,7 +300,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, protected val ad
     }
 
     protected abstract fun onConnect(
-        continuation: CancellableContinuation<List<BluetoothGattService>?>,
+        continuation: CancellableContinuation<Unit>,
         timeout: Long
     )
 
