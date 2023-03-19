@@ -112,7 +112,7 @@ abstract class AbstractConnectExecutor(activity: ComponentActivity) : BleExecuto
     /**
      * 写特征值
      *
-     * @param data                      需要写入的数据，已经分好包了的，每次传递一个 ByteArray。BLE默认单次传输长度为20字节（core spec里面定义了ATT的默认MTU为23个bytes，除去ATT的opcode一个字节以及ATT的handle2个字节之后，剩下的20个字节便是留给GATT的了。）。如果不分包的话，可以设置更大的MTU（(最大为512字节）。
+     * @param data                      需要写入的数据。BLE默认单次传输长度为20字节（core spec里面定义了ATT的默认MTU为23个bytes，除去ATT的opcode一个字节以及ATT的handle2个字节之后，剩下的20个字节便是留给GATT的了。）。如果不分包的话，可以设置更大的MTU。
      * @param characteristicUuid        特征UUID
      * @param serviceUuid               服务UUID，如果不为null，则会在此服务下查找[characteristicUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
      * @param writeType
@@ -121,7 +121,7 @@ abstract class AbstractConnectExecutor(activity: ComponentActivity) : BleExecuto
      * WRITE_TYPE_SIGNED 写特征携带认证签名，具体作用不太清楚。
      */
     abstract suspend fun writeCharacteristic(
-        data: List<ByteArray>,
+        data: ByteArray,
         characteristicUuid: UUID,
         serviceUuid: UUID? = null,
         timeout: Long = 3000L,
@@ -131,13 +131,13 @@ abstract class AbstractConnectExecutor(activity: ComponentActivity) : BleExecuto
     /**
      * 写描述值
      *
-     * @param data                      需要写入的数据，已经分好包了的，每次传递一个 ByteArray。BLE默认单次传输长度为20字节（core spec里面定义了ATT的默认MTU为23个bytes，除去ATT的opcode一个字节以及ATT的handle2个字节之后，剩下的20个字节便是留给GATT的了。）。如果不分包的话，可以设置更大的MTU（(最大为512字节）。
+     * @param data                      需要写入的数据。BLE默认单次传输长度为20字节（core spec里面定义了ATT的默认MTU为23个bytes，除去ATT的opcode一个字节以及ATT的handle2个字节之后，剩下的20个字节便是留给GATT的了。）。如果不分包的话，可以设置更大的MTU。
      * @param descriptorUuid            描述UUID，属于[characteristicUuid]
      * @param characteristicUuid        特征UUID，如果不为null，则会在此特征下查找[descriptorUuid]；如果为null，则会遍历所有特征查找第一个匹配的[descriptorUuid]
      * @param serviceUuid               服务UUID，如果不为null，则会在此服务下查找[characteristicUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
      */
     abstract suspend fun writeDescriptor(
-        data: List<ByteArray>,
+        data: ByteArray,
         descriptorUuid: UUID,
         characteristicUuid: UUID? = null,
         serviceUuid: UUID? = null,

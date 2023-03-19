@@ -231,7 +231,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, protected val ad
     }
 
     final override suspend fun writeCharacteristic(
-        data: List<ByteArray>,
+        data: ByteArray,
         characteristicUuid: UUID,
         serviceUuid: UUID?,
         timeout: Long,
@@ -261,7 +261,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, protected val ad
     }
 
     final override suspend fun writeDescriptor(
-        data: List<ByteArray>,
+        data: ByteArray,
         descriptorUuid: UUID,
         characteristicUuid: UUID?,
         serviceUuid: UUID?,
@@ -335,7 +335,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, protected val ad
 
     protected abstract fun onWriteCharacteristic(
         continuation: CancellableContinuation<Unit>,
-        data: List<ByteArray>,
+        data: ByteArray,
         characteristicUuid: UUID,
         serviceUuid: UUID?,
         timeout: Long,
@@ -344,7 +344,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, protected val ad
 
     protected abstract fun onWriteDescriptor(
         continuation: CancellableContinuation<Unit>,
-        data: List<ByteArray>,
+        data: ByteArray,
         descriptorUuid: UUID,
         characteristicUuid: UUID?,
         serviceUuid: UUID?,

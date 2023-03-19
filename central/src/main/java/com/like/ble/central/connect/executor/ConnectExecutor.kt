@@ -14,10 +14,7 @@ import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionDeviceDisconnected
 import com.like.ble.util.*
 import kotlinx.coroutines.CancellableContinuation
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.util.*
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -293,7 +290,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
 
     override fun onWriteCharacteristic(
         continuation: CancellableContinuation<Unit>,
-        data: List<ByteArray>,
+        data: ByteArray,
         characteristicUuid: UUID,
         serviceUuid: UUID?,
         timeout: Long,
@@ -316,11 +313,9 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
             continuation.resumeWithException(BleException("this characteristic not support write!"))
         }
 
-        // 是否可以进行下一批次的写入操作
-        val nextFlag = AtomicBoolean(false)
         mConnectCallbackManager.setWriteCharacteristicCallback(object : BleCallback() {
             override fun onSuccess() {
-                nextFlag.set(true)
+                continuation.resume(Unit)
             }
 
             override fun onError(exception: BleException) {
@@ -334,24 +329,15 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
             WRITE_TYPE_SIGNED 写特征携带认证签名，具体作用不太清楚。
         */
         characteristic.writeType = writeType
-        launch {
-            data.forEach {
-                characteristic.value = it
-                if (mBluetoothGatt?.writeCharacteristic(characteristic) != true) {
-                    continuation.resumeWithException(BleException("写特征值失败：${characteristicUuid.getValidString()}"))
-                }
-                do {
-                    delay(20)
-                } while (!nextFlag.get())
-                nextFlag.set(false)
-            }
-            continuation.resume(Unit)
+        characteristic.value = data
+        if (mBluetoothGatt?.writeCharacteristic(characteristic) != true) {
+            continuation.resumeWithException(BleException("写特征值失败：${characteristicUuid.getValidString()}"))
         }
     }
 
     override fun onWriteDescriptor(
         continuation: CancellableContinuation<Unit>,
-        data: List<ByteArray>,
+        data: ByteArray,
         descriptorUuid: UUID,
         characteristicUuid: UUID?,
         serviceUuid: UUID?,
@@ -383,11 +369,9 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
 //            return
 //        }
 
-        // 是否可以进行下一批次的写入操作
-        val nextFlag = AtomicBoolean(false)
         mConnectCallbackManager.setWriteDescriptorCallback(object : BleCallback() {
             override fun onSuccess() {
-                nextFlag.set(true)
+                continuation.resume(Unit)
             }
 
             override fun onError(exception: BleException) {
@@ -395,18 +379,9 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
             }
         })
 
-        launch {
-            data.forEach {
-                descriptor.value = it
-                if (mBluetoothGatt?.writeDescriptor(descriptor) != true) {
-                    continuation.resumeWithException(BleException("写描述值失败：${descriptorUuid.getValidString()}"))
-                }
-                do {
-                    delay(20)
-                } while (!nextFlag.get())
-                nextFlag.set(false)
-            }
-            continuation.resume(Unit)
+        descriptor.value = data
+        if (mBluetoothGatt?.writeDescriptor(descriptor) != true) {
+            continuation.resumeWithException(BleException("写描述值失败：${descriptorUuid.getValidString()}"))
         }
     }
 }
