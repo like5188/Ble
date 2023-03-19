@@ -27,6 +27,9 @@ abstract class AbstractScanExecutor(activity: ComponentActivity) : BleExecutor(
         arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)
     }
 ) {
+    /**
+     * 接收扫描数据，会发射异常。
+     */
     abstract val scanFlow: Flow<ScanResult>
 
     /**
