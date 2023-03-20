@@ -5,7 +5,6 @@ import androidx.lifecycle.lifecycleScope
 import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionCancelTimeout
-import com.like.ble.exception.BleExceptionTimeout
 import com.like.ble.util.MutexUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
 import kotlinx.coroutines.*
@@ -59,13 +58,8 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
                     isScanning = true
                     _scanFlow.tryEmit(ScanResult.Error(e))
                 }
-                is BleExceptionTimeout -> {
-                    stopScan()
-                    _scanFlow.tryEmit(ScanResult.Error(e))
-                }
                 else -> {
-                    isScanning = false
-                    cancelDelayJob()
+                    stopScan()
                     _scanFlow.tryEmit(ScanResult.Error(e))
                 }
             }
