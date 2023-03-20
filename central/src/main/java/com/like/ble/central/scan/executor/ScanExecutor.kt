@@ -92,7 +92,7 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
         if (success) {
             continuation.resume(Unit)
         } else {
-            continuation.resumeWithException(BleException("扫描失败"))
+            continuation.resumeWithException(BleException("开启扫描失败"))
         }
     }
 
