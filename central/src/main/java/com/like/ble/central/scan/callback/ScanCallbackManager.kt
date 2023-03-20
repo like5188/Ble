@@ -37,10 +37,11 @@ class ScanCallbackManager {
         }
     }
     private val mLeScanCallback: BluetoothAdapter.LeScanCallback = BluetoothAdapter.LeScanCallback { device, rssi, scanRecord ->
-        scanCallback?.onSuccess(device, rssi, ScanRecordBelow21.parseFromBytes(scanRecord))
+        leScanCallback?.onSuccess(device, rssi, ScanRecordBelow21.parseFromBytes(scanRecord))
     }
 
     private var scanCallback: com.like.ble.central.scan.callback.ScanCallback? = null
+    private var leScanCallback: com.like.ble.central.scan.callback.ScanCallback? = null
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun getScanCallback(): ScanCallback {
@@ -53,6 +54,10 @@ class ScanCallbackManager {
 
     fun setScanCallback(callback: com.like.ble.central.scan.callback.ScanCallback?) {
         scanCallback = callback
+    }
+
+    fun setLeScanCallback(callback: com.like.ble.central.scan.callback.ScanCallback?) {
+        leScanCallback = callback
     }
 
 }
