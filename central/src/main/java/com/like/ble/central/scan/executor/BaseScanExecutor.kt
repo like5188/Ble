@@ -1,7 +1,6 @@
 package com.like.ble.central.scan.executor
 
 import androidx.activity.ComponentActivity
-import androidx.lifecycle.lifecycleScope
 import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionCancelTimeout
@@ -42,7 +41,7 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
         bleBroadcastReceiverManager.register()
     }
 
-    final override suspend fun startScan(filterServiceUuid: UUID?, timeout: Long, duration: Long) {
+    final override suspend fun startScan(filterServiceUuid: UUID?, timeout: Long, duration: Long) = coroutineScope<Unit> {
         try {
             mutexUtils.withTryLock("正在开启扫描，请稍后！") {
                 checkEnvironmentOrThrow()
@@ -50,7 +49,7 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
                     throw BleExceptionBusy("正在扫描中……")
                 }
                 _scanFlow.tryEmit(ScanResult.Ready)
-                delayJob = activity.lifecycleScope.launch(Dispatchers.IO) {
+                delayJob = launch(Dispatchers.IO) {
                     delay(duration)
                     stopScan()
                     _scanFlow.tryEmit(ScanResult.Completed)
