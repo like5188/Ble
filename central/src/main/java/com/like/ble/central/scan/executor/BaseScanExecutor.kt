@@ -23,7 +23,7 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
     }
     private var delayJob: Job? = null
     private var isScanning = false
-    protected val _scanFlow: MutableSharedFlow<ScanResult> by lazy {
+    private val _scanFlow: MutableSharedFlow<ScanResult> by lazy {
         MutableSharedFlow(extraBufferCapacity = Int.MAX_VALUE)
     }
     final override val scanFlow: Flow<ScanResult> = _scanFlow
@@ -43,7 +43,9 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
                 }
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(timeout, "开启扫描超时") { continuation ->
-                        onStartScan(continuation, filterServiceUuid)
+                        onStartScan(continuation, filterServiceUuid) {
+                            _scanFlow.tryEmit(it)
+                        }
                     }
                 }
                 isScanning = true
@@ -91,7 +93,11 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
         }
     }
 
-    protected abstract fun onStartScan(continuation: CancellableContinuation<Unit>, filterServiceUuid: UUID?)
+    protected abstract fun onStartScan(
+        continuation: CancellableContinuation<Unit>,
+        filterServiceUuid: UUID?,
+        onResult: (ScanResult.Result) -> Unit
+    )
 
     protected abstract fun onStopScan()
 

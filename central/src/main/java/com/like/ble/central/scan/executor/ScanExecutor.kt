@@ -28,19 +28,27 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
         ScanCallbackManager()
     }
 
-    override fun onStartScan(continuation: CancellableContinuation<Unit>, filterServiceUuid: UUID?) {
+    override fun onStartScan(
+        continuation: CancellableContinuation<Unit>,
+        filterServiceUuid: UUID?,
+        onResult: (ScanResult.Result) -> Unit
+    ) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            onStartScan21(continuation, filterServiceUuid)
+            onStartScan21(continuation, filterServiceUuid, onResult)
         } else {
-            onStartScanBelow21(continuation, filterServiceUuid)
+            onStartScanBelow21(continuation, filterServiceUuid, onResult)
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    private fun onStartScan21(continuation: CancellableContinuation<Unit>, filterServiceUuid: UUID?) {
+    private fun onStartScan21(
+        continuation: CancellableContinuation<Unit>,
+        filterServiceUuid: UUID?,
+        onResult: (ScanResult.Result) -> Unit
+    ) {
         scanCallbackManager.setScanCallback(object : ScanCallback() {
             override fun onSuccess(device: BluetoothDevice, rssi: Int, scanRecord: ScanRecordBelow21?) {
-                _scanFlow.tryEmit(ScanResult.Result(device, rssi, scanRecord))
+                onResult(ScanResult.Result(device, rssi, scanRecord))
             }
 
             override fun onError(exception: BleException) {
@@ -84,10 +92,14 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
         }
     }
 
-    private fun onStartScanBelow21(continuation: CancellableContinuation<Unit>, filterServiceUuid: UUID?) {
+    private fun onStartScanBelow21(
+        continuation: CancellableContinuation<Unit>,
+        filterServiceUuid: UUID?,
+        onResult: (ScanResult.Result) -> Unit
+    ) {
         scanCallbackManager.setLeScanCallback(object : ScanCallback() {
             override fun onSuccess(device: BluetoothDevice, rssi: Int, scanRecord: ScanRecordBelow21?) {
-                _scanFlow.tryEmit(ScanResult.Result(device, rssi, scanRecord))
+                onResult(ScanResult.Result(device, rssi, scanRecord))
             }
         })
         // startLeScan 方法实际上最终也是调用的 bluetoothLeScanner?.startScan 方法。只是忽略掉了错误回调，只处理了成功回调。所以不完善。
