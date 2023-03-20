@@ -46,16 +46,12 @@ class AdvertisingExecutor(activity: ComponentActivity) : BaseAdvertisingExecutor
                 continuation.resumeWithException(exception)
             }
         })
-        try {
-            bluetoothLeAdvertiser.startAdvertising(
-                settings,
-                advertiseData,
-                scanResponse,
-                advertisingCallbackManager.getAdvertiseCallback()
-            )
-        } catch (e: Exception) {
-            continuation.resumeWithException(e)
-        }
+        bluetoothLeAdvertiser.startAdvertising(
+            settings,
+            advertiseData,
+            scanResponse,
+            advertisingCallbackManager.getAdvertiseCallback()
+        )
     }
 
     override fun onStopAdvertising() {
