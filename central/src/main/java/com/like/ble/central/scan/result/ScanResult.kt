@@ -11,7 +11,7 @@ sealed class ScanResult {
     object Ready : ScanResult()
 
     /**
-     * 扫描成功完成了
+     * 扫描完成（时间到了）
      */
     object Completed : ScanResult()
 
