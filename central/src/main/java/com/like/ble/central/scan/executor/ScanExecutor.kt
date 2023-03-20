@@ -46,6 +46,11 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
         filterServiceUuid: UUID?,
         onResult: (ScanResult.Result) -> Unit
     ) {
+        val bluetoothLeScanner = activity.getBluetoothAdapter()?.bluetoothLeScanner
+        if (bluetoothLeScanner == null) {
+            continuation.resumeWithException(BleException("phone does not support bluetooth scan"))
+            return
+        }
         scanCallbackManager.setScanCallback(object : ScanCallback() {
             override fun onSuccess(device: BluetoothDevice, rssi: Int, scanRecord: ScanRecordBelow21?) {
                 onResult(ScanResult.Result(device, rssi, scanRecord))
@@ -57,10 +62,10 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
         })
         try {
             if (filterServiceUuid == null) {
-                activity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(scanCallbackManager.getScanCallback())
+                bluetoothLeScanner.startScan(scanCallbackManager.getScanCallback())
             } else {
                 // serviceUuid 只能在这里过滤，不能放到 filterScanResult() 方法中去，因为只有 gatt.discoverServices() 过后，device.getUuids() 方法才不会返回 null。
-                activity.getBluetoothAdapter()?.bluetoothLeScanner?.startScan(
+                bluetoothLeScanner.startScan(
                     listOf(ScanFilter.Builder().setServiceUuid(ParcelUuid(filterServiceUuid)).build()),
                     /*
                      setScanMode() 设置扫描模式。可选择的模式有三种：
