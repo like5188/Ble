@@ -41,9 +41,6 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
         scanCallbackManager.setScanCallback(object : ScanCallback() {
             override fun onSuccess(device: BluetoothDevice, rssi: Int, scanRecord: ScanRecordBelow21?) {
                 _scanFlow.tryEmit(ScanResult.Result(device, rssi, scanRecord))
-                if (continuation.isActive) {
-                    continuation.resume(Unit)
-                }
             }
 
             override fun onError(exception: BleException) {
@@ -77,6 +74,11 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
                     scanCallbackManager.getScanCallback()
                 )
             }
+            // continuation.isActive 代表 startScan() 方法没有抛出错误，即开启扫描成功。
+            // 因为如果此方法抛出异常的话，会调用回调中的 onError 方法，然后调用 continuation.resumeWithException，这会导致 continuation.isActive == false，即开启扫描失败。
+            if (continuation.isActive) {
+                continuation.resume(Unit)
+            }
         } catch (e: Exception) {
             continuation.resumeWithException(e)
         }
@@ -88,6 +90,7 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
                 _scanFlow.tryEmit(ScanResult.Result(device, rssi, scanRecord))
             }
         })
+        // startLeScan 方法实际上最终也是调用的 bluetoothLeScanner?.startScan 方法。只是忽略掉了错误回调，只处理了成功回调。所以不完善。
         val success = if (filterServiceUuid == null) {
             activity.getBluetoothAdapter()?.startLeScan(scanCallbackManager.getLeScanCallback())
         } else {
