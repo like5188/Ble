@@ -30,7 +30,7 @@ class AdvertisingExecutor(activity: ComponentActivity) : BaseAdvertisingExecutor
     ) {
         val bluetoothLeAdvertiser = activity.getBluetoothAdapter()?.bluetoothLeAdvertiser
         if (bluetoothLeAdvertiser == null) {
-            continuation.resumeWithException(BleException("phone does not support Bluetooth Advertiser"))
+            continuation.resumeWithException(BleException("phone does not support bluetooth Advertiser"))
             return
         }
         // 设置设备名字
@@ -46,12 +46,16 @@ class AdvertisingExecutor(activity: ComponentActivity) : BaseAdvertisingExecutor
                 continuation.resumeWithException(exception)
             }
         })
-        bluetoothLeAdvertiser.startAdvertising(
-            settings,
-            advertiseData,
-            scanResponse,
-            advertisingCallbackManager.getAdvertiseCallback()
-        )
+        try {
+            bluetoothLeAdvertiser.startAdvertising(
+                settings,
+                advertiseData,
+                scanResponse,
+                advertisingCallbackManager.getAdvertiseCallback()
+            )
+        } catch (e: Exception) {
+            continuation.resumeWithException(e)
+        }
     }
 
     override fun onStopAdvertising() {
