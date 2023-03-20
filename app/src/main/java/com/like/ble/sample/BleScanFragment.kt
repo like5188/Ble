@@ -2,7 +2,6 @@ package com.like.ble.sample
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -51,22 +50,18 @@ class BleScanFragment : BaseLazyFragment() {
             scanExecutor.scanFlow.collect {
                 when (it) {
                     is ScanResult.Ready -> {
-                        Log.e("TAG", "ScanResult.Ready")
                         mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
                         mBinding.tvScanStatus.text = "正在开启扫描……"
                         mAdapter.submitList(null)
                     }
                     is ScanResult.Success -> {
-                        Log.e("TAG", "ScanResult.Successs")
                         mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
                         mBinding.tvScanStatus.text = "扫描中……"
                     }
                     is ScanResult.Completed -> {
-                        Log.e("TAG", "ScanResult.Completed")
                         mBinding.tvScanStatus.text = "扫描完成"
                     }
                     is ScanResult.Error -> {
-                        Log.e("TAG", "ScanResult.Error")
                         val ctx = context ?: return@collect
                         when (val e = it.throwable) {
                             is BleExceptionBusy -> {
@@ -79,7 +74,6 @@ class BleScanFragment : BaseLazyFragment() {
                         }
                     }
                     is ScanResult.Result -> {
-                        Log.e("TAG", "ScanResult.Result")
                         val name = it.device.name ?: "N/A"
                         if (name != "BLE测试设备") {// 过滤需要的外围设备
                             return@collect
