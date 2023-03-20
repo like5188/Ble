@@ -5,6 +5,8 @@ import androidx.lifecycle.lifecycleScope
 import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionCancelTimeout
+import com.like.ble.exception.BleExceptionDisabled
+import com.like.ble.util.BleBroadcastReceiverManager
 import com.like.ble.util.MutexUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
 import kotlinx.coroutines.*
@@ -21,12 +23,24 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
     private val suspendCancellableCoroutineWithTimeout by lazy {
         SuspendCancellableCoroutineWithTimeout()
     }
+    private val bleBroadcastReceiverManager by lazy {
+        BleBroadcastReceiverManager(context, onBleOff = {
+            cancelDelayJob()
+            suspendCancellableCoroutineWithTimeout.cancel()
+            isScanning = false
+            _scanFlow.tryEmit(ScanResult.Error(BleExceptionDisabled))
+        })
+    }
     private var delayJob: Job? = null
     private var isScanning = false
     private val _scanFlow: MutableSharedFlow<ScanResult> by lazy {
         MutableSharedFlow(extraBufferCapacity = Int.MAX_VALUE)
     }
     final override val scanFlow: Flow<ScanResult> = _scanFlow
+
+    init {
+        bleBroadcastReceiverManager.register()
+    }
 
     final override suspend fun startScan(filterServiceUuid: UUID?, timeout: Long, duration: Long) {
         try {
@@ -82,6 +96,7 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
 
     final override fun close() {
         stopScan()
+        bleBroadcastReceiverManager.unregister()
     }
 
     private fun cancelDelayJob() {
