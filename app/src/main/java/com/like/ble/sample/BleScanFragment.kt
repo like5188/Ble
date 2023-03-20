@@ -53,8 +53,13 @@ class BleScanFragment : BaseLazyFragment() {
                     is ScanResult.Ready -> {
                         Log.e("TAG", "ScanResult.Ready")
                         mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
-                        mBinding.tvScanStatus.text = "扫描中……"
+                        mBinding.tvScanStatus.text = "正在开启扫描……"
                         mAdapter.submitList(null)
+                    }
+                    is ScanResult.Success -> {
+                        Log.e("TAG", "ScanResult.Successs")
+                        mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
+                        mBinding.tvScanStatus.text = "扫描中……"
                     }
                     is ScanResult.Completed -> {
                         Log.e("TAG", "ScanResult.Completed")

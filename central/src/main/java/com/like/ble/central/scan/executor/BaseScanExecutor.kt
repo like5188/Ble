@@ -47,6 +47,7 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
                     }
                 }
                 isScanning = true
+                _scanFlow.tryEmit(ScanResult.Success)
             }
         } catch (e: Exception) {
             when (e) {

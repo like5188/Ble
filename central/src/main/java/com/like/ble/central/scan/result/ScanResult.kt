@@ -6,12 +6,17 @@ import com.like.ble.exception.BleException
 
 sealed class ScanResult {
     /**
-     * 准备好开始扫描了
+     * 准备开启扫描
      */
     object Ready : ScanResult()
 
     /**
-     * 扫描完成（时间到了）
+     * 开启扫描成功
+     */
+    object Success : ScanResult()
+
+    /**
+     * 扫描完成（设置的 扫描持续时长 到了）
      */
     object Completed : ScanResult()
 
