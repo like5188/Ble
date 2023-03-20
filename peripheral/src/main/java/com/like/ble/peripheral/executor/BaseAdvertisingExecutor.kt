@@ -46,7 +46,7 @@ abstract class BaseAdvertisingExecutor(activity: ComponentActivity) : AbstractAd
                 }
                 e is BleException && e.code == AdvertiseCallback.ADVERTISE_FAILED_ALREADY_STARTED -> {
                     // onStartAdvertising 方法不会挂起，会在广播成功后返回，所以如果设备正在广播，则把 AdvertiseCallback.ADVERTISE_FAILED_ALREADY_STARTED 异常转换成 BleExceptionBusy 异常抛出。
-                    throw BleExceptionBusy("设备正在广播")
+                    throw BleExceptionBusy("正在广播中……")
                 }
                 else -> throw e
             }
