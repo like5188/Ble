@@ -50,7 +50,7 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
                     throw BleExceptionBusy("正在扫描中……")
                 }
                 _scanFlow.tryEmit(ScanResult.Ready)
-                delayJob = activity.lifecycleScope.launch {
+                delayJob = activity.lifecycleScope.launch(Dispatchers.IO) {
                     delay(duration)
                     stopScan()
                     _scanFlow.tryEmit(ScanResult.Completed)
