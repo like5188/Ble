@@ -23,7 +23,7 @@ sealed class ScanResult {
     /**
      * 扫描结果返回
      */
-    data class Result(val device: BluetoothDevice, val rssi: Int, val scanRecord: ScanRecordBelow21?) : ScanResult()
+    data class Result(val device: BluetoothDevice, val rssi: Int, val scanRecord: ByteArray?) : ScanResult()
 
     /**
      * 扫描出错了

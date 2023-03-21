@@ -4,12 +4,11 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.le.ScanCallback
 import android.os.Build
 import androidx.annotation.RequiresApi
-import com.like.ble.central.util.scanrecordcompat.ScanRecordBelow21
 
 class ScanCallbackManager {
     private val mScanCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: android.bluetooth.le.ScanResult) {
-            scanCallback?.onSuccess(result.device, result.rssi, ScanRecordBelow21.parseFromBytes(result.scanRecord?.bytes))
+            scanCallback?.onSuccess(result.device, result.rssi, result.scanRecord?.bytes)
         }
 
         override fun onScanFailed(errorCode: Int) {
@@ -37,7 +36,7 @@ class ScanCallbackManager {
         }
     }
     private val mLeScanCallback: BluetoothAdapter.LeScanCallback = BluetoothAdapter.LeScanCallback { device, rssi, scanRecord ->
-        leScanCallback?.onSuccess(device, rssi, ScanRecordBelow21.parseFromBytes(scanRecord))
+        leScanCallback?.onSuccess(device, rssi, scanRecord)
     }
 
     private var scanCallback: com.like.ble.central.scan.callback.ScanCallback? = null

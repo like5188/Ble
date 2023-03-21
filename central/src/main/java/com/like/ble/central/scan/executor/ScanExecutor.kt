@@ -11,7 +11,6 @@ import androidx.annotation.RequiresApi
 import com.like.ble.central.scan.callback.ScanCallback
 import com.like.ble.central.scan.callback.ScanCallbackManager
 import com.like.ble.central.scan.result.ScanResult
-import com.like.ble.central.util.scanrecordcompat.ScanRecordBelow21
 import com.like.ble.exception.BleException
 import com.like.ble.util.getBluetoothAdapter
 import kotlinx.coroutines.CancellableContinuation
@@ -52,7 +51,7 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
             return
         }
         scanCallbackManager.setScanCallback(object : ScanCallback() {
-            override fun onSuccess(device: BluetoothDevice, rssi: Int, scanRecord: ScanRecordBelow21?) {
+            override fun onSuccess(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
                 onResult(ScanResult.Result(device, rssi, scanRecord))
             }
 
@@ -99,7 +98,7 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
         onResult: (ScanResult.Result) -> Unit
     ) {
         scanCallbackManager.setLeScanCallback(object : ScanCallback() {
-            override fun onSuccess(device: BluetoothDevice, rssi: Int, scanRecord: ScanRecordBelow21?) {
+            override fun onSuccess(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
                 onResult(ScanResult.Result(device, rssi, scanRecord))
             }
         })

@@ -7,7 +7,7 @@ import com.like.ble.central.util.scanrecordcompat.ScanRecordBelow21
 import com.like.recyclerview.model.IRecyclerViewItem
 import java.io.Serializable
 
-class BleScanInfo(val name: String, val address: String, val rssi: ObservableInt, val scanRecord: ScanRecordBelow21?) : IRecyclerViewItem,
+class BleScanInfo(val name: String, val address: String, val rssi: ObservableInt, val scanRecord: ByteArray?) : IRecyclerViewItem,
     Serializable {
     override var variableId: Int = BR.bleScanInfo
     override var layoutId: Int = R.layout.item_ble_scan
