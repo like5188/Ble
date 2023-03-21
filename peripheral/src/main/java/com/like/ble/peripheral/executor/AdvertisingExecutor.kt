@@ -35,7 +35,10 @@ class AdvertisingExecutor(activity: ComponentActivity) : BaseAdvertisingExecutor
         }
         // 设置设备名字
         if (deviceName.isNotEmpty()) {
-            activity.getBluetoothAdapter()?.name = deviceName
+            if (activity.getBluetoothAdapter()?.setName(deviceName) != true) {
+                continuation.resumeWithException(BleException("set device name ($deviceName) error"))
+                return
+            }
         }
         advertisingCallbackManager.setAdvertisingCallback(object : BleCallback() {
             override fun onSuccess() {
