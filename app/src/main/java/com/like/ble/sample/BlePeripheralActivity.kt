@@ -295,8 +295,8 @@ class BlePeripheralActivity : AppCompatActivity() {
             peripheralExecutor.startAdvertising(
                 createAdvertiseSettings(),
                 createAdvertiseData(),
-                createScanResponseAdvertiseData(byteArrayOf(0x34, 0x56)),// 外设必须广播广播包，扫描包是可选。但添加扫描包也意味着广播更多得数据，即可广播 广播包31+扫描包31=62个字节。
-                "测试",
+                createScanResponseAdvertiseData(byteArrayOf(0x11)),// 外设必须广播广播包，扫描包是可选。但添加扫描包也意味着广播更多得数据，即可广播 广播包31+扫描包31=62个字节。
+                "like",
             )
         }
     }
@@ -373,9 +373,9 @@ class BlePeripheralActivity : AppCompatActivity() {
         return AdvertiseData.Builder()
             .setIncludeDeviceName(true)// 设置广播包中是否包含蓝牙的名称。
             .setIncludeTxPowerLevel(true)// 设置广播包中是否包含蓝牙的发射功率。 数值范围：±127 dBm。
-            .addServiceUuid(ParcelUuid(UUID_SERVICE_1))// 添加是为了让使用者扫描到
-            .addServiceUuid(ParcelUuid(UUID_SERVICE_2))// 添加是为了让使用者扫描到
-            .addServiceUuid(ParcelUuid(UUID_SERVICE_3))// 添加是为了让使用者扫描到
+            .addServiceUuid(ParcelUuid(UUID_SERVICE_1))// 添加是为了让使用者扫描的时候能扫描到此蓝牙设备，如果不添加，是扫描不到的。
+//            // 如果一个外设需要在不连接的情况下对外广播数据，其数据可以存储在UUID对应的数据中，也可以存储在厂商数据中。但由于厂商ID是需要由Bluetooth SIG进行分配的，厂商间一般都将数据设置在厂商数据。
+            .addServiceData(ParcelUuid(UUID_SERVICE_1), byteArrayOf(0x01))// 设置特定的UUID和其数据在广播包中
             .build()
     }
 
@@ -384,10 +384,6 @@ class BlePeripheralActivity : AppCompatActivity() {
      */
     private fun createScanResponseAdvertiseData(data: ByteArray): AdvertiseData {
         return AdvertiseData.Builder()
-            // 如果一个外设需要在不连接的情况下对外广播数据，其数据可以存储在UUID对应的数据中，也可以存储在厂商数据中。但由于厂商ID是需要由Bluetooth SIG进行分配的，厂商间一般都将数据设置在厂商数据。
-            .addServiceData(ParcelUuid(UUID_SERVICE_1), byteArrayOf(0x01))// 设置特定的UUID和其数据在广播包中
-            .addServiceData(ParcelUuid(UUID_SERVICE_2), byteArrayOf(0x02))// 设置特定的UUID和其数据在广播包中
-            .addServiceData(ParcelUuid(UUID_SERVICE_3), byteArrayOf(0x03))// 设置特定的UUID和其数据在广播包中
             .addManufacturerData(0xAC, data)// 设置特定厂商Id和其数据在广播包中。前两个字节表示厂商ID,剩下的是厂商自定义的数据。
             .build()
     }
