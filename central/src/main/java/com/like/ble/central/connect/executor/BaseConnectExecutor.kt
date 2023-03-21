@@ -59,7 +59,6 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, protected val ad
                     // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
                 }
                 is BleExceptionDiscoverServices -> {
-                    disconnect()
                     _connectFlow.tryEmit(ConnectResult.Error(e))
                 }
                 else -> {

@@ -22,6 +22,7 @@ class ConnectCallbackManager {
                 // 连接蓝牙设备成功
                 gatt.discoverServices()
             } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
+                gatt.close()
                 connectCallback?.onError(BleExceptionDeviceDisconnected(gatt.device.address))
             }
         }
@@ -31,6 +32,8 @@ class ConnectCallbackManager {
             if (status == BluetoothGatt.GATT_SUCCESS) {// 发现了蓝牙服务后，才算真正的连接成功。
                 connectCallback?.onSuccess(gatt.services)
             } else {
+                gatt.disconnect()
+                gatt.close()
                 connectCallback?.onError(BleExceptionDiscoverServices(gatt.device.address))
             }
         }
