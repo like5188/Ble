@@ -4,7 +4,7 @@ import android.bluetooth.BluetoothGattService
 
 sealed class ConnectResult {
     /**
-     * 准备好开始连接了
+     * 准备开启连接
      */
     object Ready : ConnectResult()
 
