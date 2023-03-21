@@ -81,9 +81,6 @@ class BleScanFragment : BaseLazyFragment() {
                     is ScanResult.Result -> {
                         Logger.w("ScanResult.Result $it")
                         val name = it.device.name ?: "N/A"
-                        if (name != "测试") {// 过滤需要的外围设备
-                            return@collect
-                        }
                         val address = it.device.address ?: ""
                         val item: BleScanInfo? = mAdapter.currentList.firstOrNull { it?.address == address }
                         if (item == null) {// 防止重复添加
