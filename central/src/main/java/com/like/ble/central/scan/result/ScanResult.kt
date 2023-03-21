@@ -28,7 +28,7 @@ sealed class ScanResult {
     /**
      * 扫描出错了
      */
-    class Error(val throwable: Throwable) : ScanResult() {
+    data class Error(val throwable: Throwable) : ScanResult() {
         constructor(message: String, code: Int = -1) : this(BleException(message, code))
     }
 
