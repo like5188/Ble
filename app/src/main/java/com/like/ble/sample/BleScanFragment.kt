@@ -16,6 +16,7 @@ import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.sample.databinding.FragmentBleScanBinding
 import com.like.common.base.BaseLazyFragment
+import com.like.common.util.Logger
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
 import kotlinx.coroutines.launch
 
@@ -50,18 +51,22 @@ class BleScanFragment : BaseLazyFragment() {
             scanExecutor.scanFlow.collect {
                 when (it) {
                     is ScanResult.Ready -> {
+                        Logger.v("ScanResult.Ready")
                         mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
                         mBinding.tvScanStatus.text = "正在开启扫描……"
                         mAdapter.submitList(null)
                     }
                     is ScanResult.Success -> {
+                        Logger.d("ScanResult.Success")
                         mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
                         mBinding.tvScanStatus.text = "扫描中……"
                     }
                     is ScanResult.Completed -> {
+                        Logger.i("ScanResult.Completed")
                         mBinding.tvScanStatus.text = "扫描完成"
                     }
                     is ScanResult.Error -> {
+                        Logger.e("ScanResult.Error")
                         val ctx = context ?: return@collect
                         when (val e = it.throwable) {
                             is BleExceptionBusy -> {
@@ -74,6 +79,7 @@ class BleScanFragment : BaseLazyFragment() {
                         }
                     }
                     is ScanResult.Result -> {
+                        Logger.w("ScanResult.Result")
                         val name = it.device.name ?: "N/A"
                         if (name != "BLE测试设备") {// 过滤需要的外围设备
                             return@collect
