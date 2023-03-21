@@ -66,7 +66,7 @@ class BleScanFragment : BaseLazyFragment() {
                         mBinding.tvScanStatus.text = "扫描完成"
                     }
                     is ScanResult.Error -> {
-                        Logger.e("ScanResult.Error")
+                        Logger.e("ScanResult.Error ${it.throwable}")
                         val ctx = context ?: return@collect
                         when (val e = it.throwable) {
                             is BleExceptionBusy -> {
