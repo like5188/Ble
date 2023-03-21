@@ -1,6 +1,7 @@
 package com.like.ble.central.connect.executor
 
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothGattService
 import androidx.activity.ComponentActivity
 import com.like.ble.central.connect.result.ConnectResult
 import com.like.ble.exception.BleException
@@ -45,10 +46,11 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, protected val ad
             mutexUtils.withTryLock("正在建立连接，请稍后！") {
                 checkEnvironmentOrThrow()
                 withContext(Dispatchers.IO) {
-                    suspendCancellableCoroutineWithTimeout.execute(timeout, "连接蓝牙设备超时：$address") { continuation ->
+                    val services = suspendCancellableCoroutineWithTimeout.execute(timeout, "连接蓝牙设备超时：$address") { continuation ->
                         // onConnect 方法不会挂起，会在连接成功后返回，所以如果已经连接了，就抛出 BleExceptionBusy 异常
                         onConnect(continuation, timeout)
                     }
+                    _connectFlow.tryEmit(ConnectResult.Result(services))
                 }
             }
         } catch (e: Exception) {
@@ -305,7 +307,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, protected val ad
     }
 
     protected abstract fun onConnect(
-        continuation: CancellableContinuation<Unit>,
+        continuation: CancellableContinuation<List<BluetoothGattService>?>,
         timeout: Long
     )
 

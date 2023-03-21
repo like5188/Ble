@@ -3,7 +3,6 @@ package com.like.ble.central.connect.executor
 import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.os.Build
-import android.util.Log
 import androidx.activity.ComponentActivity
 import com.like.ble.callback.BleCallback
 import com.like.ble.central.connect.callback.ByteArrayCallback
@@ -36,7 +35,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         }
     }
 
-    override fun onConnect(continuation: CancellableContinuation<Unit>, timeout: Long) {
+    override fun onConnect(continuation: CancellableContinuation<List<BluetoothGattService>?>, timeout: Long) {
         if (context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             continuation.resumeWithException(BleExceptionBusy("设备已经连接"))
             return
@@ -50,25 +49,15 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         }
         mConnectCallbackManager.setConnectCallback(object : ConnectCallback() {
             override fun onSuccess(services: List<BluetoothGattService>?) {
-                Log.w("TAG", "onSuccess")
-                _connectFlow.tryEmit(ConnectResult.Result(services))
-                // 因为在第一次 resume 后，BaseConnectExecutor 的 connect 方法就执行完毕了，continuation.isActive == false 了。
-                // 那么在后续的蓝牙连接状态改变后，就没必要再 resume 了。
-                if (continuation.isActive) {
-                    Log.w("TAG", "1")
-                    continuation.resume(Unit)
-                }
+                continuation.resume(services)
             }
 
             override fun onError(exception: BleException) {
-                Log.e("TAG", exception.message ?: "")
                 // 因为在第一次 resumeWithException 后，BaseConnectExecutor 的 connect 方法就执行完毕了，continuation.isActive == false 了。
-                // 那么在后续的蓝牙连接状态改变后，就没必要再 resumeWithException 了。
+                // 那么在后续的蓝牙连接状态改变后，就不能再 resumeWithException 了。
                 if (continuation.isActive) {
-                    Log.e("TAG", "1")
                     continuation.resumeWithException(exception)
                 } else {
-                    Log.e("TAG", "2")
                     // 保证蓝牙中途断开能发射
                     _connectFlow.tryEmit(ConnectResult.Error(exception))
                 }
