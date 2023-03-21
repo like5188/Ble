@@ -8,9 +8,11 @@ import com.like.ble.exception.BleExceptionDisabled
 import com.like.ble.util.BleBroadcastReceiverManager
 import com.like.ble.util.MutexUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
+import com.like.ble.util.isBluetoothEnable
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.filter
 import java.util.*
 
 /**
@@ -35,7 +37,15 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
     private val _scanFlow: MutableSharedFlow<ScanResult> by lazy {
         MutableSharedFlow(extraBufferCapacity = Int.MAX_VALUE)
     }
-    final override val scanFlow: Flow<ScanResult> = _scanFlow
+    final override val scanFlow: Flow<ScanResult> = _scanFlow.filter {
+        if (context.isBluetoothEnable()) {
+            // 如果蓝牙已打开，则可以传递任何数据
+            true
+        } else {
+            // 如果蓝牙未打开，那么就只能传递 BleExceptionDisabled 异常。避免传递其它数据对使用者造成困扰。
+            it is ScanResult.Error && it.throwable is BleExceptionDisabled
+        }
+    }
 
     init {
         bleBroadcastReceiverManager.register()
