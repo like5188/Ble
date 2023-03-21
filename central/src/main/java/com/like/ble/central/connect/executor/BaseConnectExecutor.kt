@@ -6,7 +6,6 @@ import androidx.activity.ComponentActivity
 import com.like.ble.central.connect.result.ConnectResult
 import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionCancelTimeout
-import com.like.ble.exception.BleExceptionDiscoverServices
 import com.like.ble.util.MutexUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
 import com.like.ble.util.getValidString
@@ -57,9 +56,6 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, protected val ad
             when (e) {
                 is BleExceptionCancelTimeout -> {
                     // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
-                }
-                is BleExceptionDiscoverServices -> {
-                    _connectFlow.tryEmit(ConnectResult.Error(e))
                 }
                 else -> {
                     _connectFlow.tryEmit(ConnectResult.Error(e))
