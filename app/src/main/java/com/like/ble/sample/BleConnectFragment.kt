@@ -80,8 +80,7 @@ class BleConnectFragment : BaseLazyFragment() {
                         }
                         is ConnectResult.Error -> {
                             val ctx = context ?: return@collectLatest
-                            val exception = it.throwable
-                            when (exception) {
+                            when (val exception = it.throwable) {
                                 is BleExceptionBusy -> {
                                     Toast.makeText(ctx, exception.message, Toast.LENGTH_SHORT).show()
                                 }
@@ -135,7 +134,7 @@ class BleConnectFragment : BaseLazyFragment() {
         try {
             connectExecutor.disconnect()
             mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
-            mBinding.tvConnectStatus.text = "连接停止了"
+            mBinding.tvConnectStatus.text = "连接断开了"
         } catch (e: Exception) {
             mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
             mBinding.tvConnectStatus.text = e.message

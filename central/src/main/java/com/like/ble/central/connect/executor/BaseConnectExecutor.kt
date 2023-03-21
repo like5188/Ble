@@ -1,11 +1,11 @@
 package com.like.ble.central.connect.executor
 
 import android.bluetooth.BluetoothAdapter
-import android.util.Log
 import androidx.activity.ComponentActivity
 import com.like.ble.central.connect.result.ConnectResult
 import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionCancelTimeout
+import com.like.ble.exception.BleExceptionDiscoverServices
 import com.like.ble.util.MutexUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
 import com.like.ble.util.getValidString
@@ -48,15 +48,17 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, protected val ad
                     suspendCancellableCoroutineWithTimeout.execute(timeout, "连接蓝牙设备超时：$address") { continuation ->
                         // onConnect 方法不会挂起，会在连接成功后返回，所以如果已经连接了，就抛出 BleExceptionBusy 异常
                         onConnect(continuation, timeout)
-                        Log.d("TAG", "代码执行完毕")
                     }
                 }
             }
         } catch (e: Exception) {
-            Log.d("TAG", e.message ?: "")
             when (e) {
                 is BleExceptionCancelTimeout -> {
                     // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
+                }
+                is BleExceptionDiscoverServices -> {
+                    disconnect()
+                    _connectFlow.tryEmit(ConnectResult.Error(e))
                 }
                 else -> {
                     _connectFlow.tryEmit(ConnectResult.Error(e))
