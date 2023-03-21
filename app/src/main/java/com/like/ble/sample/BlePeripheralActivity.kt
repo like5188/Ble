@@ -363,6 +363,7 @@ class BlePeripheralActivity : AppCompatActivity() {
      * 广播报文（必须）
      *
      * 一个 AdvertiseData 中数据的长度必须是31个字节，如果不到31个字节 ，则剩下的全用0补全，这部分的数据是无效的，
+     * 这个数据包括很多部分。详情查看[android.bluetooth.le.BluetoothLeAdvertiser.startAdvertising]方法
      * 如果多了会广播失败，错误码如下：
      * [android.bluetooth.le.AdvertiseCallback.ADVERTISE_FAILED_DATA_TOO_LARGE]
      *
@@ -373,9 +374,6 @@ class BlePeripheralActivity : AppCompatActivity() {
         return AdvertiseData.Builder()
             .setIncludeDeviceName(true)// 设置广播包中是否包含蓝牙的名称。
             .setIncludeTxPowerLevel(true)// 设置广播包中是否包含蓝牙的发射功率。 数值范围：±127 dBm。
-            .addServiceUuid(ParcelUuid(UUID_SERVICE_1))// 添加是为了让使用者扫描的时候能扫描到此蓝牙设备，如果不添加，是扫描不到的。
-//            // 如果一个外设需要在不连接的情况下对外广播数据，其数据可以存储在UUID对应的数据中，也可以存储在厂商数据中。但由于厂商ID是需要由Bluetooth SIG进行分配的，厂商间一般都将数据设置在厂商数据。
-            .addServiceData(ParcelUuid(UUID_SERVICE_1), byteArrayOf(0x01))// 设置特定的UUID和其数据在广播包中
             .build()
     }
 
@@ -384,6 +382,8 @@ class BlePeripheralActivity : AppCompatActivity() {
      */
     private fun createScanResponseAdvertiseData(data: ByteArray): AdvertiseData {
         return AdvertiseData.Builder()
+            // 如果一个外设需要在不连接的情况下对外广播数据，其数据可以存储在UUID对应的数据中，也可以存储在厂商数据中。但由于厂商ID是需要由Bluetooth SIG进行分配的，厂商间一般都将数据设置在厂商数据。
+//            .addServiceData(ParcelUuid(UUID_SERVICE_1), byteArrayOf(0x01))// 设置特定的UUID和其数据在广播包中
             .addManufacturerData(0xAC, data)// 设置特定厂商Id和其数据在广播包中。前两个字节表示厂商ID,剩下的是厂商自定义的数据。
             .build()
     }
