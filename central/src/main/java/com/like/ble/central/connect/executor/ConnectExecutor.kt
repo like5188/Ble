@@ -77,6 +77,9 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
     }
 
     override fun onDisconnect() {
+        if (context.isBleDeviceConnected(mBluetoothGatt?.device)) {
+            mBluetoothGatt?.disconnect()
+        }
         // close()时会清空BluetoothGatt内部的mCallback回调。导致收不到断开连接的消息。所以就不能在断开连接状态回调时处理 UI。
         mBluetoothGatt?.close()
         mBluetoothGatt = null
