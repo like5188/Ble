@@ -26,9 +26,7 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
     }
     private val bleBroadcastReceiverManager by lazy {
         BleBroadcastReceiverManager(context, onBleOff = {
-            cancelDelayJob()
-            suspendCancellableCoroutineWithTimeout.cancel()
-            isScanning = false
+            stopScan()
             _scanFlow.tryEmit(ScanResult.Error(BleExceptionDisabled))
         })
     }
@@ -93,13 +91,12 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
     }
 
     final override fun stopScan() {
-        if (!checkEnvironment()) {
-            return
-        }
         cancelDelayJob()
         // 此处如果不取消，那么还会把超时错误传递出去的。
         suspendCancellableCoroutineWithTimeout.cancel()
-        onStopScan()
+        if (checkEnvironment()) {
+            onStopScan()
+        }
         isScanning = false
     }
 

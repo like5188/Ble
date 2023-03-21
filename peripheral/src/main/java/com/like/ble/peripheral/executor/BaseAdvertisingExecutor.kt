@@ -29,8 +29,7 @@ abstract class BaseAdvertisingExecutor(activity: ComponentActivity) : AbstractAd
     }
     private val bleBroadcastReceiverManager by lazy {
         BleBroadcastReceiverManager(context, onBleOff = {
-            suspendCancellableCoroutineWithTimeout.cancel()
-            isAdvertising = false
+            stopAdvertising()
             _advertisingFlow.tryEmit(AdvertisingResult.Error(BleExceptionDisabled))
         })
     }
@@ -93,12 +92,11 @@ abstract class BaseAdvertisingExecutor(activity: ComponentActivity) : AbstractAd
     }
 
     final override fun stopAdvertising() {
-        if (!checkEnvironment()) {
-            return
-        }
         // 此处如果不取消，那么还会把超时错误传递出去的。
         suspendCancellableCoroutineWithTimeout.cancel()
-        onStopAdvertising()
+        if (checkEnvironment()) {
+            onStopAdvertising()
+        }
         isAdvertising = false
     }
 

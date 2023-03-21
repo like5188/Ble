@@ -70,12 +70,11 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, protected val ad
     }
 
     final override fun disconnect() {
-        if (!checkEnvironment()) {
-            return
-        }
         // 此处如果不取消，那么还会把超时错误传递出去的。
         suspendCancellableCoroutineWithTimeout.cancel()
-        onDisconnect()
+        if (checkEnvironment()) {
+            onDisconnect()
+        }
     }
 
     final override suspend fun readCharacteristic(characteristicUuid: UUID, serviceUuid: UUID?, timeout: Long): ByteArray? {
