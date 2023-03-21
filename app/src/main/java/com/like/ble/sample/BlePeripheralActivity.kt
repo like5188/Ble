@@ -18,8 +18,10 @@ import androidx.lifecycle.lifecycleScope
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.peripheral.executor.AbstractAdvertisingExecutor
 import com.like.ble.peripheral.executor.AdvertisingExecutor
+import com.like.ble.peripheral.result.AdvertisingResult
 import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
 import com.like.ble.util.*
+import com.like.common.util.Logger
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
@@ -252,31 +254,50 @@ class BlePeripheralActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mBinding
+        lifecycleScope.launch {
+            peripheralExecutor.advertisingFlow.collect {
+                when (it) {
+                    is AdvertisingResult.Ready -> {
+                        Logger.v("AdvertisingResult.Ready")
+                        mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_blue))
+                        mBinding.tvAdvertisingStatus.text = "正在开启广播……"
+                    }
+                    is AdvertisingResult.Success -> {
+                        Logger.d("AdvertisingResult.Success")
+                        mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_blue))
+                        mBinding.tvAdvertisingStatus.text = "广播中……"
+                        initServices()//该方法是添加一个服务，在此处调用即将服务广播出去
+                    }
+                    is AdvertisingResult.Error -> {
+                        Logger.e("AdvertisingResult.Error ${it.throwable}")
+                        when (val e = it.throwable) {
+                            is BleExceptionBusy -> {
+                                Toast.makeText(this@BlePeripheralActivity, e.message, Toast.LENGTH_SHORT).show()
+                            }
+                            else -> {
+                                mBinding.tvAdvertisingStatus.setTextColor(
+                                    ContextCompat.getColor(
+                                        this@BlePeripheralActivity,
+                                        R.color.ble_text_red
+                                    )
+                                )
+                                mBinding.tvAdvertisingStatus.text = it.throwable.message
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     fun startAdvertising(view: View) {
         lifecycleScope.launch {
-            try {
-                peripheralExecutor.startAdvertising(
-                    createAdvertiseSettings(),
-                    createAdvertiseData(),
-                    createScanResponseAdvertiseData(byteArrayOf(0x34, 0x56)),// 外设必须广播广播包，扫描包是可选。但添加扫描包也意味着广播更多得数据，即可广播 广播包31+扫描包31=62个字节。
-                    "BLE测试设备",
-                )
-                mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_blue))
-                mBinding.tvAdvertisingStatus.text = "广播已开启"
-                initServices()//该方法是添加一个服务，在此处调用即将服务广播出去
-            } catch (e: Exception) {
-                when (e) {
-                    is BleExceptionBusy -> {
-                        Toast.makeText(this@BlePeripheralActivity, e.message, Toast.LENGTH_SHORT).show()
-                    }
-                    else -> {
-                        mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_red))
-                        mBinding.tvAdvertisingStatus.text = e.message
-                    }
-                }
-            }
+            peripheralExecutor.startAdvertising(
+                createAdvertiseSettings(),
+                createAdvertiseData(),
+                createScanResponseAdvertiseData(byteArrayOf(0x34, 0x56)),// 外设必须广播广播包，扫描包是可选。但添加扫描包也意味着广播更多得数据，即可广播 广播包31+扫描包31=62个字节。
+                "BLE测试设备",
+            )
         }
     }
 
