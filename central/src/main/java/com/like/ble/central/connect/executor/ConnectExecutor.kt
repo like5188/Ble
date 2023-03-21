@@ -14,7 +14,6 @@ import com.like.ble.central.connect.result.ConnectResult
 import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionDeviceDisconnected
-import com.like.ble.exception.BleExceptionDiscoverServices
 import com.like.ble.util.*
 import kotlinx.coroutines.CancellableContinuation
 import java.util.*
@@ -63,10 +62,6 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
 
             override fun onError(exception: BleException) {
                 Log.e("TAG", exception.message ?: "")
-                // 只会有两种异常：BleExceptionDeviceDisconnected、BleExceptionDiscoverServices
-                if (exception is BleExceptionDiscoverServices) {
-                    disconnect()
-                }
                 // 因为在第一次 resumeWithException 后，BaseConnectExecutor 的 connect 方法就执行完毕了，continuation.isActive == false 了。
                 // 那么在后续的蓝牙连接状态改变后，就没必要再 resumeWithException 了。
                 if (continuation.isActive) {
