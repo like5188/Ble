@@ -333,4 +333,17 @@ public final class ScanRecordBelow21 {
         System.arraycopy(scanRecord, start, bytes, 0, length);
         return bytes;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ScanRecordBelow21)) return false;
+        ScanRecordBelow21 that = (ScanRecordBelow21) o;
+        return Arrays.equals(mBytes, that.mBytes);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(mBytes);
+    }
 }
