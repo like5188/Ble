@@ -10,6 +10,7 @@ import com.like.ble.callback.BleCallback
 import com.like.ble.exception.BleExceptionDeviceDisconnected
 import com.like.ble.exception.BleExceptionDiscoverServices
 import com.like.ble.util.getValidString
+import com.like.ble.util.refreshDeviceCache
 
 @SuppressLint("MissingPermission")
 class ConnectCallbackManager {
@@ -22,6 +23,8 @@ class ConnectCallbackManager {
                 // 连接蓝牙设备成功
                 gatt.discoverServices()
             } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
+                gatt.disconnect()
+                gatt.refreshDeviceCache()
                 gatt.close()
                 connectCallback?.onError(BleExceptionDeviceDisconnected(gatt.device.address))
             }
@@ -33,6 +36,7 @@ class ConnectCallbackManager {
                 connectCallback?.onSuccess(gatt.services)
             } else {
                 gatt.disconnect()
+                gatt.refreshDeviceCache()
                 gatt.close()
                 connectCallback?.onError(BleExceptionDiscoverServices(gatt.device.address))
             }

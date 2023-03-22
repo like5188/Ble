@@ -53,6 +53,16 @@ suspend fun ComponentActivity.isBluetoothEnableAndSettingIfDisabled(): Boolean =
 }
 
 /**
+ * 清除内部缓存，并强制从远程设备刷新服务
+ */
+fun BluetoothGatt.refreshDeviceCache(): Boolean = try {
+    (BluetoothGatt::class.java.getMethod("refresh").invoke(this) as? Boolean) ?: false
+} catch (e: Exception) {
+    e.printStackTrace()
+    false
+}
+
+/**
  * 查找远程设备的特征
  */
 fun BluetoothGatt.findCharacteristic(characteristicUuid: UUID, serviceUuid: UUID? = null): BluetoothGattCharacteristic? {
