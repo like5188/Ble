@@ -20,7 +20,7 @@ import java.util.*
  * 蓝牙连接及数据操作的前提条件
  * 包括：并发处理、超时处理、蓝牙相关的前置条件检查、错误处理。
  */
-abstract class BaseConnectExecutor(activity: ComponentActivity, protected val address: String?) : AbstractConnectExecutor(activity) {
+abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?) : AbstractConnectExecutor(activity, address) {
     private val mutexUtils = MutexUtils()
     private val suspendCancellableCoroutineWithTimeout by lazy {
         SuspendCancellableCoroutineWithTimeout()
