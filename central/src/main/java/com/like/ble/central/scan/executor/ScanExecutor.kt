@@ -57,7 +57,8 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
             }
 
             override fun onError(exception: BleException) {
-                continuation.resumeWithException(exception)
+                if (continuation.isActive)
+                    continuation.resumeWithException(exception)
             }
         })
         if (filterServiceUuid == null) {
@@ -141,12 +142,14 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
             override fun onSuccess(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
                 if (address == device.address) {
                     onStopScan()
-                    continuation.resume(ScanResult.Result(device, rssi, scanRecord))
+                    if (continuation.isActive)
+                        continuation.resume(ScanResult.Result(device, rssi, scanRecord))
                 }
             }
 
             override fun onError(exception: BleException) {
-                continuation.resumeWithException(exception)
+                if (continuation.isActive)
+                    continuation.resumeWithException(exception)
             }
         })
         bluetoothLeScanner.startScan(scanCallbackManager.getScanCallback())
@@ -159,7 +162,9 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
         scanCallbackManager.setLeScanCallback(object : ScanCallback() {
             override fun onSuccess(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
                 if (address == device.address) {
-                    continuation.resume(ScanResult.Result(device, rssi, scanRecord))
+                    onStopScan()
+                    if (continuation.isActive)
+                        continuation.resume(ScanResult.Result(device, rssi, scanRecord))
                 }
             }
         })
