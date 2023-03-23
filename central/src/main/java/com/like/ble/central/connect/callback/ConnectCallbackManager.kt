@@ -102,11 +102,11 @@ class ConnectCallbackManager {
     private var connectCallback: ConnectCallback? = null
     private var readCharacteristicCallback: ByteArrayCallback? = null
     private var readDescriptorCallback: ByteArrayCallback? = null
-    private var readNotifyCallback: ByteArrayCallback? = null
     private var readRemoteRssiCallback: IntCallback? = null
     private var requestMtuCallback: IntCallback? = null
     private var writeCharacteristicCallback: BleCallback? = null
     private var writeDescriptorCallback: BleCallback? = null
+    private var readNotifyCallback: ByteArrayCallback? = null
 
     fun getBluetoothGattCallback(): BluetoothGattCallback {
         return mBluetoothGattCallback
@@ -124,10 +124,6 @@ class ConnectCallbackManager {
         readDescriptorCallback = callback
     }
 
-    fun setReadNotifyCallback(callback: ByteArrayCallback?) {
-        readNotifyCallback = callback
-    }
-
     fun setReadRemoteRssiCallback(callback: IntCallback?) {
         readRemoteRssiCallback = callback
     }
@@ -142,6 +138,10 @@ class ConnectCallbackManager {
 
     fun setWriteDescriptorCallback(callback: BleCallback?) {
         writeDescriptorCallback = callback
+    }
+
+    fun setReadNotifyCallback(callback: ByteArrayCallback?) {
+        readNotifyCallback = callback
     }
 
 }
