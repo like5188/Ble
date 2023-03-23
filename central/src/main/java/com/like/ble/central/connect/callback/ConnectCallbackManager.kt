@@ -11,6 +11,7 @@ import com.like.ble.exception.BleExceptionDeviceDisconnected
 import com.like.ble.exception.BleExceptionDiscoverServices
 import com.like.ble.util.getValidString
 import com.like.ble.util.refreshDeviceCache
+import java.util.*
 
 @SuppressLint("MissingPermission")
 class ConnectCallbackManager {
@@ -61,7 +62,7 @@ class ConnectCallbackManager {
 
         // 为某个特征启用通知后，如果远程设备上的特征发生更改，则会触发
         override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
-            readNotifyCallback?.onSuccess(characteristic.value)
+            readNotifyCallbacks[characteristic.uuid]?.onSuccess(characteristic.value)
         }
 
         override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
@@ -106,7 +107,7 @@ class ConnectCallbackManager {
     private var requestMtuCallback: IntCallback? = null
     private var writeCharacteristicCallback: BleCallback? = null
     private var writeDescriptorCallback: BleCallback? = null
-    private var readNotifyCallback: ByteArrayCallback? = null
+    private val readNotifyCallbacks = mutableMapOf<UUID, ByteArrayCallback?>()
 
     fun getBluetoothGattCallback(): BluetoothGattCallback {
         return mBluetoothGattCallback
@@ -140,8 +141,16 @@ class ConnectCallbackManager {
         writeDescriptorCallback = callback
     }
 
-    fun setReadNotifyCallback(callback: ByteArrayCallback?) {
-        readNotifyCallback = callback
+    fun addReadNotifyCallback(characteristicUuid: UUID, callback: ByteArrayCallback?) {
+        if (callback == null) {
+            readNotifyCallbacks.remove(characteristicUuid)
+        } else {
+            readNotifyCallbacks[characteristicUuid] = callback
+        }
+    }
+
+    fun clearReadNotifyCallback() {
+        readNotifyCallbacks.clear()
     }
 
 }

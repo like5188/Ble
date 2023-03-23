@@ -191,14 +191,6 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
         }
     }
 
-    final override suspend fun setReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?) {
-        checkEnvironmentOrThrow()
-        if (!context.isBleDeviceConnected(address)) {
-            throw BleExceptionDeviceDisconnected(address)
-        }
-        onSetReadNotifyCallback(characteristicUuid, serviceUuid)
-    }
-
     final override suspend fun readRemoteRssi(timeout: Long): Int {
         return try {
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
@@ -372,6 +364,18 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
         }
     }
 
+    final override suspend fun setReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?) {
+        checkEnvironmentOrThrow()
+        if (!context.isBleDeviceConnected(address)) {
+            throw BleExceptionDeviceDisconnected(address)
+        }
+        onSetReadNotifyCallback(characteristicUuid, serviceUuid)
+    }
+
+    final override suspend fun removeReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?) {
+        onRemoveReadNotifyCallback(characteristicUuid, serviceUuid)
+    }
+
     final override fun close() {
         disconnect()
         bleBroadcastReceiverManager.unregister()
@@ -396,8 +400,6 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
         characteristicUuid: UUID?,
         serviceUuid: UUID?
     )
-
-    protected abstract fun onSetReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?)
 
     protected abstract fun onReadRemoteRssi(continuation: CancellableContinuation<Int>)
 
@@ -428,5 +430,9 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
         characteristicUuid: UUID?,
         serviceUuid: UUID?
     )
+
+    protected abstract fun onSetReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?)
+
+    protected abstract fun onRemoveReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?)
 
 }

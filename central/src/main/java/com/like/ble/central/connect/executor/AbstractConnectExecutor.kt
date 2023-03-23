@@ -75,15 +75,6 @@ abstract class AbstractConnectExecutor(activity: ComponentActivity, val address:
     ): ByteArray?
 
     /**
-     * 设置服务器的通知（通过notify或者indicate的方式）监听，数据从[notifyFlow]获取，需要组包
-     * 配合[writeCharacteristic]发送命令并接收通知数据，注意必须要开启通知才能接收数据。
-     *
-     * @param characteristicUuid        特征UUID
-     * @param serviceUuid               服务UUID，如果不为null，则会在此服务下查找[characteristicUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
-     */
-    abstract suspend fun setReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID? = null)
-
-    /**
      * 失败返回-1
      */
     abstract suspend fun readRemoteRssi(timeout: Long = 3000L): Int
@@ -155,5 +146,22 @@ abstract class AbstractConnectExecutor(activity: ComponentActivity, val address:
         serviceUuid: UUID? = null,
         timeout: Long = 10000L,
     )
+
+    /**
+     * 设置指定特征值下的服务器通知监听（通过notify或者indicate的方式），数据从[notifyFlow]获取，需要组包
+     * 配合[writeCharacteristic]发送命令并接收通知数据，注意必须要开启通知才能接收数据。
+     *
+     * @param characteristicUuid        特征UUID
+     * @param serviceUuid               服务UUID，如果不为null，则会在此服务下查找[characteristicUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
+     */
+    abstract suspend fun setReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID? = null)
+
+    /**
+     * 移除指定特征值下的服务器通知监听
+     *
+     * @param characteristicUuid        特征UUID
+     * @param serviceUuid               服务UUID，如果不为null，则会在此服务下查找[characteristicUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
+     */
+    abstract suspend fun removeReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID? = null)
 
 }

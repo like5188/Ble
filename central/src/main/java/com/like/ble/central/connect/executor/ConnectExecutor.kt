@@ -147,21 +147,6 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         }
     }
 
-    override fun onSetReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?) {
-        val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
-            ?: throw BleException("特征值不存在：${characteristicUuid.getValidString()}")
-
-        if (characteristic.properties and (BluetoothGattCharacteristic.PROPERTY_INDICATE or BluetoothGattCharacteristic.PROPERTY_NOTIFY) == 0) {
-            throw BleException("this characteristic not support indicate or notify!")
-        }
-
-        mConnectCallbackManager.setReadNotifyCallback(object : ByteArrayCallback() {
-            override fun onSuccess(data: ByteArray?) {
-                _notifyFlow.tryEmit(data)
-            }
-        })
-    }
-
     override fun onReadRemoteRssi(continuation: CancellableContinuation<Int>) {
         mConnectCallbackManager.setReadRemoteRssiCallback(object : IntCallback() {
             override fun onSuccess(data: Int) {
@@ -361,4 +346,24 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
             continuation.resumeWithException(BleException("写描述值失败：${descriptorUuid.getValidString()}"))
         }
     }
+
+    override fun onSetReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?) {
+        val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
+            ?: throw BleException("特征值不存在：${characteristicUuid.getValidString()}")
+
+        if (characteristic.properties and (BluetoothGattCharacteristic.PROPERTY_INDICATE or BluetoothGattCharacteristic.PROPERTY_NOTIFY) == 0) {
+            throw BleException("this characteristic not support indicate or notify!")
+        }
+
+        mConnectCallbackManager.addReadNotifyCallback(characteristicUuid, object : ByteArrayCallback() {
+            override fun onSuccess(data: ByteArray?) {
+                _notifyFlow.tryEmit(data)
+            }
+        })
+    }
+
+    override fun onRemoveReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?) {
+        mConnectCallbackManager.addReadNotifyCallback(characteristicUuid, null)
+    }
+
 }
