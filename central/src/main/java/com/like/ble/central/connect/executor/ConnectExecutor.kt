@@ -11,7 +11,6 @@ import com.like.ble.central.connect.callback.ConnectCallbackManager
 import com.like.ble.central.connect.callback.IntCallback
 import com.like.ble.central.connect.result.ConnectResult
 import com.like.ble.exception.BleException
-import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionDeviceDisconnected
 import com.like.ble.util.*
 import kotlinx.coroutines.CancellableContinuation
@@ -35,17 +34,15 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         }
     }
 
-    override fun onConnect(continuation: CancellableContinuation<List<BluetoothGattService>?>, timeout: Long) {
-        if (context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            continuation.resumeWithException(BleExceptionBusy("设备已经连接"))
-            return
-        }
-        _connectFlow.tryEmit(ConnectResult.Ready)
-        // 获取远端的蓝牙设备
-        val bluetoothDevice = context.getBluetoothAdapter()?.getRemoteDevice(address)
+    override fun onConnect(continuation: CancellableContinuation<List<BluetoothGattService>?>, device: BluetoothDevice?) {
+        var bluetoothDevice = device
         if (bluetoothDevice == null) {
-            continuation.resumeWithException(BleException("连接蓝牙失败：$address 未找到"))
-            return
+            // 获取远端的蓝牙设备
+            bluetoothDevice = context.getBluetoothAdapter()?.getRemoteDevice(address)
+            if (bluetoothDevice == null) {
+                continuation.resumeWithException(BleException("连接蓝牙失败：$address 未找到"))
+                return
+            }
         }
         mConnectCallbackManager.setConnectCallback(object : ConnectCallback() {
             override fun onSuccess(services: List<BluetoothGattService>?) {
@@ -88,8 +85,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
     override fun onReadCharacteristic(
         continuation: CancellableContinuation<ByteArray?>,
         characteristicUuid: UUID,
-        serviceUuid: UUID?,
-        timeout: Long
+        serviceUuid: UUID?
     ) {
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             continuation.resumeWithException(BleExceptionDeviceDisconnected(address))
@@ -125,8 +121,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         continuation: CancellableContinuation<ByteArray?>,
         descriptorUuid: UUID,
         characteristicUuid: UUID?,
-        serviceUuid: UUID?,
-        timeout: Long
+        serviceUuid: UUID?
     ) {
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             continuation.resumeWithException(BleExceptionDeviceDisconnected(address))
@@ -182,7 +177,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         })
     }
 
-    override fun onReadRemoteRssi(continuation: CancellableContinuation<Int>, timeout: Long) {
+    override fun onReadRemoteRssi(continuation: CancellableContinuation<Int>) {
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             continuation.resumeWithException(BleExceptionDeviceDisconnected(address))
             return
@@ -203,7 +198,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         }
     }
 
-    override fun onRequestConnectionPriority(continuation: CancellableContinuation<Unit>, connectionPriority: Int, timeout: Long) {
+    override fun onRequestConnectionPriority(continuation: CancellableContinuation<Unit>, connectionPriority: Int) {
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             continuation.resumeWithException(BleExceptionDeviceDisconnected(address))
             return
@@ -221,7 +216,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         continuation.resume(Unit)
     }
 
-    override fun onRequestMtu(continuation: CancellableContinuation<Int>, mtu: Int, timeout: Long) {
+    override fun onRequestMtu(continuation: CancellableContinuation<Int>, mtu: Int) {
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             continuation.resumeWithException(BleExceptionDeviceDisconnected(address))
             return
@@ -252,8 +247,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         characteristicUuid: UUID,
         serviceUuid: UUID?,
         type: Int,
-        enable: Boolean,
-        timeout: Long
+        enable: Boolean
     ) {
         if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
             continuation.resumeWithException(BleExceptionDeviceDisconnected(address))
@@ -318,7 +312,6 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         data: ByteArray,
         characteristicUuid: UUID,
         serviceUuid: UUID?,
-        timeout: Long,
         writeType: Int
     ) {
         if (data.isEmpty()) {
@@ -368,8 +361,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         data: ByteArray,
         descriptorUuid: UUID,
         characteristicUuid: UUID?,
-        serviceUuid: UUID?,
-        timeout: Long
+        serviceUuid: UUID?
     ) {
         if (data.isEmpty()) {
             continuation.resumeWithException(BleException("data is empty"))

@@ -20,6 +20,14 @@ fun Context.isBleDeviceConnected(device: BluetoothDevice?): Boolean =
         getBluetoothManager()?.getConnectionState(device, BluetoothProfile.GATT) == BluetoothProfile.STATE_CONNECTED
     }
 
+@SuppressLint("MissingPermission")
+fun Context.isBleDeviceConnected(address: String?): Boolean =
+    if (address.isNullOrEmpty()) {
+        false
+    } else {
+        getBluetoothManager()?.getConnectedDevices(BluetoothProfile.GATT)?.any { it.address == address } ?: false
+    }
+
 /**
  * Context生命周期内不会改变
  */
