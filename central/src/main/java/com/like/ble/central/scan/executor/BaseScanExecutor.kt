@@ -90,6 +90,31 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
         }
     }
 
+    override suspend fun startScan(address: String?, timeout: Long): ScanResult.Result? =
+        try {
+            mutexUtils.withTryLock("正在开启扫描，请稍后！") {
+                checkEnvironmentOrThrow()
+                withContext(Dispatchers.IO) {
+                    suspendCancellableCoroutineWithTimeout.execute<ScanResult.Result?>(timeout, "开启扫描超时") { continuation ->
+                        onStartScan(continuation, address)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            when (e) {
+                is BleExceptionCancelTimeout -> {
+                    // 提前取消超时不做处理。因为这是调用 stopScan() 造成的，使用者可以直接在 stopScan() 方法结束后处理 UI 的显示，不需要此回调。
+                }
+                else -> {
+                    suspendCancellableCoroutineWithTimeout.cancel()
+                    if (checkEnvironment()) {
+                        onStopScan()
+                    }
+                }
+            }
+            null
+        }
+
     final override fun stopScan() {
         cancelDelayJob()
         // 此处如果不取消，那么还会把超时错误传递出去的。
@@ -118,6 +143,11 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
         continuation: CancellableContinuation<Unit>,
         filterServiceUuid: UUID?,
         onResult: (ScanResult.Result) -> Unit
+    )
+
+    protected abstract fun onStartScan(
+        continuation: CancellableContinuation<ScanResult.Result?>,
+        address: String?,
     )
 
     protected abstract fun onStopScan()

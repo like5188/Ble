@@ -45,6 +45,16 @@ abstract class AbstractScanExecutor(activity: ComponentActivity) : BleExecutor(
     abstract suspend fun startScan(filterServiceUuid: UUID? = null, timeout: Long = 3000L, duration: Long = 10000L)
 
     /**
+     * 开始扫描蓝牙设备
+     *
+     * @param address               需要扫描的设备地址，扫描到后就自动停止扫描。
+     * @param timeout               扫描操作的超时时间。
+     * @throws                      此方法不会抛出异常
+     * @return 扫描到的设备。失败或超时返回null
+     */
+    abstract suspend fun startScan(address: String?, timeout: Long = 10000L): ScanResult.Result?
+
+    /**
      * 停止扫描蓝牙设备
      */
     abstract fun stopScan()
