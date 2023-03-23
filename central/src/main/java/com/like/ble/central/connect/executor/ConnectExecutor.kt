@@ -31,6 +31,11 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         if (address.isNullOrEmpty() || !BluetoothAdapter.checkBluetoothAddress(address)) {
             throw BleException("invalid address：$address")
         }
+        mConnectCallbackManager.setReadNotifyCallback(object : ByteArrayCallback() {
+            override fun onSuccess(data: ByteArray) {
+                _notifyFlow.tryEmit(data)
+            }
+        })
     }
 
     override fun onConnect(continuation: CancellableContinuation<List<BluetoothGattService>>, device: BluetoothDevice?) {
@@ -345,25 +350,6 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         if (mBluetoothGatt?.writeDescriptor(descriptor) != true) {
             continuation.resumeWithException(BleException("写描述值失败：${descriptorUuid.getValidString()}"))
         }
-    }
-
-    override fun onSetReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?) {
-        val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
-            ?: throw BleException("特征值不存在：${characteristicUuid.getValidString()}")
-
-        if (characteristic.properties and (BluetoothGattCharacteristic.PROPERTY_INDICATE or BluetoothGattCharacteristic.PROPERTY_NOTIFY) == 0) {
-            throw BleException("this characteristic not support indicate or notify!")
-        }
-
-        mConnectCallbackManager.addReadNotifyCallback(characteristicUuid, object : ByteArrayCallback() {
-            override fun onSuccess(data: ByteArray) {
-                _notifyFlow.tryEmit(data)
-            }
-        })
-    }
-
-    override fun onRemoveReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?) {
-        mConnectCallbackManager.addReadNotifyCallback(characteristicUuid, null)
     }
 
 }

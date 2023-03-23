@@ -2,6 +2,7 @@ package com.like.ble.central.connect.executor
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattService
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -59,10 +60,10 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
             isBleDisabled
         }
     }
-    protected val _notifyFlow: MutableSharedFlow<ByteArray> by lazy {
+    protected val _notifyFlow: MutableSharedFlow<BluetoothGattCharacteristic> by lazy {
         MutableSharedFlow(extraBufferCapacity = Int.MAX_VALUE)
     }
-    final override val notifyFlow: Flow<ByteArray> = _notifyFlow
+    final override val notifyFlow: Flow<BluetoothGattCharacteristic> = _notifyFlow
 
     init {
         if (address.isNullOrEmpty() || !BluetoothAdapter.checkBluetoothAddress(address)) {
@@ -356,18 +357,6 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
         }
     }
 
-    final override suspend fun setReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?) {
-        checkEnvironmentOrThrow()
-        if (!context.isBleDeviceConnected(address)) {
-            throw BleExceptionDeviceDisconnected(address)
-        }
-        onSetReadNotifyCallback(characteristicUuid, serviceUuid)
-    }
-
-    final override suspend fun removeReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?) {
-        onRemoveReadNotifyCallback(characteristicUuid, serviceUuid)
-    }
-
     final override fun close() {
         disconnect()
         bleBroadcastReceiverManager.unregister()
@@ -422,9 +411,5 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
         characteristicUuid: UUID?,
         serviceUuid: UUID?
     )
-
-    protected abstract fun onSetReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?)
-
-    protected abstract fun onRemoveReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?)
 
 }
