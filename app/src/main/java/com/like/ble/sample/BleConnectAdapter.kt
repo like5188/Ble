@@ -121,35 +121,16 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                 mWriteDataFragment.arguments = Bundle().apply {
                     putSerializable("callback", object : WriteDataFragment.Callback {
                         override fun onData(data: ByteArray) {
-                            when (data[0]) {
-                                0x1.toByte() -> {
-                                    mActivity.lifecycleScope.launch {
-                                        try {
-                                            connectExecutor.setReadNotifyCallback(characteristic.uuid, serviceUuid)
-                                            connectExecutor.writeCharacteristic(
-                                                data,
-                                                characteristic.uuid,
-                                                serviceUuid,
-                                            )
-                                            Toast.makeText(mActivity, "设置通知监听并写特征成功", Toast.LENGTH_SHORT).show()
-                                        } catch (e: Exception) {
-                                            Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
-                                        }
-                                    }
-                                }
-                                else -> {
-                                    mActivity.lifecycleScope.launch {
-                                        try {
-                                            connectExecutor.writeCharacteristic(
-                                                data,
-                                                characteristic.uuid,
-                                                serviceUuid,
-                                            )
-                                            Toast.makeText(mActivity, "写特征成功", Toast.LENGTH_SHORT).show()
-                                        } catch (e: Exception) {
-                                            Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
-                                        }
-                                    }
+                            mActivity.lifecycleScope.launch {
+                                try {
+                                    connectExecutor.writeCharacteristic(
+                                        data,
+                                        characteristic.uuid,
+                                        serviceUuid,
+                                    )
+                                    Toast.makeText(mActivity, "写特征成功", Toast.LENGTH_SHORT).show()
+                                } catch (e: Exception) {
+                                    Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
                                 }
                             }
                         }

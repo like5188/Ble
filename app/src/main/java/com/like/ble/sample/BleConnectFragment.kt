@@ -121,7 +121,9 @@ class BleConnectFragment : BaseLazyFragment() {
                     Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
                 }
                 .collectLatest {
-                    Toast.makeText(context, "读取通知传来的数据成功。数据长度：${it.size} ${it.contentToString()}", Toast.LENGTH_SHORT).show()
+                    val data = it.value
+                    Toast.makeText(context, "读取通知(${it.uuid})传来的数据成功。数据长度：${data.size} ${data.contentToString()}", Toast.LENGTH_SHORT)
+                        .show()
                 }
         }
         return mBinding.root
