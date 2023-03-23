@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.withContext
 import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * 蓝牙连接及数据操作的前提条件
@@ -31,6 +32,9 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
     private val suspendCancellableCoroutineWithTimeout by lazy {
         SuspendCancellableCoroutineWithTimeout()
     }
+
+    // 是否正在扫描
+    private val isScanning = AtomicBoolean(false)
 
     // 是否需要重新扫描，当断开蓝牙再打开，如果不重新扫描，则连接不上。
     private var needScan = false
@@ -87,7 +91,9 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
                 Log.d("TAG", "connect needScan=$needScan")
                 if (needScan) {
                     val startTime = System.currentTimeMillis()
+                    isScanning.set(true)
                     scanResult = scanExecutor.startScan(address, timeout) ?: throw BleException("连接蓝牙失败：$address 未找到")
+                    isScanning.set(false)
                     // 扫描成功后，下次就不需要再扫描了
                     needScan = false
                     val scanCost = System.currentTimeMillis() - startTime
@@ -122,7 +128,9 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
         suspendCancellableCoroutineWithTimeout.cancel()
         if (checkEnvironment()) {
             onDisconnect()
-            scanExecutor.stopScan()
+            if (isScanning.get()) {
+                scanExecutor.stopScan()
+            }
         }
     }
 
