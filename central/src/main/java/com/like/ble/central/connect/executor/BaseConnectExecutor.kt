@@ -9,10 +9,7 @@ import com.like.ble.central.connect.result.ConnectResult
 import com.like.ble.central.scan.executor.AbstractScanExecutor
 import com.like.ble.central.scan.executor.ScanExecutor
 import com.like.ble.central.scan.result.ScanResult
-import com.like.ble.exception.BleException
-import com.like.ble.exception.BleExceptionBusy
-import com.like.ble.exception.BleExceptionCancelTimeout
-import com.like.ble.exception.BleExceptionDisabled
+import com.like.ble.exception.*
 import com.like.ble.util.*
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.Dispatchers
@@ -140,6 +137,9 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLock("正在读取特征值……") {
                 checkEnvironmentOrThrow()
+                if (!context.isBleDeviceConnected(address)) {
+                    throw BleExceptionDeviceDisconnected(address)
+                }
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(
                         timeout,
@@ -171,6 +171,9 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLock("正在读取描述值……") {
                 checkEnvironmentOrThrow()
+                if (!context.isBleDeviceConnected(address)) {
+                    throw BleExceptionDeviceDisconnected(address)
+                }
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(timeout, "读取描述值超时：${descriptorUuid.getValidString()}") { continuation ->
                         onReadDescriptor(continuation, descriptorUuid, characteristicUuid, serviceUuid)
@@ -190,6 +193,9 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
 
     final override suspend fun setReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?) {
         checkEnvironmentOrThrow()
+        if (!context.isBleDeviceConnected(address)) {
+            throw BleExceptionDeviceDisconnected(address)
+        }
         onSetReadNotifyCallback(characteristicUuid, serviceUuid)
     }
 
@@ -199,6 +205,9 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLock("正在读取RSSI……") {
                 checkEnvironmentOrThrow()
+                if (!context.isBleDeviceConnected(address)) {
+                    throw BleExceptionDeviceDisconnected(address)
+                }
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(timeout, "读取RSSI超时：$address") { continuation ->
                         onReadRemoteRssi(continuation)
@@ -222,6 +231,9 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLock("正在设置ConnectionPriority……") {
                 checkEnvironmentOrThrow()
+                if (!context.isBleDeviceConnected(address)) {
+                    throw BleExceptionDeviceDisconnected(address)
+                }
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(timeout, "设置ConnectionPriority超时：$address") { continuation ->
                         onRequestConnectionPriority(continuation, connectionPriority)
@@ -244,6 +256,9 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLock("正在设置MTU……") {
                 checkEnvironmentOrThrow()
+                if (!context.isBleDeviceConnected(address)) {
+                    throw BleExceptionDeviceDisconnected(address)
+                }
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(timeout, "设置MTU超时：$address") { continuation ->
                         onRequestMtu(continuation, mtu)
@@ -273,6 +288,9 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLock("正在设置通知……") {
                 checkEnvironmentOrThrow()
+                if (!context.isBleDeviceConnected(address)) {
+                    throw BleExceptionDeviceDisconnected(address)
+                }
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(timeout, "设置通知超时：$address") { continuation ->
                         onSetCharacteristicNotification(continuation, characteristicUuid, serviceUuid, type, enable)
@@ -301,6 +319,9 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLock("正在写特征值……") {
                 checkEnvironmentOrThrow()
+                if (!context.isBleDeviceConnected(address)) {
+                    throw BleExceptionDeviceDisconnected(address)
+                }
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(
                         timeout,
@@ -332,6 +353,9 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLock("正在写描述值……") {
                 checkEnvironmentOrThrow()
+                if (!context.isBleDeviceConnected(address)) {
+                    throw BleExceptionDeviceDisconnected(address)
+                }
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(timeout, "写描述值超时：${descriptorUuid.getValidString()}") { continuation ->
                         onWriteDescriptor(continuation, data, descriptorUuid, characteristicUuid, serviceUuid)

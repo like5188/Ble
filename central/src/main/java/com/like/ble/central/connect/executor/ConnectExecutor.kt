@@ -11,7 +11,6 @@ import com.like.ble.central.connect.callback.ConnectCallbackManager
 import com.like.ble.central.connect.callback.IntCallback
 import com.like.ble.central.connect.result.ConnectResult
 import com.like.ble.exception.BleException
-import com.like.ble.exception.BleExceptionDeviceDisconnected
 import com.like.ble.util.*
 import kotlinx.coroutines.CancellableContinuation
 import java.util.*
@@ -87,11 +86,6 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         characteristicUuid: UUID,
         serviceUuid: UUID?
     ) {
-        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            continuation.resumeWithException(BleExceptionDeviceDisconnected(address))
-            return
-        }
-
         val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
         if (characteristic == null) {
             continuation.resumeWithException(BleException("特征值不存在：${characteristicUuid.getValidString()}"))
@@ -123,11 +117,6 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         characteristicUuid: UUID?,
         serviceUuid: UUID?
     ) {
-        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            continuation.resumeWithException(BleExceptionDeviceDisconnected(address))
-            return
-        }
-
         val descriptor = mBluetoothGatt?.findDescriptor(
             descriptorUuid,
             characteristicUuid,
@@ -159,10 +148,6 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
     }
 
     override fun onSetReadNotifyCallback(characteristicUuid: UUID, serviceUuid: UUID?) {
-        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            throw BleExceptionDeviceDisconnected(address)
-        }
-
         val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
             ?: throw BleException("特征值不存在：${characteristicUuid.getValidString()}")
 
@@ -178,11 +163,6 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
     }
 
     override fun onReadRemoteRssi(continuation: CancellableContinuation<Int>) {
-        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            continuation.resumeWithException(BleExceptionDeviceDisconnected(address))
-            return
-        }
-
         mConnectCallbackManager.setReadRemoteRssiCallback(object : IntCallback() {
             override fun onSuccess(data: Int) {
                 continuation.resume(data)
@@ -199,11 +179,6 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
     }
 
     override fun onRequestConnectionPriority(continuation: CancellableContinuation<Unit>, connectionPriority: Int) {
-        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            continuation.resumeWithException(BleExceptionDeviceDisconnected(address))
-            return
-        }
-
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             continuation.resumeWithException(BleException("android 5.0及其以上才支持requestConnectionPriority：$address"))
             return
@@ -217,11 +192,6 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
     }
 
     override fun onRequestMtu(continuation: CancellableContinuation<Int>, mtu: Int) {
-        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            continuation.resumeWithException(BleExceptionDeviceDisconnected(address))
-            return
-        }
-
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             continuation.resumeWithException(BleException("android 5.0及其以上才支持设置MTU：$address"))
             return
@@ -249,11 +219,6 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         type: Int,
         enable: Boolean
     ) {
-        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            continuation.resumeWithException(BleExceptionDeviceDisconnected(address))
-            return
-        }
-
         val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
         if (characteristic == null) {
             continuation.resumeWithException(BleException("特征值不存在：${characteristicUuid.getValidString()}"))
@@ -318,11 +283,6 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
             continuation.resumeWithException(BleException("data is empty"))
             return
         }
-        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            continuation.resumeWithException(BleExceptionDeviceDisconnected(address))
-            return
-        }
-
         val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
         if (characteristic == null) {
             continuation.resumeWithException(BleException("特征值不存在：${characteristicUuid.getValidString()}"))
@@ -367,11 +327,6 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
             continuation.resumeWithException(BleException("data is empty"))
             return
         }
-        if (!context.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            continuation.resumeWithException(BleExceptionDeviceDisconnected(address))
-            return
-        }
-
         val descriptor = mBluetoothGatt?.findDescriptor(descriptorUuid, characteristicUuid, serviceUuid)
         if (descriptor == null) {
             continuation.resumeWithException(BleException("描述不存在：${descriptorUuid.getValidString()}"))
