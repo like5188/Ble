@@ -59,10 +59,10 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
             isBleDisabled
         }
     }
-    protected val _notifyFlow: MutableSharedFlow<ByteArray?> by lazy {
+    protected val _notifyFlow: MutableSharedFlow<ByteArray> by lazy {
         MutableSharedFlow(extraBufferCapacity = Int.MAX_VALUE)
     }
-    final override val notifyFlow: Flow<ByteArray?> = _notifyFlow
+    final override val notifyFlow: Flow<ByteArray> = _notifyFlow
 
     init {
         if (address.isNullOrEmpty() || !BluetoothAdapter.checkBluetoothAddress(address)) {
@@ -123,7 +123,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
         }
     }
 
-    final override suspend fun readCharacteristic(characteristicUuid: UUID, serviceUuid: UUID?, timeout: Long): ByteArray? {
+    final override suspend fun readCharacteristic(characteristicUuid: UUID, serviceUuid: UUID?, timeout: Long): ByteArray {
         return try {
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
@@ -145,7 +145,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
             when (e) {
                 is BleExceptionCancelTimeout -> {
                     // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
-                    null
+                    byteArrayOf()
                 }
                 else -> throw e
             }
@@ -157,7 +157,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
         characteristicUuid: UUID?,
         serviceUuid: UUID?,
         timeout: Long
-    ): ByteArray? {
+    ): ByteArray {
         return try {
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
@@ -176,7 +176,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
             when (e) {
                 is BleExceptionCancelTimeout -> {
                     // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
-                    null
+                    byteArrayOf()
                 }
                 else -> throw e
             }
@@ -374,20 +374,20 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
     }
 
     protected abstract fun onConnect(
-        continuation: CancellableContinuation<List<BluetoothGattService>?>,
+        continuation: CancellableContinuation<List<BluetoothGattService>>,
         device: BluetoothDevice?
     )
 
     protected abstract fun onDisconnect()
 
     protected abstract fun onReadCharacteristic(
-        continuation: CancellableContinuation<ByteArray?>,
+        continuation: CancellableContinuation<ByteArray>,
         characteristicUuid: UUID,
         serviceUuid: UUID?
     )
 
     protected abstract fun onReadDescriptor(
-        continuation: CancellableContinuation<ByteArray?>,
+        continuation: CancellableContinuation<ByteArray>,
         descriptorUuid: UUID,
         characteristicUuid: UUID?,
         serviceUuid: UUID?

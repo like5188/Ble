@@ -106,7 +106,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                 mActivity.lifecycleScope.launch {
                     try {
                         val data = connectExecutor.readCharacteristic(characteristic.uuid, serviceUuid)
-                        Toast.makeText(mActivity, "读特征成功。数据长度：${data?.size} ${data?.contentToString()}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(mActivity, "读特征成功。数据长度：${data.size} ${data.contentToString()}", Toast.LENGTH_SHORT).show()
                     } catch (e: Exception) {
                         Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
                     }
@@ -240,7 +240,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                         characteristic.uuid,
                         serviceUuid
                     )
-                    Toast.makeText(mActivity, "读描述值成功。数据长度：${data?.size} ${data?.contentToString()}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(mActivity, "读描述值成功。数据长度：${data.size} ${data.contentToString()}", Toast.LENGTH_SHORT).show()
                 } catch (e: Exception) {
                     Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
                 }

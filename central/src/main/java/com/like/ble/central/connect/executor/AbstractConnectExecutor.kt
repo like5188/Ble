@@ -33,7 +33,7 @@ abstract class AbstractConnectExecutor(activity: ComponentActivity, val address:
     /**
      * 接收通知数据，不会发射异常。
      */
-    abstract val notifyFlow: Flow<ByteArray?>
+    abstract val notifyFlow: Flow<ByteArray>
 
     /**
      * 连接蓝牙设备，数据从[connectFlow]获取
@@ -58,7 +58,7 @@ abstract class AbstractConnectExecutor(activity: ComponentActivity, val address:
         characteristicUuid: UUID,
         serviceUuid: UUID? = null,
         timeout: Long = 3000L,
-    ): ByteArray?
+    ): ByteArray
 
     /**
      * 读描述值，一次最多可以读取600字节
@@ -72,7 +72,7 @@ abstract class AbstractConnectExecutor(activity: ComponentActivity, val address:
         characteristicUuid: UUID? = null,
         serviceUuid: UUID? = null,
         timeout: Long = 3000L,
-    ): ByteArray?
+    ): ByteArray
 
     /**
      * 失败返回-1

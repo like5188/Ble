@@ -103,7 +103,7 @@ class BleConnectFragment : BaseLazyFragment() {
                             mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
                             mBinding.tvConnectStatus.text = "连接成功"
                             val services = it.services
-                            if (!services.isNullOrEmpty()) {
+                            if (services.isNotEmpty()) {
                                 val bleGattServiceInfos = services.map { bluetoothGattService ->
                                     BleConnectInfo(mData.address, bluetoothGattService)
                                 }
@@ -121,7 +121,7 @@ class BleConnectFragment : BaseLazyFragment() {
                     Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
                 }
                 .collectLatest {
-                    Toast.makeText(context, "读取通知传来的数据成功。数据长度：${it?.size} ${it?.contentToString()}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "读取通知传来的数据成功。数据长度：${it.size} ${it.contentToString()}", Toast.LENGTH_SHORT).show()
                 }
         }
         return mBinding.root

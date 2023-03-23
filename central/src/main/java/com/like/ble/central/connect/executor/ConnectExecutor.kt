@@ -33,7 +33,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         }
     }
 
-    override fun onConnect(continuation: CancellableContinuation<List<BluetoothGattService>?>, device: BluetoothDevice?) {
+    override fun onConnect(continuation: CancellableContinuation<List<BluetoothGattService>>, device: BluetoothDevice?) {
         var bluetoothDevice = device
         if (bluetoothDevice == null) {
             // 获取远端的蓝牙设备
@@ -44,7 +44,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
             }
         }
         mConnectCallbackManager.setConnectCallback(object : ConnectCallback() {
-            override fun onSuccess(services: List<BluetoothGattService>?) {
+            override fun onSuccess(services: List<BluetoothGattService>) {
                 continuation.resume(services)
             }
 
@@ -82,7 +82,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
     }
 
     override fun onReadCharacteristic(
-        continuation: CancellableContinuation<ByteArray?>,
+        continuation: CancellableContinuation<ByteArray>,
         characteristicUuid: UUID,
         serviceUuid: UUID?
     ) {
@@ -98,7 +98,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         }
 
         mConnectCallbackManager.setReadCharacteristicCallback(object : ByteArrayCallback() {
-            override fun onSuccess(data: ByteArray?) {
+            override fun onSuccess(data: ByteArray) {
                 continuation.resume(data)
             }
 
@@ -112,7 +112,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
     }
 
     override fun onReadDescriptor(
-        continuation: CancellableContinuation<ByteArray?>,
+        continuation: CancellableContinuation<ByteArray>,
         descriptorUuid: UUID,
         characteristicUuid: UUID?,
         serviceUuid: UUID?
@@ -134,7 +134,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
 //        }
 
         mConnectCallbackManager.setReadDescriptorCallback(object : ByteArrayCallback() {
-            override fun onSuccess(data: ByteArray?) {
+            override fun onSuccess(data: ByteArray) {
                 continuation.resume(data)
             }
 
@@ -356,7 +356,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         }
 
         mConnectCallbackManager.addReadNotifyCallback(characteristicUuid, object : ByteArrayCallback() {
-            override fun onSuccess(data: ByteArray?) {
+            override fun onSuccess(data: ByteArray) {
                 _notifyFlow.tryEmit(data)
             }
         })

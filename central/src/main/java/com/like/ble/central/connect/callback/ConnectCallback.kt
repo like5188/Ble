@@ -4,5 +4,5 @@ import android.bluetooth.BluetoothGattService
 import com.like.ble.callback.BleCallback
 
 abstract class ConnectCallback : BleCallback() {
-    abstract fun onSuccess(services: List<BluetoothGattService>?)
+    abstract fun onSuccess(services: List<BluetoothGattService>)
 }
