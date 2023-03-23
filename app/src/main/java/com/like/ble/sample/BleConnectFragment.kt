@@ -15,6 +15,7 @@ import com.like.ble.central.connect.result.ConnectResult
 import com.like.ble.central.util.ScanAndConnectExecutor
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.sample.databinding.FragmentBleConnectBinding
+import com.like.ble.util.getValidString
 import com.like.common.base.BaseLazyFragment
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
 import kotlinx.coroutines.flow.catch
@@ -122,8 +123,11 @@ class BleConnectFragment : BaseLazyFragment() {
                 }
                 .collectLatest {
                     val data = it.value
-                    Toast.makeText(context, "读取通知(${it.uuid})传来的数据成功。数据长度：${data.size} ${data.contentToString()}", Toast.LENGTH_SHORT)
-                        .show()
+                    Toast.makeText(
+                        context,
+                        "读取通知(${it.uuid.getValidString()})传来的数据成功。数据长度：${data.size} ${data.contentToString()}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
         }
         return mBinding.root
