@@ -56,6 +56,7 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
                 if (isScanning) {
                     throw BleExceptionBusy("正在扫描中……")
                 }
+                isScanning = true
                 _scanFlow.tryEmit(ScanResult.Ready)
                 delayJob = launch(Dispatchers.IO) {
                     delay(duration)
@@ -69,7 +70,6 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
                         }
                     }
                 }
-                isScanning = true
                 _scanFlow.tryEmit(ScanResult.Success)
             }
         } catch (e: Exception) {
@@ -94,6 +94,7 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
         try {
             mutexUtils.withTryLock("正在开启扫描，请稍后！") {
                 checkEnvironmentOrThrow()
+                isScanning = true
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute<ScanResult.Result?>(timeout, "开启扫描超时") { continuation ->
                         onStartScan(continuation, address)
@@ -113,9 +114,14 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
                 }
             }
             null
+        } finally {
+            isScanning = false
         }
 
     final override fun stopScan() {
+        if (!isScanning) {
+            return
+        }
         cancelDelayJob()
         // 此处如果不取消，那么还会把超时错误传递出去的。
         suspendCancellableCoroutineWithTimeout.cancel()

@@ -64,13 +64,13 @@ abstract class BaseAdvertisingExecutor(activity: ComponentActivity) : AbstractAd
                 if (isAdvertising) {
                     throw BleExceptionBusy("正在广播中……")
                 }
+                isAdvertising = true
                 _advertisingFlow.tryEmit(AdvertisingResult.Ready)
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(timeout, "开启广播超时") { continuation ->
                         onStartAdvertising(continuation, settings, advertiseData, scanResponse, deviceName)
                     }
                 }
-                isAdvertising = true
                 _advertisingFlow.tryEmit(AdvertisingResult.Success)
             }
         } catch (e: Exception) {
@@ -92,6 +92,9 @@ abstract class BaseAdvertisingExecutor(activity: ComponentActivity) : AbstractAd
     }
 
     final override fun stopAdvertising() {
+        if (!isAdvertising) {
+            return
+        }
         // 此处如果不取消，那么还会把超时错误传递出去的。
         suspendCancellableCoroutineWithTimeout.cancel()
         if (checkEnvironment()) {
