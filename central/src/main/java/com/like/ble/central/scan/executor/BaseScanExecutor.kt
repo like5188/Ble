@@ -90,7 +90,7 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
         }
     }
 
-    override suspend fun startScan(address: String?, timeout: Long): ScanResult.Result? =
+    final override suspend fun startScan(address: String?, timeout: Long): ScanResult.Result? =
         try {
             mutexUtils.withTryLock("正在开启扫描，请稍后！") {
                 checkEnvironmentOrThrow()
