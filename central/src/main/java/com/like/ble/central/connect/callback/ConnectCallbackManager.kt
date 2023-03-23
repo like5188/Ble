@@ -1,10 +1,7 @@
 package com.like.ble.central.connect.callback
 
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCallback
-import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.BluetoothGattDescriptor
+import android.bluetooth.*
 import android.util.Log
 import com.like.ble.callback.BleCallback
 import com.like.ble.exception.BleExceptionDeviceDisconnected
@@ -61,7 +58,7 @@ class ConnectCallbackManager {
 
         // 为某个特征启用通知后，如果远程设备上的特征发生更改，则会触发
         override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
-            readNotifyCallback?.onSuccess(characteristic.value)
+            readNotifyCallback?.onSuccess(characteristic)
         }
 
         override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
@@ -83,7 +80,7 @@ class ConnectCallbackManager {
         // 写特征值，注意，这里的characteristic.value中的数据是你写入的数据，而不是外围设备sendResponse返回的。
         override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                writeCharacteristicCallback?.onSuccess()
+                writeCharacteristicCallback?.onSuccess(Unit)
             } else {
                 writeCharacteristicCallback?.onError("写特征值失败：${characteristic.uuid.getValidString()}")
             }
@@ -91,7 +88,7 @@ class ConnectCallbackManager {
 
         override fun onDescriptorWrite(gatt: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                writeDescriptorCallback?.onSuccess()
+                writeDescriptorCallback?.onSuccess(Unit)
             } else {
                 writeDescriptorCallback?.onError("写描述值失败：${descriptor.uuid.getValidString()}")
             }
@@ -99,48 +96,48 @@ class ConnectCallbackManager {
 
     }
 
-    private var connectCallback: ConnectCallback? = null
-    private var readCharacteristicCallback: ByteArrayCallback? = null
-    private var readDescriptorCallback: ByteArrayCallback? = null
-    private var readRemoteRssiCallback: IntCallback? = null
-    private var requestMtuCallback: IntCallback? = null
-    private var writeCharacteristicCallback: BleCallback? = null
-    private var writeDescriptorCallback: BleCallback? = null
-    private var readNotifyCallback: ByteArrayCallback? = null
+    private var connectCallback: BleCallback<List<BluetoothGattService>>? = null
+    private var readCharacteristicCallback: BleCallback<ByteArray>? = null
+    private var readDescriptorCallback: BleCallback<ByteArray>? = null
+    private var readRemoteRssiCallback: BleCallback<Int>? = null
+    private var requestMtuCallback: BleCallback<Int>? = null
+    private var writeCharacteristicCallback: BleCallback<Unit>? = null
+    private var writeDescriptorCallback: BleCallback<Unit>? = null
+    private var readNotifyCallback: BleCallback<BluetoothGattCharacteristic>? = null
 
     fun getBluetoothGattCallback(): BluetoothGattCallback {
         return mBluetoothGattCallback
     }
 
-    fun setConnectCallback(callback: ConnectCallback?) {
+    fun setConnectCallback(callback: BleCallback<List<BluetoothGattService>>?) {
         connectCallback = callback
     }
 
-    fun setReadCharacteristicCallback(callback: ByteArrayCallback?) {
+    fun setReadCharacteristicCallback(callback: BleCallback<ByteArray>?) {
         readCharacteristicCallback = callback
     }
 
-    fun setReadDescriptorCallback(callback: ByteArrayCallback?) {
+    fun setReadDescriptorCallback(callback: BleCallback<ByteArray>?) {
         readDescriptorCallback = callback
     }
 
-    fun setReadRemoteRssiCallback(callback: IntCallback?) {
+    fun setReadRemoteRssiCallback(callback: BleCallback<Int>?) {
         readRemoteRssiCallback = callback
     }
 
-    fun setRequestMtuCallback(callback: IntCallback?) {
+    fun setRequestMtuCallback(callback: BleCallback<Int>?) {
         requestMtuCallback = callback
     }
 
-    fun setWriteCharacteristicCallback(callback: BleCallback?) {
+    fun setWriteCharacteristicCallback(callback: BleCallback<Unit>?) {
         writeCharacteristicCallback = callback
     }
 
-    fun setWriteDescriptorCallback(callback: BleCallback?) {
+    fun setWriteDescriptorCallback(callback: BleCallback<Unit>?) {
         writeDescriptorCallback = callback
     }
 
-    fun setReadNotifyCallback(callback: ByteArrayCallback?) {
+    fun setReadNotifyCallback(callback: BleCallback<BluetoothGattCharacteristic>?) {
         readNotifyCallback = callback
     }
 

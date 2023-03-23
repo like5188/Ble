@@ -5,10 +5,7 @@ import android.bluetooth.*
 import android.os.Build
 import androidx.activity.ComponentActivity
 import com.like.ble.callback.BleCallback
-import com.like.ble.central.connect.callback.ByteArrayCallback
-import com.like.ble.central.connect.callback.ConnectCallback
 import com.like.ble.central.connect.callback.ConnectCallbackManager
-import com.like.ble.central.connect.callback.IntCallback
 import com.like.ble.central.connect.result.ConnectResult
 import com.like.ble.exception.BleException
 import com.like.ble.util.*
@@ -31,8 +28,8 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         if (address.isNullOrEmpty() || !BluetoothAdapter.checkBluetoothAddress(address)) {
             throw BleException("invalid address：$address")
         }
-        mConnectCallbackManager.setReadNotifyCallback(object : ByteArrayCallback() {
-            override fun onSuccess(data: ByteArray) {
+        mConnectCallbackManager.setReadNotifyCallback(object : BleCallback<BluetoothGattCharacteristic>() {
+            override fun onSuccess(data: BluetoothGattCharacteristic) {
                 _notifyFlow.tryEmit(data)
             }
         })
@@ -48,9 +45,9 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
                 return
             }
         }
-        mConnectCallbackManager.setConnectCallback(object : ConnectCallback() {
-            override fun onSuccess(services: List<BluetoothGattService>) {
-                continuation.resume(services)
+        mConnectCallbackManager.setConnectCallback(object : BleCallback<List<BluetoothGattService>>() {
+            override fun onSuccess(data: List<BluetoothGattService>) {
+                continuation.resume(data)
             }
 
             override fun onError(exception: BleException) {
@@ -102,7 +99,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
             return
         }
 
-        mConnectCallbackManager.setReadCharacteristicCallback(object : ByteArrayCallback() {
+        mConnectCallbackManager.setReadCharacteristicCallback(object : BleCallback<ByteArray>() {
             override fun onSuccess(data: ByteArray) {
                 continuation.resume(data)
             }
@@ -138,7 +135,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
 //            return
 //        }
 
-        mConnectCallbackManager.setReadDescriptorCallback(object : ByteArrayCallback() {
+        mConnectCallbackManager.setReadDescriptorCallback(object : BleCallback<ByteArray>() {
             override fun onSuccess(data: ByteArray) {
                 continuation.resume(data)
             }
@@ -153,7 +150,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
     }
 
     override fun onReadRemoteRssi(continuation: CancellableContinuation<Int>) {
-        mConnectCallbackManager.setReadRemoteRssiCallback(object : IntCallback() {
+        mConnectCallbackManager.setReadRemoteRssiCallback(object : BleCallback<Int>() {
             override fun onSuccess(data: Int) {
                 continuation.resume(data)
             }
@@ -187,7 +184,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
             return
         }
 
-        mConnectCallbackManager.setRequestMtuCallback(object : IntCallback() {
+        mConnectCallbackManager.setRequestMtuCallback(object : BleCallback<Int>() {
             override fun onSuccess(data: Int) {
                 continuation.resume(data)
             }
@@ -284,8 +281,8 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
             return
         }
 
-        mConnectCallbackManager.setWriteCharacteristicCallback(object : BleCallback() {
-            override fun onSuccess() {
+        mConnectCallbackManager.setWriteCharacteristicCallback(object : BleCallback<Unit>() {
+            override fun onSuccess(data: Unit) {
                 continuation.resume(Unit)
             }
 
@@ -336,8 +333,8 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
 //            return
 //        }
 
-        mConnectCallbackManager.setWriteDescriptorCallback(object : BleCallback() {
-            override fun onSuccess() {
+        mConnectCallbackManager.setWriteDescriptorCallback(object : BleCallback<Unit>() {
+            override fun onSuccess(data: Unit) {
                 continuation.resume(Unit)
             }
 

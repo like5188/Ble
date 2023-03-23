@@ -40,8 +40,8 @@ class AdvertisingExecutor(activity: ComponentActivity) : BaseAdvertisingExecutor
                 return
             }
         }
-        advertisingCallbackManager.setAdvertisingCallback(object : BleCallback() {
-            override fun onSuccess() {
+        advertisingCallbackManager.setAdvertisingCallback(object : BleCallback<Unit>() {
+            override fun onSuccess(data: Unit) {
                 continuation.resume(Unit)
             }
 

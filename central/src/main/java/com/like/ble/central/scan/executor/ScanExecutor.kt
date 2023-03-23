@@ -9,7 +9,6 @@ import android.os.Build
 import android.os.ParcelUuid
 import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
-import com.like.ble.central.scan.callback.ScanCallback
 import com.like.ble.central.scan.callback.ScanCallbackManager
 import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.BleException

@@ -4,11 +4,13 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.le.ScanCallback
 import android.os.Build
 import androidx.annotation.RequiresApi
+import com.like.ble.callback.BleCallback
+import com.like.ble.central.scan.result.ScanResult
 
 class ScanCallbackManager {
     private val mScanCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: android.bluetooth.le.ScanResult) {
-            scanCallback?.onSuccess(result.device, result.rssi, result.scanRecord?.bytes)
+            scanCallback?.onSuccess(ScanResult.Result(result.device, result.rssi, result.scanRecord?.bytes))
         }
 
         override fun onScanFailed(errorCode: Int) {
@@ -36,11 +38,11 @@ class ScanCallbackManager {
         }
     }
     private val mLeScanCallback: BluetoothAdapter.LeScanCallback = BluetoothAdapter.LeScanCallback { device, rssi, scanRecord ->
-        leScanCallback?.onSuccess(device, rssi, scanRecord)
+        leScanCallback?.onSuccess(ScanResult.Result(device, rssi, scanRecord))
     }
 
-    private var scanCallback: com.like.ble.central.scan.callback.ScanCallback? = null
-    private var leScanCallback: com.like.ble.central.scan.callback.ScanCallback? = null
+    private var scanCallback: BleCallback<ScanResult.Result>? = null
+    private var leScanCallback: BleCallback<ScanResult.Result>? = null
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun getScanCallback(): ScanCallback {
@@ -51,11 +53,11 @@ class ScanCallbackManager {
         return mLeScanCallback
     }
 
-    fun setScanCallback(callback: com.like.ble.central.scan.callback.ScanCallback?) {
+    fun setScanCallback(callback: BleCallback<ScanResult.Result>?) {
         scanCallback = callback
     }
 
-    fun setLeScanCallback(callback: com.like.ble.central.scan.callback.ScanCallback?) {
+    fun setLeScanCallback(callback: BleCallback<ScanResult.Result>?) {
         leScanCallback = callback
     }
 
