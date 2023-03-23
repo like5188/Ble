@@ -2,13 +2,13 @@ package com.like.ble.central.scan.executor
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanSettings
 import android.os.Build
 import android.os.ParcelUuid
 import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
+import com.like.ble.callback.BleCallback
 import com.like.ble.central.scan.callback.ScanCallbackManager
 import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.BleException
@@ -50,9 +50,9 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
             continuation.resumeWithException(BleException("phone does not support bluetooth scan"))
             return
         }
-        scanCallbackManager.setScanCallback(object : ScanCallback() {
-            override fun onSuccess(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
-                onResult(ScanResult.Result(device, rssi, scanRecord))
+        scanCallbackManager.setScanCallback(object : BleCallback<ScanResult.Result>() {
+            override fun onSuccess(data: ScanResult.Result) {
+                onResult(data)
             }
 
             override fun onError(exception: BleException) {
@@ -98,9 +98,9 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
         filterServiceUuid: UUID?,
         onResult: (ScanResult.Result) -> Unit
     ) {
-        scanCallbackManager.setLeScanCallback(object : ScanCallback() {
-            override fun onSuccess(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
-                onResult(ScanResult.Result(device, rssi, scanRecord))
+        scanCallbackManager.setLeScanCallback(object : BleCallback<ScanResult.Result>() {
+            override fun onSuccess(data: ScanResult.Result) {
+                onResult(data)
             }
         })
         // startLeScan 方法实际上最终也是调用的 bluetoothLeScanner?.startScan 方法。只是忽略掉了错误回调，只处理了成功回调。所以不完善。
@@ -137,12 +137,12 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
             continuation.resumeWithException(BleException("phone does not support bluetooth scan"))
             return
         }
-        scanCallbackManager.setScanCallback(object : ScanCallback() {
-            override fun onSuccess(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
-                if (address == device.address) {
+        scanCallbackManager.setScanCallback(object : BleCallback<ScanResult.Result>() {
+            override fun onSuccess(data: ScanResult.Result) {
+                if (address == data.device.address) {
                     onStopScan()
                     if (continuation.isActive)
-                        continuation.resume(ScanResult.Result(device, rssi, scanRecord))
+                        continuation.resume(data)
                 }
             }
 
@@ -158,12 +158,12 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
         continuation: CancellableContinuation<ScanResult.Result?>,
         address: String,
     ) {
-        scanCallbackManager.setLeScanCallback(object : ScanCallback() {
-            override fun onSuccess(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray?) {
-                if (address == device.address) {
+        scanCallbackManager.setLeScanCallback(object : BleCallback<ScanResult.Result>() {
+            override fun onSuccess(data: ScanResult.Result) {
+                if (address == data.device.address) {
                     onStopScan()
                     if (continuation.isActive)
-                        continuation.resume(ScanResult.Result(device, rssi, scanRecord))
+                        continuation.resume(data)
                 }
             }
         })

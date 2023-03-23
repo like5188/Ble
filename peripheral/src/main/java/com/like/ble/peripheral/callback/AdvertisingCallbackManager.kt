@@ -19,16 +19,16 @@ class AdvertisingCallbackManager {
         }
 
         override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
-            advertisingCallback?.onSuccess()
+            advertisingCallback?.onSuccess(Unit)
         }
     }
-    private var advertisingCallback: BleCallback? = null
+    private var advertisingCallback: BleCallback<Unit>? = null
 
     fun getAdvertiseCallback(): AdvertiseCallback {
         return mAdvertiseCallback
     }
 
-    fun setAdvertisingCallback(callback: BleCallback?) {
+    fun setAdvertisingCallback(callback: BleCallback<Unit>?) {
         advertisingCallback = callback
     }
 
