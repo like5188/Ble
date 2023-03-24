@@ -20,7 +20,6 @@ import com.like.ble.util.BleBroadcastReceiverManager
 import com.like.common.base.BaseLazyFragment
 import com.like.common.util.Logger
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -35,15 +34,14 @@ class BleScanFragment : BaseLazyFragment() {
     private val scanExecutor: AbstractScanExecutor by lazy {
         ScanExecutor(requireActivity())
     }
-    private var scanJob: Job? = null
     private val bleBroadcastReceiverManager by lazy {
         BleBroadcastReceiverManager(requireContext(),
             onBleOff = {
+                scanExecutor.close()
                 val ctx = context ?: return@BleBroadcastReceiverManager
                 val redColor = ContextCompat.getColor(ctx, R.color.ble_text_red)
                 mBinding.tvScanStatus.setTextColor(redColor)
                 mBinding.tvScanStatus.text = "蓝牙未打开"
-                scanJob?.cancel()
             },
             onBleOn = {
                 val ctx = context ?: return@BleBroadcastReceiverManager
@@ -76,7 +74,7 @@ class BleScanFragment : BaseLazyFragment() {
     }
 
     private fun startScan() {
-        scanJob = lifecycleScope.launch {
+        lifecycleScope.launch {
             mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
             mBinding.tvScanStatus.text = "扫描中……"
             scanExecutor.startScan()
