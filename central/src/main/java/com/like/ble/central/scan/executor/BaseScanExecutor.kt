@@ -51,7 +51,7 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
 
     final override suspend fun startScan(filterServiceUuid: UUID?, timeout: Long, duration: Long) = coroutineScope<Unit> {
         try {
-            mutexUtils.withTryLock("正在开启扫描，请稍后！") {
+            mutexUtils.withTryLockOrThrow("正在开启扫描，请稍后！") {
                 checkEnvironmentOrThrow()
                 if (isScanning) {
                     throw BleExceptionBusy("正在扫描中……")
@@ -92,7 +92,7 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
 
     final override suspend fun startScan(address: String?, timeout: Long): ScanResult.Result? =
         try {
-            mutexUtils.withTryLock("正在开启扫描，请稍后！") {
+            mutexUtils.withTryLockOrThrow("正在开启扫描，请稍后！") {
                 checkEnvironmentOrThrow()
                 isScanning = true
                 withContext(Dispatchers.IO) {

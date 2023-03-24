@@ -59,7 +59,7 @@ abstract class BaseAdvertisingExecutor(activity: ComponentActivity) : AbstractAd
         timeout: Long
     ) {
         try {
-            mutexUtils.withTryLock("正在开启广播，请稍后！") {
+            mutexUtils.withTryLockOrThrow("正在开启广播，请稍后！") {
                 checkEnvironmentOrThrow()
                 if (isAdvertising) {
                     throw BleExceptionBusy("正在广播中……")

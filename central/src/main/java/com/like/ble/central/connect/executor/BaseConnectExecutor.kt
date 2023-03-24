@@ -74,7 +74,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
 
     final override suspend fun connect(timeout: Long) {
         try {
-            mutexUtils.withTryLock("正在建立连接，请稍后！") {
+            mutexUtils.withTryLockOrThrow("正在建立连接，请稍后！") {
                 checkEnvironmentOrThrow()
                 if (context.isBleDeviceConnected(address)) {
                     throw BleExceptionBusy("设备已经连接")
@@ -128,7 +128,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
         return try {
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
-            mutexUtils.withTryLock("正在读取特征值……") {
+            mutexUtils.withTryLockOrThrow("正在读取特征值……") {
                 checkEnvironmentOrThrow()
                 if (!context.isBleDeviceConnected(address)) {
                     throw BleExceptionDeviceDisconnected(address)
@@ -162,7 +162,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
         return try {
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
-            mutexUtils.withTryLock("正在读取描述值……") {
+            mutexUtils.withTryLockOrThrow("正在读取描述值……") {
                 checkEnvironmentOrThrow()
                 if (!context.isBleDeviceConnected(address)) {
                     throw BleExceptionDeviceDisconnected(address)
@@ -188,7 +188,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
         return try {
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
-            mutexUtils.withTryLock("正在读取RSSI……") {
+            mutexUtils.withTryLockOrThrow("正在读取RSSI……") {
                 checkEnvironmentOrThrow()
                 if (!context.isBleDeviceConnected(address)) {
                     throw BleExceptionDeviceDisconnected(address)
@@ -214,7 +214,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
         try {
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
-            mutexUtils.withTryLock("正在设置ConnectionPriority……") {
+            mutexUtils.withTryLockOrThrow("正在设置ConnectionPriority……") {
                 checkEnvironmentOrThrow()
                 if (!context.isBleDeviceConnected(address)) {
                     throw BleExceptionDeviceDisconnected(address)
@@ -239,7 +239,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
         return try {
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
-            mutexUtils.withTryLock("正在设置MTU……") {
+            mutexUtils.withTryLockOrThrow("正在设置MTU……") {
                 checkEnvironmentOrThrow()
                 if (!context.isBleDeviceConnected(address)) {
                     throw BleExceptionDeviceDisconnected(address)
@@ -271,7 +271,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
         try {
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
-            mutexUtils.withTryLock("正在设置通知……") {
+            mutexUtils.withTryLockOrThrow("正在设置通知……") {
                 checkEnvironmentOrThrow()
                 if (!context.isBleDeviceConnected(address)) {
                     throw BleExceptionDeviceDisconnected(address)
@@ -302,7 +302,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
         try {
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
-            mutexUtils.withTryLock("正在写特征值……") {
+            mutexUtils.withTryLockOrThrow("正在写特征值……") {
                 checkEnvironmentOrThrow()
                 if (!context.isBleDeviceConnected(address)) {
                     throw BleExceptionDeviceDisconnected(address)
@@ -336,7 +336,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
         try {
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
-            mutexUtils.withTryLock("正在写描述值……") {
+            mutexUtils.withTryLockOrThrow("正在写描述值……") {
                 checkEnvironmentOrThrow()
                 if (!context.isBleDeviceConnected(address)) {
                     throw BleExceptionDeviceDisconnected(address)
