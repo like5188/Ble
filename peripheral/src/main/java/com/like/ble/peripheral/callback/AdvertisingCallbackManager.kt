@@ -5,7 +5,7 @@ import android.bluetooth.le.AdvertiseSettings
 import com.like.ble.callback.BleCallback
 
 class AdvertisingCallbackManager {
-    private val mAdvertiseCallback = object : AdvertiseCallback() {
+    private val advertiseCallback = object : AdvertiseCallback() {
         override fun onStartFailure(errorCode: Int) {
             val errorMsg = when (errorCode) {
                 ADVERTISE_FAILED_DATA_TOO_LARGE -> "Failed to start advertising as the advertise data to be broadcasted is larger than 31 bytes."
@@ -15,21 +15,21 @@ class AdvertisingCallbackManager {
                 ADVERTISE_FAILED_FEATURE_UNSUPPORTED -> "This feature is not supported on this platform"
                 else -> "errorCode=$errorCode"
             }
-            advertisingCallback?.onError(errorMsg, errorCode)
+            advertisingBleCallback?.onError(errorMsg, errorCode)
         }
 
         override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
-            advertisingCallback?.onSuccess(Unit)
+            advertisingBleCallback?.onSuccess(Unit)
         }
     }
-    private var advertisingCallback: BleCallback<Unit>? = null
+    private var advertisingBleCallback: BleCallback<Unit>? = null
 
     fun getAdvertiseCallback(): AdvertiseCallback {
-        return mAdvertiseCallback
+        return advertiseCallback
     }
 
-    fun setAdvertisingCallback(callback: BleCallback<Unit>?) {
-        advertisingCallback = callback
+    fun setAdvertisingBleCallback(callback: BleCallback<Unit>?) {
+        advertisingBleCallback = callback
     }
 
 }

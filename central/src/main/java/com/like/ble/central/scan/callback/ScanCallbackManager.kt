@@ -8,9 +8,9 @@ import com.like.ble.callback.BleCallback
 import com.like.ble.central.scan.result.ScanResult
 
 class ScanCallbackManager {
-    private val mScanCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : ScanCallback() {
+    private val scanCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: android.bluetooth.le.ScanResult) {
-            scanCallback?.onSuccess(ScanResult.Result(result.device, result.rssi, result.scanRecord?.bytes))
+            scanBleCallback?.onSuccess(ScanResult.Result(result.device, result.rssi, result.scanRecord?.bytes))
         }
 
         override fun onScanFailed(errorCode: Int) {
@@ -23,7 +23,7 @@ class ScanCallbackManager {
                 6 -> "Fails to start scan as application tries to scan too frequently."
                 else -> "unknown scan error"
             }
-            scanCallback?.onError(errorMsg, errorCode)
+            scanBleCallback?.onError(errorMsg, errorCode)
         }
 
         // Bluetoothadapter.isOffloadedScanBatchingSupported()</br>
@@ -37,28 +37,28 @@ class ScanCallbackManager {
         override fun onBatchScanResults(results: MutableList<android.bluetooth.le.ScanResult>?) {
         }
     }
-    private val mLeScanCallback: BluetoothAdapter.LeScanCallback = BluetoothAdapter.LeScanCallback { device, rssi, scanRecord ->
-        leScanCallback?.onSuccess(ScanResult.Result(device, rssi, scanRecord))
+    private val leScanCallback: BluetoothAdapter.LeScanCallback = BluetoothAdapter.LeScanCallback { device, rssi, scanRecord ->
+        leScanBleCallback?.onSuccess(ScanResult.Result(device, rssi, scanRecord))
     }
 
-    private var scanCallback: BleCallback<ScanResult.Result>? = null
-    private var leScanCallback: BleCallback<ScanResult.Result>? = null
+    private var scanBleCallback: BleCallback<ScanResult.Result>? = null
+    private var leScanBleCallback: BleCallback<ScanResult.Result>? = null
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun getScanCallback(): ScanCallback {
-        return mScanCallback
+        return scanCallback
     }
 
     fun getLeScanCallback(): BluetoothAdapter.LeScanCallback {
-        return mLeScanCallback
+        return leScanCallback
     }
 
-    fun setScanCallback(callback: BleCallback<ScanResult.Result>?) {
-        scanCallback = callback
+    fun setScanBleCallback(callback: BleCallback<ScanResult.Result>?) {
+        scanBleCallback = callback
     }
 
-    fun setLeScanCallback(callback: BleCallback<ScanResult.Result>?) {
-        leScanCallback = callback
+    fun setLeScanBleCallback(callback: BleCallback<ScanResult.Result>?) {
+        leScanBleCallback = callback
     }
 
 }

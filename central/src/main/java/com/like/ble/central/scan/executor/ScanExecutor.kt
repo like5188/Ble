@@ -50,7 +50,7 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
             continuation.resumeWithException(BleException("phone does not support bluetooth scan"))
             return
         }
-        scanCallbackManager.setScanCallback(object : BleCallback<ScanResult.Result>() {
+        scanCallbackManager.setScanBleCallback(object : BleCallback<ScanResult.Result>() {
             override fun onSuccess(data: ScanResult.Result) {
                 onResult(data)
             }
@@ -98,7 +98,7 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
         filterServiceUuid: UUID?,
         onResult: (ScanResult.Result) -> Unit
     ) {
-        scanCallbackManager.setLeScanCallback(object : BleCallback<ScanResult.Result>() {
+        scanCallbackManager.setLeScanBleCallback(object : BleCallback<ScanResult.Result>() {
             override fun onSuccess(data: ScanResult.Result) {
                 onResult(data)
             }
@@ -137,7 +137,7 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
             continuation.resumeWithException(BleException("phone does not support bluetooth scan"))
             return
         }
-        scanCallbackManager.setScanCallback(object : BleCallback<ScanResult.Result>() {
+        scanCallbackManager.setScanBleCallback(object : BleCallback<ScanResult.Result>() {
             override fun onSuccess(data: ScanResult.Result) {
                 if (address == data.device.address) {
                     onStopScan()
@@ -158,7 +158,7 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
         continuation: CancellableContinuation<ScanResult.Result?>,
         address: String,
     ) {
-        scanCallbackManager.setLeScanCallback(object : BleCallback<ScanResult.Result>() {
+        scanCallbackManager.setLeScanBleCallback(object : BleCallback<ScanResult.Result>() {
             override fun onSuccess(data: ScanResult.Result) {
                 if (address == data.device.address) {
                     onStopScan()
