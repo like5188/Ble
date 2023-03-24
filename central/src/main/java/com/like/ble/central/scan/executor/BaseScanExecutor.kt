@@ -22,6 +22,7 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
         SuspendCancellableCoroutineWithTimeout()
     }
 
+    // 不知道为什么，如果这里使用callbackFlow，那么使用awaitClose时总是报错
     final override fun startScan(filterServiceUuid: UUID?, timeout: Long): Flow<ScanResult> = channelFlow {
         try {
             mutexUtils.withTryLockOrThrow("正在扫描中……") {

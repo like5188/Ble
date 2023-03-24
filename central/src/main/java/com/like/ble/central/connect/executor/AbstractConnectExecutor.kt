@@ -2,10 +2,10 @@ package com.like.ble.central.connect.executor
 
 import android.Manifest
 import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattService
 import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.annotation.IntRange
-import com.like.ble.central.connect.result.ConnectResult
 import com.like.ble.executor.BleExecutor
 import kotlinx.coroutines.flow.Flow
 import java.util.*
@@ -25,22 +25,16 @@ abstract class AbstractConnectExecutor(activity: ComponentActivity, val address:
         arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)
     }
 ) {
-    /**
-     * 接收连接数据，会发射异常。
-     */
-    abstract val connectFlow: Flow<ConnectResult>
 
     /**
-     * 接收通知数据，不会发射异常。
+     * 连接蓝牙设备
      */
-    abstract val notifyFlow: Flow<BluetoothGattCharacteristic>
+    abstract suspend fun connect(timeout: Long = 10000L): List<BluetoothGattService>
 
     /**
-     * 连接蓝牙设备，数据从[connectFlow]获取
-     *
-     * @throws                      此方法不会抛出异常，所有异常都经过[connectFlow]发射出去。
+     * 扫描并连接蓝牙设备
      */
-    abstract suspend fun connect(timeout: Long = 10000L)
+    abstract suspend fun scanAndConnect(timeout: Long = 10000L): List<BluetoothGattService>
 
     /**
      * 断开蓝牙设备
@@ -147,5 +141,13 @@ abstract class AbstractConnectExecutor(activity: ComponentActivity, val address:
         serviceUuid: UUID? = null,
         timeout: Long = 10000L,
     )
+
+    /**
+     * 设置通知监听
+     * 需要配合[setCharacteristicNotification]来使用。
+     *
+     * @param characteristicUuid    指定需要获取数据的特征
+     */
+    abstract fun setNotifyCallback(characteristicUuid: UUID): Flow<ByteArray>
 
 }

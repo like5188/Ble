@@ -11,14 +11,12 @@ import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.central.connect.executor.AbstractConnectExecutor
 import com.like.ble.central.connect.executor.ConnectExecutor
-import com.like.ble.central.connect.result.ConnectResult
+import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
+import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.sample.databinding.FragmentBleConnectBinding
-import com.like.ble.util.getValidString
 import com.like.common.base.BaseLazyFragment
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 /**
@@ -67,71 +65,48 @@ class BleConnectFragment : BaseLazyFragment() {
         mBinding.tvRequestConnectionPriority.setOnClickListener {
             requestConnectionPriority()
         }
-        lifecycleScope.launch {
-            connectExecutor.connectFlow
-                .catch {
-                    Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
-                }
-                .collectLatest {
-                    when (it) {
-                        is ConnectResult.Ready -> {
-                            mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_black_1))
-                            mBinding.tvConnectStatus.text = "连接中……"
-                            mAdapter.submitList(null)
-                        }
-                        is ConnectResult.Error -> {
-                            val ctx = context ?: return@collectLatest
-                            when (val exception = it.throwable) {
-                                is BleExceptionBusy -> {
-                                    Toast.makeText(ctx, exception.message, Toast.LENGTH_SHORT).show()
-                                }
-                                else -> {
-                                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
-                                    mBinding.tvConnectStatus.text = exception.message
-                                    mAdapter.submitList(null)
-                                    mBinding.etRequestMtu.setText("")
-                                    mBinding.etReadRemoteRssi.setText("")
-                                    mBinding.etRequestConnectionPriority.setText("")
-                                }
-                            }
-                        }
-                        is ConnectResult.Result -> {
-                            val ctx = context ?: return@collectLatest
-                            mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
-                            mBinding.tvConnectStatus.text = "连接成功"
-                            val services = it.services
-                            if (services.isNotEmpty()) {
-                                val bleGattServiceInfos = services.map { bluetoothGattService ->
-                                    BleConnectInfo(mData.address, bluetoothGattService)
-                                }
-                                mAdapter.submitList(bleGattServiceInfos)
-                            } else {
-                                mAdapter.submitList(null)
-                            }
-                        }
-                    }
-                }
-        }
-        lifecycleScope.launch {
-            connectExecutor.notifyFlow
-                .catch {
-                    Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
-                }
-                .collectLatest {
-                    val data = it.value
-                    Toast.makeText(
-                        context,
-                        "读取通知(${it.uuid.getValidString()})传来的数据成功。数据长度：${data.size} ${data.contentToString()}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-        }
         return mBinding.root
     }
 
     private fun connect() {
+        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_black_1))
+        mBinding.tvConnectStatus.text = "连接中……"
+        mAdapter.submitList(null)
         lifecycleScope.launch {
-            connectExecutor.connect()
+            try {
+                val services = connectExecutor.connect()
+                val ctx = context ?: return@launch
+                mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
+                mBinding.tvConnectStatus.text = "连接成功"
+                if (services.isNotEmpty()) {
+                    val bleGattServiceInfos = services.map { bluetoothGattService ->
+                        BleConnectInfo(mData.address, bluetoothGattService)
+                    }
+                    mAdapter.submitList(bleGattServiceInfos)
+                } else {
+                    mAdapter.submitList(null)
+                }
+            } catch (e: BleException) {
+                val ctx = context ?: return@launch
+                when (e) {
+                    is BleExceptionCancelTimeout -> {
+                        // 提前取消超时不做处理。因为这是调用 stopAdvertising() 造成的，使用者可以直接在 stopAdvertising() 方法结束后处理 UI 的显示，不需要此回调。
+                    }
+                    is BleExceptionBusy -> {
+                        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
+                        mBinding.tvConnectStatus.text = "连接成功"
+                        Toast.makeText(ctx, e.message, Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {
+                        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
+                        mBinding.tvConnectStatus.text = e.message
+                        mAdapter.submitList(null)
+                        mBinding.etRequestMtu.setText("")
+                        mBinding.etReadRemoteRssi.setText("")
+                        mBinding.etRequestConnectionPriority.setText("")
+                    }
+                }
+            }
         }
     }
 

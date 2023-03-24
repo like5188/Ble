@@ -2,21 +2,24 @@ package com.like.ble.central.connect.executor
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattService
 import android.util.Log
 import androidx.activity.ComponentActivity
-import com.like.ble.central.connect.result.ConnectResult
 import com.like.ble.central.scan.executor.AbstractScanExecutor
 import com.like.ble.central.scan.executor.ScanExecutor
-import com.like.ble.central.scan.result.ScanResult
-import com.like.ble.exception.*
-import com.like.ble.util.*
+import com.like.ble.exception.BleException
+import com.like.ble.exception.BleExceptionBusy
+import com.like.ble.exception.BleExceptionCancelTimeout
+import com.like.ble.exception.BleExceptionDeviceDisconnected
+import com.like.ble.util.MutexUtils
+import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
+import com.like.ble.util.getValidString
+import com.like.ble.util.isBleDeviceConnected
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
 import java.util.*
 
@@ -29,98 +32,83 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
     private val suspendCancellableCoroutineWithTimeout by lazy {
         SuspendCancellableCoroutineWithTimeout()
     }
-
-    // 是否需要重新扫描，当断开蓝牙再打开，如果不重新扫描，则连接不上。
-    private var needScan = false
     private val scanExecutor: AbstractScanExecutor by lazy {
         ScanExecutor(activity)
     }
-
-    private val bleBroadcastReceiverManager by lazy {
-        BleBroadcastReceiverManager(context, onBleOff = {
-            disconnect()
-            _connectFlow.tryEmit(ConnectResult.Error(BleExceptionDisabled))
-        })
-    }
-    protected val _connectFlow: MutableSharedFlow<ConnectResult> by lazy {
-        MutableSharedFlow(extraBufferCapacity = Int.MAX_VALUE)
-    }
-    final override val connectFlow: Flow<ConnectResult> = _connectFlow.filter {
-        if (context.isBluetoothEnable()) {
-            // 如果蓝牙已打开，则可以传递任何数据
-            true
-        } else {
-            // 如果蓝牙未打开，那么就只能传递 BleExceptionDisabled 异常。避免传递其它数据对使用者造成困扰。
-            val isBleDisabled = it is ConnectResult.Error && it.throwable is BleExceptionDisabled
-            if (isBleDisabled) {
-                // 蓝牙关闭时，需要重新扫描才能连接上设备。
-                needScan = true
-            }
-            // 其它类型时，needScan 保持不变
-            isBleDisabled
-        }
-    }
-    protected val _notifyFlow: MutableSharedFlow<BluetoothGattCharacteristic> by lazy {
-        MutableSharedFlow(extraBufferCapacity = Int.MAX_VALUE)
-    }
-    final override val notifyFlow: Flow<BluetoothGattCharacteristic> = _notifyFlow
 
     init {
         if (address.isNullOrEmpty() || !BluetoothAdapter.checkBluetoothAddress(address)) {
             throw BleException("invalid address：$address")
         }
-        bleBroadcastReceiverManager.register()
     }
 
-    final override suspend fun connect(timeout: Long) {
+    final override suspend fun connect(timeout: Long): List<BluetoothGattService> =
         try {
             mutexUtils.withTryLockOrThrow("正在建立连接，请稍后！") {
                 checkEnvironmentOrThrow()
                 if (context.isBleDeviceConnected(address)) {
                     throw BleExceptionBusy("设备已经连接")
                 }
-                _connectFlow.tryEmit(ConnectResult.Ready)
-                var remainTimeout = timeout// 剩余的分配给连接的超时时间
-                var scanResult: ScanResult? = null// 扫描结果
-                Log.d("TAG", "connect needScan=$needScan")
-                if (needScan) {
-                    val startTime = System.currentTimeMillis()
-                    scanResult = scanExecutor.startScan(address, timeout) ?: throw BleException("连接蓝牙失败：$address 未找到")
-                    // 扫描成功后，下次就不需要再扫描了
-                    needScan = false
-                    val scanCost = System.currentTimeMillis() - startTime
-                    remainTimeout -= scanCost
-                    Log.d(
-                        "TAG",
-                        "connect timeout=$timeout scanCost=$scanCost remainTimeout=$remainTimeout"
-                    )
-                }
                 withContext(Dispatchers.IO) {
-                    val services = suspendCancellableCoroutineWithTimeout.execute(remainTimeout, "连接蓝牙设备超时：$address") { continuation ->
+                    suspendCancellableCoroutineWithTimeout.execute<List<BluetoothGattService>>(
+                        timeout, "连接蓝牙设备超时：$address"
+                    ) { continuation ->
+                        continuation.invokeOnCancellation {
+                            disconnect()
+                        }
                         // onConnect 方法不会挂起，会在连接成功后返回，所以如果已经连接了，就抛出 BleExceptionBusy 异常
-                        onConnect(continuation, scanResult?.device)
+                        onConnect(continuation)
                     }
-                    _connectFlow.tryEmit(ConnectResult.Result(services))
                 }
             }
         } catch (e: Exception) {
-            when (e) {
-                is BleExceptionCancelTimeout -> {
-                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
+            // 转换一下异常，方便使用者判断。
+            throw if (e is BleException) e else BleException(e.message)
+        }
+
+    final override suspend fun scanAndConnect(timeout: Long): List<BluetoothGattService> =
+        try {
+            mutexUtils.withTryLockOrThrow("正在建立连接，请稍后！") {
+                checkEnvironmentOrThrow()
+                if (context.isBleDeviceConnected(address)) {
+                    throw BleExceptionBusy("设备已经连接")
                 }
-                else -> {
-                    _connectFlow.tryEmit(ConnectResult.Error(e))
+                val startTime = System.currentTimeMillis()
+                val scanResult = try {
+                    scanExecutor.startScan(address, timeout)
+                } catch (e: Exception) {
+                    throw BleException("连接蓝牙失败，未找到蓝牙设备：$address")
+                }
+                val scanCost = System.currentTimeMillis() - startTime
+                val remainTimeout = timeout - scanCost// 剩余的分配给连接的超时时间
+                withContext(Dispatchers.IO) {
+                    suspendCancellableCoroutineWithTimeout.execute<List<BluetoothGattService>>(
+                        remainTimeout, "连接蓝牙设备超时：$address"
+                    ) { continuation ->
+                        continuation.invokeOnCancellation {
+                            disconnect()
+                        }
+                        // onConnect 方法不会挂起，会在连接成功后返回，所以如果已经连接了，就抛出 BleExceptionBusy 异常
+                        onConnect(continuation, scanResult.device)
+                    }
                 }
             }
+        } catch (e: Exception) {
+            // 转换一下异常，方便使用者判断。
+            throw if (e is BleException) e else BleException(e.message)
         }
-    }
 
     final override fun disconnect() {
-        // 此处如果不取消，那么还会把超时错误传递出去的。
-        suspendCancellableCoroutineWithTimeout.cancel()
-        if (checkEnvironment()) {
-            onDisconnect()
-            scanExecutor.stopScan()
+        try {
+            // 此处如果不取消，那么还会把超时错误传递出去的。
+            suspendCancellableCoroutineWithTimeout.cancel()
+            if (checkEnvironment()) {
+                onDisconnect()
+                scanExecutor.stopScan()
+            }
+        } catch (e: Exception) {
+            // 转换一下异常，方便使用者判断。
+            throw if (e is BleException) e else BleException(e.message)
         }
     }
 
@@ -357,14 +345,23 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
         }
     }
 
+    final override fun setNotifyCallback(characteristicUuid: UUID): Flow<ByteArray> = callbackFlow {
+        onSetNotifyCallback(characteristicUuid) {
+            trySend(it)
+        }
+        awaitClose {
+            onRemoveNotifyCallback(characteristicUuid)
+            Log.d("TAG", "通知监听被取消")
+        }
+    }
+
     final override fun close() {
         disconnect()
-        bleBroadcastReceiverManager.unregister()
     }
 
     protected abstract fun onConnect(
         continuation: CancellableContinuation<List<BluetoothGattService>>,
-        device: BluetoothDevice?
+        device: BluetoothDevice? = null
     )
 
     protected abstract fun onDisconnect()
@@ -411,5 +408,9 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
         characteristicUuid: UUID?,
         serviceUuid: UUID?
     )
+
+    protected abstract fun onSetNotifyCallback(characteristicUuid: UUID, onResult: (ByteArray) -> Unit)
+
+    protected abstract fun onRemoveNotifyCallback(characteristicUuid: UUID)
 
 }

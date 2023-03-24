@@ -20,6 +20,10 @@ import com.like.ble.util.getTypeString
 import com.like.ble.util.getValidString
 import com.like.recyclerview.adapter.BaseListAdapter
 import com.like.recyclerview.viewholder.BindingViewHolder
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.cancellable
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -121,16 +125,47 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                 mWriteDataFragment.arguments = Bundle().apply {
                     putSerializable("callback", object : WriteDataFragment.Callback {
                         override fun onData(data: ByteArray) {
-                            mActivity.lifecycleScope.launch {
-                                try {
-                                    connectExecutor.writeCharacteristic(
-                                        data,
-                                        characteristic.uuid,
-                                        serviceUuid,
-                                    )
-                                    Toast.makeText(mActivity, "写特征成功", Toast.LENGTH_SHORT).show()
-                                } catch (e: Exception) {
-                                    Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
+                            when (data[0]) {
+                                0x1.toByte() -> {
+                                    mActivity.lifecycleScope.launch {
+                                        try {
+                                            val notifyFlow = connectExecutor.setNotifyCallback(characteristic.uuid)
+                                            connectExecutor.writeCharacteristic(
+                                                data,
+                                                characteristic.uuid,
+                                                serviceUuid,
+                                            )
+                                            Toast.makeText(mActivity, "设置通知监听并写特征成功", Toast.LENGTH_SHORT).show()
+                                            notifyFlow.cancellable().catch {
+                                                Toast.makeText(mActivity, it.message, Toast.LENGTH_SHORT).show()
+                                            }.collectLatest {
+                                                Toast.makeText(
+                                                    mActivity,
+                                                    "读取通知(${characteristic.uuid.getValidString()})传来的数据成功。数据长度：${it.size} ${it.contentToString()}",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                                if (it.contentToString() == "0x030x04") {
+                                                    cancel()
+                                                }
+                                            }
+                                        } catch (e: Exception) {
+                                            Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }
+                                else -> {
+                                    mActivity.lifecycleScope.launch {
+                                        try {
+                                            connectExecutor.writeCharacteristic(
+                                                data,
+                                                characteristic.uuid,
+                                                serviceUuid,
+                                            )
+                                            Toast.makeText(mActivity, "写特征成功", Toast.LENGTH_SHORT).show()
+                                        } catch (e: Exception) {
+                                            Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
                                 }
                             }
                         }

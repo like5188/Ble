@@ -6,7 +6,6 @@ import android.os.Build
 import androidx.activity.ComponentActivity
 import com.like.ble.callback.BleCallback
 import com.like.ble.central.connect.callback.ConnectCallbackManager
-import com.like.ble.central.connect.result.ConnectResult
 import com.like.ble.exception.BleException
 import com.like.ble.util.*
 import kotlinx.coroutines.CancellableContinuation
@@ -28,11 +27,6 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         if (address.isNullOrEmpty() || !BluetoothAdapter.checkBluetoothAddress(address)) {
             throw BleException("invalid address：$address")
         }
-        mConnectCallbackManager.setReadNotifyBleCallback(object : BleCallback<BluetoothGattCharacteristic>() {
-            override fun onSuccess(data: BluetoothGattCharacteristic) {
-                _notifyFlow.tryEmit(data)
-            }
-        })
     }
 
     override fun onConnect(continuation: CancellableContinuation<List<BluetoothGattService>>, device: BluetoothDevice?) {
@@ -51,16 +45,8 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
             }
 
             override fun onError(exception: BleException) {
-                // 因为在第一次 resumeWithException 后，BaseConnectExecutor 的 connect 方法就执行完毕了，continuation.isActive == false 了。
-                // 那么在后续的蓝牙连接状态改变后，就不能再 resumeWithException 了。
-                if (continuation.isActive) {
-                    continuation.resumeWithException(exception)
-                } else {
-                    // 保证蓝牙中途断开能发射
-                    _connectFlow.tryEmit(ConnectResult.Error(exception))
-                }
+                continuation.resumeWithException(exception)
             }
-
         })
         mBluetoothGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             bluetoothDevice.connectGatt(
@@ -347,6 +333,18 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         if (mBluetoothGatt?.writeDescriptor(descriptor) != true) {
             continuation.resumeWithException(BleException("写描述值失败：${descriptorUuid.getValidString()}"))
         }
+    }
+
+    override fun onSetNotifyCallback(characteristicUuid: UUID, onResult: (ByteArray) -> Unit) {
+        mConnectCallbackManager.setReadNotifyBleCallback(characteristicUuid, object : BleCallback<ByteArray>() {
+            override fun onSuccess(data: ByteArray) {
+                onResult(data)
+            }
+        })
+    }
+
+    override fun onRemoveNotifyCallback(characteristicUuid: UUID) {
+        mConnectCallbackManager.setReadNotifyBleCallback(characteristicUuid, null)
     }
 
 }
