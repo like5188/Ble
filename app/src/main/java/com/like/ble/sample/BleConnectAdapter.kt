@@ -3,7 +3,6 @@ package com.like.ble.sample
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.LinearLayout
@@ -22,7 +21,10 @@ import com.like.ble.util.getValidString
 import com.like.recyclerview.adapter.BaseListAdapter
 import com.like.recyclerview.viewholder.BindingViewHolder
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.cancellable
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -134,13 +136,11 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                                                     characteristic.uuid,
                                                     serviceUuid,
                                                 )
+
                                                 Toast.makeText(mActivity, "设置通知监听并写特征成功", Toast.LENGTH_SHORT).show()
                                             }
                                             .catch {
                                                 Toast.makeText(mActivity, it.message, Toast.LENGTH_SHORT).show()
-                                            }
-                                            .onCompletion {
-                                                Log.e("TAG", "onCompletion $it")
                                             }
                                             .collectLatest {
                                                 Toast.makeText(
@@ -149,11 +149,9 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                                                     Toast.LENGTH_SHORT
                                                 ).show()
                                                 if (it.last() == Byte.MAX_VALUE) {
-                                                    Log.e("TAG", "cancel")
                                                     cancel()
                                                 }
                                             }
-                                        Log.e("TAG", "end")
                                     }
                                 }
                                 else -> {
