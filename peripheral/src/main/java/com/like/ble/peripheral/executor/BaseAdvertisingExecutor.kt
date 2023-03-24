@@ -62,6 +62,7 @@ abstract class BaseAdvertisingExecutor(activity: ComponentActivity) : AbstractAd
                 onStopAdvertising()
             }
         } catch (e: Exception) {
+            // 转换一下异常，方便使用者判断。
             throw if (e is BleException) e else BleException(e.message)
         }
     }
