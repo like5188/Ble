@@ -5,7 +5,6 @@ import android.bluetooth.*
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import android.os.Bundle
-import android.os.ParcelUuid
 import android.text.Html
 import android.view.View
 import android.widget.Toast
