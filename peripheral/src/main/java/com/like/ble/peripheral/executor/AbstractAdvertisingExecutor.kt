@@ -6,8 +6,6 @@ import android.bluetooth.le.AdvertiseSettings
 import android.os.Build
 import androidx.activity.ComponentActivity
 import com.like.ble.executor.BleExecutor
-import com.like.ble.peripheral.result.AdvertisingResult
-import kotlinx.coroutines.flow.Flow
 
 /**
  * 外围设备广播执行者
@@ -34,20 +32,15 @@ abstract class AbstractAdvertisingExecutor(activity: ComponentActivity) : BleExe
         emptyArray()
     }
 ) {
-    /**
-     * 接收广播状态，会发射异常。
-     */
-    abstract val advertisingFlow: Flow<AdvertisingResult>
 
     /**
-     * 开始广播，数据从[advertisingFlow]获取
-     * 由于发送广播操作不涉及到和其它设备进行交互，所以执行很快，不需要用 flow 来提供各种中间状态的结果。
+     * 开启广播
      *
      * @param settings          广播的设置
      * @param advertiseData     广播的数据
      * @param scanResponse      与广播数据相关联的扫描响应数据
      * @param deviceName        设备名称。默认为设备名称。
-     * @throws                      此方法不会抛出异常，所有异常都经过[advertisingFlow]发射出去。
+     * @throws [com.like.ble.exception.BleException]
      */
     abstract suspend fun startAdvertising(
         settings: AdvertiseSettings,
@@ -59,6 +52,8 @@ abstract class AbstractAdvertisingExecutor(activity: ComponentActivity) : BleExe
 
     /**
      * 停止广播
+     *
+     * @throws [com.like.ble.exception.BleException]
      */
     abstract fun stopAdvertising()
 

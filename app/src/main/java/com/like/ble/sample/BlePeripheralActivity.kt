@@ -5,7 +5,6 @@ import android.bluetooth.*
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import android.os.Bundle
-import android.os.ParcelUuid
 import android.text.Html
 import android.view.View
 import android.widget.Toast
@@ -15,13 +14,12 @@ import androidx.core.content.ContextCompat
 import androidx.core.widget.NestedScrollView
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
+import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.peripheral.executor.AbstractAdvertisingExecutor
 import com.like.ble.peripheral.executor.AdvertisingExecutor
-import com.like.ble.peripheral.result.AdvertisingResult
 import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
 import com.like.ble.util.*
-import com.like.common.util.Logger
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
@@ -51,6 +49,21 @@ class BlePeripheralActivity : AppCompatActivity() {
 
     private val mBinding: ActivityBlePeripheralBinding by lazy {
         DataBindingUtil.setContentView(this, R.layout.activity_ble_peripheral)
+    }
+    private val bleBroadcastReceiverManager by lazy {
+        BleBroadcastReceiverManager(this,
+            onBleOff = {
+                val redColor = ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_red)
+                mBinding.tvAdvertisingStatus.setTextColor(redColor)
+                mBinding.tvAdvertisingStatus.text = "蓝牙未打开"
+            },
+            onBleOn = {
+                val blueColor = ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_blue)
+                mBinding.tvAdvertisingStatus.setTextColor(blueColor)
+                mBinding.tvAdvertisingStatus.text = "蓝牙已打开，正在重启广播……"
+                startAdvertising(mBinding.tvAdvertisingStatus)
+            }
+        )
     }
     private var mBluetoothGattServer: BluetoothGattServer? = null
     private val mBluetoothGattServerCallback = object : BluetoothGattServerCallback() {
@@ -254,50 +267,34 @@ class BlePeripheralActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mBinding
-        lifecycleScope.launch {
-            peripheralExecutor.advertisingFlow.collect {
-                when (it) {
-                    is AdvertisingResult.Ready -> {
-                        Logger.v("AdvertisingResult.Ready")
-                        mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_blue))
-                        mBinding.tvAdvertisingStatus.text = "正在开启广播……"
-                    }
-                    is AdvertisingResult.Success -> {
-                        Logger.d("AdvertisingResult.Success")
-                        mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_blue))
-                        mBinding.tvAdvertisingStatus.text = "广播中……"
-                        initServices()//该方法是添加一个服务，在此处调用即将服务广播出去
-                    }
-                    is AdvertisingResult.Error -> {
-                        Logger.e("AdvertisingResult.Error ${it.throwable}")
-                        when (val e = it.throwable) {
-                            is BleExceptionBusy -> {
-                                Toast.makeText(this@BlePeripheralActivity, e.message, Toast.LENGTH_SHORT).show()
-                            }
-                            else -> {
-                                mBinding.tvAdvertisingStatus.setTextColor(
-                                    ContextCompat.getColor(
-                                        this@BlePeripheralActivity,
-                                        R.color.ble_text_red
-                                    )
-                                )
-                                mBinding.tvAdvertisingStatus.text = it.throwable.message
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        bleBroadcastReceiverManager.register()
     }
 
     fun startAdvertising(view: View) {
         lifecycleScope.launch {
-            peripheralExecutor.startAdvertising(
-                createAdvertiseSettings(),
-                createAdvertiseData(),
-                createScanResponseAdvertiseData(byteArrayOf(0x11)),// 外设必须广播广播包，扫描包是可选。但添加扫描包也意味着广播更多得数据，即可广播 广播包31+扫描包31=62个字节。
-                "like",
-            )
+            try {
+                peripheralExecutor.startAdvertising(
+                    createAdvertiseSettings(),
+                    createAdvertiseData(),
+                    createScanResponseAdvertiseData(byteArrayOf(0x11)),// 外设必须广播广播包，扫描包是可选。但添加扫描包也意味着广播更多得数据，即可广播 广播包31+扫描包31=62个字节。
+                    "like",
+                )
+                val blueColor = ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_blue)
+                mBinding.tvAdvertisingStatus.setTextColor(blueColor)
+                mBinding.tvAdvertisingStatus.text = "广播中……"
+                initServices()//该方法是添加一个服务，在此处调用即将服务广播出去
+            } catch (e: BleException) {
+                when (e) {
+                    is BleExceptionBusy -> {
+                        Toast.makeText(this@BlePeripheralActivity, e.message, Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {
+                        val redColor = ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_red)
+                        mBinding.tvAdvertisingStatus.setTextColor(redColor)
+                        mBinding.tvAdvertisingStatus.text = e.message
+                    }
+                }
+            }
         }
     }
 
@@ -306,7 +303,7 @@ class BlePeripheralActivity : AppCompatActivity() {
             peripheralExecutor.stopAdvertising()
             mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_blue))
             mBinding.tvAdvertisingStatus.text = "广播停止了"
-        } catch (e: Exception) {
+        } catch (e: BleException) {
             mBinding.tvAdvertisingStatus.setTextColor(ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_red))
             mBinding.tvAdvertisingStatus.text = e.message
         }
@@ -454,6 +451,7 @@ class BlePeripheralActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        bleBroadcastReceiverManager.unregister()
         peripheralExecutor.close()
         getBluetoothManager()?.getConnectedDevices(BluetoothProfile.GATT)?.forEach {
             mBluetoothGattServer?.cancelConnection(it)
