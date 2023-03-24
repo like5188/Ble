@@ -11,13 +11,13 @@ import androidx.databinding.ObservableInt
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.central.scan.executor.AbstractScanExecutor
 import com.like.ble.central.scan.executor.ScanExecutor
-import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.exception.BleExceptionTimeout
 import com.like.ble.sample.databinding.FragmentBleScanBinding
 import com.like.common.base.BaseLazyFragment
 import com.like.common.util.Logger
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -55,8 +55,26 @@ class BleScanFragment : BaseLazyFragment() {
         mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
         mBinding.tvScanStatus.text = "扫描中……"
         lifecycleScope.launch {
-            try {
-                scanExecutor.startScan().collectLatest {
+            scanExecutor.startScan()
+                .catch {
+                    Logger.e("Scan Error $it")
+                    val ctx = context ?: return@catch
+                    when (it) {
+                        is BleExceptionCancelTimeout -> {
+                            mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
+                            mBinding.tvScanStatus.text = "扫描停止了"
+                        }
+                        is BleExceptionTimeout -> {
+                            mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
+                            mBinding.tvScanStatus.text = "扫描完成"
+                        }
+                        else -> {
+                            mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
+                            mBinding.tvScanStatus.text = it.message
+                        }
+                    }
+                }
+                .collectLatest {
                     Logger.w("Scan Result ${it.device.address}")
                     val name = it.device.name ?: "N/A"
                     val address = it.device.address ?: ""
@@ -69,33 +87,14 @@ class BleScanFragment : BaseLazyFragment() {
                         item.updateRssi(it.rssi)
                     }
                 }
-            } catch (e: BleException) {
-                Logger.e("Scan Error $e")
-                val ctx = context ?: return@launch
-                when (e) {
-                    is BleExceptionCancelTimeout -> {
-                        // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
-                    }
-                    is BleExceptionTimeout -> {
-                        mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
-                        mBinding.tvScanStatus.text = "扫描完成"
-                    }
-                    else -> {
-                        mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
-                        mBinding.tvScanStatus.text = e.message
-                    }
-                }
-            }
         }
     }
 
     private fun stopScan() {
-        val ctx = context ?: return
         try {
             scanExecutor.stopScan()
-            mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
-            mBinding.tvScanStatus.text = "扫描停止了"
         } catch (e: Exception) {
+            val ctx = context ?: return
             mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
             mBinding.tvScanStatus.text = e.message
         }

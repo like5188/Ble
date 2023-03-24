@@ -41,6 +41,7 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
             }
         } catch (e: Exception) {
             if (e is BleExceptionBusy) {
+                // 此处不能close。
                 Toast.makeText(context, "is scanning ……", Toast.LENGTH_SHORT).show()
                 return@channelFlow
             }
