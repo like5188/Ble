@@ -21,10 +21,9 @@ import com.like.ble.util.getValidString
 import com.like.recyclerview.adapter.BaseListAdapter
 import com.like.recyclerview.viewholder.BindingViewHolder
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.cancellable
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -129,16 +128,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                             when (data[0]) {
                                 0x1.toByte() -> {
                                     mActivity.lifecycleScope.launch {
-                                        connectExecutor.setNotifyCallback(characteristic.uuid).cancellable()
-                                            .onStart {
-                                                connectExecutor.writeCharacteristic(
-                                                    data,
-                                                    characteristic.uuid,
-                                                    serviceUuid,
-                                                )
-
-                                                Toast.makeText(mActivity, "设置通知监听并写特征成功", Toast.LENGTH_SHORT).show()
-                                            }
+                                        connectExecutor.setNotifyCallback(characteristic.uuid)
                                             .catch {
                                                 Toast.makeText(mActivity, it.message, Toast.LENGTH_SHORT).show()
                                             }
@@ -152,6 +142,15 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                                                     cancel()
                                                 }
                                             }
+                                    }
+                                    mActivity.lifecycleScope.launch {
+                                        // 延迟以便 setNotifyCallback 成功再写入命令。
+                                        delay(20)
+                                        connectExecutor.writeCharacteristic(
+                                            data,
+                                            characteristic.uuid,
+                                            serviceUuid,
+                                        )
                                     }
                                 }
                                 else -> {
