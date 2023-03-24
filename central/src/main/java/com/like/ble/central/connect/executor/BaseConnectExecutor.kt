@@ -81,7 +81,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
                 }
                 _connectFlow.tryEmit(ConnectResult.Ready)
                 var remainTimeout = timeout// 剩余的分配给连接的超时时间
-                var scanResult: ScanResult.Result? = null// 扫描结果
+                var scanResult: ScanResult? = null// 扫描结果
                 Log.d("TAG", "connect needScan=$needScan")
                 if (needScan) {
                     val startTime = System.currentTimeMillis()

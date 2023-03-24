@@ -12,7 +12,6 @@ import androidx.lifecycle.lifecycleScope
 import com.like.ble.central.connect.executor.AbstractConnectExecutor
 import com.like.ble.central.connect.executor.ConnectExecutor
 import com.like.ble.central.connect.result.ConnectResult
-import com.like.ble.central.util.ScanAndConnectExecutor
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.sample.databinding.FragmentBleConnectBinding
 import com.like.ble.util.getValidString
@@ -30,9 +29,6 @@ class BleConnectFragment : BaseLazyFragment() {
     private lateinit var mData: BleScanInfo
     private val connectExecutor: AbstractConnectExecutor by lazy {
         ConnectExecutor(requireActivity(), mData.address)
-    }
-    private val scanAndConnectExecutor: ScanAndConnectExecutor by lazy {
-        ScanAndConnectExecutor(requireActivity(), connectExecutor)
     }
     private val mAdapter: BleConnectAdapter by lazy { BleConnectAdapter(requireActivity(), connectExecutor) }
 
@@ -135,7 +131,7 @@ class BleConnectFragment : BaseLazyFragment() {
 
     private fun connect() {
         lifecycleScope.launch {
-            scanAndConnectExecutor.connect()
+            connectExecutor.connect()
         }
     }
 

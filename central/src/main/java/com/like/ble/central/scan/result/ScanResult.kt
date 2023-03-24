@@ -1,35 +1,28 @@
 package com.like.ble.central.scan.result
 
 import android.bluetooth.BluetoothDevice
-import com.like.ble.central.util.scanrecordcompat.ScanRecordBelow21
-import com.like.ble.exception.BleException
 
-sealed class ScanResult {
-    /**
-     * 准备开启扫描
-     */
-    object Ready : ScanResult()
+data class ScanResult(val device: BluetoothDevice, val rssi: Int, val scanRecord: ByteArray?) {
 
-    /**
-     * 开启扫描成功
-     */
-    object Success : ScanResult()
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is ScanResult) return false
 
-    /**
-     * 扫描完成（设置的 扫描持续时长 到了）
-     */
-    object Completed : ScanResult()
+        if (device != other.device) return false
+        if (rssi != other.rssi) return false
+        if (scanRecord != null) {
+            if (other.scanRecord == null) return false
+            if (!scanRecord.contentEquals(other.scanRecord)) return false
+        } else if (other.scanRecord != null) return false
 
-    /**
-     * 扫描结果返回
-     */
-    data class Result(val device: BluetoothDevice, val rssi: Int, val scanRecord: ByteArray?) : ScanResult()
+        return true
+    }
 
-    /**
-     * 扫描出错了
-     */
-    data class Error(val throwable: Throwable) : ScanResult() {
-        constructor(message: String, code: Int = -1) : this(BleException(message, code))
+    override fun hashCode(): Int {
+        var result = device.hashCode()
+        result = 31 * result + rssi
+        result = 31 * result + (scanRecord?.contentHashCode() ?: 0)
+        return result
     }
 
 }

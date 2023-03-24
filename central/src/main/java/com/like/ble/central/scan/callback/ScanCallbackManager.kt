@@ -10,7 +10,7 @@ import com.like.ble.central.scan.result.ScanResult
 class ScanCallbackManager {
     private val scanCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP) object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: android.bluetooth.le.ScanResult) {
-            scanBleCallback?.onSuccess(ScanResult.Result(result.device, result.rssi, result.scanRecord?.bytes))
+            scanBleCallback?.onSuccess(ScanResult(result.device, result.rssi, result.scanRecord?.bytes))
         }
 
         override fun onScanFailed(errorCode: Int) {
@@ -38,11 +38,11 @@ class ScanCallbackManager {
         }
     }
     private val leScanCallback: BluetoothAdapter.LeScanCallback = BluetoothAdapter.LeScanCallback { device, rssi, scanRecord ->
-        leScanBleCallback?.onSuccess(ScanResult.Result(device, rssi, scanRecord))
+        leScanBleCallback?.onSuccess(ScanResult(device, rssi, scanRecord))
     }
 
-    private var scanBleCallback: BleCallback<ScanResult.Result>? = null
-    private var leScanBleCallback: BleCallback<ScanResult.Result>? = null
+    private var scanBleCallback: BleCallback<ScanResult>? = null
+    private var leScanBleCallback: BleCallback<ScanResult>? = null
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun getScanCallback(): ScanCallback {
@@ -53,11 +53,11 @@ class ScanCallbackManager {
         return leScanCallback
     }
 
-    fun setScanBleCallback(callback: BleCallback<ScanResult.Result>?) {
+    fun setScanBleCallback(callback: BleCallback<ScanResult>?) {
         scanBleCallback = callback
     }
 
-    fun setLeScanBleCallback(callback: BleCallback<ScanResult.Result>?) {
+    fun setLeScanBleCallback(callback: BleCallback<ScanResult>?) {
         leScanBleCallback = callback
     }
 

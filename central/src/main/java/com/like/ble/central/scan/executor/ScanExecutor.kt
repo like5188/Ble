@@ -27,37 +27,28 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
         ScanCallbackManager()
     }
 
-    override fun onStartScan(
-        continuation: CancellableContinuation<Unit>,
-        filterServiceUuid: UUID?,
-        onResult: (ScanResult.Result) -> Unit
-    ) {
+    override fun onStartScan(filterServiceUuid: UUID?, onResult: (ScanResult) -> Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            onStartScan21(continuation, filterServiceUuid, onResult)
+            onStartScan21(filterServiceUuid, onResult)
         } else {
-            onStartScanBelow21(continuation, filterServiceUuid, onResult)
+            onStartScanBelow21(filterServiceUuid, onResult)
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun onStartScan21(
-        continuation: CancellableContinuation<Unit>,
         filterServiceUuid: UUID?,
-        onResult: (ScanResult.Result) -> Unit
+        onResult: (ScanResult) -> Unit
     ) {
         val bluetoothLeScanner = activity.getBluetoothAdapter()?.bluetoothLeScanner
-        if (bluetoothLeScanner == null) {
-            continuation.resumeWithException(BleException("phone does not support bluetooth scan"))
-            return
-        }
-        scanCallbackManager.setScanBleCallback(object : BleCallback<ScanResult.Result>() {
-            override fun onSuccess(data: ScanResult.Result) {
+            ?: throw BleException("phone does not support bluetooth scan")
+        scanCallbackManager.setScanBleCallback(object : BleCallback<ScanResult>() {
+            override fun onSuccess(data: ScanResult) {
                 onResult(data)
             }
 
             override fun onError(exception: BleException) {
-                if (continuation.isActive)
-                    continuation.resumeWithException(exception)
+                throw exception
             }
         })
         if (filterServiceUuid == null) {
@@ -86,20 +77,14 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
                 scanCallbackManager.getScanCallback()
             )
         }
-        // continuation.isActive 代表 startScan() 方法没有抛出错误，即开启扫描成功。
-        // 因为如果此方法抛出异常的话，会调用回调中的 onError 方法，然后调用 continuation.resumeWithException，这会导致 continuation.isActive == false，即开启扫描失败。
-        if (continuation.isActive) {
-            continuation.resume(Unit)
-        }
     }
 
     private fun onStartScanBelow21(
-        continuation: CancellableContinuation<Unit>,
         filterServiceUuid: UUID?,
-        onResult: (ScanResult.Result) -> Unit
+        onResult: (ScanResult) -> Unit
     ) {
-        scanCallbackManager.setLeScanBleCallback(object : BleCallback<ScanResult.Result>() {
-            override fun onSuccess(data: ScanResult.Result) {
+        scanCallbackManager.setLeScanBleCallback(object : BleCallback<ScanResult>() {
+            override fun onSuccess(data: ScanResult) {
                 onResult(data)
             }
         })
@@ -109,14 +94,12 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
         } else {
             activity.getBluetoothAdapter()?.startLeScan(arrayOf(filterServiceUuid), scanCallbackManager.getLeScanCallback())
         } ?: false
-        if (success) {
-            continuation.resume(Unit)
-        } else {
-            continuation.resumeWithException(BleException("开启扫描失败"))
+        if (!success) {
+            throw BleException("开启扫描失败")
         }
     }
 
-    override fun onStartScan(continuation: CancellableContinuation<ScanResult.Result?>, address: String?) {
+    override fun onStartScan(continuation: CancellableContinuation<ScanResult>, address: String?) {
         if (address.isNullOrEmpty() || !BluetoothAdapter.checkBluetoothAddress(address)) {
             throw BleException("invalid address：$address")
         }
@@ -129,7 +112,7 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun onStartScan21(
-        continuation: CancellableContinuation<ScanResult.Result?>,
+        continuation: CancellableContinuation<ScanResult>,
         address: String,
     ) {
         val bluetoothLeScanner = activity.getBluetoothAdapter()?.bluetoothLeScanner
@@ -137,8 +120,8 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
             continuation.resumeWithException(BleException("phone does not support bluetooth scan"))
             return
         }
-        scanCallbackManager.setScanBleCallback(object : BleCallback<ScanResult.Result>() {
-            override fun onSuccess(data: ScanResult.Result) {
+        scanCallbackManager.setScanBleCallback(object : BleCallback<ScanResult>() {
+            override fun onSuccess(data: ScanResult) {
                 if (address == data.device.address) {
                     onStopScan()
                     if (continuation.isActive)
@@ -155,11 +138,11 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
     }
 
     private fun onStartScanBelow21(
-        continuation: CancellableContinuation<ScanResult.Result?>,
+        continuation: CancellableContinuation<ScanResult>,
         address: String,
     ) {
-        scanCallbackManager.setLeScanBleCallback(object : BleCallback<ScanResult.Result>() {
-            override fun onSuccess(data: ScanResult.Result) {
+        scanCallbackManager.setLeScanBleCallback(object : BleCallback<ScanResult>() {
+            override fun onSuccess(data: ScanResult) {
                 if (address == data.device.address) {
                     onStopScan()
                     if (continuation.isActive)

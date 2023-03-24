@@ -34,6 +34,9 @@ abstract class BaseAdvertisingExecutor(activity: ComponentActivity) : AbstractAd
                 checkEnvironmentOrThrow()
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute<Unit>(timeout, "开启广播超时") { continuation ->
+                        continuation.invokeOnCancellation {
+                            stopAdvertising()
+                        }
                         onStartAdvertising(continuation, settings, advertiseData, scanResponse, deviceName)
                     }
                 }
