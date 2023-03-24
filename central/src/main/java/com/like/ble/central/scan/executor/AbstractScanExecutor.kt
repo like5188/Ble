@@ -35,7 +35,6 @@ abstract class AbstractScanExecutor(activity: ComponentActivity) : BleExecutor(
      *
      * @param filterServiceUuid     需要过滤的设备服务UUID，默认为null，即不过滤
      * @param timeout               扫描持续时长。达到时长后，会自动停止扫描；如果<=0，表示不限制。
-     * @throws [com.like.ble.exception.BleException]
      */
     abstract fun startScan(filterServiceUuid: UUID? = null, timeout: Long = 10000L): Flow<ScanResult>
 
