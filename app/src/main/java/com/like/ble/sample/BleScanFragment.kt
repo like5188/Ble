@@ -16,9 +16,11 @@ import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.exception.BleExceptionTimeout
 import com.like.ble.sample.databinding.FragmentBleScanBinding
+import com.like.ble.util.BleBroadcastReceiverManager
 import com.like.common.base.BaseLazyFragment
 import com.like.common.util.Logger
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -32,6 +34,25 @@ class BleScanFragment : BaseLazyFragment() {
     private val mAdapter: BleScanAdapter by lazy { BleScanAdapter(requireActivity()) }
     private val scanExecutor: AbstractScanExecutor by lazy {
         ScanExecutor(requireActivity())
+    }
+    private var scanJob: Job? = null
+    private val bleBroadcastReceiverManager by lazy {
+        BleBroadcastReceiverManager(requireContext(),
+            onBleOff = {
+                val ctx = context ?: return@BleBroadcastReceiverManager
+                val redColor = ContextCompat.getColor(ctx, R.color.ble_text_red)
+                mBinding.tvScanStatus.setTextColor(redColor)
+                mBinding.tvScanStatus.text = "蓝牙未打开"
+                scanJob?.cancel()
+            },
+            onBleOn = {
+                val ctx = context ?: return@BleBroadcastReceiverManager
+                val blueColor = ContextCompat.getColor(ctx, R.color.ble_text_blue)
+                mBinding.tvScanStatus.setTextColor(blueColor)
+                mBinding.tvScanStatus.text = "蓝牙已打开，正在重启扫描……"
+                startScan()
+            }
+        )
     }
 
     companion object {
@@ -50,13 +71,14 @@ class BleScanFragment : BaseLazyFragment() {
         mBinding.btnStopScan.setOnClickListener {
             stopScan()
         }
+        bleBroadcastReceiverManager.register()
         return mBinding.root
     }
 
     private fun startScan() {
-        mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
-        mBinding.tvScanStatus.text = "扫描中……"
-        lifecycleScope.launch {
+        scanJob = lifecycleScope.launch {
+            mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
+            mBinding.tvScanStatus.text = "扫描中……"
             scanExecutor.startScan()
                 .catch {
                     Logger.e("catch scan error $it")
@@ -107,6 +129,7 @@ class BleScanFragment : BaseLazyFragment() {
     }
 
     override fun onDestroy() {
+        bleBroadcastReceiverManager.unregister()
         scanExecutor.close()
         super.onDestroy()
     }

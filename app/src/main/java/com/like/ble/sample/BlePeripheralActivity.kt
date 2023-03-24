@@ -21,6 +21,7 @@ import com.like.ble.peripheral.executor.AbstractAdvertisingExecutor
 import com.like.ble.peripheral.executor.AdvertisingExecutor
 import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
 import com.like.ble.util.*
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
@@ -51,12 +52,14 @@ class BlePeripheralActivity : AppCompatActivity() {
     private val mBinding: ActivityBlePeripheralBinding by lazy {
         DataBindingUtil.setContentView(this, R.layout.activity_ble_peripheral)
     }
+    private var advertisingJob: Job? = null
     private val bleBroadcastReceiverManager by lazy {
         BleBroadcastReceiverManager(this,
             onBleOff = {
                 val redColor = ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_red)
                 mBinding.tvAdvertisingStatus.setTextColor(redColor)
                 mBinding.tvAdvertisingStatus.text = "蓝牙未打开"
+                advertisingJob?.cancel()
             },
             onBleOn = {
                 val blueColor = ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_blue)
@@ -272,7 +275,7 @@ class BlePeripheralActivity : AppCompatActivity() {
     }
 
     fun startAdvertising(view: View) {
-        lifecycleScope.launch {
+        advertisingJob = lifecycleScope.launch {
             try {
                 peripheralExecutor.startAdvertising(
                     createAdvertiseSettings(),
