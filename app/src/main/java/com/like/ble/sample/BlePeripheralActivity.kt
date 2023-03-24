@@ -5,6 +5,7 @@ import android.bluetooth.*
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import android.os.Bundle
+import android.os.ParcelUuid
 import android.text.Html
 import android.view.View
 import android.widget.Toast
@@ -371,6 +372,7 @@ class BlePeripheralActivity : AppCompatActivity() {
         return AdvertiseData.Builder()
             .setIncludeDeviceName(true)// 设置广播包中是否包含蓝牙的名称。
             .setIncludeTxPowerLevel(true)// 设置广播包中是否包含蓝牙的发射功率。 数值范围：±127 dBm。
+//            .addServiceUuid(ParcelUuid(UUID_SERVICE_1))// 设置特定的UUID在广播包中，用于扫描时通过 UUID 进行过滤设备
             .build()
     }
 
