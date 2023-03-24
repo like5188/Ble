@@ -1,10 +1,8 @@
 package com.like.ble.central.scan.executor
 
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.BleException
-import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.util.MutexUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
 import kotlinx.coroutines.CancellableContinuation
@@ -40,11 +38,6 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
                 }
             }
         } catch (e: Exception) {
-            if (e is BleExceptionBusy) {
-                // 此处不能close。
-                Toast.makeText(context, "is scanning ……", Toast.LENGTH_SHORT).show()
-                return@channelFlow
-            }
             throw if (e is BleException) e else BleException(e.message)
         }
     }
