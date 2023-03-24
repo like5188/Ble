@@ -28,7 +28,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         if (address.isNullOrEmpty() || !BluetoothAdapter.checkBluetoothAddress(address)) {
             throw BleException("invalid address：$address")
         }
-        mConnectCallbackManager.setReadNotifyCallback(object : BleCallback<BluetoothGattCharacteristic>() {
+        mConnectCallbackManager.setReadNotifyBleCallback(object : BleCallback<BluetoothGattCharacteristic>() {
             override fun onSuccess(data: BluetoothGattCharacteristic) {
                 _notifyFlow.tryEmit(data)
             }
@@ -45,7 +45,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
                 return
             }
         }
-        mConnectCallbackManager.setConnectCallback(object : BleCallback<List<BluetoothGattService>>() {
+        mConnectCallbackManager.setConnectBleCallback(object : BleCallback<List<BluetoothGattService>>() {
             override fun onSuccess(data: List<BluetoothGattService>) {
                 continuation.resume(data)
             }
@@ -99,7 +99,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
             return
         }
 
-        mConnectCallbackManager.setReadCharacteristicCallback(object : BleCallback<ByteArray>() {
+        mConnectCallbackManager.setReadCharacteristicBleCallback(object : BleCallback<ByteArray>() {
             override fun onSuccess(data: ByteArray) {
                 continuation.resume(data)
             }
@@ -135,7 +135,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
 //            return
 //        }
 
-        mConnectCallbackManager.setReadDescriptorCallback(object : BleCallback<ByteArray>() {
+        mConnectCallbackManager.setReadDescriptorBleCallback(object : BleCallback<ByteArray>() {
             override fun onSuccess(data: ByteArray) {
                 continuation.resume(data)
             }
@@ -150,7 +150,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
     }
 
     override fun onReadRemoteRssi(continuation: CancellableContinuation<Int>) {
-        mConnectCallbackManager.setReadRemoteRssiCallback(object : BleCallback<Int>() {
+        mConnectCallbackManager.setReadRemoteRssiBleCallback(object : BleCallback<Int>() {
             override fun onSuccess(data: Int) {
                 continuation.resume(data)
             }
@@ -184,7 +184,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
             return
         }
 
-        mConnectCallbackManager.setRequestMtuCallback(object : BleCallback<Int>() {
+        mConnectCallbackManager.setRequestMtuBleCallback(object : BleCallback<Int>() {
             override fun onSuccess(data: Int) {
                 continuation.resume(data)
             }
@@ -281,7 +281,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
             return
         }
 
-        mConnectCallbackManager.setWriteCharacteristicCallback(object : BleCallback<Unit>() {
+        mConnectCallbackManager.setWriteCharacteristicBleCallback(object : BleCallback<Unit>() {
             override fun onSuccess(data: Unit) {
                 continuation.resume(Unit)
             }
@@ -333,7 +333,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
 //            return
 //        }
 
-        mConnectCallbackManager.setWriteDescriptorCallback(object : BleCallback<Unit>() {
+        mConnectCallbackManager.setWriteDescriptorBleCallback(object : BleCallback<Unit>() {
             override fun onSuccess(data: Unit) {
                 continuation.resume(Unit)
             }
