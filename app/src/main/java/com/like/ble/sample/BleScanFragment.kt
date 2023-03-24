@@ -61,8 +61,7 @@ class BleScanFragment : BaseLazyFragment() {
                     val ctx = context ?: return@catch
                     when (it) {
                         is BleExceptionCancelTimeout -> {
-                            mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
-                            mBinding.tvScanStatus.text = "扫描停止了"
+                            // 提前取消超时不做处理。因为这是调用 stopScan() 造成的，使用者可以直接在 stopScan() 方法结束后处理 UI 的显示，不需要此回调。
                         }
                         is BleExceptionTimeout -> {
                             mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
@@ -91,10 +90,12 @@ class BleScanFragment : BaseLazyFragment() {
     }
 
     private fun stopScan() {
+        val ctx = context ?: return
         try {
             scanExecutor.stopScan()
+            mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
+            mBinding.tvScanStatus.text = "扫描停止了"
         } catch (e: Exception) {
-            val ctx = context ?: return
             mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
             mBinding.tvScanStatus.text = e.message
         }

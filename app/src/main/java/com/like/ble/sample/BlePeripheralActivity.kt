@@ -17,6 +17,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
+import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.peripheral.executor.AbstractAdvertisingExecutor
 import com.like.ble.peripheral.executor.AdvertisingExecutor
 import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
@@ -286,6 +287,9 @@ class BlePeripheralActivity : AppCompatActivity() {
                 initServices()//该方法是添加一个服务，在此处调用即将服务广播出去
             } catch (e: BleException) {
                 when (e) {
+                    is BleExceptionCancelTimeout -> {
+                        // 提前取消超时不做处理。因为这是调用 stopAdvertising() 造成的，使用者可以直接在 stopAdvertising() 方法结束后处理 UI 的显示，不需要此回调。
+                    }
                     is BleExceptionBusy -> {
                         Toast.makeText(this@BlePeripheralActivity, e.message, Toast.LENGTH_SHORT).show()
                     }
