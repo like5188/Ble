@@ -46,6 +46,9 @@ class BleScanFragment : BaseLazyFragment() {
             },
             onBleOn = {
                 val ctx = context ?: return@BleBroadcastReceiverManager
+                if (mBinding.tvScanStatus.text == "扫描未启动") {
+                    return@BleBroadcastReceiverManager
+                }
                 val blueColor = ContextCompat.getColor(ctx, R.color.ble_text_blue)
                 mBinding.tvScanStatus.setTextColor(blueColor)
                 mBinding.tvScanStatus.text = "蓝牙已打开，正在重启扫描……"

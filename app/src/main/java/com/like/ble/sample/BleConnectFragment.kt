@@ -15,6 +15,7 @@ import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.sample.databinding.FragmentBleConnectBinding
+import com.like.ble.util.BleBroadcastReceiverManager
 import com.like.common.base.BaseLazyFragment
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
 import kotlinx.coroutines.launch
@@ -29,6 +30,27 @@ class BleConnectFragment : BaseLazyFragment() {
         ConnectExecutor(requireActivity(), mData.address)
     }
     private val mAdapter: BleConnectAdapter by lazy { BleConnectAdapter(requireActivity(), connectExecutor) }
+    private val bleBroadcastReceiverManager by lazy {
+        BleBroadcastReceiverManager(requireContext(),
+            onBleOff = {
+                connectExecutor.disconnect()
+                val ctx = context ?: return@BleBroadcastReceiverManager
+                val redColor = ContextCompat.getColor(ctx, R.color.ble_text_red)
+                mBinding.tvConnectStatus.setTextColor(redColor)
+                mBinding.tvConnectStatus.text = "蓝牙未打开"
+            },
+            onBleOn = {
+                val ctx = context ?: return@BleBroadcastReceiverManager
+                if (mBinding.tvConnectStatus.text == "未连接") {
+                    return@BleBroadcastReceiverManager
+                }
+                val blueColor = ContextCompat.getColor(ctx, R.color.ble_text_blue)
+                mBinding.tvConnectStatus.setTextColor(blueColor)
+                mBinding.tvConnectStatus.text = "蓝牙已打开，正在重新连接……"
+                connect(true)
+            }
+        )
+    }
 
     companion object {
         fun newInstance(bleScanInfo: BleScanInfo?): BleConnectFragment {
@@ -51,7 +73,7 @@ class BleConnectFragment : BaseLazyFragment() {
         mBinding.rv.layoutManager = WrapLinearLayoutManager(requireContext())
         mBinding.rv.adapter = mAdapter
         mBinding.btnConnect.setOnClickListener {
-            connect()
+            connect(false)
         }
         mBinding.btnDisconnect.setOnClickListener {
             disconnect()
@@ -65,16 +87,21 @@ class BleConnectFragment : BaseLazyFragment() {
         mBinding.tvRequestConnectionPriority.setOnClickListener {
             requestConnectionPriority()
         }
+        bleBroadcastReceiverManager.register()
         return mBinding.root
     }
 
-    private fun connect() {
+    private fun connect(needScan: Boolean) {
         val preState = mBinding.tvConnectStatus.text
         mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_black_1))
         mBinding.tvConnectStatus.text = "连接中……"
         lifecycleScope.launch {
             try {
-                val services = connectExecutor.connect()
+                val services = if (needScan) {
+                    connectExecutor.scanAndConnect()
+                } else {
+                    connectExecutor.connect()
+                }
                 val ctx = context ?: return@launch
                 mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
                 mBinding.tvConnectStatus.text = "连接成功"
@@ -168,6 +195,7 @@ class BleConnectFragment : BaseLazyFragment() {
     }
 
     override fun onDestroy() {
+        bleBroadcastReceiverManager.unregister()
         connectExecutor.close()
         super.onDestroy()
     }
