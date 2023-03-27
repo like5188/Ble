@@ -12,6 +12,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DiffUtil
 import com.like.ble.central.connect.executor.AbstractConnectExecutor
+import com.like.ble.exception.BleException
 import com.like.ble.sample.databinding.ItemBleConnectBinding
 import com.like.ble.sample.databinding.ItemBleConnectCharacteristicBinding
 import com.like.ble.sample.databinding.ItemBleConnectDescriptorsBinding
@@ -111,7 +112,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                     try {
                         val data = connectExecutor.readCharacteristic(characteristic.uuid, serviceUuid)
                         Toast.makeText(mActivity, "读特征成功。数据长度：${data.size} ${data.contentToString()}", Toast.LENGTH_SHORT).show()
-                    } catch (e: Exception) {
+                    } catch (e: BleException) {
                         Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -162,7 +163,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                                                 serviceUuid,
                                             )
                                             Toast.makeText(mActivity, "写特征成功", Toast.LENGTH_SHORT).show()
-                                        } catch (e: Exception) {
+                                        } catch (e: BleException) {
                                             Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
                                         }
                                     }
@@ -192,7 +193,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                         } else {
                             binding.ivNotify.setImageResource(R.drawable.notify_close)
                         }
-                    } catch (e: Exception) {
+                    } catch (e: BleException) {
                         Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -216,7 +217,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                         } else {
                             binding.ivIndicate.setImageResource(R.drawable.indicate_close)
                         }
-                    } catch (e: Exception) {
+                    } catch (e: BleException) {
                         Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -257,7 +258,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                         serviceUuid
                     )
                     Toast.makeText(mActivity, "读描述值成功。数据长度：${data.size} ${data.contentToString()}", Toast.LENGTH_SHORT).show()
-                } catch (e: Exception) {
+                } catch (e: BleException) {
                     Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
                 }
             }
@@ -276,7 +277,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                                     5000,
                                 )
                                 Toast.makeText(mActivity, "写描述值成功", Toast.LENGTH_SHORT).show()
-                            } catch (e: Exception) {
+                            } catch (e: BleException) {
                                 Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
                             }
                         }

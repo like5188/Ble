@@ -12,6 +12,7 @@ import androidx.databinding.ObservableInt
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.central.scan.executor.AbstractScanExecutor
 import com.like.ble.central.scan.executor.ScanExecutor
+import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.exception.BleExceptionTimeout
@@ -128,7 +129,7 @@ class BleScanFragment : BaseLazyFragment() {
             scanExecutor.stopScan()
             mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
             mBinding.tvScanStatus.text = "扫描停止了"
-        } catch (e: Exception) {
+        } catch (e: BleException) {
             mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
             mBinding.tvScanStatus.text = e.message
         }

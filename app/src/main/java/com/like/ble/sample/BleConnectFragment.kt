@@ -116,7 +116,7 @@ class BleConnectFragment : BaseLazyFragment() {
             connectExecutor.disconnect()
             mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
             mBinding.tvConnectStatus.text = "连接断开了"
-        } catch (e: Exception) {
+        } catch (e: BleException) {
             mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
             mBinding.tvConnectStatus.text = e.message
         }
@@ -132,7 +132,7 @@ class BleConnectFragment : BaseLazyFragment() {
             try {
                 connectExecutor.requestMtu(mtu)
                 Toast.makeText(context, "设置成功", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
+            } catch (e: BleException) {
                 Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
             }
         }
@@ -143,7 +143,7 @@ class BleConnectFragment : BaseLazyFragment() {
             try {
                 val rssi = connectExecutor.readRemoteRssi(3000)
                 mBinding.etReadRemoteRssi.setText(rssi.toString())
-            } catch (e: Exception) {
+            } catch (e: BleException) {
                 Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
             }
         }
@@ -160,7 +160,7 @@ class BleConnectFragment : BaseLazyFragment() {
                 try {
                     connectExecutor.requestConnectionPriority(connectionPriority)
                     Toast.makeText(context, "设置成功", Toast.LENGTH_SHORT).show()
-                } catch (e: Exception) {
+                } catch (e: BleException) {
                     Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
                 }
             }
