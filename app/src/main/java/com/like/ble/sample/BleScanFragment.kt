@@ -75,7 +75,6 @@ class BleScanFragment : BaseLazyFragment() {
 
     private fun startScan() {
         lifecycleScope.launch {
-            val preState = mBinding.tvScanStatus.text
             mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
             mBinding.tvScanStatus.text = "扫描中……"
             scanExecutor.startScan()
@@ -88,7 +87,7 @@ class BleScanFragment : BaseLazyFragment() {
                         }
                         is BleExceptionBusy -> {
                             mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
-                            mBinding.tvScanStatus.text = preState
+                            mBinding.tvScanStatus.text = "扫描中……"
                             Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
                         }
                         is BleExceptionTimeout -> {
