@@ -23,11 +23,11 @@ abstract class BleExecutor(context: Context) {
     abstract fun close()
 
     /**
-     * 检查蓝牙操作需要的环境
+     * 检查蓝牙操作需要的环境，如果不满足，则去请求。
      * 1、如果没有打开蓝牙开关，则去打开。
      * 2、如果没有相关权限，则去请求。
      */
-    fun checkEnvironment(activity: ComponentActivity?) {
+    fun requestEnvironment(activity: ComponentActivity?) {
         activity ?: return
         activity.lifecycleScope.launch(Dispatchers.Main) {
             activity.isBluetoothEnableAndSettingIfDisabled()

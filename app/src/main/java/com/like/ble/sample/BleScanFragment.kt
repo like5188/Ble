@@ -74,7 +74,7 @@ class BleScanFragment : BaseLazyFragment() {
             stopScan()
         }
         bleBroadcastReceiverManager.register()
-        scanExecutor.checkEnvironment(activity)
+        scanExecutor.requestEnvironment(activity)
         return mBinding.root
     }
 

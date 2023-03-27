@@ -90,7 +90,7 @@ class BleConnectFragment : BaseLazyFragment() {
             requestConnectionPriority()
         }
         bleBroadcastReceiverManager.register()
-        connectExecutor.checkEnvironment(activity)
+        connectExecutor.requestEnvironment(activity)
         return mBinding.root
     }
 
