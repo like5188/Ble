@@ -28,11 +28,11 @@ abstract class BaseScanExecutor(context: Context) : AbstractScanExecutor(context
             mutexUtils.withTryLockOrThrow("正在扫描中……") {
                 checkEnvironmentOrThrow()
                 withContext(Dispatchers.IO) {
-                    suspendCancellableCoroutineWithTimeout.execute<ScanResult>(timeout, "扫描完成") { continuation ->
+                    suspendCancellableCoroutineWithTimeout.execute<Unit>(timeout, "扫描完成") { continuation ->
                         continuation.invokeOnCancellation {
                             stopScan()
                         }
-                        onStartScan(filterServiceUuid) {
+                        onStartScan(continuation, filterServiceUuid) {
                             trySend(it)
                         }
                     }
@@ -77,6 +77,7 @@ abstract class BaseScanExecutor(context: Context) : AbstractScanExecutor(context
     }
 
     protected abstract fun onStartScan(
+        continuation: CancellableContinuation<Unit>,
         filterServiceUuid: UUID?,
         onResult: (ScanResult) -> Unit
     )

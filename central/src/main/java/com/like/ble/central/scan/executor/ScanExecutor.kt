@@ -27,9 +27,9 @@ class ScanExecutor(context: Context) : BaseScanExecutor(context) {
         ScanCallbackManager()
     }
 
-    override fun onStartScan(filterServiceUuid: UUID?, onResult: (ScanResult) -> Unit) {
+    override fun onStartScan(continuation: CancellableContinuation<Unit>, filterServiceUuid: UUID?, onResult: (ScanResult) -> Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            onStartScan21(filterServiceUuid, onResult)
+            onStartScan21(continuation, filterServiceUuid, onResult)
         } else {
             onStartScanBelow21(filterServiceUuid, onResult)
         }
@@ -37,6 +37,7 @@ class ScanExecutor(context: Context) : BaseScanExecutor(context) {
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun onStartScan21(
+        continuation: CancellableContinuation<Unit>,
         filterServiceUuid: UUID?,
         onResult: (ScanResult) -> Unit
     ) {
@@ -48,7 +49,8 @@ class ScanExecutor(context: Context) : BaseScanExecutor(context) {
             }
 
             override fun onError(exception: BleException) {
-                throw exception
+                // 这里不能直接抛异常，因为异步回调在另外的线程中，直接抛出了捕获不了，会造成崩溃。
+                continuation.resumeWithException(exception)
             }
         })
         if (filterServiceUuid == null) {
