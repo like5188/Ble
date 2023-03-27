@@ -100,9 +100,9 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
         try {
             // 此处如果不取消，那么还会把超时错误传递出去的。
             suspendCancellableCoroutineWithTimeout.cancel()
+            scanExecutor.stopScan()
             if (checkEnvironment()) {
                 onDisconnect()
-                scanExecutor.stopScan()
             }
         } catch (e: Exception) {
             throw e.toBleException()
