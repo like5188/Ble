@@ -43,18 +43,10 @@ abstract class BaseAdvertisingExecutor(activity: ComponentActivity) : AbstractAd
                 }
             }
         } catch (e: Exception) {
-            // 转换一下异常，方便使用者判断。
-            throw when (e) {
-                is BleException -> {
-                    if (e.code == AdvertiseCallback.ADVERTISE_FAILED_ALREADY_STARTED) {
-                        BleExceptionBusy("正在广播中……")
-                    } else {
-                        e
-                    }
-                }
-                else -> BleException(e.message)
+            if (e is BleException && e.code == AdvertiseCallback.ADVERTISE_FAILED_ALREADY_STARTED) {
+                throw BleExceptionBusy("正在广播中……")
             }
-
+            throw e.toBleException()
         }
     }
 
