@@ -69,6 +69,7 @@ class BleConnectFragment : BaseLazyFragment() {
     }
 
     private fun connect() {
+        val preState = mBinding.tvConnectStatus.text
         mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_black_1))
         mBinding.tvConnectStatus.text = "连接中……"
         lifecycleScope.launch {
@@ -93,7 +94,7 @@ class BleConnectFragment : BaseLazyFragment() {
                     }
                     is BleExceptionBusy -> {
                         mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
-                        mBinding.tvConnectStatus.text = "连接成功"
+                        mBinding.tvConnectStatus.text = preState
                         Toast.makeText(ctx, e.message, Toast.LENGTH_SHORT).show()
                     }
                     else -> {

@@ -75,6 +75,7 @@ class BleScanFragment : BaseLazyFragment() {
 
     private fun startScan() {
         lifecycleScope.launch {
+            val preState = mBinding.tvScanStatus.text
             mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
             mBinding.tvScanStatus.text = "扫描中……"
             scanExecutor.startScan()
@@ -86,6 +87,8 @@ class BleScanFragment : BaseLazyFragment() {
                             // 提前取消超时不做处理。因为这是调用 stopScan() 造成的，使用者可以直接在 stopScan() 方法结束后处理 UI 的显示，不需要此回调。
                         }
                         is BleExceptionBusy -> {
+                            mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
+                            mBinding.tvScanStatus.text = preState
                             Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
                         }
                         is BleExceptionTimeout -> {
@@ -95,6 +98,7 @@ class BleScanFragment : BaseLazyFragment() {
                         else -> {
                             mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
                             mBinding.tvScanStatus.text = it.message
+                            mAdapter.submitList(null)
                         }
                     }
                 }
