@@ -33,6 +33,7 @@ class BleConnectFragment : BaseLazyFragment() {
     private val bleBroadcastReceiverManager by lazy {
         BleBroadcastReceiverManager(requireContext(),
             onBleOff = {
+                needScan = true
                 connectExecutor.disconnect()
                 val ctx = context ?: return@BleBroadcastReceiverManager
                 val redColor = ContextCompat.getColor(ctx, R.color.ble_text_red)
@@ -47,10 +48,11 @@ class BleConnectFragment : BaseLazyFragment() {
                 val blueColor = ContextCompat.getColor(ctx, R.color.ble_text_blue)
                 mBinding.tvConnectStatus.setTextColor(blueColor)
                 mBinding.tvConnectStatus.text = "蓝牙已打开，正在重新连接……"
-                connect(true)
+                connect()
             }
         )
     }
+    private var needScan: Boolean = false
 
     companion object {
         fun newInstance(bleScanInfo: BleScanInfo?): BleConnectFragment {
@@ -73,7 +75,7 @@ class BleConnectFragment : BaseLazyFragment() {
         mBinding.rv.layoutManager = WrapLinearLayoutManager(requireContext())
         mBinding.rv.adapter = mAdapter
         mBinding.btnConnect.setOnClickListener {
-            connect(false)
+            connect()
         }
         mBinding.btnDisconnect.setOnClickListener {
             disconnect()
@@ -91,7 +93,7 @@ class BleConnectFragment : BaseLazyFragment() {
         return mBinding.root
     }
 
-    private fun connect(needScan: Boolean) {
+    private fun connect() {
         val preState = mBinding.tvConnectStatus.text
         mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_black_1))
         mBinding.tvConnectStatus.text = "连接中……"
@@ -102,6 +104,7 @@ class BleConnectFragment : BaseLazyFragment() {
                 } else {
                     connectExecutor.connect()
                 }
+                needScan = false
                 val ctx = context ?: return@launch
                 mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
                 mBinding.tvConnectStatus.text = "连接成功"
