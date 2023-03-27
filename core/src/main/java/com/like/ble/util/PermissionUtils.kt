@@ -24,7 +24,7 @@ object PermissionUtils {
 
     /**
      * 检查并请求指定的权限
-     * @return true：拥有权限；false：没有权限；
+     * @return true：同意了所有权限；false：没有同意所有权限；
      */
     suspend fun requestPermissions(activity: ComponentActivity, vararg permissions: String): Boolean {
         if (permissions.isEmpty()) {
