@@ -3,6 +3,7 @@ package com.like.ble.central.scan.executor
 import androidx.activity.ComponentActivity
 import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.BleException
+import com.like.ble.exception.toBleException
 import com.like.ble.util.MutexUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
 import kotlinx.coroutines.CancellableContinuation
@@ -39,7 +40,7 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
                 }
             }
         } catch (e: Exception) {
-            throw if (e is BleException) e else BleException(e.message)
+            throw e.toBleException()
         }
     }
 
@@ -57,8 +58,7 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
                 }
             }
         } catch (e: Exception) {
-            // 转换一下异常，方便使用者判断。
-            throw if (e is BleException) e else BleException(e.message)
+            throw e.toBleException()
         }
 
     final override fun stopScan() {
@@ -69,8 +69,7 @@ abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecu
                 onStopScan()
             }
         } catch (e: Exception) {
-            // 转换一下异常，方便使用者判断。
-            throw if (e is BleException) e else BleException(e.message)
+            throw e.toBleException()
         }
     }
 

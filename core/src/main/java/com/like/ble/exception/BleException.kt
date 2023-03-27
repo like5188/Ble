@@ -2,6 +2,11 @@ package com.like.ble.exception
 
 open class BleException(message: String?, val code: Int = -1) : Exception(message)
 
+fun Exception.toBleException(): BleException {
+    // 转换一下异常，方便使用者判断。
+    return if (this is BleException) this else BleException(this.message)
+}
+
 object BleExceptionDisabled : BleException("蓝牙未打开", -2)
 object BleExceptionPermission : BleException("蓝牙权限被拒绝", -3)
 class BleExceptionDeviceDisconnected(address: String?) : BleException("蓝牙设备未连接:$address", -4)

@@ -10,6 +10,7 @@ import com.like.ble.central.scan.executor.ScanExecutor
 import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionDeviceDisconnected
+import com.like.ble.exception.toBleException
 import com.like.ble.util.MutexUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
 import com.like.ble.util.getValidString
@@ -61,8 +62,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
                 }
             }
         } catch (e: Exception) {
-            // 转换一下异常，方便使用者判断。
-            throw if (e is BleException) e else BleException(e.message)
+            throw e.toBleException()
         }
 
     final override suspend fun scanAndConnect(timeout: Long): List<BluetoothGattService> =
@@ -93,8 +93,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
                 }
             }
         } catch (e: Exception) {
-            // 转换一下异常，方便使用者判断。
-            throw if (e is BleException) e else BleException(e.message)
+            throw e.toBleException()
         }
 
     final override fun disconnect() {
@@ -106,8 +105,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
                 scanExecutor.stopScan()
             }
         } catch (e: Exception) {
-            // 转换一下异常，方便使用者判断。
-            throw if (e is BleException) e else BleException(e.message)
+            throw e.toBleException()
         }
     }
 
@@ -130,8 +128,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
                 }
             }
         } catch (e: Exception) {
-            // 转换一下异常，方便使用者判断。
-            throw if (e is BleException) e else BleException(e.message)
+            throw e.toBleException()
         }
     }
 
@@ -156,8 +153,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
                 }
             }
         } catch (e: Exception) {
-            // 转换一下异常，方便使用者判断。
-            throw if (e is BleException) e else BleException(e.message)
+            throw e.toBleException()
         }
     }
 
@@ -177,8 +173,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
                 }
             }
         } catch (e: Exception) {
-            // 转换一下异常，方便使用者判断。
-            throw if (e is BleException) e else BleException(e.message)
+            throw e.toBleException()
         }
     }
 
@@ -198,8 +193,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
                 }
             }
         } catch (e: Exception) {
-            // 转换一下异常，方便使用者判断。
-            throw if (e is BleException) e else BleException(e.message)
+            throw e.toBleException()
         }
     }
 
@@ -219,8 +213,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
                 }
             }
         } catch (e: Exception) {
-            // 转换一下异常，方便使用者判断。
-            throw if (e is BleException) e else BleException(e.message)
+            throw e.toBleException()
         }
     }
 
@@ -246,8 +239,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
                 }
             }
         } catch (e: Exception) {
-            // 转换一下异常，方便使用者判断。
-            throw if (e is BleException) e else BleException(e.message)
+            throw e.toBleException()
         }
     }
 
@@ -277,7 +269,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
             }
         } catch (e: Exception) {
             // 转换一下异常，方便使用者判断。
-            throw if (e is BleException) e else BleException(e.message)
+            throw e.toBleException()
         }
     }
 
@@ -306,8 +298,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
                 }
             }
         } catch (e: Exception) {
-            // 转换一下异常，方便使用者判断。
-            throw if (e is BleException) e else BleException(e.message)
+            throw e.toBleException()
         }
     }
 

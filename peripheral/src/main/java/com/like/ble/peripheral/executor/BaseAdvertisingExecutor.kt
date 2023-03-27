@@ -6,6 +6,7 @@ import android.bluetooth.le.AdvertiseSettings
 import androidx.activity.ComponentActivity
 import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
+import com.like.ble.exception.toBleException
 import com.like.ble.util.MutexUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
 import kotlinx.coroutines.CancellableContinuation
@@ -65,8 +66,7 @@ abstract class BaseAdvertisingExecutor(activity: ComponentActivity) : AbstractAd
                 onStopAdvertising()
             }
         } catch (e: Exception) {
-            // 转换一下异常，方便使用者判断。
-            throw if (e is BleException) e else BleException(e.message)
+            throw e.toBleException()
         }
     }
 
