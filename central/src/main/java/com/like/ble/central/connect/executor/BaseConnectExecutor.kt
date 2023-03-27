@@ -9,7 +9,6 @@ import com.like.ble.central.scan.executor.AbstractScanExecutor
 import com.like.ble.central.scan.executor.ScanExecutor
 import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
-import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.exception.BleExceptionDeviceDisconnected
 import com.like.ble.util.MutexUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
@@ -131,13 +130,8 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
                 }
             }
         } catch (e: Exception) {
-            when (e) {
-                is BleExceptionCancelTimeout -> {
-                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
-                    byteArrayOf()
-                }
-                else -> throw e
-            }
+            // 转换一下异常，方便使用者判断。
+            throw if (e is BleException) e else BleException(e.message)
         }
     }
 
@@ -162,13 +156,8 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
                 }
             }
         } catch (e: Exception) {
-            when (e) {
-                is BleExceptionCancelTimeout -> {
-                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
-                    byteArrayOf()
-                }
-                else -> throw e
-            }
+            // 转换一下异常，方便使用者判断。
+            throw if (e is BleException) e else BleException(e.message)
         }
     }
 
@@ -188,13 +177,8 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
                 }
             }
         } catch (e: Exception) {
-            when (e) {
-                is BleExceptionCancelTimeout -> {
-                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
-                    -1
-                }
-                else -> throw e
-            }
+            // 转换一下异常，方便使用者判断。
+            throw if (e is BleException) e else BleException(e.message)
         }
     }
 
@@ -208,18 +192,14 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
                     throw BleExceptionDeviceDisconnected(address)
                 }
                 withContext(Dispatchers.IO) {
-                    suspendCancellableCoroutineWithTimeout.execute(timeout, "设置ConnectionPriority超时：$address") { continuation ->
+                    suspendCancellableCoroutineWithTimeout.execute<Unit>(timeout, "设置ConnectionPriority超时：$address") { continuation ->
                         onRequestConnectionPriority(continuation, connectionPriority)
                     }
                 }
             }
         } catch (e: Exception) {
-            when (e) {
-                is BleExceptionCancelTimeout -> {
-                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
-                }
-                else -> throw e
-            }
+            // 转换一下异常，方便使用者判断。
+            throw if (e is BleException) e else BleException(e.message)
         }
     }
 
@@ -239,13 +219,8 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
                 }
             }
         } catch (e: Exception) {
-            when (e) {
-                is BleExceptionCancelTimeout -> {
-                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
-                    -1
-                }
-                else -> throw e
-            }
+            // 转换一下异常，方便使用者判断。
+            throw if (e is BleException) e else BleException(e.message)
         }
     }
 
@@ -265,18 +240,14 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
                     throw BleExceptionDeviceDisconnected(address)
                 }
                 withContext(Dispatchers.IO) {
-                    suspendCancellableCoroutineWithTimeout.execute(timeout, "设置通知超时：$address") { continuation ->
+                    suspendCancellableCoroutineWithTimeout.execute<Unit>(timeout, "设置通知超时：$address") { continuation ->
                         onSetCharacteristicNotification(continuation, characteristicUuid, serviceUuid, type, enable)
                     }
                 }
             }
         } catch (e: Exception) {
-            when (e) {
-                is BleExceptionCancelTimeout -> {
-                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
-                }
-                else -> throw e
-            }
+            // 转换一下异常，方便使用者判断。
+            throw if (e is BleException) e else BleException(e.message)
         }
     }
 
@@ -296,7 +267,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
                     throw BleExceptionDeviceDisconnected(address)
                 }
                 withContext(Dispatchers.IO) {
-                    suspendCancellableCoroutineWithTimeout.execute(
+                    suspendCancellableCoroutineWithTimeout.execute<Unit>(
                         timeout,
                         "写特征值超时：${characteristicUuid.getValidString()}"
                     ) { continuation ->
@@ -305,12 +276,8 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
                 }
             }
         } catch (e: Exception) {
-            when (e) {
-                is BleExceptionCancelTimeout -> {
-                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
-                }
-                else -> throw e
-            }
+            // 转换一下异常，方便使用者判断。
+            throw if (e is BleException) e else BleException(e.message)
         }
     }
 
@@ -330,18 +297,17 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
                     throw BleExceptionDeviceDisconnected(address)
                 }
                 withContext(Dispatchers.IO) {
-                    suspendCancellableCoroutineWithTimeout.execute(timeout, "写描述值超时：${descriptorUuid.getValidString()}") { continuation ->
+                    suspendCancellableCoroutineWithTimeout.execute<Unit>(
+                        timeout,
+                        "写描述值超时：${descriptorUuid.getValidString()}"
+                    ) { continuation ->
                         onWriteDescriptor(continuation, data, descriptorUuid, characteristicUuid, serviceUuid)
                     }
                 }
             }
         } catch (e: Exception) {
-            when (e) {
-                is BleExceptionCancelTimeout -> {
-                    // 提前取消超时不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
-                }
-                else -> throw e
-            }
+            // 转换一下异常，方便使用者判断。
+            throw if (e is BleException) e else BleException(e.message)
         }
     }
 
