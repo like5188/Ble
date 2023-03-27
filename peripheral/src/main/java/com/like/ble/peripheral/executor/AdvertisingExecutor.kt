@@ -3,7 +3,7 @@ package com.like.ble.peripheral.executor
 import android.annotation.SuppressLint
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
-import androidx.activity.ComponentActivity
+import android.content.Context
 import com.like.ble.callback.BleCallback
 import com.like.ble.exception.BleException
 import com.like.ble.peripheral.callback.AdvertisingCallbackManager
@@ -16,7 +16,7 @@ import kotlin.coroutines.resumeWithException
  * 外围设备广播的真正逻辑
  */
 @SuppressLint("MissingPermission")
-class AdvertisingExecutor(activity: ComponentActivity) : BaseAdvertisingExecutor(activity) {
+class AdvertisingExecutor(context: Context) : BaseAdvertisingExecutor(context) {
     private val advertisingCallbackManager: AdvertisingCallbackManager by lazy {
         AdvertisingCallbackManager()
     }
@@ -28,14 +28,14 @@ class AdvertisingExecutor(activity: ComponentActivity) : BaseAdvertisingExecutor
         scanResponse: AdvertiseData?,
         deviceName: String
     ) {
-        val bluetoothLeAdvertiser = activity.getBluetoothAdapter()?.bluetoothLeAdvertiser
+        val bluetoothLeAdvertiser = mContext.getBluetoothAdapter()?.bluetoothLeAdvertiser
         if (bluetoothLeAdvertiser == null) {
             continuation.resumeWithException(BleException("phone does not support bluetooth Advertiser"))
             return
         }
         // 设置设备名字
         if (deviceName.isNotEmpty()) {
-            if (activity.getBluetoothAdapter()?.setName(deviceName) != true) {
+            if (mContext.getBluetoothAdapter()?.setName(deviceName) != true) {
                 continuation.resumeWithException(BleException("set device name ($deviceName) error"))
                 return
             }
@@ -58,7 +58,7 @@ class AdvertisingExecutor(activity: ComponentActivity) : BaseAdvertisingExecutor
     }
 
     override fun onStopAdvertising() {
-        activity.getBluetoothAdapter()?.bluetoothLeAdvertiser?.stopAdvertising(advertisingCallbackManager.getAdvertiseCallback())
+        mContext.getBluetoothAdapter()?.bluetoothLeAdvertiser?.stopAdvertising(advertisingCallbackManager.getAdvertiseCallback())
     }
 
 }

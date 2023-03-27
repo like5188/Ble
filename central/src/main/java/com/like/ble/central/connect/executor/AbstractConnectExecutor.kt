@@ -3,8 +3,8 @@ package com.like.ble.central.connect.executor
 import android.Manifest
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattService
+import android.content.Context
 import android.os.Build
-import androidx.activity.ComponentActivity
 import androidx.annotation.IntRange
 import com.like.ble.executor.BleExecutor
 import kotlinx.coroutines.flow.Flow
@@ -13,18 +13,19 @@ import java.util.*
 /**
  * 中心设备蓝牙连接及数据操作的执行者。
  */
-abstract class AbstractConnectExecutor(activity: ComponentActivity, val address: String?) : BleExecutor(
-    activity,
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        // Android 12 中的新蓝牙权限
-        // https://developer.android.google.cn/about/versions/12/features/bluetooth-permissions?hl=zh-cn
-        arrayOf(Manifest.permission.BLUETOOTH_CONNECT)
-    } else if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
-    } else {
-        arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)
+abstract class AbstractConnectExecutor(context: Context, val address: String?) : BleExecutor(context) {
+
+    final override fun getPermissions(): Array<String> {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Android 12 中的新蓝牙权限
+            // https://developer.android.google.cn/about/versions/12/features/bluetooth-permissions?hl=zh-cn
+            arrayOf(Manifest.permission.BLUETOOTH_CONNECT)
+        } else if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+        } else {
+            arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)
+        }
     }
-) {
 
     /**
      * 连接蓝牙设备

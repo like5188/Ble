@@ -3,8 +3,8 @@ package com.like.ble.peripheral.executor
 import android.Manifest
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
+import android.content.Context
 import android.os.Build
-import androidx.activity.ComponentActivity
 import com.like.ble.executor.BleExecutor
 
 /**
@@ -19,19 +19,20 @@ import com.like.ble.executor.BleExecutor
  * 广播数据是必需的，因为外设必需不停的向外广播，让中心设备知道它的存在。</br>
  * 扫描回复是可选的，中心设备可以向外设请求扫描回复，这里包含一些设备额外的信息。
  */
-abstract class AbstractAdvertisingExecutor(activity: ComponentActivity) : BleExecutor(
-    activity,
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        // Android 12 中的新蓝牙权限
-        // https://developer.android.google.cn/about/versions/12/features/bluetooth-permissions?hl=zh-cn
-        arrayOf(
-            Manifest.permission.BLUETOOTH_CONNECT,
-            Manifest.permission.BLUETOOTH_ADVERTISE
-        )
-    } else {
-        emptyArray()
+abstract class AbstractAdvertisingExecutor(context: Context) : BleExecutor(context) {
+
+    final override fun getPermissions(): Array<String> {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Android 12 中的新蓝牙权限
+            // https://developer.android.google.cn/about/versions/12/features/bluetooth-permissions?hl=zh-cn
+            arrayOf(
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_ADVERTISE
+            )
+        } else {
+            emptyArray()
+        }
     }
-) {
 
     /**
      * 开启广播

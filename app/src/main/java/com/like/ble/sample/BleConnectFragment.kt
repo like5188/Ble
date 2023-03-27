@@ -27,7 +27,7 @@ class BleConnectFragment : BaseLazyFragment() {
     private lateinit var mBinding: FragmentBleConnectBinding
     private lateinit var mData: BleScanInfo
     private val connectExecutor: AbstractConnectExecutor by lazy {
-        ConnectExecutor(requireActivity(), mData.address)
+        ConnectExecutor(requireContext(), mData.address)
     }
     private val mAdapter: BleConnectAdapter by lazy { BleConnectAdapter(requireActivity(), connectExecutor) }
     private val bleBroadcastReceiverManager by lazy {
@@ -90,6 +90,7 @@ class BleConnectFragment : BaseLazyFragment() {
             requestConnectionPriority()
         }
         bleBroadcastReceiverManager.register()
+        connectExecutor.checkEnvironment(activity)
         return mBinding.root
     }
 

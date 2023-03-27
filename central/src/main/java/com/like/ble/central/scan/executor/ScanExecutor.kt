@@ -4,9 +4,9 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanSettings
+import android.content.Context
 import android.os.Build
 import android.os.ParcelUuid
-import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import com.like.ble.callback.BleCallback
 import com.like.ble.central.scan.callback.ScanCallbackManager
@@ -22,7 +22,7 @@ import kotlin.coroutines.resumeWithException
  * 蓝牙扫描的真正逻辑
  */
 @SuppressLint("MissingPermission")
-class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
+class ScanExecutor(context: Context) : BaseScanExecutor(context) {
     private val scanCallbackManager: ScanCallbackManager by lazy {
         ScanCallbackManager()
     }
@@ -40,7 +40,7 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
         filterServiceUuid: UUID?,
         onResult: (ScanResult) -> Unit
     ) {
-        val bluetoothLeScanner = activity.getBluetoothAdapter()?.bluetoothLeScanner
+        val bluetoothLeScanner = mContext.getBluetoothAdapter()?.bluetoothLeScanner
             ?: throw BleException("phone does not support bluetooth scan")
         scanCallbackManager.setScanBleCallback(object : BleCallback<ScanResult>() {
             override fun onSuccess(data: ScanResult) {
@@ -90,9 +90,9 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
         })
         // startLeScan 方法实际上最终也是调用的 bluetoothLeScanner?.startScan 方法。只是忽略掉了错误回调，只处理了成功回调。所以不完善。
         val success = if (filterServiceUuid == null) {
-            activity.getBluetoothAdapter()?.startLeScan(scanCallbackManager.getLeScanCallback())
+            mContext.getBluetoothAdapter()?.startLeScan(scanCallbackManager.getLeScanCallback())
         } else {
-            activity.getBluetoothAdapter()?.startLeScan(arrayOf(filterServiceUuid), scanCallbackManager.getLeScanCallback())
+            mContext.getBluetoothAdapter()?.startLeScan(arrayOf(filterServiceUuid), scanCallbackManager.getLeScanCallback())
         } ?: false
         if (!success) {
             throw BleException("开启扫描失败")
@@ -115,7 +115,7 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
         continuation: CancellableContinuation<ScanResult>,
         address: String,
     ) {
-        val bluetoothLeScanner = activity.getBluetoothAdapter()?.bluetoothLeScanner
+        val bluetoothLeScanner = mContext.getBluetoothAdapter()?.bluetoothLeScanner
         if (bluetoothLeScanner == null) {
             continuation.resumeWithException(BleException("phone does not support bluetooth scan"))
             return
@@ -151,7 +151,7 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
             }
         })
         // startLeScan 方法实际上最终也是调用的 bluetoothLeScanner?.startScan 方法。只是忽略掉了错误回调，只处理了成功回调。所以不完善。
-        val success = activity.getBluetoothAdapter()?.startLeScan(scanCallbackManager.getLeScanCallback()) ?: false
+        val success = mContext.getBluetoothAdapter()?.startLeScan(scanCallbackManager.getLeScanCallback()) ?: false
         if (!success) {
             continuation.resumeWithException(BleException("开启扫描失败"))
         }
@@ -159,9 +159,9 @@ class ScanExecutor(activity: ComponentActivity) : BaseScanExecutor(activity) {
 
     override fun onStopScan() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            activity.getBluetoothAdapter()?.bluetoothLeScanner?.stopScan(scanCallbackManager.getScanCallback())
+            mContext.getBluetoothAdapter()?.bluetoothLeScanner?.stopScan(scanCallbackManager.getScanCallback())
         } else {
-            activity.getBluetoothAdapter()?.stopLeScan(scanCallbackManager.getLeScanCallback())
+            mContext.getBluetoothAdapter()?.stopLeScan(scanCallbackManager.getLeScanCallback())
         }
     }
 

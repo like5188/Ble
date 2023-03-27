@@ -3,8 +3,8 @@ package com.like.ble.central.connect.executor
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGattService
+import android.content.Context
 import android.util.Log
-import androidx.activity.ComponentActivity
 import com.like.ble.central.scan.executor.AbstractScanExecutor
 import com.like.ble.central.scan.executor.ScanExecutor
 import com.like.ble.exception.BleException
@@ -27,13 +27,13 @@ import java.util.*
  * 蓝牙连接及数据操作的前提条件
  * 包括：并发处理、超时处理、蓝牙相关的前置条件检查、错误处理。
  */
-abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?) : AbstractConnectExecutor(activity, address) {
+abstract class BaseConnectExecutor(context: Context, address: String?) : AbstractConnectExecutor(context, address) {
     private val mutexUtils = MutexUtils()
     private val suspendCancellableCoroutineWithTimeout by lazy {
         SuspendCancellableCoroutineWithTimeout()
     }
     private val scanExecutor: AbstractScanExecutor by lazy {
-        ScanExecutor(activity)
+        ScanExecutor(mContext)
     }
 
     init {
@@ -46,7 +46,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
         try {
             mutexUtils.withTryLockOrThrow("正在建立连接，请稍后！") {
                 checkEnvironmentOrThrow()
-                if (context.isBleDeviceConnected(address)) {
+                if (mContext.isBleDeviceConnected(address)) {
                     throw BleExceptionBusy("设备已经连接")
                 }
                 withContext(Dispatchers.IO) {
@@ -69,7 +69,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
         try {
             mutexUtils.withTryLockOrThrow("正在建立连接，请稍后！") {
                 checkEnvironmentOrThrow()
-                if (context.isBleDeviceConnected(address)) {
+                if (mContext.isBleDeviceConnected(address)) {
                     throw BleExceptionBusy("设备已经连接")
                 }
                 val startTime = System.currentTimeMillis()
@@ -115,7 +115,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLockOrThrow("正在读取特征值……") {
                 checkEnvironmentOrThrow()
-                if (!context.isBleDeviceConnected(address)) {
+                if (!mContext.isBleDeviceConnected(address)) {
                     throw BleExceptionDeviceDisconnected(address)
                 }
                 withContext(Dispatchers.IO) {
@@ -143,7 +143,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLockOrThrow("正在读取描述值……") {
                 checkEnvironmentOrThrow()
-                if (!context.isBleDeviceConnected(address)) {
+                if (!mContext.isBleDeviceConnected(address)) {
                     throw BleExceptionDeviceDisconnected(address)
                 }
                 withContext(Dispatchers.IO) {
@@ -163,7 +163,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLockOrThrow("正在读取RSSI……") {
                 checkEnvironmentOrThrow()
-                if (!context.isBleDeviceConnected(address)) {
+                if (!mContext.isBleDeviceConnected(address)) {
                     throw BleExceptionDeviceDisconnected(address)
                 }
                 withContext(Dispatchers.IO) {
@@ -183,7 +183,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLockOrThrow("正在设置ConnectionPriority……") {
                 checkEnvironmentOrThrow()
-                if (!context.isBleDeviceConnected(address)) {
+                if (!mContext.isBleDeviceConnected(address)) {
                     throw BleExceptionDeviceDisconnected(address)
                 }
                 withContext(Dispatchers.IO) {
@@ -203,7 +203,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLockOrThrow("正在设置MTU……") {
                 checkEnvironmentOrThrow()
-                if (!context.isBleDeviceConnected(address)) {
+                if (!mContext.isBleDeviceConnected(address)) {
                     throw BleExceptionDeviceDisconnected(address)
                 }
                 withContext(Dispatchers.IO) {
@@ -229,7 +229,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLockOrThrow("正在设置通知……") {
                 checkEnvironmentOrThrow()
-                if (!context.isBleDeviceConnected(address)) {
+                if (!mContext.isBleDeviceConnected(address)) {
                     throw BleExceptionDeviceDisconnected(address)
                 }
                 withContext(Dispatchers.IO) {
@@ -255,7 +255,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLockOrThrow("正在写特征值……") {
                 checkEnvironmentOrThrow()
-                if (!context.isBleDeviceConnected(address)) {
+                if (!mContext.isBleDeviceConnected(address)) {
                     throw BleExceptionDeviceDisconnected(address)
                 }
                 withContext(Dispatchers.IO) {
@@ -285,7 +285,7 @@ abstract class BaseConnectExecutor(activity: ComponentActivity, address: String?
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLockOrThrow("正在写描述值……") {
                 checkEnvironmentOrThrow()
-                if (!context.isBleDeviceConnected(address)) {
+                if (!mContext.isBleDeviceConnected(address)) {
                     throw BleExceptionDeviceDisconnected(address)
                 }
                 withContext(Dispatchers.IO) {

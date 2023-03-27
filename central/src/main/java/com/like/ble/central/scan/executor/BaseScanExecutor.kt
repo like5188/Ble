@@ -1,8 +1,7 @@
 package com.like.ble.central.scan.executor
 
-import androidx.activity.ComponentActivity
+import android.content.Context
 import com.like.ble.central.scan.result.ScanResult
-import com.like.ble.exception.BleException
 import com.like.ble.exception.toBleException
 import com.like.ble.util.MutexUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
@@ -17,7 +16,7 @@ import java.util.*
  * 蓝牙扫描的前提条件
  * 包括：并发处理、超时处理、蓝牙相关的前置条件检查、错误处理。
  */
-abstract class BaseScanExecutor(activity: ComponentActivity) : AbstractScanExecutor(activity) {
+abstract class BaseScanExecutor(context: Context) : AbstractScanExecutor(context) {
     private val mutexUtils = MutexUtils()
     private val suspendCancellableCoroutineWithTimeout by lazy {
         SuspendCancellableCoroutineWithTimeout()

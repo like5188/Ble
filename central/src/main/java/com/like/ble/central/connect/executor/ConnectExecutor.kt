@@ -2,8 +2,8 @@ package com.like.ble.central.connect.executor
 
 import android.annotation.SuppressLint
 import android.bluetooth.*
+import android.content.Context
 import android.os.Build
-import androidx.activity.ComponentActivity
 import com.like.ble.callback.BleCallback
 import com.like.ble.central.connect.callback.ConnectCallbackManager
 import com.like.ble.exception.BleException
@@ -17,7 +17,7 @@ import kotlin.coroutines.resumeWithException
  * 蓝牙连接及数据操作的真正逻辑
  */
 @SuppressLint("MissingPermission")
-class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConnectExecutor(activity, address) {
+class ConnectExecutor(context: Context, address: String?) : BaseConnectExecutor(context, address) {
     private var mBluetoothGatt: BluetoothGatt? = null
     private val mConnectCallbackManager: ConnectCallbackManager by lazy {
         ConnectCallbackManager()
@@ -33,7 +33,7 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         var bluetoothDevice = device
         if (bluetoothDevice == null) {
             // 获取远端的蓝牙设备
-            bluetoothDevice = context.getBluetoothAdapter()?.getRemoteDevice(address)
+            bluetoothDevice = mContext.getBluetoothAdapter()?.getRemoteDevice(address)
             if (bluetoothDevice == null) {
                 continuation.resumeWithException(BleException("连接蓝牙失败：$address 未找到"))
                 return
@@ -50,18 +50,18 @@ class ConnectExecutor(activity: ComponentActivity, address: String?) : BaseConne
         })
         mBluetoothGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             bluetoothDevice.connectGatt(
-                context,
+                mContext,
                 false,// 是否自动重连。不知道为什么，设置为true时会导致连接不上
                 mConnectCallbackManager.getBluetoothGattCallback(),
                 BluetoothDevice.TRANSPORT_LE
             )
         } else {
-            bluetoothDevice.connectGatt(context, false, mConnectCallbackManager.getBluetoothGattCallback())
+            bluetoothDevice.connectGatt(mContext, false, mConnectCallbackManager.getBluetoothGattCallback())
         }
     }
 
     override fun onDisconnect() {
-        if (context.isBleDeviceConnected(mBluetoothGatt?.device)) {
+        if (mContext.isBleDeviceConnected(mBluetoothGatt?.device)) {
             mBluetoothGatt?.disconnect()
         }
         // close()时会清空BluetoothGatt内部的mCallback回调。导致收不到断开连接的消息。所以就不能在断开连接状态回调时处理 UI。

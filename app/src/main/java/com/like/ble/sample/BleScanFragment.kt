@@ -33,7 +33,7 @@ class BleScanFragment : BaseLazyFragment() {
     private lateinit var mBinding: FragmentBleScanBinding
     private val mAdapter: BleScanAdapter by lazy { BleScanAdapter(requireActivity()) }
     private val scanExecutor: AbstractScanExecutor by lazy {
-        ScanExecutor(requireActivity())
+        ScanExecutor(requireContext())
     }
     private val bleBroadcastReceiverManager by lazy {
         BleBroadcastReceiverManager(requireContext(),
@@ -74,6 +74,7 @@ class BleScanFragment : BaseLazyFragment() {
             stopScan()
         }
         bleBroadcastReceiverManager.register()
+        scanExecutor.checkEnvironment(activity)
         return mBinding.root
     }
 

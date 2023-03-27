@@ -3,7 +3,7 @@ package com.like.ble.peripheral.executor
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
-import androidx.activity.ComponentActivity
+import android.content.Context
 import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.toBleException
@@ -17,7 +17,7 @@ import kotlinx.coroutines.withContext
  * 外围设备广播的前提条件
  * 包括：并发处理、超时处理、蓝牙相关的前置条件检查、错误处理。
  */
-abstract class BaseAdvertisingExecutor(activity: ComponentActivity) : AbstractAdvertisingExecutor(activity) {
+abstract class BaseAdvertisingExecutor(context: Context) : AbstractAdvertisingExecutor(context) {
     private val mutexUtils = MutexUtils()
     private val suspendCancellableCoroutineWithTimeout by lazy {
         SuspendCancellableCoroutineWithTimeout()
