@@ -75,6 +75,7 @@ class BleScanFragment : BaseLazyFragment() {
 
     private fun startScan() {
         lifecycleScope.launch {
+            var isFirstData = true
             mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
             mBinding.tvScanStatus.text = "扫描中……"
             scanExecutor.startScan()
@@ -103,6 +104,10 @@ class BleScanFragment : BaseLazyFragment() {
                 }
                 .collectLatest {
                     Logger.w("scan result ${it.device.address}")
+                    if (isFirstData) {
+                        isFirstData = false
+                        mAdapter.submitList(null)
+                    }
                     val name = it.device.name ?: "N/A"
                     val address = it.device.address ?: ""
                     val item: BleScanInfo? = mAdapter.currentList.firstOrNull { it?.address == address }
