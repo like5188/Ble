@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGattService
 import android.content.Context
 import android.util.Log
-import com.like.ble.central.scan.executor.ScanExecutorFactory
 import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionDeviceDisconnected
@@ -38,7 +37,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         }
     }
 
-    final override suspend fun connect(timeout: Long): List<BluetoothGattService> =
+    final override suspend fun connect(device: BluetoothDevice?, timeout: Long): List<BluetoothGattService> =
         try {
             mutexUtils.withTryLockOrThrow("正在建立连接，请稍后！") {
                 checkEnvironmentOrThrow()
@@ -53,38 +52,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                             disconnect()
                         }
                         // onConnect 方法不会挂起，会在连接成功后返回，所以如果已经连接了，就抛出 BleExceptionBusy 异常
-                        onConnect(continuation)
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            throw e.toBleException()
-        }
-
-    final override suspend fun scanAndConnect(timeout: Long): List<BluetoothGattService> =
-        try {
-            mutexUtils.withTryLockOrThrow("正在建立连接，请稍后！") {
-                checkEnvironmentOrThrow()
-                if (mContext.isBleDeviceConnected(address)) {
-                    throw BleExceptionBusy("设备已经连接")
-                }
-                val startTime = System.currentTimeMillis()
-                val scanResult = try {
-                    ScanExecutorFactory.get(mContext).startScan(address, timeout)
-                } catch (e: Exception) {
-                    throw BleException("连接蓝牙失败，未找到蓝牙设备：$address")
-                }
-                val scanCost = System.currentTimeMillis() - startTime
-                val remainTimeout = timeout - scanCost// 剩余的分配给连接的超时时间
-                withContext(Dispatchers.IO) {
-                    suspendCancellableCoroutineWithTimeout.execute<List<BluetoothGattService>>(
-                        remainTimeout, "连接蓝牙设备超时：$address"
-                    ) { continuation ->
-                        continuation.invokeOnCancellation {
-                            disconnect()
-                        }
-                        // onConnect 方法不会挂起，会在连接成功后返回，所以如果已经连接了，就抛出 BleExceptionBusy 异常
-                        onConnect(continuation, scanResult.device)
+                        onConnect(continuation, device)
                     }
                 }
             }
@@ -96,7 +64,6 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         try {
             // 此处如果不取消，那么还会把超时错误传递出去的。
             suspendCancellableCoroutineWithTimeout.cancel()
-            ScanExecutorFactory.get(mContext).stopScan()
             if (checkEnvironment()) {
                 onDisconnect()
             }

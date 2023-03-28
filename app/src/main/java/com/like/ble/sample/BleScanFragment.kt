@@ -84,7 +84,7 @@ class BleScanFragment : BaseLazyFragment() {
             mBinding.tvScanStatus.text = "扫描中……"
             scanExecutor.startScan()
                 .catch {
-                    Logger.e("catch scan error $it")
+                    Logger.e("BleScanFragment catch scan error $it")
                     val ctx = context ?: return@catch
                     when (it) {
                         is BleExceptionCancelTimeout -> {
@@ -107,7 +107,7 @@ class BleScanFragment : BaseLazyFragment() {
                     }
                 }
                 .collectLatest {
-                    Logger.w("scan result ${it.device.address}")
+                    Logger.w("BleScanFragment scan result ${it.device.address}")
                     if (isFirstData) {
                         isFirstData = false
                         mAdapter.submitList(null)

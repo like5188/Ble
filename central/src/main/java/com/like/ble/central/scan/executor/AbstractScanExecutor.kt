@@ -41,16 +41,6 @@ abstract class AbstractScanExecutor(context: Context) : BleExecutor(context) {
     abstract fun startScan(filterServiceUuid: UUID? = null, timeout: Long = 10000L): Flow<ScanResult>
 
     /**
-     * 开始扫描指定地址的蓝牙设备，扫描到后就自动停止扫描
-     *
-     * @param address               需要扫描的设备地址。
-     * @param timeout               扫描持续时长。达到时长后，会自动停止扫描；如果<=0，表示不限制。
-     * @return 扫描到的设备。
-     * @throws [com.like.ble.exception.BleException]
-     */
-    abstract suspend fun startScan(address: String?, timeout: Long = 10000L): ScanResult
-
-    /**
      * 停止扫描蓝牙设备
      *
      * @throws [com.like.ble.exception.BleException]

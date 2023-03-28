@@ -1,6 +1,7 @@
 package com.like.ble.central.connect.executor
 
 import android.Manifest
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattService
 import android.content.Context
@@ -29,15 +30,11 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
 
     /**
      * 连接蓝牙设备
+     *
+     * @param device    需要连接的设备，如果为 null，则连接 [address]
      * @throws [com.like.ble.exception.BleException]
      */
-    abstract suspend fun connect(timeout: Long = 10000L): List<BluetoothGattService>
-
-    /**
-     * 扫描并连接蓝牙设备
-     * @throws [com.like.ble.exception.BleException]
-     */
-    abstract suspend fun scanAndConnect(timeout: Long = 10000L): List<BluetoothGattService>
+    abstract suspend fun connect(device: BluetoothDevice? = null, timeout: Long = 10000L): List<BluetoothGattService>
 
     /**
      * 断开蓝牙设备

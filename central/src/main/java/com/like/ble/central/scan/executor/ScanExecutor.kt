@@ -1,7 +1,6 @@
 package com.like.ble.central.scan.executor
 
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanSettings
 import android.content.Context
@@ -15,7 +14,6 @@ import com.like.ble.exception.BleException
 import com.like.ble.util.getBluetoothAdapter
 import kotlinx.coroutines.CancellableContinuation
 import java.util.*
-import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 /**
@@ -98,64 +96,6 @@ internal class ScanExecutor(context: Context) : BaseScanExecutor(context) {
         } ?: false
         if (!success) {
             throw BleException("开启扫描失败")
-        }
-    }
-
-    override fun onStartScan(continuation: CancellableContinuation<ScanResult>, address: String?) {
-        if (address.isNullOrEmpty() || !BluetoothAdapter.checkBluetoothAddress(address)) {
-            throw BleException("invalid address：$address")
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            onStartScan21(continuation, address)
-        } else {
-            onStartScanBelow21(continuation, address)
-        }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    private fun onStartScan21(
-        continuation: CancellableContinuation<ScanResult>,
-        address: String,
-    ) {
-        val bluetoothLeScanner = mContext.getBluetoothAdapter()?.bluetoothLeScanner
-        if (bluetoothLeScanner == null) {
-            continuation.resumeWithException(BleException("phone does not support bluetooth scan"))
-            return
-        }
-        scanCallbackManager.setScanBleCallback(object : BleCallback<ScanResult>() {
-            override fun onSuccess(data: ScanResult) {
-                if (address == data.device.address) {
-                    onStopScan()
-                    if (continuation.isActive)
-                        continuation.resume(data)
-                }
-            }
-
-            override fun onError(exception: BleException) {
-                if (continuation.isActive)
-                    continuation.resumeWithException(exception)
-            }
-        })
-        bluetoothLeScanner.startScan(scanCallbackManager.getScanCallback())
-    }
-
-    private fun onStartScanBelow21(
-        continuation: CancellableContinuation<ScanResult>,
-        address: String,
-    ) {
-        scanCallbackManager.setLeScanBleCallback(object : BleCallback<ScanResult>() {
-            override fun onSuccess(data: ScanResult) {
-                if (address == data.device.address) {
-                    onStopScan()
-                    if (continuation.isActive)
-                        continuation.resume(data)
-                }
-            }
-        })
-        // startLeScan 方法实际上最终也是调用的 bluetoothLeScanner?.startScan 方法。只是忽略掉了错误回调，只处理了成功回调。所以不完善。
-        val success = mContext.getBluetoothAdapter()?.startLeScan(scanCallbackManager.getLeScanCallback()) ?: false
-        if (!success) {
-            continuation.resumeWithException(BleException("开启扫描失败"))
         }
     }
 

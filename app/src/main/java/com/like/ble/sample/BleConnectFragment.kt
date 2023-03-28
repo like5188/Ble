@@ -1,5 +1,6 @@
 package com.like.ble.sample
 
+import android.bluetooth.BluetoothGattService
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,13 +11,18 @@ import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.central.connect.executor.AbstractConnectExecutor
 import com.like.ble.central.connect.executor.ConnectExecutorFactory
+import com.like.ble.central.scan.executor.ScanExecutorFactory
 import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.sample.databinding.FragmentBleConnectBinding
 import com.like.ble.util.BleBroadcastReceiverManager
 import com.like.common.base.BaseLazyFragment
+import com.like.common.util.Logger
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.cancellable
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 /**
@@ -93,28 +99,46 @@ class BleConnectFragment : BaseLazyFragment() {
         return mBinding.root
     }
 
+    private fun onConnected(services: List<BluetoothGattService>) {
+        Logger.v("BleConnectFragment 3")
+        val ctx = context ?: return
+        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
+        mBinding.tvConnectStatus.text = "连接成功"
+        if (services.isNotEmpty()) {
+            val bleGattServiceInfos = services.map { bluetoothGattService ->
+                BleConnectInfo(mData.address, bluetoothGattService)
+            }
+            mAdapter.submitList(bleGattServiceInfos)
+        } else {
+            mAdapter.submitList(null)
+        }
+        Logger.v("BleConnectFragment 4")
+    }
+
     private fun connect() {
         val preState = mBinding.tvConnectStatus.text
         mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_black_1))
         mBinding.tvConnectStatus.text = "连接中……"
         lifecycleScope.launch {
             try {
-                val services = if (needScan) {
-                    connectExecutor.scanAndConnect()
+                if (needScan) {
+                    ScanExecutorFactory.get(requireContext()).stopScan()
+                    ScanExecutorFactory.get(requireContext()).startScan().cancellable()
+                        .collectLatest {
+                            Logger.w("BleConnectFragment scan result ${it.device.address}")
+                            if (mData.address == it.device.address) {
+                                val services = connectExecutor.connect(it.device)
+                                onConnected(services)
+                                needScan = false
+                                ScanExecutorFactory.get(requireContext()).stopScan()
+                                Logger.v("BleConnectFragment 1")
+                            }
+                        }
+                    Logger.v("BleConnectFragment 2")
                 } else {
-                    connectExecutor.connect()
-                }
-                needScan = false
-                val ctx = context ?: return@launch
-                mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
-                mBinding.tvConnectStatus.text = "连接成功"
-                if (services.isNotEmpty()) {
-                    val bleGattServiceInfos = services.map { bluetoothGattService ->
-                        BleConnectInfo(mData.address, bluetoothGattService)
-                    }
-                    mAdapter.submitList(bleGattServiceInfos)
-                } else {
-                    mAdapter.submitList(null)
+                    val services = connectExecutor.connect()
+                    onConnected(services)
+                    needScan = false
                 }
             } catch (e: BleException) {
                 val ctx = context ?: return@launch
