@@ -11,7 +11,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableInt
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.central.scan.executor.AbstractScanExecutor
-import com.like.ble.central.scan.executor.ScanExecutor
+import com.like.ble.central.scan.executor.ScanExecutorFactory
 import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionCancelTimeout
@@ -33,7 +33,7 @@ class BleScanFragment : BaseLazyFragment() {
     private lateinit var mBinding: FragmentBleScanBinding
     private val mAdapter: BleScanAdapter by lazy { BleScanAdapter(requireActivity()) }
     private val scanExecutor: AbstractScanExecutor by lazy {
-        ScanExecutor(requireContext())
+        ScanExecutorFactory.get(requireContext())
     }
     private val bleBroadcastReceiverManager by lazy {
         BleBroadcastReceiverManager(requireContext(),

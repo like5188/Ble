@@ -22,7 +22,7 @@ import kotlin.coroutines.resumeWithException
  * 蓝牙扫描的真正逻辑
  */
 @SuppressLint("MissingPermission")
-class ScanExecutor(context: Context) : BaseScanExecutor(context) {
+internal class ScanExecutor(context: Context) : BaseScanExecutor(context) {
     private val scanCallbackManager: ScanCallbackManager by lazy {
         ScanCallbackManager()
     }

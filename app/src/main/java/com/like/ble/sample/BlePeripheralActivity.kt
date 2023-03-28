@@ -18,7 +18,7 @@ import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.peripheral.executor.AbstractAdvertisingExecutor
-import com.like.ble.peripheral.executor.AdvertisingExecutor
+import com.like.ble.peripheral.executor.AdvertisingExecutorFactory
 import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
 import com.like.ble.util.*
 import kotlinx.coroutines.delay
@@ -266,7 +266,7 @@ class BlePeripheralActivity : AppCompatActivity() {
 
     }
     private val peripheralExecutor: AbstractAdvertisingExecutor by lazy {
-        AdvertisingExecutor(this)
+        AdvertisingExecutorFactory.get(this)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -17,7 +17,7 @@ import kotlin.coroutines.resumeWithException
  * 蓝牙连接及数据操作的真正逻辑
  */
 @SuppressLint("MissingPermission")
-class ConnectExecutor(context: Context, address: String?) : BaseConnectExecutor(context, address) {
+internal class ConnectExecutor(context: Context, address: String?) : BaseConnectExecutor(context, address) {
     private var mBluetoothGatt: BluetoothGatt? = null
     private val mConnectCallbackManager: ConnectCallbackManager by lazy {
         ConnectCallbackManager()

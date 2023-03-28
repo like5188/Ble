@@ -1,6 +1,5 @@
 package com.like.ble.sample
 
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,7 +9,7 @@ import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.central.connect.executor.AbstractConnectExecutor
-import com.like.ble.central.connect.executor.ConnectExecutor
+import com.like.ble.central.connect.executor.ConnectExecutorFactory
 import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionCancelTimeout
@@ -27,7 +26,7 @@ class BleConnectFragment : BaseLazyFragment() {
     private lateinit var mBinding: FragmentBleConnectBinding
     private lateinit var mData: BleScanInfo
     private val connectExecutor: AbstractConnectExecutor by lazy {
-        ConnectExecutor(requireContext(), mData.address)
+        ConnectExecutorFactory.get(requireContext(), mData.address)
     }
     private val mAdapter: BleConnectAdapter by lazy { BleConnectAdapter(requireActivity(), connectExecutor) }
     private val bleBroadcastReceiverManager by lazy {
@@ -186,14 +185,12 @@ class BleConnectFragment : BaseLazyFragment() {
             return
         }
         val connectionPriority = mBinding.etRequestConnectionPriority.text.toString().trim().toInt()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            lifecycleScope.launch {
-                try {
-                    connectExecutor.requestConnectionPriority(connectionPriority)
-                    Toast.makeText(context, "设置成功", Toast.LENGTH_SHORT).show()
-                } catch (e: BleException) {
-                    Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
-                }
+        lifecycleScope.launch {
+            try {
+                connectExecutor.requestConnectionPriority(connectionPriority)
+                Toast.makeText(context, "设置成功", Toast.LENGTH_SHORT).show()
+            } catch (e: BleException) {
+                Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
             }
         }
     }

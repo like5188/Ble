@@ -16,7 +16,7 @@ import kotlin.coroutines.resumeWithException
  * 外围设备广播的真正逻辑
  */
 @SuppressLint("MissingPermission")
-class AdvertisingExecutor(context: Context) : BaseAdvertisingExecutor(context) {
+internal class AdvertisingExecutor(context: Context) : BaseAdvertisingExecutor(context) {
     private val advertisingCallbackManager: AdvertisingCallbackManager by lazy {
         AdvertisingCallbackManager()
     }

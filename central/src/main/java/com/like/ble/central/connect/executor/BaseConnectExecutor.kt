@@ -5,8 +5,7 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGattService
 import android.content.Context
 import android.util.Log
-import com.like.ble.central.scan.executor.AbstractScanExecutor
-import com.like.ble.central.scan.executor.ScanExecutor
+import com.like.ble.central.scan.executor.ScanExecutorFactory
 import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionDeviceDisconnected
@@ -27,13 +26,10 @@ import java.util.*
  * 蓝牙连接及数据操作的前提条件
  * 包括：并发处理、超时处理、蓝牙相关的前置条件检查、错误处理。
  */
-abstract class BaseConnectExecutor(context: Context, address: String?) : AbstractConnectExecutor(context, address) {
+internal abstract class BaseConnectExecutor(context: Context, address: String?) : AbstractConnectExecutor(context, address) {
     private val mutexUtils = MutexUtils()
     private val suspendCancellableCoroutineWithTimeout by lazy {
         SuspendCancellableCoroutineWithTimeout()
-    }
-    private val scanExecutor: AbstractScanExecutor by lazy {
-        ScanExecutor(mContext)
     }
 
     init {
@@ -74,7 +70,7 @@ abstract class BaseConnectExecutor(context: Context, address: String?) : Abstrac
                 }
                 val startTime = System.currentTimeMillis()
                 val scanResult = try {
-                    scanExecutor.startScan(address, timeout)
+                    ScanExecutorFactory.get(mContext).startScan(address, timeout)
                 } catch (e: Exception) {
                     throw BleException("连接蓝牙失败，未找到蓝牙设备：$address")
                 }
@@ -100,7 +96,7 @@ abstract class BaseConnectExecutor(context: Context, address: String?) : Abstrac
         try {
             // 此处如果不取消，那么还会把超时错误传递出去的。
             suspendCancellableCoroutineWithTimeout.cancel()
-            scanExecutor.stopScan()
+            ScanExecutorFactory.get(mContext).stopScan()
             if (checkEnvironment()) {
                 onDisconnect()
             }
