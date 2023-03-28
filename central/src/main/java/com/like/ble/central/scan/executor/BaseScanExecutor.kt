@@ -31,6 +31,7 @@ internal abstract class BaseScanExecutor(context: Context) : AbstractScanExecuto
                     suspendCancellableCoroutineWithTimeout.execute<Unit>(timeout, "扫描完成") { continuation ->
                         continuation.invokeOnCancellation {
                             stopScan()
+                            close()
                         }
                         onStartScan(continuation, filterServiceUuid) {
                             trySend(it)

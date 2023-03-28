@@ -20,7 +20,6 @@ import com.like.ble.util.BleBroadcastReceiverManager
 import com.like.common.base.BaseLazyFragment
 import com.like.common.util.Logger
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
