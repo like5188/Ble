@@ -21,4 +21,8 @@ object ConnectExecutorFactory {
         }
     }
 
+    internal fun remove(address: String?) {
+        connectExecutors.remove(address)
+    }
+
 }

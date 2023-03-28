@@ -310,6 +310,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
 
     final override fun close() {
         disconnect()
+        ConnectExecutorFactory.remove(address)
     }
 
     protected abstract fun onConnect(
