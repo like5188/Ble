@@ -51,8 +51,7 @@ class BleScanFragment : BaseLazyFragment() {
                 }
                 val blueColor = ContextCompat.getColor(ctx, R.color.ble_text_blue)
                 mBinding.tvScanStatus.setTextColor(blueColor)
-                mBinding.tvScanStatus.text = "蓝牙已打开，正在重启扫描……"
-                startScan()
+                mBinding.tvScanStatus.text = "蓝牙已打开"
             }
         )
     }

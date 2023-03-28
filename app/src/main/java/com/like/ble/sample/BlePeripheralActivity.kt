@@ -65,8 +65,7 @@ class BlePeripheralActivity : AppCompatActivity() {
                 }
                 val blueColor = ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_blue)
                 mBinding.tvAdvertisingStatus.setTextColor(blueColor)
-                mBinding.tvAdvertisingStatus.text = "蓝牙已打开，正在重启广播……"
-                startAdvertising(mBinding.tvAdvertisingStatus)
+                mBinding.tvAdvertisingStatus.text = "蓝牙已打开"
             }
         )
     }
