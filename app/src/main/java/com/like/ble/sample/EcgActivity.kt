@@ -25,15 +25,15 @@ import kotlinx.coroutines.launch
  * 心电
  */
 class EcgActivity : AppCompatActivity() {
-    private val ECG_SERVICE_UUID = createBleUuidBy16Bit("0001")
-    private val ECG_COMMAND_UUID = createBleUuidBy16Bit("0002")
-    private val ECG_NOTIFICATION_UUID = createBleUuidBy16Bit("0003")
     private val mBinding: ActivityEcgBinding by lazy {
         DataBindingUtil.setContentView(this, R.layout.activity_ecg)
     }
     private val connectExecutor: AbstractConnectExecutor by lazy {
         ConnectExecutorFactory.get(this, "A0:02:19:00:02:19")
     }
+    private val serviceUuid = createBleUuidBy16Bit("0001")
+    private val commandUuid = createBleUuidBy16Bit("0002")
+    private val notificationUuid = createBleUuidBy16Bit("0003")
     private lateinit var commandCharacteristic: BluetoothGattCharacteristic
     private lateinit var notificationCharacteristic: BluetoothGattCharacteristic
 
@@ -54,19 +54,19 @@ class EcgActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val services = connectExecutor.connect()
-                val service = services.firstOrNull { it.uuid == ECG_SERVICE_UUID }
+                val service = services.firstOrNull { it.uuid == serviceUuid }
                 if (service == null) {
-                    Toast.makeText(this@EcgActivity, "没有找到服务：$ECG_SERVICE_UUID", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@EcgActivity, "没有找到服务：$serviceUuid", Toast.LENGTH_SHORT).show()
                     return@launch
                 }
-                val commandCharacteristic = service.getCharacteristic(ECG_COMMAND_UUID)
+                val commandCharacteristic = service.getCharacteristic(commandUuid)
                 if (commandCharacteristic == null) {
-                    Toast.makeText(this@EcgActivity, "没有找到命令特征：$ECG_COMMAND_UUID", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@EcgActivity, "没有找到命令特征：$commandUuid", Toast.LENGTH_SHORT).show()
                     return@launch
                 }
-                val notificationCharacteristic = service.getCharacteristic(ECG_NOTIFICATION_UUID)
+                val notificationCharacteristic = service.getCharacteristic(notificationUuid)
                 if (notificationCharacteristic == null) {
-                    Toast.makeText(this@EcgActivity, "没有找到通知特征：$ECG_NOTIFICATION_UUID", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@EcgActivity, "没有找到通知特征：$notificationUuid", Toast.LENGTH_SHORT).show()
                     return@launch
                 }
 
