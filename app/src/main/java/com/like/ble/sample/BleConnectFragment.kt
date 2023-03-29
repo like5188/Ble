@@ -102,14 +102,15 @@ class BleConnectFragment : BaseLazyFragment() {
         lifecycleScope.launch {
             try {
                 val services = if (needScan) {
+                    val timeout = 10000L
                     val startTime = System.currentTimeMillis()
                     val scanResultList: List<ScanResult> = try {
-                        ScanExecutorFactory.get(requireContext()).scanAddresses(addresses = arrayOf(mData.address))
+                        ScanExecutorFactory.get(requireContext()).scanAddresses(timeout = timeout, addresses = arrayOf(mData.address))
                     } catch (e: Exception) {
                         throw BleException("连接蓝牙失败，未找到蓝牙设备：${mData.address}")
                     }
                     val scanCost = System.currentTimeMillis() - startTime
-                    val remainTimeout = 10000 - scanCost// 剩余的分配给连接的超时时间
+                    val remainTimeout = timeout - scanCost// 剩余的分配给连接的超时时间
                     connectExecutor.connect(scanResultList.first().device, remainTimeout)
                 } else {
                     connectExecutor.connect()
