@@ -57,7 +57,7 @@ class EcgActivity : AppCompatActivity() {
                 }
                 .collectLatest {
                     StarData.putData(it)
-                    Logger.d("读取通知(${notificationUuid.getValidString()})传来的数据成功。数据长度：${it.size} ${it.contentToString()}")
+                    Logger.d("读取到通知(${notificationUuid.getValidString()})传来的数据成功。数据长度：${it.size}\n${it.contentToString()}")
                 }
         }
 
