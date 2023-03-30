@@ -78,7 +78,7 @@ class EcgActivity : AppCompatActivity() {
                     Toast.makeText(this@EcgActivity, "没有找到通知特征：$notificationUuid", Toast.LENGTH_SHORT).show()
                     return@launch
                 }
-                connectExecutor.setCharacteristicNotification(notificationCharacteristic.uuid, service.uuid)
+                connectExecutor.setCharacteristicNotification(notificationUuid, serviceUuid)
                 this@EcgActivity.commandCharacteristic = commandCharacteristic
                 this@EcgActivity.notificationCharacteristic = notificationCharacteristic
                 mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this@EcgActivity, R.color.ble_text_blue))
