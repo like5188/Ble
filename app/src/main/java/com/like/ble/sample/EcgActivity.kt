@@ -63,21 +63,10 @@ class EcgActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val services = connectExecutor.connect()
-                val service = services.firstOrNull { it.uuid == serviceUuid }
-                if (service == null) {
-                    Toast.makeText(this@EcgActivity, "没有找到服务：$serviceUuid", Toast.LENGTH_SHORT).show()
-                    return@launch
-                }
-                val commandCharacteristic = service.getCharacteristic(commandUuid)
-                if (commandCharacteristic == null) {
-                    Toast.makeText(this@EcgActivity, "没有找到命令特征：$commandUuid", Toast.LENGTH_SHORT).show()
-                    return@launch
-                }
-                val notificationCharacteristic = service.getCharacteristic(notificationUuid)
-                if (notificationCharacteristic == null) {
-                    Toast.makeText(this@EcgActivity, "没有找到通知特征：$notificationUuid", Toast.LENGTH_SHORT).show()
-                    return@launch
-                }
+                val service = services.firstOrNull { it.uuid == serviceUuid } ?: throw BleException("没有找到服务：$serviceUuid")
+                val commandCharacteristic = service.getCharacteristic(commandUuid) ?: throw BleException("没有找到命令特征：$commandUuid")
+                val notificationCharacteristic =
+                    service.getCharacteristic(notificationUuid) ?: throw BleException("没有找到通知特征：$notificationUuid")
                 connectExecutor.setCharacteristicNotification(notificationUuid, serviceUuid)
                 this@EcgActivity.commandCharacteristic = commandCharacteristic
                 this@EcgActivity.notificationCharacteristic = notificationCharacteristic
@@ -94,6 +83,7 @@ class EcgActivity : AppCompatActivity() {
                         Toast.makeText(this@EcgActivity, e.message, Toast.LENGTH_SHORT).show()
                     }
                     else -> {
+                        connectExecutor.disconnect()
                         mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(this@EcgActivity, R.color.ble_text_red))
                         mBinding.tvConnectStatus.text = e.message
                     }
