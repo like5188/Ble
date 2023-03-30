@@ -18,11 +18,4 @@
         android:text="启动蓝牙外围设备界面"
         android:textAllCaps="false" />
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="gotoEcgActivity"
-        android:text="启动心电设备界面"
-        android:textAllCaps="false" />
-
 </LinearLayout>

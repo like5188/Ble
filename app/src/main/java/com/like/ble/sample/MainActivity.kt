@@ -20,8 +20,4 @@ class MainActivity : AppCompatActivity() {
         startActivity<BlePeripheralActivity>()
     }
 
-    fun gotoEcgActivity(view: View) {
-        startActivity<EcgActivity>()
-    }
-
 }
