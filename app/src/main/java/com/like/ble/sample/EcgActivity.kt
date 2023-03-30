@@ -22,7 +22,6 @@ import com.starcaretech.stardata.data.AlertSwitch
 import com.starcaretech.stardata.data.DataPoint
 import com.starcaretech.stardata.data.DeviceException
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 /**
@@ -55,7 +54,7 @@ class EcgActivity : AppCompatActivity() {
                 .catch {
                     Toast.makeText(this@EcgActivity, it.message, Toast.LENGTH_SHORT).show()
                 }
-                .collectLatest {
+                .collect {
                     StarData.putData(it)
                     Logger.d("读取到通知(${notificationUuid.getValidString()})传来的数据成功。数据长度：${it.size}\n${it.contentToString()}")
                 }
@@ -69,6 +68,7 @@ class EcgActivity : AppCompatActivity() {
 
                 override fun onDataPoints(list: List<DataPoint>) {
                     Logger.i("onDataPoints 数据量：${list.size}")
+                    val heartRates = list.map { it.getHeartRate() }
                 }
 
                 override fun onAlertSwitch(alertSwitch: AlertSwitch) {
