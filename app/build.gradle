@@ -75,6 +75,7 @@ dependencies {
     implementation 'com.github.like5188.RecyclerView:ext:4.1.8'
     implementation 'com.github.like5188.RecyclerView:ui:4.1.8'
 
+    // 深圳星康医疗科技有限公司 数据解析包。还要两外添加 libECGMonitor.so。
     implementation(name: 'stardata-release', ext: 'aar')
 
     implementation project(':core')
