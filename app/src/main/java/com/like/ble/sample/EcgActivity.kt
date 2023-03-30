@@ -16,7 +16,6 @@ import com.like.ble.sample.databinding.ActivityEcgBinding
 import com.like.ble.util.createBleUuidBy16Bit
 import com.like.ble.util.getValidString
 import com.like.common.util.Logger
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -45,6 +44,16 @@ class EcgActivity : AppCompatActivity() {
         mBinding.btnDisconnect.setOnClickListener {
             disconnect()
         }
+        connectExecutor.requestEnvironment(this)
+        lifecycleScope.launch {
+            connectExecutor.setNotifyCallback(notificationUuid)
+                .catch {
+                    Toast.makeText(this@EcgActivity, it.message, Toast.LENGTH_SHORT).show()
+                }
+                .collectLatest {
+                    Logger.d("读取通知(${notificationUuid.getValidString()})传来的数据成功。数据长度：${it.size} ${it.contentToString()}")
+                }
+        }
     }
 
     private fun connect() {
@@ -69,18 +78,6 @@ class EcgActivity : AppCompatActivity() {
                     Toast.makeText(this@EcgActivity, "没有找到通知特征：$notificationUuid", Toast.LENGTH_SHORT).show()
                     return@launch
                 }
-
-                launch {
-                    connectExecutor.setNotifyCallback(notificationCharacteristic.uuid)
-                        .catch {
-                            Toast.makeText(this@EcgActivity, it.message, Toast.LENGTH_SHORT).show()
-                        }
-                        .collectLatest {
-                            Logger.d("读取通知(${notificationCharacteristic.uuid.getValidString()})传来的数据成功。数据长度：${it.size} ${it.contentToString()}")
-                        }
-                }
-
-                delay(20)
                 connectExecutor.setCharacteristicNotification(notificationCharacteristic.uuid, service.uuid)
                 this@EcgActivity.commandCharacteristic = commandCharacteristic
                 this@EcgActivity.notificationCharacteristic = notificationCharacteristic
