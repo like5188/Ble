@@ -40,24 +40,14 @@
 ```java
     // 扫描使用 AbstractScanExecutor 类，然后调用其中的方法即可
     private val scanExecutor: AbstractScanExecutor by lazy {
-        ScanExecutor(ComponentActivity)
-    }
-    // 特殊处理：接收扫描结果
-    lifecycleScope.launch {
-        scanExecutor.scanFlow.collect {
-        }
+        ScanExecutorFactory.get(context)
     }
     // 释放资源
     scanExecutor.close()
 
     // 连接使用 AbstractConnectExecutor 类，然后调用其中的方法即可
     private val connectExecutor: AbstractConnectExecutor by lazy {
-        ConnectExecutor(ComponentActivity, address)
-    }
-    // 特殊处理：接收通知数据
-    lifecycleScope.launch {
-        connectExecutor.notifyFlow.collect {
-        }
+        ConnectExecutorFactory.get(context, address)
     }
     // 释放资源
     connectExecutor.close()
@@ -67,7 +57,7 @@
 ```java
     // 广播使用 AbstractAdvertisingExecutor 类，然后调用其中的方法即可
     private val peripheralExecutor: AbstractAdvertisingExecutor by lazy {
-        AdvertisingExecutor(this)
+        AdvertisingExecutorFactory.get(context)
     }
     // 释放资源
     peripheralExecutor.close()
