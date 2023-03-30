@@ -16,6 +16,11 @@ import com.like.ble.sample.databinding.ActivityEcgBinding
 import com.like.ble.util.createBleUuidBy16Bit
 import com.like.ble.util.getValidString
 import com.like.common.util.Logger
+import com.starcaretech.stardata.StarData
+import com.starcaretech.stardata.common.DataReceiverSample
+import com.starcaretech.stardata.data.AlertSwitch
+import com.starcaretech.stardata.data.DataPoint
+import com.starcaretech.stardata.data.DeviceException
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -51,8 +56,33 @@ class EcgActivity : AppCompatActivity() {
                     Toast.makeText(this@EcgActivity, it.message, Toast.LENGTH_SHORT).show()
                 }
                 .collectLatest {
+                    StarData.putData(it)
                     Logger.d("读取通知(${notificationUuid.getValidString()})传来的数据成功。数据长度：${it.size} ${it.contentToString()}")
                 }
+        }
+
+        lifecycleScope.launch {
+            StarData.setDataReceiver(object : DataReceiverSample() {
+                override fun onDeviceException(e: DeviceException) { // 设备异常
+                    Logger.e(e)
+                }
+
+                override fun onECGData(bytes: ByteArray) {
+                    Logger.v(bytes.contentToString())
+                }
+
+                override fun onDataPoints(list: List<DataPoint>) {
+                    Logger.i(list)
+                }
+
+                override fun onAlertSwitch(alertSwitch: AlertSwitch) {
+                    // 设备报警开关
+                    alertSwitch.setLowPower(3)
+                    alertSwitch.setFlash(3)
+                    alertSwitch.setLeadOff(3)
+                    alertSwitch.setBleStatus(1)
+                }
+            })
         }
     }
 
