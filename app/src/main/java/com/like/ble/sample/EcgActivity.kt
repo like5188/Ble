@@ -67,12 +67,8 @@ class EcgActivity : AppCompatActivity() {
                     Logger.e(e)
                 }
 
-                override fun onECGData(bytes: ByteArray) {
-                    Logger.v(bytes.contentToString())
-                }
-
                 override fun onDataPoints(list: List<DataPoint>) {
-                    Logger.i(list)
+                    Logger.i("onDataPoints 数据量：${list.size}")
                 }
 
                 override fun onAlertSwitch(alertSwitch: AlertSwitch) {
