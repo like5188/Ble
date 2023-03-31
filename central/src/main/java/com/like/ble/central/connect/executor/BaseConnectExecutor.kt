@@ -269,6 +269,8 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         onSetNotifyCallback(characteristicUuid) {
             trySend(it)
         }
+        // 注意：不能在这个作用域里面做耗时操作，或者使用挂起函数。
+        // 这样会导致使用者关闭协程作用域的时候，因为还没有执行到 awaitClose 方法，所以就触发不了 awaitClose 里面的代码。
         awaitClose {
             onRemoveNotifyCallback(characteristicUuid)
             Log.d("TAG", "通知监听被取消")
