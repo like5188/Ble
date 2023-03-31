@@ -31,7 +31,7 @@ abstract class AbstractScanExecutor(context: Context) : BleExecutor(context) {
 
     /**
      * 开始扫描蓝牙设备
-     *
+     * 收集此流时，开始执行扫描操作。
      * android 7.0 后不能在30秒内扫描和停止超过5次。android 蓝牙模块会打印当前应用扫描太频繁的log日志,并在android 5.0 的ScanCallback回调中触发onScanFailed(int）,返回错误码：ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED,表示app无法注册，无法开始扫描）。
      *
      * @param filterServiceUuid     需要过滤的设备服务UUID，默认为null，即不过滤
@@ -39,17 +39,6 @@ abstract class AbstractScanExecutor(context: Context) : BleExecutor(context) {
      * @throws [com.like.ble.exception.BleException]
      */
     abstract fun startScan(filterServiceUuid: UUID? = null, timeout: Long = 10000L): Flow<ScanResult>
-
-    /**
-     * 扫描指定所有地址的蓝牙设备，全部扫描到后就自动停止扫描
-     *
-     * @param filterServiceUuid     需要过滤的设备服务UUID，默认为null，即不过滤
-     * @param timeout               扫描持续时长。达到时长后，会自动停止扫描；如果<=0，表示不限制。
-     * @param addresses             需要扫描的设备地址。
-     * @return 扫描到的设备
-     * @throws [com.like.ble.exception.BleException]
-     */
-    abstract suspend fun scanAddresses(filterServiceUuid: UUID? = null, timeout: Long = 10000L, vararg addresses: String?): List<ScanResult>
 
     /**
      * 停止扫描蓝牙设备

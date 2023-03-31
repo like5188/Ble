@@ -44,23 +44,6 @@ internal abstract class BaseScanExecutor(context: Context) : AbstractScanExecuto
         }
     }
 
-    final override suspend fun scanAddresses(filterServiceUuid: UUID?, timeout: Long, vararg addresses: String?): List<ScanResult> =
-        try {
-            mutexUtils.withTryLockOrThrow("正在扫描中……") {
-                checkEnvironmentOrThrow()
-                withContext(Dispatchers.IO) {
-                    suspendCancellableCoroutineWithTimeout.execute<List<ScanResult>>(timeout, "未找到全部设备：$addresses") { continuation ->
-                        continuation.invokeOnCancellation {
-                            stopScan()
-                        }
-                        onScanAddresses(continuation, filterServiceUuid, *addresses)
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            throw e.toBleException()
-        }
-
     final override fun stopScan() {
         try {
             // 此处如果不取消，那么还会把超时错误传递出去的。
@@ -81,12 +64,6 @@ internal abstract class BaseScanExecutor(context: Context) : AbstractScanExecuto
         continuation: CancellableContinuation<Unit>,
         filterServiceUuid: UUID?,
         onResult: (ScanResult) -> Unit
-    )
-
-    protected abstract fun onScanAddresses(
-        continuation: CancellableContinuation<List<ScanResult>>,
-        filterServiceUuid: UUID?,
-        vararg addresses: String?
     )
 
     protected abstract fun onStopScan()

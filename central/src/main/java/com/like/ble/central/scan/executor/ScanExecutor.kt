@@ -1,13 +1,11 @@
 package com.like.ble.central.scan.executor
 
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.os.Build
 import android.os.ParcelUuid
-import android.util.Log
 import androidx.annotation.RequiresApi
 import com.like.ble.callback.BleCallback
 import com.like.ble.central.scan.callback.ScanCallbackManager
@@ -16,7 +14,6 @@ import com.like.ble.exception.BleException
 import com.like.ble.util.getBluetoothAdapter
 import kotlinx.coroutines.CancellableContinuation
 import java.util.*
-import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 /**
@@ -36,40 +33,6 @@ internal class ScanExecutor(context: Context) : BaseScanExecutor(context) {
 
             override fun onError(exception: BleException) {
                 // 这里不能直接抛异常，因为异步回调在另外的线程中，直接抛出了捕获不了，会造成崩溃。
-                if (continuation.isActive)
-                    continuation.resumeWithException(exception)
-            }
-        }
-        onStartScan(filterServiceUuid, bleCallback)
-    }
-
-    override fun onScanAddresses(
-        continuation: CancellableContinuation<List<ScanResult>>,
-        filterServiceUuid: UUID?,
-        vararg addresses: String?
-    ) {
-        if (addresses.isEmpty() || addresses.any { it.isNullOrEmpty() || !BluetoothAdapter.checkBluetoothAddress(it) }) {
-            throw BleException("invalid addresses")
-        }
-        val bleCallback = object : BleCallback<ScanResult>() {
-            val result = mutableListOf<ScanResult>()
-
-            override fun onSuccess(data: ScanResult) {
-                Log.e("TAG", data.device.address)
-                if (addresses.contains(data.device.address)) {
-                    if (!result.contains(data)) {
-                        result.add(data)
-                    }
-                    if (result.size == addresses.size) {
-                        onStopScan()
-                        if (continuation.isActive) {
-                            continuation.resume(result)
-                        }
-                    }
-                }
-            }
-
-            override fun onError(exception: BleException) {
                 if (continuation.isActive)
                     continuation.resumeWithException(exception)
             }
