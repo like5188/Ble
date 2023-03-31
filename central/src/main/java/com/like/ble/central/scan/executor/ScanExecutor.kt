@@ -37,10 +37,6 @@ internal class ScanExecutor(context: Context) : BaseScanExecutor(context) {
                     continuation.resumeWithException(exception)
             }
         }
-        onStartScan(filterServiceUuid, bleCallback)
-    }
-
-    private fun onStartScan(filterServiceUuid: UUID?, bleCallback: BleCallback<ScanResult>) {
         scanCallbackManager.setScanBleCallback(bleCallback)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             onStartScan21(filterServiceUuid)
