@@ -36,7 +36,8 @@ internal class ScanExecutor(context: Context) : BaseScanExecutor(context) {
 
             override fun onError(exception: BleException) {
                 // 这里不能直接抛异常，因为异步回调在另外的线程中，直接抛出了捕获不了，会造成崩溃。
-                continuation.resumeWithException(exception)
+                if (continuation.isActive)
+                    continuation.resumeWithException(exception)
             }
         }
         onStartScan(filterServiceUuid, bleCallback)
