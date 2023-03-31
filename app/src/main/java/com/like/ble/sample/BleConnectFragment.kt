@@ -1,5 +1,6 @@
 package com.like.ble.sample
 
+import android.bluetooth.BluetoothGattService
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,14 +12,16 @@ import androidx.lifecycle.lifecycleScope
 import com.like.ble.central.connect.executor.AbstractConnectExecutor
 import com.like.ble.central.connect.executor.ConnectExecutorFactory
 import com.like.ble.central.scan.executor.ScanExecutorFactory
-import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.sample.databinding.FragmentBleConnectBinding
 import com.like.ble.util.BleBroadcastReceiverManager
 import com.like.common.base.BaseLazyFragment
+import com.like.common.util.Logger
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 /**
@@ -99,29 +102,44 @@ class BleConnectFragment : BaseLazyFragment() {
         val preState = mBinding.tvConnectStatus.text
         mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_black_1))
         mBinding.tvConnectStatus.text = "连接中……"
+
+        fun onConnectSuccess(services: List<BluetoothGattService>) {
+            val ctx = context ?: return
+            mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
+            mBinding.tvConnectStatus.text = "连接成功"
+            if (services.isNotEmpty()) {
+                val bleGattServiceInfos = services.map { bluetoothGattService ->
+                    BleConnectInfo(mData.address, bluetoothGattService)
+                }
+                mAdapter.submitList(bleGattServiceInfos)
+            } else {
+                mAdapter.submitList(null)
+            }
+        }
+
         lifecycleScope.launch {
             try {
-                val services = if (needScan) {
-                    val scanResultList: List<ScanResult> = try {
-                        ScanExecutorFactory.get(requireContext()).scanAddresses(addresses = arrayOf(mData.address))
-                    } catch (e: Exception) {
-                        throw BleException("连接蓝牙失败，未找到蓝牙设备：${mData.address}")
-                    }
-                    connectExecutor.connect(scanResultList.first().device)
+                if (needScan) {
+                    ScanExecutorFactory.get(requireContext()).startScan()
+                        .catch {
+                            when (it) {
+                                is BleExceptionCancelTimeout -> {
+                                }
+                                else -> {
+                                    throw BleException("连接蓝牙失败，未找到蓝牙设备：${mData.address}")
+                                }
+                            }
+                        }
+                        .collectLatest {
+                            Logger.w("BleScanFragment scan result ${it.device.address}")
+                            if (it.device.address == mData.address) {
+                                needScan = false
+                                ScanExecutorFactory.get(requireContext()).stopScan()
+                                onConnectSuccess(connectExecutor.connect(it.device))
+                            }
+                        }
                 } else {
-                    connectExecutor.connect()
-                }
-                needScan = false
-                val ctx = context ?: return@launch
-                mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
-                mBinding.tvConnectStatus.text = "连接成功"
-                if (services.isNotEmpty()) {
-                    val bleGattServiceInfos = services.map { bluetoothGattService ->
-                        BleConnectInfo(mData.address, bluetoothGattService)
-                    }
-                    mAdapter.submitList(bleGattServiceInfos)
-                } else {
-                    mAdapter.submitList(null)
+                    onConnectSuccess(connectExecutor.connect())
                 }
             } catch (e: BleException) {
                 val ctx = context ?: return@launch
