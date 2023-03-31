@@ -154,7 +154,10 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
 
     /**
      * 设置通知监听
-     * 需要配合[setCharacteristicNotification]来使用。
+     *
+     * 注意：
+     * 1、需要配合[setCharacteristicNotification]来使用。
+     * 2、必须使用：if (某个条件) {cancel()} 来取消协程作用域，从而会移除此监听。否则会一直挂起。
      *
      * @param characteristicUuid    指定需要获取数据的特征
      */
