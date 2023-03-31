@@ -269,9 +269,10 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         onSetNotifyCallback(characteristicUuid) {
             trySend(it)
         }
-        // 注意：不能在这个作用域里面做耗时操作，或者使用挂起函数。
-        // 这样会导致使用者关闭协程作用域的时候，因为还没有执行到 awaitClose 方法，所以就触发不了 awaitClose 里面的代码。
-        // 所以如果要使用耗时操作，需要使用 launch 方法重新开启一个子协程。
+        // 注意：不能在这个作用域里面使用挂起函数，这样会导致使用者使用 cancel 方法关闭协程作用域的时候，
+        // 因为还没有执行到 awaitClose 方法，所以就触发不了 awaitClose 里面的代码。所以如果要使用挂起函数，有两种方式：
+        // 1、使用 launch 方法重新开启一个子协程。
+        // 2、把挂起函数 try catch 起来，这样就能捕获 JobCancellationException 异常，然后就可以执行下面的 awaitClose 方法。
         awaitClose {
             onRemoveNotifyCallback(characteristicUuid)
             Log.d("TAG", "通知监听被取消")
