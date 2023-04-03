@@ -41,7 +41,8 @@ internal abstract class BaseScanExecutor(context: Context) : AbstractScanExecuto
                 }
             }
         } catch (e: Exception) {
-            // flow 使用了某些中间运算符(例如firstOrNull、take)会抛出(AbortFlowException)。使用者不需要处理，因为这是正常的结束并取消协程。
+            // 当在异步回调时，由于线程原因，会使得使用了某些中间运算符(例如firstOrNull、take)的 flow 会抛出 AbortFlowException 异常，使用者不需要处理，因为这是正常的结束并取消协程。
+            // 当不使用异步线程时，这个异常被 AbortFlowException.checkOwnership() 方法处理了的，不会抛出。比如 AbstractConnectExecutor.setNotifyCallback 方法的实现方式。
             if (e !is CancellationException) {
                 throw e.toBleException()
             }
