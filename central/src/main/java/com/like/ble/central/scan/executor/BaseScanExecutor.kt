@@ -6,6 +6,7 @@ import com.like.ble.exception.toBleException
 import com.like.ble.util.MutexUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
 import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
@@ -40,7 +41,10 @@ internal abstract class BaseScanExecutor(context: Context) : AbstractScanExecuto
                 }
             }
         } catch (e: Exception) {
-            throw e.toBleException()
+            // flow 使用了某些中间运算符(例如firstOrNull、take)会抛出(AbortFlowException)。使用者不需要处理，因为这是正常的结束并取消协程。
+            if (e !is CancellationException) {
+                throw e.toBleException()
+            }
         }
     }
 

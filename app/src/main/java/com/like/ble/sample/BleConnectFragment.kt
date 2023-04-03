@@ -21,7 +21,7 @@ import com.like.common.base.BaseLazyFragment
 import com.like.common.util.Logger
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 /**
@@ -120,7 +120,7 @@ class BleConnectFragment : BaseLazyFragment() {
         lifecycleScope.launch {
             try {
                 if (needScan) {
-                    ScanExecutorFactory.get(requireContext()).startScan()
+                    val scanResult = ScanExecutorFactory.get(requireContext()).startScan()
                         .catch {
                             when (it) {
                                 is BleExceptionCancelTimeout -> {
@@ -130,14 +130,15 @@ class BleConnectFragment : BaseLazyFragment() {
                                 }
                             }
                         }
-                        .collectLatest {
-                            Logger.w("BleScanFragment scan result ${it.device.address}")
-                            if (it.device.address == mData.address) {
-                                needScan = false
-                                ScanExecutorFactory.get(requireContext()).stopScan()
-                                onConnectSuccess(connectExecutor.connect(it.device))
-                            }
+                        .firstOrNull {
+                            Logger.v(it)
+                            it.device.address == mData.address
                         }
+                    if (scanResult != null) {
+                        needScan = false
+                        ScanExecutorFactory.get(requireContext()).stopScan()
+                        onConnectSuccess(connectExecutor.connect(scanResult.device))
+                    }
                 } else {
                     onConnectSuccess(connectExecutor.connect())
                 }
@@ -145,7 +146,7 @@ class BleConnectFragment : BaseLazyFragment() {
                 val ctx = context ?: return@launch
                 when (e) {
                     is BleExceptionCancelTimeout -> {
-                        // 提前取消超时不做处理。因为这是调用 stopAdvertising() 造成的，使用者可以直接在 stopAdvertising() 方法结束后处理 UI 的显示，不需要此回调。
+                        // 提前取消超时(BleExceptionCancelTimeout)不做处理。因为这是调用 stopAdvertising() 造成的，使用者可以直接在 stopAdvertising() 方法结束后处理 UI 的显示，不需要此回调。
                     }
                     is BleExceptionBusy -> {
                         mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
