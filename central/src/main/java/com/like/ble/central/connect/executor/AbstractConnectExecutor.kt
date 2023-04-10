@@ -94,7 +94,7 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
     abstract suspend fun requestMtu(@IntRange(from = 23, to = 517) mtu: Int, timeout: Long = 3000L): Int
 
     /**
-     * 设置特征的notification或者indication，开启后，数据从[notifyFlow]获取，需要自己组包。
+     * 设置特征的notification或者indication，开启后，数据从[setNotifyCallback]获取，需要自己组包。
      * 配合[writeCharacteristic]发送命令并接收通知数据，注意必须要开启通知才能接收数据。
      *
      * @param characteristicUuid            特征UUID
