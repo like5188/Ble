@@ -347,4 +347,8 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
         mConnectCallbackManager.setReadNotifyBleCallback(characteristicUuid, null)
     }
 
+    override fun getDevice(): BluetoothDevice? {
+        return mBluetoothGatt?.device
+    }
+
 }

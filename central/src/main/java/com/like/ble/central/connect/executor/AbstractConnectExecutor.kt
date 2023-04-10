@@ -28,6 +28,8 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
         }
     }
 
+    abstract fun getDevice(): BluetoothDevice?
+
     /**
      * 连接蓝牙设备
      *
