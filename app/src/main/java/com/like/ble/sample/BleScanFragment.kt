@@ -22,7 +22,7 @@ import com.like.common.base.BaseLazyFragment
 import com.like.common.util.Logger
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.launch
 
 /**
@@ -106,7 +106,8 @@ class BleScanFragment : BaseLazyFragment() {
                         }
                     }
                 }
-                .collectLatest {
+                .conflate()// 如果消费者还在处理，则丢弃新的数据。然后消费者处理完后，再去获取生产者中的最新数据来处理。
+                .collect {
                     Logger.w("BleScanFragment scan result ${it.device.address}")
                     if (isFirstData) {
                         isFirstData = false

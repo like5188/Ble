@@ -23,8 +23,8 @@ import com.like.recyclerview.adapter.BaseListAdapter
 import com.like.recyclerview.viewholder.BindingViewHolder
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -133,7 +133,8 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                                             .catch {
                                                 Toast.makeText(mActivity, it.message, Toast.LENGTH_SHORT).show()
                                             }
-                                            .collectLatest {
+                                            .buffer()// 因为通知数据很重要，所以不能丢弃，就缓存起来。
+                                            .collect {
                                                 Toast.makeText(
                                                     mActivity,
                                                     "读取通知(${characteristic.uuid.getValidString()})传来的数据成功。数据长度：${it.size} ${it.contentToString()}",
