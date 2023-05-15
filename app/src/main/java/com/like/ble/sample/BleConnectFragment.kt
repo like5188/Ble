@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.central.connect.executor.AbstractConnectExecutor
 import com.like.ble.central.connect.executor.ConnectExecutorFactory
@@ -17,7 +18,6 @@ import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.sample.databinding.FragmentBleConnectBinding
 import com.like.ble.util.BleBroadcastReceiverManager
-import com.like.common.base.BaseLazyFragment
 import com.like.common.util.Logger
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
 import kotlinx.coroutines.flow.catch
@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 /**
  * 连接设备界面
  */
-class BleConnectFragment : BaseLazyFragment() {
+class BleConnectFragment : Fragment() {
     private lateinit var mBinding: FragmentBleConnectBinding
     private lateinit var mData: BleScanInfo
     private val connectExecutor: AbstractConnectExecutor by lazy {
@@ -225,10 +225,6 @@ class BleConnectFragment : BaseLazyFragment() {
         bleBroadcastReceiverManager.unregister()
         connectExecutor.close()
         super.onDestroy()
-    }
-
-    override fun onLazyLoadData() {
-
     }
 
 }

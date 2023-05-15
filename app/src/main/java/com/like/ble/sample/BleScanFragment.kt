@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableInt
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.central.scan.executor.AbstractScanExecutor
 import com.like.ble.central.scan.executor.ScanExecutorFactory
@@ -18,7 +19,6 @@ import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.exception.BleExceptionTimeout
 import com.like.ble.sample.databinding.FragmentBleScanBinding
 import com.like.ble.util.BleBroadcastReceiverManager
-import com.like.common.base.BaseLazyFragment
 import com.like.common.util.Logger
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
 import kotlinx.coroutines.flow.catch
@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
  * 扫描设备界面
  */
 @SuppressLint("MissingPermission")
-class BleScanFragment : BaseLazyFragment() {
+class BleScanFragment : Fragment() {
     private lateinit var mBinding: FragmentBleScanBinding
     private val mAdapter: BleScanAdapter by lazy { BleScanAdapter(requireActivity()) }
     private val scanExecutor: AbstractScanExecutor by lazy {
@@ -143,9 +143,6 @@ class BleScanFragment : BaseLazyFragment() {
         bleBroadcastReceiverManager.unregister()
         scanExecutor.close()
         super.onDestroy()
-    }
-
-    override fun onLazyLoadData() {
     }
 
 }
