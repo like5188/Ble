@@ -16,7 +16,7 @@ class ConnectCallbackManager {
     private val bluetoothGattCallback = object : BluetoothGattCallback() {
         // 当连接状态改变
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-            Log.i("TAG", "onConnectionStateChange status=$status newState=$newState")
+            Log.i("ConnectCallbackManager", "onConnectionStateChange status=$status newState=$newState")
             if (newState == BluetoothGatt.STATE_CONNECTED) {
                 // 连接蓝牙设备成功
                 gatt.discoverServices()
