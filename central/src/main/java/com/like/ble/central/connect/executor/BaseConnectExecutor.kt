@@ -45,13 +45,12 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                     throw BleExceptionBusy("设备已经连接")
                 }
                 withContext(Dispatchers.IO) {
-                    suspendCancellableCoroutineWithTimeout.execute<List<BluetoothGattService>>(
+                    suspendCancellableCoroutineWithTimeout.execute(
                         timeout, "连接蓝牙设备超时：$address"
                     ) { continuation ->
                         continuation.invokeOnCancellation {
                             disconnect()
                         }
-                        // onConnect 方法不会挂起，会在连接成功后返回，所以如果已经连接了，就抛出 BleExceptionBusy 异常
                         onConnect(continuation, device)
                     }
                 }
@@ -275,7 +274,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         // 2、把挂起函数 try catch 起来，这样就能捕获 JobCancellationException 异常，然后就可以执行下面的 awaitClose 方法。
         awaitClose {
             onRemoveNotifyCallback(characteristicUuid)
-            Log.d("TAG", "通知监听被取消")
+            Log.d("BaseConnectExecutor", "通知监听被取消")
         }
     }
 
