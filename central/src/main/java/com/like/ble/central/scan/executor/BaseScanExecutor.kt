@@ -23,7 +23,7 @@ internal abstract class BaseScanExecutor(context: Context) : AbstractScanExecuto
         SuspendCancellableCoroutineWithTimeout()
     }
 
-    // 这里不使用 callbackFlow 是因为不需要释放资源。因为资源都在 continuation.invokeOnCancellation 中释放了。
+    // 这里不使用 callbackFlow 是因为 awaitClose 有可能由于前面的代码抛异常，从而不能执行。所以这里需要把资源都放在 continuation.invokeOnCancellation 中释放了。
     final override fun startScan(filterServiceUuid: UUID?, timeout: Long): Flow<ScanResult> = channelFlow {
         try {
             mutexUtils.withTryLockOrThrow("正在扫描中……") {
