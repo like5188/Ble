@@ -62,6 +62,7 @@ internal abstract class BaseScanExecutor(context: Context) : AbstractScanExecuto
     }
 
     final override fun close() {
+        super.close()
         stopScan()
     }
 

@@ -279,6 +279,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     }
 
     final override fun close() {
+        super.close()
         disconnect()
         ConnectExecutorFactory.remove(address)
     }
