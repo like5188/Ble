@@ -91,7 +91,7 @@ class BleConnectFragment : Fragment() {
         }
         connectExecutor.requestEnvironment(activity)
         mBinding.tvConnectStatus.doAfterTextChanged {
-            Logger.e("HAHAHA", it.toString())
+            Logger.e("BleConnectFragment", "tvConnectStatus：${it.toString()}")
         }
         return mBinding.root
     }
