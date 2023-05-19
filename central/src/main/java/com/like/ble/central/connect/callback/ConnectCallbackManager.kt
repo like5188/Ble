@@ -7,6 +7,7 @@ import android.util.Log
 import com.like.ble.callback.BleCallback
 import com.like.ble.exception.BleExceptionDeviceDisconnected
 import com.like.ble.exception.BleExceptionDiscoverServices
+import com.like.ble.executor.BleExecutor
 import com.like.ble.util.getValidString
 import com.like.ble.util.isBluetoothEnable
 import com.like.ble.util.refreshDeviceCache
@@ -27,7 +28,9 @@ class ConnectCallbackManager(private val context: Context) {
                 gatt.refreshDeviceCache()
                 gatt.close()
                 val e = BleExceptionDeviceDisconnected(gatt.device.address)
-                // 断开原因为关闭蓝牙开关时，不回调，由 BleExecutor 中的 setOnBleEnableListener 设置监听来回调。
+                /**
+                 * 当断开原因为关闭蓝牙开关时，不回调，由 [BleExecutor.setOnBleEnableListener] 设置的监听来回调。
+                 */
                 if (context.isBluetoothEnable()) {
                     onDisconnectedListener?.invoke(e)
                 }
