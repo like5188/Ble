@@ -31,18 +31,9 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
 
     override fun onConnect(
         continuation: CancellableContinuation<List<BluetoothGattService>>,
-        device: BluetoothDevice?,
+        device: BluetoothDevice,
         onDisconnectedListener: ((Throwable) -> Unit)?
     ) {
-        var bluetoothDevice = device
-        if (bluetoothDevice == null) {
-            // 获取远端的蓝牙设备
-            bluetoothDevice = mContext.getBluetoothAdapter()?.getRemoteDevice(address)
-            if (bluetoothDevice == null) {
-                continuation.resumeWithException(BleException("连接蓝牙失败：$address 未找到"))
-                return
-            }
-        }
         mConnectCallbackManager.setOnDisconnectedListener(null)
         mConnectCallbackManager.setConnectBleCallback(object : BleCallback<List<BluetoothGattService>>() {
             override fun onSuccess(data: List<BluetoothGattService>) {
@@ -58,14 +49,14 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
             }
         })
         mBluetoothGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            bluetoothDevice.connectGatt(
+            device.connectGatt(
                 mContext,
                 false,// 参数autoConnect，如果为 true 的话，系统就会发起一个后台连接，等到系统发现了一个设备，就会自动连上，通常这个过程是非常慢的。为 false 的话，就会直接连接，通常会比较快。同样，BluetoothGatt.connect()只能发起一个后台连接，不是直接连接。所以连接时设置autoConnect参数设置为false，如果想实现重连功能的话，最好自己去手动实现。
                 mConnectCallbackManager.getBluetoothGattCallback(),
                 BluetoothDevice.TRANSPORT_LE
             )
         } else {
-            bluetoothDevice.connectGatt(mContext, false, mConnectCallbackManager.getBluetoothGattCallback())
+            device.connectGatt(mContext, false, mConnectCallbackManager.getBluetoothGattCallback())
         }
     }
 

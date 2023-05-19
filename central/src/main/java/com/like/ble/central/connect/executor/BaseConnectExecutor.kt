@@ -7,10 +7,7 @@ import android.content.Context
 import android.util.Log
 import com.like.ble.central.scan.executor.ScanExecutorFactory
 import com.like.ble.exception.*
-import com.like.ble.util.MutexUtils
-import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
-import com.like.ble.util.getValidString
-import com.like.ble.util.isBleDeviceConnected
+import com.like.ble.util.*
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -49,28 +46,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
             }
             withContext(Dispatchers.IO) {
                 Log.d("BaseConnectExecutor", "connect needScan：$needScan")
-                // 当关闭蓝牙开关再打开后，连接时就需要先扫描，否则连接不上。
-                val device = if (needScan) {
-                    ScanExecutorFactory.get(mContext).startScan()
-                        .catch {
-                            onScanError(it)
-                        }
-                        .firstOrNull {
-                            it.device.address == address
-                        }
-                        ?.apply {
-                            try {
-                                ScanExecutorFactory.get(mContext).stopScan()
-                                // 连接成功后，就不需要扫描了，不成功的话，下次连接时还是需要先扫描
-                                needScan = false
-                            } catch (e: BleException) {
-                                onScanError(e)
-                            }
-                        }
-                        ?.device
-                } else {
-                    null
-                }
+                val device = getBluetoothDevice()
                 suspendCancellableCoroutineWithTimeout.execute(
                     timeout, "连接蓝牙设备超时：$address"
                 ) { continuation ->
@@ -85,6 +61,29 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         throw e.toBleException()
     }
 
+    private suspend fun getBluetoothDevice(): BluetoothDevice = if (needScan) {
+        // 当关闭蓝牙开关再打开后，连接时就需要先扫描，否则连接不上。
+        ScanExecutorFactory.get(mContext).startScan()
+            .catch {
+                scanErrorToConnectErrorAndThrow(it)
+            }
+            .firstOrNull {
+                it.device.address == address
+            }
+            ?.apply {
+                try {
+                    ScanExecutorFactory.get(mContext).stopScan()
+                    // 连接成功后，就不需要扫描了，不成功的话，下次连接时还是需要先扫描
+                    needScan = false
+                } catch (e: BleException) {
+                    scanErrorToConnectErrorAndThrow(e)
+                }
+            }
+            ?.device
+    } else {
+        mContext.getBluetoothAdapter()?.getRemoteDevice(address)
+    } ?: throw BleException("连接蓝牙失败，未找到蓝牙设备：$address")
+
     final override fun disconnect() {
         Log.d("BaseConnectExecutor", "disconnect needScan：$needScan")
         try {
@@ -93,7 +92,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                 try {
                     ScanExecutorFactory.get(mContext).stopScan()
                 } catch (e: BleException) {
-                    onScanError(e)
+                    scanErrorToConnectErrorAndThrow(e)
                 }
             }
             // 此处如果不取消，那么还会把超时错误传递出去的。
@@ -109,13 +108,13 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     /**
      * 在连接时，不能报扫描相关的错误，需要转换成连接相关的错误。
      */
-    private fun onScanError(throwable: Throwable) {
-        when (throwable) {
+    private fun scanErrorToConnectErrorAndThrow(throwable: Throwable) {
+        throw  when (throwable) {
             is BleExceptionCancelTimeout -> {
-                throw throwable
+                throwable
             }
             else -> {
-                throw BleException("连接蓝牙失败，未找到蓝牙设备：$address")
+                BleException("连接蓝牙失败，未找到蓝牙设备：$address")
             }
         }
     }
@@ -340,7 +339,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
 
     protected abstract fun onConnect(
         continuation: CancellableContinuation<List<BluetoothGattService>>,
-        device: BluetoothDevice? = null,
+        device: BluetoothDevice,
         onDisconnectedListener: ((Throwable) -> Unit)?
     )
 
