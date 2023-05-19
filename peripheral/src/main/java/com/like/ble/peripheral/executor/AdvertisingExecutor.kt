@@ -42,11 +42,13 @@ internal class AdvertisingExecutor(context: Context) : BaseAdvertisingExecutor(c
         }
         advertisingCallbackManager.setAdvertisingBleCallback(object : BleCallback<Unit>() {
             override fun onSuccess(data: Unit) {
-                continuation.resume(Unit)
+                if (continuation.isActive)
+                    continuation.resume(Unit)
             }
 
             override fun onError(exception: BleException) {
-                continuation.resumeWithException(exception)
+                if (continuation.isActive)
+                    continuation.resumeWithException(exception)
             }
         })
         bluetoothLeAdvertiser.startAdvertising(

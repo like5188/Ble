@@ -46,13 +46,15 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
         mConnectCallbackManager.setOnDisconnectedListener(null)
         mConnectCallbackManager.setConnectBleCallback(object : BleCallback<List<BluetoothGattService>>() {
             override fun onSuccess(data: List<BluetoothGattService>) {
-                continuation.resume(data)
+                if (continuation.isActive)
+                    continuation.resume(data)
                 // 连接成功再设置此监听，
                 mConnectCallbackManager.setOnDisconnectedListener(onDisconnectedListener)
             }
 
             override fun onError(exception: BleException) {
-                continuation.resumeWithException(exception)
+                if (continuation.isActive)
+                    continuation.resumeWithException(exception)
             }
         })
         mBluetoothGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -94,11 +96,13 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
 
         mConnectCallbackManager.setReadCharacteristicBleCallback(object : BleCallback<ByteArray>() {
             override fun onSuccess(data: ByteArray) {
-                continuation.resume(data)
+                if (continuation.isActive)
+                    continuation.resume(data)
             }
 
             override fun onError(exception: BleException) {
-                continuation.resumeWithException(exception)
+                if (continuation.isActive)
+                    continuation.resumeWithException(exception)
             }
         })
         if (mBluetoothGatt?.readCharacteristic(characteristic) != true) {
@@ -130,11 +134,13 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
 
         mConnectCallbackManager.setReadDescriptorBleCallback(object : BleCallback<ByteArray>() {
             override fun onSuccess(data: ByteArray) {
-                continuation.resume(data)
+                if (continuation.isActive)
+                    continuation.resume(data)
             }
 
             override fun onError(exception: BleException) {
-                continuation.resumeWithException(exception)
+                if (continuation.isActive)
+                    continuation.resumeWithException(exception)
             }
         })
         if (mBluetoothGatt?.readDescriptor(descriptor) != true) {
@@ -145,11 +151,13 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
     override fun onReadRemoteRssi(continuation: CancellableContinuation<Int>) {
         mConnectCallbackManager.setReadRemoteRssiBleCallback(object : BleCallback<Int>() {
             override fun onSuccess(data: Int) {
-                continuation.resume(data)
+                if (continuation.isActive)
+                    continuation.resume(data)
             }
 
             override fun onError(exception: BleException) {
-                continuation.resumeWithException(exception)
+                if (continuation.isActive)
+                    continuation.resumeWithException(exception)
             }
         })
 
@@ -179,11 +187,13 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
 
         mConnectCallbackManager.setRequestMtuBleCallback(object : BleCallback<Int>() {
             override fun onSuccess(data: Int) {
-                continuation.resume(data)
+                if (continuation.isActive)
+                    continuation.resume(data)
             }
 
             override fun onError(exception: BleException) {
-                continuation.resumeWithException(exception)
+                if (continuation.isActive)
+                    continuation.resumeWithException(exception)
             }
         })
 
@@ -276,11 +286,13 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
 
         mConnectCallbackManager.setWriteCharacteristicBleCallback(object : BleCallback<Unit>() {
             override fun onSuccess(data: Unit) {
-                continuation.resume(Unit)
+                if (continuation.isActive)
+                    continuation.resume(Unit)
             }
 
             override fun onError(exception: BleException) {
-                continuation.resumeWithException(exception)
+                if (continuation.isActive)
+                    continuation.resumeWithException(exception)
             }
         })
         /*
@@ -328,11 +340,13 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
 
         mConnectCallbackManager.setWriteDescriptorBleCallback(object : BleCallback<Unit>() {
             override fun onSuccess(data: Unit) {
-                continuation.resume(Unit)
+                if (continuation.isActive)
+                    continuation.resume(Unit)
             }
 
             override fun onError(exception: BleException) {
-                continuation.resumeWithException(exception)
+                if (continuation.isActive)
+                    continuation.resumeWithException(exception)
             }
         })
 
