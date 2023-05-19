@@ -46,7 +46,7 @@ class BleScanFragment : Fragment() {
                 }
 
                 override fun off() {
-                    scanExecutor.close()
+                    scanExecutor.stopScan()
                     val ctx = context ?: return
                     val redColor = ContextCompat.getColor(ctx, R.color.ble_text_red)
                     mBinding.tvScanStatus.setTextColor(redColor)

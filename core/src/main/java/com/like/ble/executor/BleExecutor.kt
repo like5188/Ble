@@ -35,7 +35,7 @@ abstract class BleExecutor(context: Context) {
     }
 
     /**
-     * 释放资源
+     * 释放资源，并取消蓝牙开关广播监听
      */
     open fun close() {
         bleBroadcastReceiverManager.unregister()
