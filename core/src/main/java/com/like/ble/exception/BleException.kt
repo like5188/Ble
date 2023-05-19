@@ -7,7 +7,7 @@ class BleExceptionDeviceDisconnected(address: String?) : BleException("蓝牙设
 class BleExceptionDiscoverServices(address: String?) : BleException("发现服务失败:$address", -5)
 class BleExceptionBusy(message: String? = "蓝牙繁忙，请稍后再试！") : BleException(message, -6)
 class BleExceptionTimeout(message: String?) : BleException(message, -7)
-object BleExceptionCancelTimeout : BleException("", -8)
+object BleExceptionCancelTimeout : BleException("操作被取消", -8)
 
 fun Exception.toBleException(): BleException {
     // 转换一下异常，方便使用者判断。
