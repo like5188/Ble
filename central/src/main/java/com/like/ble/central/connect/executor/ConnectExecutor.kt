@@ -29,7 +29,11 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
         }
     }
 
-    override fun onConnect(continuation: CancellableContinuation<List<BluetoothGattService>>, device: BluetoothDevice?) {
+    override fun onConnect(
+        continuation: CancellableContinuation<List<BluetoothGattService>>,
+        device: BluetoothDevice?,
+        onDisconnectedListener: ((Throwable) -> Unit)?
+    ) {
         var bluetoothDevice = device
         if (bluetoothDevice == null) {
             // 获取远端的蓝牙设备
@@ -39,9 +43,12 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
                 return
             }
         }
+        mConnectCallbackManager.setOnDisconnectedListener(null)
         mConnectCallbackManager.setConnectBleCallback(object : BleCallback<List<BluetoothGattService>>() {
             override fun onSuccess(data: List<BluetoothGattService>) {
                 continuation.resume(data)
+                // 连接成功再设置此监听，
+                mConnectCallbackManager.setOnDisconnectedListener(onDisconnectedListener)
             }
 
             override fun onError(exception: BleException) {

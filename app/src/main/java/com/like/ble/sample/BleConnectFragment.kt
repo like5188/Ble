@@ -14,6 +14,7 @@ import com.like.ble.callback.OnBleEnableListener
 import com.like.ble.central.connect.executor.AbstractConnectExecutor
 import com.like.ble.central.connect.executor.ConnectExecutorFactory
 import com.like.ble.central.scan.executor.ScanExecutorFactory
+import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionCancelTimeout
@@ -116,10 +117,33 @@ class BleConnectFragment : Fragment() {
             }
         }
 
+        fun onDisconnected(throwable: Throwable) {
+            val ctx = context ?: return
+            when (throwable) {
+                is BleExceptionCancelTimeout -> {
+                    // 提前取消超时(BleExceptionCancelTimeout)不做处理。因为这是调用 stopAdvertising() 造成的，使用者可以直接在 stopAdvertising() 方法结束后处理 UI 的显示，不需要此回调。
+                }
+                is BleExceptionBusy -> {
+                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
+                    mBinding.tvConnectStatus.text = preState
+                    Toast.makeText(ctx, throwable.message, Toast.LENGTH_SHORT).show()
+                }
+                else -> {
+                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
+                    mBinding.tvConnectStatus.text = throwable.message
+                    mAdapter.submitList(null)
+                    mBinding.etRequestMtu.setText("")
+                    mBinding.etReadRemoteRssi.setText("")
+                    mBinding.etRequestConnectionPriority.setText("")
+                }
+            }
+        }
+
         lifecycleScope.launch {
             try {
+                var scanResult: ScanResult? = null
                 if (needScan) {
-                    val scanResult = ScanExecutorFactory.get(requireContext()).startScan()
+                    scanResult = ScanExecutorFactory.get(requireContext()).startScan()
                         .catch {
                             when (it) {
                                 is BleExceptionCancelTimeout -> {
@@ -136,31 +160,15 @@ class BleConnectFragment : Fragment() {
                     if (scanResult != null) {
                         needScan = false
                         ScanExecutorFactory.get(requireContext()).stopScan()
-                        onConnectSuccess(connectExecutor.connect(scanResult.device))
                     }
-                } else {
-                    onConnectSuccess(connectExecutor.connect())
                 }
+                val services = connectExecutor.connect(scanResult?.device) {
+                    // 连接成功后再断开
+                    onDisconnected(it)
+                }
+                onConnectSuccess(services)
             } catch (e: BleException) {
-                val ctx = context ?: return@launch
-                when (e) {
-                    is BleExceptionCancelTimeout -> {
-                        // 提前取消超时(BleExceptionCancelTimeout)不做处理。因为这是调用 stopAdvertising() 造成的，使用者可以直接在 stopAdvertising() 方法结束后处理 UI 的显示，不需要此回调。
-                    }
-                    is BleExceptionBusy -> {
-                        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
-                        mBinding.tvConnectStatus.text = preState
-                        Toast.makeText(ctx, e.message, Toast.LENGTH_SHORT).show()
-                    }
-                    else -> {
-                        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
-                        mBinding.tvConnectStatus.text = e.message
-                        mAdapter.submitList(null)
-                        mBinding.etRequestMtu.setText("")
-                        mBinding.etReadRemoteRssi.setText("")
-                        mBinding.etRequestConnectionPriority.setText("")
-                    }
-                }
+                onDisconnected(e)
             }
         }
     }

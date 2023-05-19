@@ -33,10 +33,15 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
     /**
      * 连接蓝牙设备
      *
-     * @param device    需要连接的设备，如果为 null，则连接 [address]
+     * @param device                    需要连接的设备，如果为 null，则连接 [address]
+     * @param onDisconnectedListener    如果连接成功后再断开，就会触发此回调。
      * @throws [com.like.ble.exception.BleException]
      */
-    abstract suspend fun connect(device: BluetoothDevice? = null, timeout: Long = 10000L): List<BluetoothGattService>
+    abstract suspend fun connect(
+        device: BluetoothDevice? = null,
+        timeout: Long = 10000L,
+        onDisconnectedListener: ((Throwable) -> Unit)? = null
+    ): List<BluetoothGattService>
 
     /**
      * 断开蓝牙设备

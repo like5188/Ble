@@ -24,7 +24,9 @@ class ConnectCallbackManager {
                 gatt.disconnect()
                 gatt.refreshDeviceCache()
                 gatt.close()
-                connectBleCallback?.onError(BleExceptionDeviceDisconnected(gatt.device.address))
+                val e = BleExceptionDeviceDisconnected(gatt.device.address)
+                onDisconnectedListener?.invoke(e)
+                connectBleCallback?.onError(e)
             }
         }
 
@@ -36,7 +38,9 @@ class ConnectCallbackManager {
                 gatt.disconnect()
                 gatt.refreshDeviceCache()
                 gatt.close()
-                connectBleCallback?.onError(BleExceptionDiscoverServices(gatt.device.address))
+                val e = BleExceptionDiscoverServices(gatt.device.address)
+                onDisconnectedListener?.invoke(e)
+                connectBleCallback?.onError(e)
             }
         }
 
@@ -105,6 +109,7 @@ class ConnectCallbackManager {
     private var writeCharacteristicBleCallback: BleCallback<Unit>? = null
     private var writeDescriptorBleCallback: BleCallback<Unit>? = null
     private var readNotifyBleCallbacks = mutableMapOf<UUID, BleCallback<ByteArray>>()
+    private var onDisconnectedListener: ((Throwable) -> Unit)? = null
 
     fun getBluetoothGattCallback(): BluetoothGattCallback {
         return bluetoothGattCallback
@@ -144,6 +149,10 @@ class ConnectCallbackManager {
         } else {
             readNotifyBleCallbacks[characteristicUuid] = callback
         }
+    }
+
+    fun setOnDisconnectedListener(listener: ((Throwable) -> Unit)? = null) {
+        onDisconnectedListener = listener
     }
 
 }

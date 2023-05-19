@@ -37,7 +37,11 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         }
     }
 
-    final override suspend fun connect(device: BluetoothDevice?, timeout: Long): List<BluetoothGattService> =
+    final override suspend fun connect(
+        device: BluetoothDevice?,
+        timeout: Long,
+        onDisconnectedListener: ((Throwable) -> Unit)?
+    ): List<BluetoothGattService> =
         try {
             mutexUtils.withTryLockOrThrow("正在建立连接，请稍后！") {
                 checkEnvironmentOrThrow()
@@ -51,7 +55,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                         continuation.invokeOnCancellation {
                             disconnect()
                         }
-                        onConnect(continuation, device)
+                        onConnect(continuation, device, onDisconnectedListener)
                     }
                 }
             }
@@ -286,7 +290,8 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
 
     protected abstract fun onConnect(
         continuation: CancellableContinuation<List<BluetoothGattService>>,
-        device: BluetoothDevice? = null
+        device: BluetoothDevice? = null,
+        onDisconnectedListener: ((Throwable) -> Unit)?
     )
 
     protected abstract fun onDisconnect()
