@@ -25,6 +25,7 @@ abstract class BleExecutor(context: Context) {
                 onBleEnableListener?.on()
             },
             onBleOff = {
+                onBleOff()
                 onBleEnableListener?.off()
             }
         )
