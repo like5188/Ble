@@ -100,7 +100,7 @@ class BleConnectFragment : Fragment() {
 
     private fun connect() {
         val preState = mBinding.tvConnectStatus.text
-        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_black_1))
+        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
         mBinding.tvConnectStatus.text = "连接中……"
 
         fun onConnectSuccess(services: List<BluetoothGattService>) {
