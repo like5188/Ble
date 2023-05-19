@@ -36,14 +36,10 @@ class BleConnectFragment : Fragment() {
         ConnectExecutorFactory.get(requireContext(), mData.address).apply {
             setOnBleEnableListener(object : OnBleEnableListener {
                 override fun on() {
-                    val ctx = context ?: return
                     if (mBinding.tvConnectStatus.text == "未连接") {
                         return
                     }
-                    val blueColor = ContextCompat.getColor(ctx, R.color.ble_text_blue)
-                    mBinding.tvConnectStatus.setTextColor(blueColor)
-                    mBinding.tvConnectStatus.text = "蓝牙已打开，正在重新连接……"
-                    this@BleConnectFragment.connect()
+                    reConnect()
                 }
 
                 override fun off() {
@@ -139,6 +135,7 @@ class BleConnectFragment : Fragment() {
                         mBinding.etRequestMtu.setText("")
                         mBinding.etReadRemoteRssi.setText("")
                         mBinding.etRequestConnectionPriority.setText("")
+                        reConnect()
                     }
                 }
             }
@@ -176,6 +173,12 @@ class BleConnectFragment : Fragment() {
                 onDisconnected(e)
             }
         }
+    }
+
+    private fun reConnect() {
+        mBinding.tvConnectStatus.postDelayed({
+            this@BleConnectFragment.connect()
+        }, 3000)
     }
 
     fun disconnect() {
