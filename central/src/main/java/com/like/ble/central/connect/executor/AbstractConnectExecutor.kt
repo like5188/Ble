@@ -33,13 +33,11 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
     /**
      * 连接蓝牙设备
      *
-     * @param device                    需要连接的设备，如果为 null，则连接 [address]
      * @param onDisconnectedListener    如果连接成功后再断开，就会触发此回调。
      * 注意：当断开原因为关闭蓝牙开关时，不回调，由 [BleExecutor.setOnBleEnableListener] 设置的监听来回调。
      * @throws [com.like.ble.exception.BleException]
      */
     abstract suspend fun connect(
-        device: BluetoothDevice? = null,
         timeout: Long = 10000L,
         onDisconnectedListener: ((Throwable) -> Unit)? = null
     ): List<BluetoothGattService>

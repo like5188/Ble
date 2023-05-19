@@ -14,8 +14,6 @@ import androidx.lifecycle.lifecycleScope
 import com.like.ble.callback.OnBleEnableListener
 import com.like.ble.central.connect.executor.AbstractConnectExecutor
 import com.like.ble.central.connect.executor.ConnectExecutorFactory
-import com.like.ble.central.scan.executor.ScanExecutorFactory
-import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionCancelTimeout
@@ -23,8 +21,6 @@ import com.like.ble.sample.databinding.FragmentBleConnectBinding
 import com.like.common.util.Logger
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 /**
@@ -48,7 +44,6 @@ class BleConnectFragment : Fragment() {
                 }
 
                 override fun off() {
-                    needScan = true
                     val ctx = context ?: return
                     val redColor = ContextCompat.getColor(ctx, R.color.ble_text_red)
                     mBinding.tvConnectStatus.setTextColor(redColor)
@@ -58,7 +53,6 @@ class BleConnectFragment : Fragment() {
         }
     }
     private val mAdapter: BleConnectAdapter by lazy { BleConnectAdapter(requireActivity(), connectExecutor) }
-    private var needScan: Boolean = false
 
     companion object {
         fun newInstance(bleScanInfo: BleScanInfo?): BleConnectFragment {
@@ -150,29 +144,8 @@ class BleConnectFragment : Fragment() {
 
         lifecycleScope.launch {
             try {
-                var scanResult: ScanResult? = null
-                if (needScan) {
-                    scanResult = ScanExecutorFactory.get(requireContext()).startScan()
-                        .catch {
-                            when (it) {
-                                is BleExceptionCancelTimeout -> {
-                                }
-                                else -> {
-                                    throw BleException("连接蓝牙失败，未找到蓝牙设备：${mData.address}")
-                                }
-                            }
-                        }
-                        .firstOrNull {
-                            Logger.v(it)
-                            it.device.address == mData.address
-                        }
-                    if (scanResult != null) {
-                        needScan = false
-                        ScanExecutorFactory.get(requireContext()).stopScan()
-                    }
-                }
-                val services = connectExecutor.connect(scanResult?.device) {
-                    // 连接成功后再断开
+                val services = connectExecutor.connect {
+                    // 连接成功后再断开会回调
                     onDisconnected(it)
                 }
                 onConnectSuccess(services)
