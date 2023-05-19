@@ -2,16 +2,18 @@ package com.like.ble.central.connect.callback
 
 import android.annotation.SuppressLint
 import android.bluetooth.*
+import android.content.Context
 import android.util.Log
 import com.like.ble.callback.BleCallback
 import com.like.ble.exception.BleExceptionDeviceDisconnected
 import com.like.ble.exception.BleExceptionDiscoverServices
 import com.like.ble.util.getValidString
+import com.like.ble.util.isBluetoothEnable
 import com.like.ble.util.refreshDeviceCache
 import java.util.*
 
 @SuppressLint("MissingPermission")
-class ConnectCallbackManager {
+class ConnectCallbackManager(private val context: Context) {
     // 蓝牙Gatt回调方法中都不可以进行耗时操作，需要将其方法内进行的操作丢进另一个线程，尽快返回。
     private val bluetoothGattCallback = object : BluetoothGattCallback() {
         // 当连接状态改变
@@ -25,7 +27,10 @@ class ConnectCallbackManager {
                 gatt.refreshDeviceCache()
                 gatt.close()
                 val e = BleExceptionDeviceDisconnected(gatt.device.address)
-                onDisconnectedListener?.invoke(e)
+                // 断开原因为关闭蓝牙开关时，不回调，由 BleExecutor 中的 setOnBleEnableListener 设置监听来回调。
+                if (context.isBluetoothEnable()) {
+                    onDisconnectedListener?.invoke(e)
+                }
                 connectBleCallback?.onError(e)
             }
         }
@@ -39,7 +44,9 @@ class ConnectCallbackManager {
                 gatt.refreshDeviceCache()
                 gatt.close()
                 val e = BleExceptionDiscoverServices(gatt.device.address)
-                onDisconnectedListener?.invoke(e)
+                if (context.isBluetoothEnable()) {
+                    onDisconnectedListener?.invoke(e)
+                }
                 connectBleCallback?.onError(e)
             }
         }

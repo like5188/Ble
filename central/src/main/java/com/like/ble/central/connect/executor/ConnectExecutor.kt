@@ -20,7 +20,7 @@ import kotlin.coroutines.resumeWithException
 internal class ConnectExecutor(context: Context, address: String?) : BaseConnectExecutor(context, address) {
     private var mBluetoothGatt: BluetoothGatt? = null
     private val mConnectCallbackManager: ConnectCallbackManager by lazy {
-        ConnectCallbackManager()
+        ConnectCallbackManager(context)
     }
 
     init {
