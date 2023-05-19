@@ -8,8 +8,6 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.junit.Test
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -22,20 +20,16 @@ class ExampleUnitTest {
     @Test
     fun addition_isCorrect() = runBlocking {
         channelFlow<Unit> {
-            try {
-                suspendCancellableCoroutine<Unit> {
-                    cancellableContinuation = it
-                    it.invokeOnCancellation {
-                        println("invokeOnCancellation")
-                        close()
-                    }
-                    onStartScan(it)
-                    println("onStartScan")
+            suspendCancellableCoroutine<Unit> {
+                cancellableContinuation = it
+                it.invokeOnCancellation {
+                    println("invokeOnCancellation")
+                    close()
                 }
-                delay(5000)
-            } catch (e: Exception) {
-                cancellableContinuation?.cancel()
+                onStartScan(it)
+                println("onStartScan")
             }
+            delay(5000)
         }.catch {
             println(it)
         }.collect()
