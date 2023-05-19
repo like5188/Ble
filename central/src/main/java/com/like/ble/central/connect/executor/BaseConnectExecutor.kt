@@ -46,7 +46,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
             }
             withContext(Dispatchers.IO) {
                 Log.d("BaseConnectExecutor", "connect needScan：$needScan")
-                val device = getBluetoothDevice()
+                val device = getBluetoothDevice()// todo 需要放到下面的代码块中去，才能准确超时时间
                 suspendCancellableCoroutineWithTimeout.execute(
                     timeout, "连接蓝牙设备超时：$address"
                 ) { continuation ->
