@@ -15,13 +15,11 @@ import org.junit.Test
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 class ExampleUnitTest {
-    var cancellableContinuation: CancellableContinuation<*>? = null
 
     @Test
     fun addition_isCorrect() = runBlocking {
         channelFlow<Unit> {
             suspendCancellableCoroutine<Unit> {
-                cancellableContinuation = it
                 it.invokeOnCancellation {
                     println("invokeOnCancellation")
                     close()
