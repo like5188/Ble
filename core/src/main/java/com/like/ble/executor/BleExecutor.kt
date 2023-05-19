@@ -74,4 +74,6 @@ abstract class BleExecutor(context: Context) {
         onBleEnableListener = listener
     }
 
+    abstract fun onBleOff()
+
 }

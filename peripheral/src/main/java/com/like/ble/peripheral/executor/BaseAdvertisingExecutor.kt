@@ -67,6 +67,10 @@ internal abstract class BaseAdvertisingExecutor(context: Context) : AbstractAdve
         stopAdvertising()
     }
 
+    override fun onBleOff() {
+        stopAdvertising()
+    }
+
     protected abstract fun onStartAdvertising(
         continuation: CancellableContinuation<Unit>,
         settings: AdvertiseSettings,

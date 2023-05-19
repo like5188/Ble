@@ -288,6 +288,10 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         ConnectExecutorFactory.remove(address)
     }
 
+    override fun onBleOff() {
+        disconnect()
+    }
+
     protected abstract fun onConnect(
         continuation: CancellableContinuation<List<BluetoothGattService>>,
         device: BluetoothDevice? = null,

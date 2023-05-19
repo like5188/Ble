@@ -36,15 +36,18 @@ class BleConnectFragment : Fragment() {
         ConnectExecutorFactory.get(requireContext(), mData.address).apply {
             setOnBleEnableListener(object : OnBleEnableListener {
                 override fun on() {
+                    val ctx = context ?: return
                     if (mBinding.tvConnectStatus.text == "未连接") {
                         return
                     }
+                    val blueColor = ContextCompat.getColor(ctx, R.color.ble_text_blue)
+                    mBinding.tvConnectStatus.setTextColor(blueColor)
+                    mBinding.tvConnectStatus.text = "蓝牙已打开"
                     reConnect()
                 }
 
                 override fun off() {
                     needScan = true
-                    connectExecutor.disconnect()
                     val ctx = context ?: return
                     val redColor = ContextCompat.getColor(ctx, R.color.ble_text_red)
                     mBinding.tvConnectStatus.setTextColor(redColor)

@@ -66,6 +66,10 @@ internal abstract class BaseScanExecutor(context: Context) : AbstractScanExecuto
         stopScan()
     }
 
+    override fun onBleOff() {
+        stopScan()
+    }
+
     protected abstract fun onStartScan(
         continuation: CancellableContinuation<Unit>,
         filterServiceUuid: UUID?,
