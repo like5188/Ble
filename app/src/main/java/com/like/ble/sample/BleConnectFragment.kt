@@ -121,7 +121,7 @@ class BleConnectFragment : Fragment() {
             lifecycleScope.launch(Dispatchers.Main) {
                 when (throwable) {
                     is BleExceptionCancelTimeout -> {
-                        // 提前取消超时(BleExceptionCancelTimeout)不做处理。因为这是调用 stopAdvertising() 造成的，使用者可以直接在 stopAdvertising() 方法结束后处理 UI 的显示，不需要此回调。
+                        // 提前取消超时(BleExceptionCancelTimeout)不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
                     }
                     is BleExceptionBusy -> {
                         mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
