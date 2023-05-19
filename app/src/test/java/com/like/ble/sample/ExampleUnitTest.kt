@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.junit.Test
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -38,8 +40,8 @@ class ExampleUnitTest {
         continuation.cancel()
         println("0")
 //        continuation.resume(Unit)
-        println("1")
+//        println("1")
 //        continuation.resumeWithException(IllegalArgumentException("err"))
-        println("2")
+//        println("2")
     }
 }
