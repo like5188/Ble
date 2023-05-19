@@ -46,11 +46,7 @@ class ConnectCallbackManager(private val context: Context) {
                 gatt.disconnect()
                 gatt.refreshDeviceCache()
                 gatt.close()
-                val e = BleExceptionDiscoverServices(gatt.device.address)
-                if (context.isBluetoothEnable()) {
-                    onDisconnectedListener?.invoke(e)
-                }
-                connectBleCallback?.onError(e)
+                connectBleCallback?.onError(BleExceptionDiscoverServices(gatt.device.address))
             }
         }
 
