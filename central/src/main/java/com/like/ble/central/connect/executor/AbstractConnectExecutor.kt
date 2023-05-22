@@ -44,6 +44,7 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
 
     /**
      * 断开蓝牙设备
+     * 注意：断开连接不会触发[onConnectionStateChange]回调
      * @throws [com.like.ble.exception.BleException]
      */
     abstract fun disconnect()

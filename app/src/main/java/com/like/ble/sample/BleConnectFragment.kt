@@ -21,6 +21,8 @@ import com.like.ble.sample.databinding.FragmentBleConnectBinding
 import com.like.common.util.Logger
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -53,6 +55,7 @@ class BleConnectFragment : Fragment() {
         }
     }
     private val mAdapter: BleConnectAdapter by lazy { BleConnectAdapter(requireActivity(), connectExecutor) }
+    private var reConnectJob: Job? = null
 
     companion object {
         fun newInstance(bleScanInfo: BleScanInfo?): BleConnectFragment {
@@ -156,14 +159,17 @@ class BleConnectFragment : Fragment() {
     }
 
     private fun reConnect() {
-        mBinding.tvConnectStatus.postDelayed({
+        reConnectJob = lifecycleScope.launch {
+            delay(3000)
             this@BleConnectFragment.connect()
-        }, 3000)
+        }
     }
 
     fun disconnect() {
         val ctx = context ?: return
         try {
+            reConnectJob?.cancel()
+            reConnectJob = null
             connectExecutor.disconnect()
             mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
             mBinding.tvConnectStatus.text = "连接断开了"
