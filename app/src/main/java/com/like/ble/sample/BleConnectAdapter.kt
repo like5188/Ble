@@ -13,6 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DiffUtil
 import com.like.ble.central.connect.executor.AbstractConnectExecutor
 import com.like.ble.exception.BleException
+import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.sample.databinding.ItemBleConnectBinding
 import com.like.ble.sample.databinding.ItemBleConnectCharacteristicBinding
 import com.like.ble.sample.databinding.ItemBleConnectDescriptorsBinding
@@ -21,11 +22,9 @@ import com.like.ble.util.getTypeString
 import com.like.ble.util.getValidString
 import com.like.recyclerview.adapter.BaseListAdapter
 import com.like.recyclerview.viewholder.BindingViewHolder
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.launch
 import java.util.*
 
 class BleConnectAdapter(private val mActivity: FragmentActivity, private val connectExecutor: AbstractConnectExecutor) :
@@ -66,6 +65,20 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                     characteristics.forEach {
                         addCharacteristic(item.address, item.service.uuid, it, binding.llCharacteristics)
                     }
+                }
+            }
+        }
+    }
+
+    private suspend fun onError(e: Throwable) {
+        val ctx = mActivity
+        withContext(Dispatchers.Main) {
+            when (e) {
+                is BleExceptionCancelTimeout -> {
+                    // 提前取消超时(BleExceptionCancelTimeout)不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
+                }
+                else -> {
+                    Toast.makeText(ctx, e.message, Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -113,7 +126,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                         val data = connectExecutor.readCharacteristic(characteristic.uuid, serviceUuid)
                         Toast.makeText(mActivity, "读特征成功。数据长度：${data.size} ${data.contentToString()}", Toast.LENGTH_SHORT).show()
                     } catch (e: BleException) {
-                        Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
+                        onError(e)
                     }
                 }
             }
@@ -131,7 +144,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                                     mActivity.lifecycleScope.launch {
                                         connectExecutor.setNotifyCallback(characteristic.uuid)
                                             .catch {
-                                                Toast.makeText(mActivity, it.message, Toast.LENGTH_SHORT).show()
+                                                onError(it)
                                             }
                                             .buffer()// 因为通知数据很重要，所以不能丢弃，就缓存起来。
                                             .collect {
@@ -165,7 +178,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                                             )
                                             Toast.makeText(mActivity, "写特征成功", Toast.LENGTH_SHORT).show()
                                         } catch (e: BleException) {
-                                            Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
+                                            onError(e)
                                         }
                                     }
                                 }
@@ -195,7 +208,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                             binding.ivNotify.setImageResource(R.drawable.notify_close)
                         }
                     } catch (e: BleException) {
-                        Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
+                        onError(e)
                     }
                 }
             }
@@ -219,7 +232,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                             binding.ivIndicate.setImageResource(R.drawable.indicate_close)
                         }
                     } catch (e: BleException) {
-                        Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
+                        onError(e)
                     }
                 }
             }
@@ -260,7 +273,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                     )
                     Toast.makeText(mActivity, "读描述值成功。数据长度：${data.size} ${data.contentToString()}", Toast.LENGTH_SHORT).show()
                 } catch (e: BleException) {
-                    Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
+                    onError(e)
                 }
             }
         }
@@ -279,7 +292,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                                 )
                                 Toast.makeText(mActivity, "写描述值成功", Toast.LENGTH_SHORT).show()
                             } catch (e: BleException) {
-                                Toast.makeText(mActivity, e.message, Toast.LENGTH_SHORT).show()
+                                onError(e)
                             }
                         }
                     }

@@ -20,10 +20,7 @@ import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.sample.databinding.FragmentBleConnectBinding
 import com.like.common.util.Logger
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 
 /**
  * 连接设备界面
@@ -179,6 +176,20 @@ class BleConnectFragment : Fragment() {
         }
     }
 
+    private suspend fun onError(e: Throwable) {
+        val ctx = context ?: return
+        withContext(Dispatchers.Main) {
+            when (e) {
+                is BleExceptionCancelTimeout -> {
+                    // 提前取消超时(BleExceptionCancelTimeout)不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
+                }
+                else -> {
+                    Toast.makeText(ctx, e.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
     private fun requestMtu() {
         if (mBinding.etRequestMtu.text.trim().isEmpty()) {
             Toast.makeText(context, "请输入MTU的值", Toast.LENGTH_SHORT).show()
@@ -190,7 +201,7 @@ class BleConnectFragment : Fragment() {
                 connectExecutor.requestMtu(mtu)
                 Toast.makeText(context, "设置成功", Toast.LENGTH_SHORT).show()
             } catch (e: BleException) {
-                Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
+                onError(e)
             }
         }
     }
@@ -201,7 +212,7 @@ class BleConnectFragment : Fragment() {
                 val rssi = connectExecutor.readRemoteRssi(3000)
                 mBinding.etReadRemoteRssi.setText(rssi.toString())
             } catch (e: BleException) {
-                Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
+                onError(e)
             }
         }
     }
@@ -217,7 +228,7 @@ class BleConnectFragment : Fragment() {
                 connectExecutor.requestConnectionPriority(connectionPriority)
                 Toast.makeText(context, "设置成功", Toast.LENGTH_SHORT).show()
             } catch (e: BleException) {
-                Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
+                onError(e)
             }
         }
     }
