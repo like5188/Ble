@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import java.util.*
+import kotlin.coroutines.resume
 
 /**
  * 蓝牙连接及数据操作的前提条件
@@ -46,9 +47,13 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
             }
             withContext(Dispatchers.IO) {
                 Log.d("BaseConnectExecutor", "connect needScan：$needScan")
-                val device = getBluetoothDevice()// todo 需要放到下面的代码块中去，才能准确超时时间
+                val startTime = System.currentTimeMillis()
+                val device = getBluetoothDevice(timeout)
+                val cost = System.currentTimeMillis() - startTime
+                val remainTime = timeout - cost
+                Log.d("BaseConnectExecutor", "connect getBluetoothDevice timeout：$timeout cost：$cost remainTime：$remainTime")
                 suspendCancellableCoroutineWithTimeout.execute(
-                    timeout, "连接蓝牙设备超时：$address"
+                    remainTime, "连接蓝牙设备超时：$address"
                 ) { continuation ->
                     continuation.invokeOnCancellation {
                         disconnect()
@@ -61,9 +66,9 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         throw e.toBleException()
     }
 
-    private suspend fun getBluetoothDevice(): BluetoothDevice = if (needScan) {
+    private suspend fun getBluetoothDevice(timeout: Long): BluetoothDevice = if (needScan) {
         // 当关闭蓝牙开关再打开后，连接时就需要先扫描，否则连接不上。
-        ScanExecutorFactory.get(mContext).startScan()
+        ScanExecutorFactory.get(mContext).startScan(timeout = timeout)
             .catch {
                 scanErrorToConnectErrorAndThrow(it)
             }
@@ -81,7 +86,11 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
             }
             ?.device
     } else {
-        mContext.getBluetoothAdapter()?.getRemoteDevice(address)
+        suspendCancellableCoroutineWithTimeout.execute(
+            timeout, "连接蓝牙设备超时，未找到蓝牙设备：$address"
+        ) {
+            it.resume(mContext.getBluetoothAdapter()?.getRemoteDevice(address))
+        }
     } ?: throw BleException("连接蓝牙失败，未找到蓝牙设备：$address")
 
     final override fun disconnect() {
