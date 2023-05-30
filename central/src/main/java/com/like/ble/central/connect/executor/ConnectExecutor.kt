@@ -270,7 +270,7 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
             return
         }
 
-        if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_WRITE == 0) {
+        if (characteristic.properties and (BluetoothGattCharacteristic.PROPERTY_WRITE or BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) == 0) {
             continuation.resumeWithException(BleException("this characteristic not support write!"))
             return
         }
