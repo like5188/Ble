@@ -255,9 +255,11 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute<Unit>(timeout, "设置通知超时：$address") { continuation ->
                         onSetCharacteristicNotification(characteristicUuid, serviceUuid, type, enable, onSuccess = {
-                            continuation.resume(Unit)
+                            if (continuation.isActive)
+                                continuation.resume(Unit)
                         }) {
-                            continuation.resumeWithException(it)
+                            if (continuation.isActive)
+                                continuation.resumeWithException(it)
                         }
                     }
                 }
@@ -288,9 +290,11 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                         "写特征值超时：${characteristicUuid.getValidString()}"
                     ) { continuation ->
                         onWriteCharacteristic(data, characteristicUuid, serviceUuid, writeType, onSuccess = {
-                            continuation.resume(Unit)
+                            if (continuation.isActive)
+                                continuation.resume(Unit)
                         }) {
-                            continuation.resumeWithException(it)
+                            if (continuation.isActive)
+                                continuation.resumeWithException(it)
                         }
                     }
                 }
@@ -321,7 +325,8 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                 ) { continuation ->
                     // 启用通知
                     onSetCharacteristicNotification(notifyUuid, serviceUuid, 0, true) {
-                        continuation.resumeWithException(it)
+                        if (continuation.isActive)
+                            continuation.resumeWithException(it)
                     }
                     // 设置监听
                     var result: ByteArray = byteArrayOf()
@@ -333,12 +338,14 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                             // 取消监听
                             onRemoveNotifyCallback()
                             Log.d("BaseConnectExecutor", "通知监听被取消")
-                            continuation.resume(result)
+                            if (continuation.isActive)
+                                continuation.resume(result)
                         }
                     }
                     // 写入命令
                     onWriteCharacteristic(data, writeUuid, serviceUuid, writeType) {
-                        continuation.resumeWithException(it)
+                        if (continuation.isActive)
+                            continuation.resumeWithException(it)
                     }
                 }
             }
