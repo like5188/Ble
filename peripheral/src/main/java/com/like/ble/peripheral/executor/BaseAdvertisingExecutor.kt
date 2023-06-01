@@ -9,9 +9,10 @@ import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.toBleException
 import com.like.ble.util.MutexUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
-import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 /**
  * 外围设备广播的前提条件
@@ -38,7 +39,13 @@ internal abstract class BaseAdvertisingExecutor(context: Context) : AbstractAdve
                         continuation.invokeOnCancellation {
                             stopAdvertising()
                         }
-                        onStartAdvertising(continuation, settings, advertiseData, scanResponse, deviceName)
+                        onStartAdvertising(settings, advertiseData, scanResponse, deviceName, onSuccess = {
+                            if (continuation.isActive)
+                                continuation.resume(Unit)
+                        }) {
+                            if (continuation.isActive)
+                                continuation.resumeWithException(it)
+                        }
                     }
                 }
             }
@@ -72,11 +79,12 @@ internal abstract class BaseAdvertisingExecutor(context: Context) : AbstractAdve
     }
 
     protected abstract fun onStartAdvertising(
-        continuation: CancellableContinuation<Unit>,
         settings: AdvertiseSettings,
         advertiseData: AdvertiseData,
         scanResponse: AdvertiseData?,
-        deviceName: String
+        deviceName: String,
+        onSuccess: (() -> Unit)?,
+        onError: ((Throwable) -> Unit)?
     )
 
     protected abstract fun onStopAdvertising()
