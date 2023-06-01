@@ -8,10 +8,7 @@ import com.like.ble.callback.BleCallback
 import com.like.ble.central.connect.callback.ConnectCallbackManager
 import com.like.ble.exception.BleException
 import com.like.ble.util.*
-import kotlinx.coroutines.CancellableContinuation
 import java.util.*
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 /**
  * 蓝牙连接及数据操作的真正逻辑
@@ -30,22 +27,21 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
     }
 
     override fun onConnect(
-        continuation: CancellableContinuation<List<BluetoothGattService>>,
         device: BluetoothDevice,
-        onDisconnectedListener: ((Throwable) -> Unit)?
+        onDisconnectedListener: ((Throwable) -> Unit)?,
+        onSuccess: ((List<BluetoothGattService>) -> Unit)?,
+        onError: ((Throwable) -> Unit)?
     ) {
         mConnectCallbackManager.setOnDisconnectedListener(null)
         mConnectCallbackManager.setConnectBleCallback(object : BleCallback<List<BluetoothGattService>>() {
             override fun onSuccess(data: List<BluetoothGattService>) {
-                if (continuation.isActive)
-                    continuation.resume(data)
+                onSuccess?.invoke(data)
                 // 连接成功再设置此监听，
                 mConnectCallbackManager.setOnDisconnectedListener(onDisconnectedListener)
             }
 
             override fun onError(exception: BleException) {
-                if (continuation.isActive)
-                    continuation.resumeWithException(exception)
+                onError?.invoke(exception)
             }
         })
         mBluetoothGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -70,42 +66,42 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
     }
 
     override fun onReadCharacteristic(
-        continuation: CancellableContinuation<ByteArray>,
         characteristicUuid: UUID,
-        serviceUuid: UUID?
+        serviceUuid: UUID?,
+        onSuccess: ((ByteArray) -> Unit)?,
+        onError: ((Throwable) -> Unit)?
     ) {
         val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
         if (characteristic == null) {
-            continuation.resumeWithException(BleException("特征值不存在：${characteristicUuid.getValidString()}"))
+            onError?.invoke(BleException("特征值不存在：${characteristicUuid.getValidString()}"))
             return
         }
 
         if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_READ == 0) {
-            continuation.resumeWithException(BleException("this characteristic not support read!"))
+            onError?.invoke(BleException("this characteristic not support read!"))
             return
         }
 
         mConnectCallbackManager.setReadCharacteristicBleCallback(object : BleCallback<ByteArray>() {
             override fun onSuccess(data: ByteArray) {
-                if (continuation.isActive)
-                    continuation.resume(data)
+                onSuccess?.invoke(data)
             }
 
             override fun onError(exception: BleException) {
-                if (continuation.isActive)
-                    continuation.resumeWithException(exception)
+                onError?.invoke(exception)
             }
         })
         if (mBluetoothGatt?.readCharacteristic(characteristic) != true) {
-            continuation.resumeWithException(BleException("读取特征值失败：${characteristicUuid.getValidString()}"))
+            onError?.invoke(BleException("读取特征值失败：${characteristicUuid.getValidString()}"))
         }
     }
 
     override fun onReadDescriptor(
-        continuation: CancellableContinuation<ByteArray>,
         descriptorUuid: UUID,
         characteristicUuid: UUID?,
-        serviceUuid: UUID?
+        serviceUuid: UUID?,
+        onSuccess: ((ByteArray) -> Unit)?,
+        onError: ((Throwable) -> Unit)?
     ) {
         val descriptor = mBluetoothGatt?.findDescriptor(
             descriptorUuid,
@@ -113,7 +109,7 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
             serviceUuid
         )
         if (descriptor == null) {
-            continuation.resumeWithException(BleException("描述不存在：${descriptorUuid.getValidString()}"))
+            onError?.invoke(BleException("描述不存在：${descriptorUuid.getValidString()}"))
             return
         }
 
@@ -125,71 +121,76 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
 
         mConnectCallbackManager.setReadDescriptorBleCallback(object : BleCallback<ByteArray>() {
             override fun onSuccess(data: ByteArray) {
-                if (continuation.isActive)
-                    continuation.resume(data)
+                onSuccess?.invoke(data)
             }
 
             override fun onError(exception: BleException) {
-                if (continuation.isActive)
-                    continuation.resumeWithException(exception)
+                onError?.invoke(exception)
             }
         })
         if (mBluetoothGatt?.readDescriptor(descriptor) != true) {
-            continuation.resumeWithException(BleException("读取描述值失败：${descriptorUuid.getValidString()}"))
+            onError?.invoke(BleException("读取描述值失败：${descriptorUuid.getValidString()}"))
         }
     }
 
-    override fun onReadRemoteRssi(continuation: CancellableContinuation<Int>) {
+    override fun onReadRemoteRssi(
+        onSuccess: ((Int) -> Unit)?,
+        onError: ((Throwable) -> Unit)?
+    ) {
         mConnectCallbackManager.setReadRemoteRssiBleCallback(object : BleCallback<Int>() {
             override fun onSuccess(data: Int) {
-                if (continuation.isActive)
-                    continuation.resume(data)
+                onSuccess?.invoke(data)
             }
 
             override fun onError(exception: BleException) {
-                if (continuation.isActive)
-                    continuation.resumeWithException(exception)
+                onError?.invoke(exception)
             }
         })
 
         if (mBluetoothGatt?.readRemoteRssi() != true) {
-            continuation.resumeWithException(BleException("读取RSSI失败：$address"))
+            onError?.invoke(BleException("读取RSSI失败：$address"))
         }
     }
 
-    override fun onRequestConnectionPriority(continuation: CancellableContinuation<Unit>, connectionPriority: Int) {
+    override fun onRequestConnectionPriority(
+        connectionPriority: Int,
+        onSuccess: (() -> Unit)?,
+        onError: ((Throwable) -> Unit)?
+    ) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            continuation.resumeWithException(BleException("android 5.0及其以上才支持requestConnectionPriority：$address"))
+            onError?.invoke(BleException("android 5.0及其以上才支持requestConnectionPriority：$address"))
             return
         }
 
         if (mBluetoothGatt?.requestConnectionPriority(connectionPriority) != true) {
-            continuation.resumeWithException(BleException("设置ConnectionPriority失败：$address"))
+            onError?.invoke(BleException("设置ConnectionPriority失败：$address"))
             return
         }
-        continuation.resume(Unit)
+        onSuccess?.invoke()
     }
 
-    override fun onRequestMtu(continuation: CancellableContinuation<Int>, mtu: Int) {
+    override fun onRequestMtu(
+        mtu: Int,
+        onSuccess: ((Int) -> Unit)?,
+        onError: ((Throwable) -> Unit)?
+    ) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            continuation.resumeWithException(BleException("android 5.0及其以上才支持设置MTU：$address"))
+            onError?.invoke(BleException("android 5.0及其以上才支持设置MTU：$address"))
             return
         }
 
         mConnectCallbackManager.setRequestMtuBleCallback(object : BleCallback<Int>() {
             override fun onSuccess(data: Int) {
-                if (continuation.isActive)
-                    continuation.resume(data)
+                onSuccess?.invoke(data)
             }
 
             override fun onError(exception: BleException) {
-                if (continuation.isActive)
-                    continuation.resumeWithException(exception)
+                onError?.invoke(exception)
             }
         })
 
         if (mBluetoothGatt?.requestMtu(mtu) != true) {
-            continuation.resumeWithException(BleException("设置MTU失败：$address"))
+            onError?.invoke(BleException("设置MTU失败：$address"))
         }
     }
 
@@ -300,19 +301,20 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
     }
 
     override fun onWriteDescriptor(
-        continuation: CancellableContinuation<Unit>,
         data: ByteArray,
         descriptorUuid: UUID,
         characteristicUuid: UUID?,
-        serviceUuid: UUID?
+        serviceUuid: UUID?,
+        onSuccess: (() -> Unit)?,
+        onError: ((Throwable) -> Unit)?
     ) {
         if (data.isEmpty()) {
-            continuation.resumeWithException(BleException("data is empty"))
+            onError?.invoke(BleException("data is empty"))
             return
         }
         val descriptor = mBluetoothGatt?.findDescriptor(descriptorUuid, characteristicUuid, serviceUuid)
         if (descriptor == null) {
-            continuation.resumeWithException(BleException("描述不存在：${descriptorUuid.getValidString()}"))
+            onError?.invoke(BleException("描述不存在：${descriptorUuid.getValidString()}"))
             return
         }
 
@@ -331,19 +333,17 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
 
         mConnectCallbackManager.setWriteDescriptorBleCallback(object : BleCallback<Unit>() {
             override fun onSuccess(data: Unit) {
-                if (continuation.isActive)
-                    continuation.resume(Unit)
+                onSuccess?.invoke()
             }
 
             override fun onError(exception: BleException) {
-                if (continuation.isActive)
-                    continuation.resumeWithException(exception)
+                onError?.invoke(exception)
             }
         })
 
         descriptor.value = data
         if (mBluetoothGatt?.writeDescriptor(descriptor) != true) {
-            continuation.resumeWithException(BleException("写描述值失败：${descriptorUuid.getValidString()}"))
+            onError?.invoke(BleException("写描述值失败：${descriptorUuid.getValidString()}"))
         }
     }
 

@@ -8,7 +8,6 @@ import android.util.Log
 import com.like.ble.central.scan.executor.ScanExecutorFactory
 import com.like.ble.exception.*
 import com.like.ble.util.*
-import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -59,7 +58,13 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                     continuation.invokeOnCancellation {
                         disconnect()
                     }
-                    onConnect(continuation, device, onDisconnectedListener)
+                    onConnect(device, onDisconnectedListener, onSuccess = {
+                        if (continuation.isActive)
+                            continuation.resume(it)
+                    }) {
+                        if (continuation.isActive)
+                            continuation.resumeWithException(it)
+                    }
                 }
             }
         }
@@ -143,7 +148,13 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                         timeout,
                         "读取特征值超时：${characteristicUuid.getValidString()}"
                     ) { continuation ->
-                        onReadCharacteristic(continuation, characteristicUuid, serviceUuid)
+                        onReadCharacteristic(characteristicUuid, serviceUuid, onSuccess = {
+                            if (continuation.isActive)
+                                continuation.resume(it)
+                        }) {
+                            if (continuation.isActive)
+                                continuation.resumeWithException(it)
+                        }
                     }
                 }
             }
@@ -168,7 +179,13 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                 }
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(timeout, "读取描述值超时：${descriptorUuid.getValidString()}") { continuation ->
-                        onReadDescriptor(continuation, descriptorUuid, characteristicUuid, serviceUuid)
+                        onReadDescriptor(descriptorUuid, characteristicUuid, serviceUuid, onSuccess = {
+                            if (continuation.isActive)
+                                continuation.resume(it)
+                        }) {
+                            if (continuation.isActive)
+                                continuation.resumeWithException(it)
+                        }
                     }
                 }
             }
@@ -188,7 +205,13 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                 }
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(timeout, "读取RSSI超时：$address") { continuation ->
-                        onReadRemoteRssi(continuation)
+                        onReadRemoteRssi(onSuccess = {
+                            if (continuation.isActive)
+                                continuation.resume(it)
+                        }) {
+                            if (continuation.isActive)
+                                continuation.resumeWithException(it)
+                        }
                     }
                 }
             }
@@ -208,7 +231,13 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                 }
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute<Unit>(timeout, "设置ConnectionPriority超时：$address") { continuation ->
-                        onRequestConnectionPriority(continuation, connectionPriority)
+                        onRequestConnectionPriority(connectionPriority, onSuccess = {
+                            if (continuation.isActive)
+                                continuation.resume(Unit)
+                        }) {
+                            if (continuation.isActive)
+                                continuation.resumeWithException(it)
+                        }
                     }
                 }
             }
@@ -228,7 +257,13 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                 }
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(timeout, "设置MTU超时：$address") { continuation ->
-                        onRequestMtu(continuation, mtu)
+                        onRequestMtu(mtu, onSuccess = {
+                            if (continuation.isActive)
+                                continuation.resume(it)
+                        }) {
+                            if (continuation.isActive)
+                                continuation.resumeWithException(it)
+                        }
                     }
                 }
             }
@@ -374,7 +409,13 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                         timeout,
                         "写描述值超时：${descriptorUuid.getValidString()}"
                     ) { continuation ->
-                        onWriteDescriptor(continuation, data, descriptorUuid, characteristicUuid, serviceUuid)
+                        onWriteDescriptor(data, descriptorUuid, characteristicUuid, serviceUuid, onSuccess = {
+                            if (continuation.isActive)
+                                continuation.resume(Unit)
+                        }) {
+                            if (continuation.isActive)
+                                continuation.resumeWithException(it)
+                        }
                     }
                 }
             }
@@ -409,31 +450,45 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     }
 
     protected abstract fun onConnect(
-        continuation: CancellableContinuation<List<BluetoothGattService>>,
         device: BluetoothDevice,
-        onDisconnectedListener: ((Throwable) -> Unit)?
+        onDisconnectedListener: ((Throwable) -> Unit)?,
+        onSuccess: ((List<BluetoothGattService>) -> Unit)?,
+        onError: ((Throwable) -> Unit)?
     )
 
     protected abstract fun onDisconnect()
 
     protected abstract fun onReadCharacteristic(
-        continuation: CancellableContinuation<ByteArray>,
         characteristicUuid: UUID,
-        serviceUuid: UUID?
+        serviceUuid: UUID?,
+        onSuccess: ((ByteArray) -> Unit)?,
+        onError: ((Throwable) -> Unit)?
     )
 
     protected abstract fun onReadDescriptor(
-        continuation: CancellableContinuation<ByteArray>,
         descriptorUuid: UUID,
         characteristicUuid: UUID?,
-        serviceUuid: UUID?
+        serviceUuid: UUID?,
+        onSuccess: ((ByteArray) -> Unit)?,
+        onError: ((Throwable) -> Unit)?
     )
 
-    protected abstract fun onReadRemoteRssi(continuation: CancellableContinuation<Int>)
+    protected abstract fun onReadRemoteRssi(
+        onSuccess: ((Int) -> Unit)?,
+        onError: ((Throwable) -> Unit)?
+    )
 
-    protected abstract fun onRequestConnectionPriority(continuation: CancellableContinuation<Unit>, connectionPriority: Int)
+    protected abstract fun onRequestConnectionPriority(
+        connectionPriority: Int,
+        onSuccess: (() -> Unit)?,
+        onError: ((Throwable) -> Unit)?
+    )
 
-    protected abstract fun onRequestMtu(continuation: CancellableContinuation<Int>, mtu: Int)
+    protected abstract fun onRequestMtu(
+        mtu: Int,
+        onSuccess: ((Int) -> Unit)?,
+        onError: ((Throwable) -> Unit)?
+    )
 
     protected abstract fun onSetCharacteristicNotification(
         characteristicUuid: UUID,
@@ -454,11 +509,12 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     )
 
     protected abstract fun onWriteDescriptor(
-        continuation: CancellableContinuation<Unit>,
         data: ByteArray,
         descriptorUuid: UUID,
         characteristicUuid: UUID?,
-        serviceUuid: UUID?
+        serviceUuid: UUID?,
+        onSuccess: (() -> Unit)?,
+        onError: ((Throwable) -> Unit)?
     )
 
     protected abstract fun onSetNotifyCallback(onResult: (ByteArray) -> Unit)
