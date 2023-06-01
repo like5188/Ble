@@ -340,7 +340,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         }
     }
 
-    final override suspend fun writeAndWaitNotify(
+    final override suspend fun writeCharacteristicAndWaitNotify(
         data: ByteArray,
         writeUuid: UUID,
         notifyUuid: UUID?,

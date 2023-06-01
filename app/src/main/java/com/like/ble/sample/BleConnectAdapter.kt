@@ -22,9 +22,9 @@ import com.like.ble.util.getTypeString
 import com.like.ble.util.getValidString
 import com.like.recyclerview.adapter.BaseListAdapter
 import com.like.recyclerview.viewholder.BindingViewHolder
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.buffer
-import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.*
 
 class BleConnectAdapter(private val mActivity: FragmentActivity, private val connectExecutor: AbstractConnectExecutor) :
@@ -142,30 +142,22 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                             when (data[0]) {
                                 0x1.toByte() -> {
                                     mActivity.lifecycleScope.launch {
-                                        connectExecutor.setNotifyCallback()
-                                            .catch {
-                                                onError(it)
+                                        try {
+                                            val result = connectExecutor.writeCharacteristicAndWaitNotify(
+                                                data,
+                                                characteristic.uuid,
+                                                serviceUuid = serviceUuid
+                                            ) {
+                                                it.last() == Byte.MAX_VALUE
                                             }
-                                            .buffer()// 因为通知数据很重要，所以不能丢弃，就缓存起来。
-                                            .collect {
-                                                Toast.makeText(
-                                                    mActivity,
-                                                    "读取通知(${characteristic.uuid.getValidString()})传来的数据成功。数据长度：${it.size} ${it.contentToString()}",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
-                                                if (it.last() == Byte.MAX_VALUE) {
-                                                    cancel()
-                                                }
-                                            }
-                                    }
-                                    mActivity.lifecycleScope.launch {
-                                        // 延迟以便 setNotifyCallback 成功再写入命令。
-                                        delay(20)
-                                        connectExecutor.writeCharacteristic(
-                                            data,
-                                            characteristic.uuid,
-                                            serviceUuid,
-                                        )
+                                            Toast.makeText(
+                                                mActivity,
+                                                "写特征成功，并且收到通知(${characteristic.uuid.getValidString()})，数据长度：${result.size} ${result.contentToString()}",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        } catch (e: BleException) {
+                                            onError(e)
+                                        }
                                     }
                                 }
                                 else -> {

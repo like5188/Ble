@@ -103,8 +103,7 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
     abstract suspend fun requestMtu(@IntRange(from = 23, to = 517) mtu: Int, timeout: Long = 3000L): Int
 
     /**
-     * 设置特征的notification或者indication，开启后，数据从[setNotifyCallback]获取，需要自己组包。
-     * 配合[writeCharacteristic]发送命令并接收通知数据，注意必须要开启通知才能接收数据。
+     * 设置特征的notification或者indication。
      *
      * @param characteristicUuid            特征UUID
      * @param serviceUuid                   服务UUID，如果不为null，则会在此服务下查找[characteristicUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
@@ -123,6 +122,7 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
 
     /**
      * 写特征值并等待通知返回数据
+     * 注意：调用此方法会自动调用[setNotifyCallback]覆盖通知回调。
      *
      * @param data                      需要写入的数据。
      * BLE默认单次传输长度为20字节（core spec里面定义了ATT的默认MTU为23个bytes，除去ATT的opcode一个字节以及ATT的handle2个字节之后，剩下的20个字节便是留给GATT的了。）。如果不分包的话，可以设置更大的MTU。
@@ -138,7 +138,7 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
      * @param isWholePackage            是否是一个完整的数据包
      * @throws [com.like.ble.exception.BleException]
      */
-    abstract suspend fun writeAndWaitNotify(
+    abstract suspend fun writeCharacteristicAndWaitNotify(
         data: ByteArray,
         writeUuid: UUID,
         notifyUuid: UUID? = null,
@@ -193,12 +193,11 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
     )
 
     /**
-     * 设置通知监听
+     * 设置通知监听，数据需要自己处理。
      *
      * 注意：
-     * 1、需要配合[setCharacteristicNotification]来使用。
-     * 2、可以使用[CoroutineScope.cancel]方法来取消协程作用域，从而会自动移除此监听。
-     * 即 flow 停止收集则自动移除此监听，否则会一直存在。
+     * 1、配合[writeCharacteristic]发送命令并接收通知数据，注意必须要开启通知[setCharacteristicNotification]才能接收数据。
+     * 2、可以使用[CoroutineScope.cancel]方法来取消协程作用域，从而会自动移除此监听。即 flow 停止收集则自动移除此监听，否则会一直存在。
      */
     abstract fun setNotifyCallback(): Flow<ByteArray>
 
