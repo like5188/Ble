@@ -8,6 +8,7 @@ import android.content.Context
 import android.os.Build
 import androidx.annotation.IntRange
 import com.like.ble.executor.BleExecutor
+import com.like.ble.util.isBleDeviceConnected
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import java.util.*
@@ -28,6 +29,8 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
             arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)
         }
     }
+
+    fun isBleDeviceConnected(): Boolean = mContext.isBleDeviceConnected(address)
 
     abstract fun getDevice(): BluetoothDevice?
 
