@@ -11,7 +11,6 @@ import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableInt
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import com.like.ble.callback.OnBleEnableListener
 import com.like.ble.central.scan.executor.AbstractScanExecutor
 import com.like.ble.central.scan.executor.ScanExecutorFactory
 import com.like.ble.exception.BleException
@@ -19,6 +18,7 @@ import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.exception.BleExceptionTimeout
 import com.like.ble.sample.databinding.FragmentBleScanBinding
+import com.like.ble.util.BleBroadcastReceiverManager
 import com.like.common.util.Logger
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
 import kotlinx.coroutines.flow.catch
@@ -33,26 +33,27 @@ class BleScanFragment : Fragment() {
     private lateinit var mBinding: FragmentBleScanBinding
     private val mAdapter: BleScanAdapter by lazy { BleScanAdapter(requireActivity()) }
     private val scanExecutor: AbstractScanExecutor by lazy {
-        ScanExecutorFactory.get(requireContext()).apply {
-            setOnBleEnableListener(object : OnBleEnableListener {
-                override fun on() {
-                    val ctx = context ?: return
-                    if (mBinding.tvScanStatus.text == "扫描未启动") {
-                        return
-                    }
-                    val blueColor = ContextCompat.getColor(ctx, R.color.ble_text_blue)
-                    mBinding.tvScanStatus.setTextColor(blueColor)
-                    mBinding.tvScanStatus.text = "蓝牙已打开"
+        ScanExecutorFactory.get(requireContext())
+    }
+    private val bleBroadcastReceiverManager by lazy {
+        BleBroadcastReceiverManager(requireContext(),
+            onBleOn = {
+                val ctx = context ?: return@BleBroadcastReceiverManager
+                if (mBinding.tvScanStatus.text == "扫描未启动") {
+                    return@BleBroadcastReceiverManager
                 }
-
-                override fun off() {
-                    val ctx = context ?: return
-                    val redColor = ContextCompat.getColor(ctx, R.color.ble_text_red)
-                    mBinding.tvScanStatus.setTextColor(redColor)
-                    mBinding.tvScanStatus.text = "蓝牙未打开"
-                }
-            })
-        }
+                val blueColor = ContextCompat.getColor(ctx, R.color.ble_text_blue)
+                mBinding.tvScanStatus.setTextColor(blueColor)
+                mBinding.tvScanStatus.text = "蓝牙已打开"
+            },
+            onBleOff = {
+                scanExecutor.stopScan()
+                val ctx = context ?: return@BleBroadcastReceiverManager
+                val redColor = ContextCompat.getColor(ctx, R.color.ble_text_red)
+                mBinding.tvScanStatus.setTextColor(redColor)
+                mBinding.tvScanStatus.text = "蓝牙未打开"
+            }
+        )
     }
 
     companion object {
@@ -71,6 +72,7 @@ class BleScanFragment : Fragment() {
         mBinding.btnStopScan.setOnClickListener {
             stopScan()
         }
+        bleBroadcastReceiverManager.register()
         scanExecutor.requestEnvironment(activity)
         return mBinding.root
     }
@@ -138,6 +140,7 @@ class BleScanFragment : Fragment() {
     }
 
     override fun onDestroy() {
+        bleBroadcastReceiverManager.unregister()
         scanExecutor.close()
         super.onDestroy()
     }
