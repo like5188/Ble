@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import java.util.*
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 /**
  * 蓝牙连接及数据操作的前提条件
@@ -253,7 +254,11 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                 }
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute<Unit>(timeout, "设置通知超时：$address") { continuation ->
-                        onSetCharacteristicNotification(continuation, characteristicUuid, serviceUuid, type, enable)
+                        onSetCharacteristicNotification(characteristicUuid, serviceUuid, type, enable, onSuccess = {
+                            continuation.resume(Unit)
+                        }) {
+                            continuation.resumeWithException(it)
+                        }
                     }
                 }
             }
@@ -282,7 +287,11 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                         timeout,
                         "写特征值超时：${characteristicUuid.getValidString()}"
                     ) { continuation ->
-                        onWriteCharacteristic(continuation, data, characteristicUuid, serviceUuid, writeType)
+                        onWriteCharacteristic(data, characteristicUuid, serviceUuid, writeType, onSuccess = {
+                            continuation.resume(Unit)
+                        }) {
+                            continuation.resumeWithException(it)
+                        }
                     }
                 }
             }
@@ -290,6 +299,52 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
             // 转换一下异常，方便使用者判断。
             throw e.toBleException()
         }
+    }
+
+    final override suspend fun writeWithResponse(
+        data: ByteArray,
+        writeUuid: UUID,
+        notifyUuid: UUID,
+        serviceUuid: UUID?,
+        timeout: Long,
+        writeType: Int,
+        isWholePackage: (ByteArray) -> Boolean
+    ): ByteArray = try {
+        mutexUtils.withTryLockOrThrow("正在写特征值……") {
+            checkEnvironmentOrThrow()
+            if (!mContext.isBleDeviceConnected(address)) {
+                throw BleExceptionDeviceDisconnected(address)
+            }
+            withContext(Dispatchers.IO) {
+                suspendCancellableCoroutineWithTimeout.execute(
+                    timeout, "写特征值超时：${writeUuid.getValidString()}"
+                ) { continuation ->
+                    // 启用通知
+                    onSetCharacteristicNotification(notifyUuid, serviceUuid, 0, true) {
+                        continuation.resumeWithException(it)
+                    }
+                    // 设置监听
+                    var result: ByteArray = byteArrayOf()
+                    onSetNotifyCallback(notifyUuid) {
+                        Log.d("BaseConnectExecutor", "获取到数据 ${it.contentToString()}")
+                        result += it
+                        if (isWholePackage(result)) {
+                            Log.d("BaseConnectExecutor", "获取到了完整数据包 ${result.contentToString()}")
+                            // 取消监听
+                            onRemoveNotifyCallback(notifyUuid)
+                            Log.d("BaseConnectExecutor", "通知监听被取消")
+                            continuation.resume(result)
+                        }
+                    }
+                    // 写入命令
+                    onWriteCharacteristic(data, writeUuid, serviceUuid, writeType) {
+                        continuation.resumeWithException(it)
+                    }
+                }
+            }
+        }
+    } catch (e: Exception) {
+        throw e.toBleException()
     }
 
     final override suspend fun writeDescriptor(
@@ -374,19 +429,21 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     protected abstract fun onRequestMtu(continuation: CancellableContinuation<Int>, mtu: Int)
 
     protected abstract fun onSetCharacteristicNotification(
-        continuation: CancellableContinuation<Unit>,
         characteristicUuid: UUID,
         serviceUuid: UUID?,
         type: Int,
-        enable: Boolean
+        enable: Boolean,
+        onSuccess: (() -> Unit)? = null,
+        onError: ((Throwable) -> Unit)? = null
     )
 
     protected abstract fun onWriteCharacteristic(
-        continuation: CancellableContinuation<Unit>,
         data: ByteArray,
         characteristicUuid: UUID,
         serviceUuid: UUID?,
-        writeType: Int
+        writeType: Int,
+        onSuccess: (() -> Unit)? = null,
+        onError: ((Throwable) -> Unit)? = null
     )
 
     protected abstract fun onWriteDescriptor(

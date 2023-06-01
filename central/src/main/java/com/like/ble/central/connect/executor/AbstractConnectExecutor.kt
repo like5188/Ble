@@ -118,6 +118,32 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
     )
 
     /**
+     * 写特征值并等待通知返回数据
+     *
+     * @param data                      需要写入的数据。
+     * BLE默认单次传输长度为20字节（core spec里面定义了ATT的默认MTU为23个bytes，除去ATT的opcode一个字节以及ATT的handle2个字节之后，剩下的20个字节便是留给GATT的了。）。如果不分包的话，可以设置更大的MTU。
+     * 如果数据大于20字节，则会超时失败，更会导致蓝牙连接断开
+     * @param writeUuid                 写特征UUID
+     * @param notifyUuid                通知特征UUID
+     * @param serviceUuid               服务UUID，如果不为null，则会在此服务下查找[characteristicUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
+     * @param writeType
+     * WRITE_TYPE_DEFAULT 默认类型，需要外围设备的确认，也就是需要外围设备的回应，这样才能继续发送写。
+     * WRITE_TYPE_NO_RESPONSE 设置该类型不需要外围设备的回应，可以继续写数据。加快传输速率。
+     * WRITE_TYPE_SIGNED 写特征携带认证签名，具体作用不太清楚。
+     * @param isWholePackage            是否是一个完整的数据包
+     * @throws [com.like.ble.exception.BleException]
+     */
+    abstract suspend fun writeWithResponse(
+        data: ByteArray,
+        writeUuid: UUID,
+        notifyUuid: UUID,
+        serviceUuid: UUID? = null,
+        timeout: Long = 15000L,
+        writeType: Int = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT,
+        isWholePackage: (ByteArray) -> Boolean
+    ): ByteArray
+
+    /**
      * 写特征值
      *
      * @param data                      需要写入的数据。

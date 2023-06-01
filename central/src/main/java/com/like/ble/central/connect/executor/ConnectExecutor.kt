@@ -194,20 +194,21 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
     }
 
     override fun onSetCharacteristicNotification(
-        continuation: CancellableContinuation<Unit>,
         characteristicUuid: UUID,
         serviceUuid: UUID?,
         type: Int,
-        enable: Boolean
+        enable: Boolean,
+        onSuccess: (() -> Unit)?,
+        onError: ((Throwable) -> Unit)?
     ) {
         val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
         if (characteristic == null) {
-            continuation.resumeWithException(BleException("特征值不存在：${characteristicUuid.getValidString()}"))
+            onError?.invoke(BleException("特征值不存在：${characteristicUuid.getValidString()}"))
             return
         }
 
         if (characteristic.properties and (BluetoothGattCharacteristic.PROPERTY_NOTIFY or BluetoothGattCharacteristic.PROPERTY_INDICATE) == 0) {
-            continuation.resumeWithException(BleException("this characteristic not support notify or indicate"))
+            onError?.invoke(BleException("this characteristic not support notify or indicate"))
             return
         }
 
@@ -217,7 +218,7 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
         // 写入值来使能服务端的这两个功能Notification/Indication，这样服务端才能发送。
         val cccd = characteristic.getDescriptor(createBleUuidBy16Bit("2902"))
         if (cccd == null) {
-            continuation.resumeWithException(BleException("getDescriptor fail"))
+            onError?.invoke(BleException("getDescriptor fail"))
             return
         }
 
@@ -237,53 +238,52 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
                 }
             }
             else -> {
-                continuation.resumeWithException(BleException("type can only be 0 or 1"))
+                onError?.invoke(BleException("type can only be 0 or 1"))
                 return
             }
         }
 
         if (mBluetoothGatt?.setCharacteristicNotification(characteristic, enable) != true) {
-            continuation.resumeWithException(BleException("setCharacteristicNotification fail"))
+            onError?.invoke(BleException("setCharacteristicNotification fail"))
             return
         }
         if (mBluetoothGatt?.writeDescriptor(cccd) != true) {
-            continuation.resumeWithException(BleException("writeDescriptor fail"))
+            onError?.invoke(BleException("writeDescriptor fail"))
             return
         }
-        continuation.resume(Unit)
+        onSuccess?.invoke()
     }
 
     override fun onWriteCharacteristic(
-        continuation: CancellableContinuation<Unit>,
         data: ByteArray,
         characteristicUuid: UUID,
         serviceUuid: UUID?,
-        writeType: Int
+        writeType: Int,
+        onSuccess: (() -> Unit)?,
+        onError: ((Throwable) -> Unit)?
     ) {
         if (data.isEmpty()) {
-            continuation.resumeWithException(BleException("data is empty"))
+            onError?.invoke(BleException("data is empty"))
             return
         }
         val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
         if (characteristic == null) {
-            continuation.resumeWithException(BleException("特征值不存在：${characteristicUuid.getValidString()}"))
+            onError?.invoke(BleException("特征值不存在：${characteristicUuid.getValidString()}"))
             return
         }
 
         if (characteristic.properties and (BluetoothGattCharacteristic.PROPERTY_WRITE or BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) == 0) {
-            continuation.resumeWithException(BleException("this characteristic not support write!"))
+            onError?.invoke(BleException("this characteristic not support write!"))
             return
         }
 
         mConnectCallbackManager.setWriteCharacteristicBleCallback(object : BleCallback<Unit>() {
             override fun onSuccess(data: Unit) {
-                if (continuation.isActive)
-                    continuation.resume(Unit)
+                onSuccess?.invoke()
             }
 
             override fun onError(exception: BleException) {
-                if (continuation.isActive)
-                    continuation.resumeWithException(exception)
+                onError?.invoke(exception)
             }
         })
         /*
@@ -295,7 +295,7 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
         characteristic.writeType = writeType
         characteristic.value = data
         if (mBluetoothGatt?.writeCharacteristic(characteristic) != true) {
-            continuation.resumeWithException(BleException("写特征值失败：${characteristicUuid.getValidString()}"))
+            onError?.invoke(BleException("写特征值失败：${characteristicUuid.getValidString()}"))
         }
     }
 
