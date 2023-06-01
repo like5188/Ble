@@ -138,7 +138,7 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
      * @param isWholePackage            是否是一个完整的数据包
      * @throws [com.like.ble.exception.BleException]
      */
-    abstract suspend fun writeWithResponse(
+    abstract suspend fun writeAndWaitNotify(
         data: ByteArray,
         writeUuid: UUID,
         notifyUuid: UUID? = null,
