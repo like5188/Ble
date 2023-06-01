@@ -36,6 +36,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     }
 
     final override suspend fun connect(
+        device: BluetoothDevice?,
         timeout: Long,
         onDisconnectedListener: ((Throwable) -> Unit)?
     ): List<BluetoothGattService> = try {
@@ -51,9 +52,9 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                     continuation.invokeOnCancellation {
                         disconnect()
                     }
-                    val device = mContext.getBluetoothAdapter()?.getRemoteDevice(address)
-                        ?: throw BleException("连接蓝牙失败，未找到蓝牙设备：$address")
-                    onConnect(device, onDisconnectedListener, onSuccess = {
+                    val d = device ?: mContext.getBluetoothAdapter()?.getRemoteDevice(address)
+                    ?: throw BleException("连接蓝牙失败，未找到蓝牙设备：$address")
+                    onConnect(d, onDisconnectedListener, onSuccess = {
                         if (continuation.isActive)
                             continuation.resume(it)
                     }) {
