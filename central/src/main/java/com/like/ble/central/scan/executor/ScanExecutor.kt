@@ -30,7 +30,7 @@ internal class ScanExecutor(context: Context) : BaseScanExecutor(context) {
     ) {
         val bleCallback = object : BleCallback<ScanResult>() {
             override fun onSuccess(data: ScanResult) {
-                onSuccess(data)
+                onSuccess?.invoke(data)
             }
 
             override fun onError(exception: BleException) {
