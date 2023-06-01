@@ -150,6 +150,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                                             ) {
                                                 it.last() == Byte.MAX_VALUE
                                             }
+                                            binding.ivNotify.setImageResource(R.drawable.notify)
                                             Toast.makeText(
                                                 mActivity,
                                                 "写特征成功，并且收到通知(${characteristic.uuid.getValidString()})，数据长度：${result.size} ${result.contentToString()}",
