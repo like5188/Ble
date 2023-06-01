@@ -142,7 +142,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                             when (data[0]) {
                                 0x1.toByte() -> {
                                     mActivity.lifecycleScope.launch {
-                                        connectExecutor.setNotifyCallback(characteristic.uuid)
+                                        connectExecutor.setNotifyCallback()
                                             .catch {
                                                 onError(it)
                                             }

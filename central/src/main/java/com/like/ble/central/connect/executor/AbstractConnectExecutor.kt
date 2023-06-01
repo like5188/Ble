@@ -8,6 +8,7 @@ import android.content.Context
 import android.os.Build
 import androidx.annotation.IntRange
 import com.like.ble.executor.BleExecutor
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import java.util.*
 
@@ -190,10 +191,9 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
      *
      * 注意：
      * 1、需要配合[setCharacteristicNotification]来使用。
-     * 2、必须使用：if (某个条件) {cancel()} 来取消协程作用域，从而会移除此监听。否则会一直挂起。
-     *
-     * @param characteristicUuid    指定需要获取数据的特征
+     * 2、可以使用[CoroutineScope.cancel]方法来取消协程作用域，从而会自动移除此监听。
+     * 即 flow 停止收集则自动移除此监听，否则会一直存在。
      */
-    abstract fun setNotifyCallback(characteristicUuid: UUID): Flow<ByteArray>
+    abstract fun setNotifyCallback(): Flow<ByteArray>
 
 }

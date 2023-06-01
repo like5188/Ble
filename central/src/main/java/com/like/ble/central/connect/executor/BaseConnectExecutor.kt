@@ -325,13 +325,13 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                     }
                     // 设置监听
                     var result: ByteArray = byteArrayOf()
-                    onSetNotifyCallback(notifyUuid) {
+                    onSetNotifyCallback {
                         Log.d("BaseConnectExecutor", "获取到数据 ${it.contentToString()}")
                         result += it
                         if (isWholePackage(result)) {
                             Log.d("BaseConnectExecutor", "获取到了完整数据包 ${result.contentToString()}")
                             // 取消监听
-                            onRemoveNotifyCallback(notifyUuid)
+                            onRemoveNotifyCallback()
                             Log.d("BaseConnectExecutor", "通知监听被取消")
                             continuation.resume(result)
                         }
@@ -376,8 +376,8 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         }
     }
 
-    final override fun setNotifyCallback(characteristicUuid: UUID): Flow<ByteArray> = callbackFlow {
-        onSetNotifyCallback(characteristicUuid) {
+    final override fun setNotifyCallback(): Flow<ByteArray> = callbackFlow {
+        onSetNotifyCallback {
             trySend(it)
         }
         // 注意：不能在这个作用域里面使用挂起函数，这样会导致使用者使用 cancel 方法关闭协程作用域的时候，
@@ -385,7 +385,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         // 1、使用 launch 方法重新开启一个子协程。
         // 2、把挂起函数 try catch 起来，这样就能捕获 JobCancellationException 异常，然后就可以执行下面的 awaitClose 方法。
         awaitClose {
-            onRemoveNotifyCallback(characteristicUuid)
+            onRemoveNotifyCallback()
             Log.d("BaseConnectExecutor", "通知监听被取消")
         }
     }
@@ -454,8 +454,8 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         serviceUuid: UUID?
     )
 
-    protected abstract fun onSetNotifyCallback(characteristicUuid: UUID, onResult: (ByteArray) -> Unit)
+    protected abstract fun onSetNotifyCallback(onResult: (ByteArray) -> Unit)
 
-    protected abstract fun onRemoveNotifyCallback(characteristicUuid: UUID)
+    protected abstract fun onRemoveNotifyCallback()
 
 }

@@ -347,16 +347,16 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
         }
     }
 
-    override fun onSetNotifyCallback(characteristicUuid: UUID, onResult: (ByteArray) -> Unit) {
-        mConnectCallbackManager.setReadNotifyBleCallback(characteristicUuid, object : BleCallback<ByteArray>() {
+    override fun onSetNotifyCallback(onResult: (ByteArray) -> Unit) {
+        mConnectCallbackManager.setReadNotifyBleCallback(object : BleCallback<ByteArray>() {
             override fun onSuccess(data: ByteArray) {
                 onResult(data)
             }
         })
     }
 
-    override fun onRemoveNotifyCallback(characteristicUuid: UUID) {
-        mConnectCallbackManager.setReadNotifyBleCallback(characteristicUuid, null)
+    override fun onRemoveNotifyCallback() {
+        mConnectCallbackManager.setReadNotifyBleCallback(null)
     }
 
     override fun getDevice(): BluetoothDevice? {

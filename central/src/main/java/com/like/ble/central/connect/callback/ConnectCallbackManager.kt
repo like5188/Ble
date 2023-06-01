@@ -11,7 +11,6 @@ import com.like.ble.executor.BleExecutor
 import com.like.ble.util.getValidString
 import com.like.ble.util.isBluetoothEnable
 import com.like.ble.util.refreshDeviceCache
-import java.util.*
 
 @SuppressLint("MissingPermission")
 class ConnectCallbackManager(private val context: Context) {
@@ -69,7 +68,7 @@ class ConnectCallbackManager(private val context: Context) {
 
         // 为某个特征启用通知后，如果远程设备上的特征发生更改，则会触发
         override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
-            readNotifyBleCallbacks[characteristic.uuid]?.onSuccess(characteristic.value)
+            readNotifyBleCallback?.onSuccess(characteristic.value)
         }
 
         override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
@@ -114,7 +113,7 @@ class ConnectCallbackManager(private val context: Context) {
     private var requestMtuBleCallback: BleCallback<Int>? = null
     private var writeCharacteristicBleCallback: BleCallback<Unit>? = null
     private var writeDescriptorBleCallback: BleCallback<Unit>? = null
-    private var readNotifyBleCallbacks = mutableMapOf<UUID, BleCallback<ByteArray>>()
+    private var readNotifyBleCallback: BleCallback<ByteArray>? = null
     private var onDisconnectedListener: ((Throwable) -> Unit)? = null
 
     fun getBluetoothGattCallback(): BluetoothGattCallback {
@@ -149,15 +148,11 @@ class ConnectCallbackManager(private val context: Context) {
         writeDescriptorBleCallback = callback
     }
 
-    fun setReadNotifyBleCallback(characteristicUuid: UUID, callback: BleCallback<ByteArray>?) {
-        if (callback == null) {
-            readNotifyBleCallbacks.remove(characteristicUuid)
-        } else {
-            readNotifyBleCallbacks[characteristicUuid] = callback
-        }
+    fun setReadNotifyBleCallback(callback: BleCallback<ByteArray>?) {
+        readNotifyBleCallback = callback
     }
 
-    fun setOnDisconnectedListener(listener: ((Throwable) -> Unit)? = null) {
+    fun setOnDisconnectedListener(listener: ((Throwable) -> Unit)?) {
         onDisconnectedListener = listener
     }
 
