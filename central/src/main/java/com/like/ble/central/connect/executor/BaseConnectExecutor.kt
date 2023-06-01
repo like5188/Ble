@@ -346,6 +346,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         notifyUuid: UUID,
         serviceUuid: UUID?,
         timeout: Long,
+        notifyType: Int,
         writeType: Int,
         isWholePackage: (ByteArray) -> Boolean
     ): ByteArray = try {
@@ -359,7 +360,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                     timeout, "写特征值超时：${writeUuid.getValidString()}"
                 ) { continuation ->
                     // 启用通知
-                    onSetCharacteristicNotification(notifyUuid, serviceUuid, 0, true) {
+                    onSetCharacteristicNotification(notifyUuid, serviceUuid, notifyType, true) {
                         if (continuation.isActive)
                             continuation.resumeWithException(it)
                     }
