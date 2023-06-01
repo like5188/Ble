@@ -5,13 +5,13 @@ import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.toBleException
 import com.like.ble.util.MutexUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
-import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.withContext
 import java.util.*
+import kotlin.coroutines.resumeWithException
 
 /**
  * 蓝牙扫描的前提条件
@@ -34,8 +34,11 @@ internal abstract class BaseScanExecutor(context: Context) : AbstractScanExecuto
                             stopScan()
                             close()
                         }
-                        onStartScan(continuation, filterServiceUuid) {
+                        onStartScan(filterServiceUuid, onSuccess = {
                             trySend(it)
+                        }) {
+                            if (continuation.isActive)
+                                continuation.resumeWithException(it)
                         }
                     }
                 }
@@ -71,9 +74,9 @@ internal abstract class BaseScanExecutor(context: Context) : AbstractScanExecuto
     }
 
     protected abstract fun onStartScan(
-        continuation: CancellableContinuation<Unit>,
         filterServiceUuid: UUID?,
-        onResult: (ScanResult) -> Unit
+        onSuccess: ((ScanResult) -> Unit)?,
+        onError: ((Throwable) -> Unit)?
     )
 
     protected abstract fun onStopScan()

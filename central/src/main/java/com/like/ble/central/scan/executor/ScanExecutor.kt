@@ -12,9 +12,7 @@ import com.like.ble.central.scan.callback.ScanCallbackManager
 import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.BleException
 import com.like.ble.util.getBluetoothAdapter
-import kotlinx.coroutines.CancellableContinuation
 import java.util.*
-import kotlin.coroutines.resumeWithException
 
 /**
  * 蓝牙扫描的真正逻辑
@@ -25,16 +23,19 @@ internal class ScanExecutor(context: Context) : BaseScanExecutor(context) {
         ScanCallbackManager()
     }
 
-    override fun onStartScan(continuation: CancellableContinuation<Unit>, filterServiceUuid: UUID?, onResult: (ScanResult) -> Unit) {
+    override fun onStartScan(
+        filterServiceUuid: UUID?,
+        onSuccess: ((ScanResult) -> Unit)?,
+        onError: ((Throwable) -> Unit)?
+    ) {
         val bleCallback = object : BleCallback<ScanResult>() {
             override fun onSuccess(data: ScanResult) {
-                onResult(data)
+                onSuccess(data)
             }
 
             override fun onError(exception: BleException) {
                 // 这里不能直接抛异常，因为异步回调在另外的线程中，直接抛出了捕获不了，会造成崩溃。
-                if (continuation.isActive)
-                    continuation.resumeWithException(exception)
+                onError?.invoke(exception)
             }
         }
         scanCallbackManager.setScanBleCallback(bleCallback)
