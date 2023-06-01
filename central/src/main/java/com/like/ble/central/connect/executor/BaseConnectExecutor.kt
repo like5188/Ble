@@ -343,7 +343,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     final override suspend fun writeWithResponse(
         data: ByteArray,
         writeUuid: UUID,
-        notifyUuid: UUID,
+        notifyUuid: UUID?,
         serviceUuid: UUID?,
         timeout: Long,
         notifyType: Int,
@@ -359,10 +359,12 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                 suspendCancellableCoroutineWithTimeout.execute(
                     timeout, "写特征值超时：${writeUuid.getValidString()}"
                 ) { continuation ->
-                    // 启用通知
-                    onSetCharacteristicNotification(notifyUuid, serviceUuid, notifyType, true) {
-                        if (continuation.isActive)
-                            continuation.resumeWithException(it)
+                    if (notifyUuid != null) {
+                        // 启用通知
+                        onSetCharacteristicNotification(notifyUuid, serviceUuid, notifyType, true) {
+                            if (continuation.isActive)
+                                continuation.resumeWithException(it)
+                        }
                     }
                     // 设置监听
                     var result: ByteArray = byteArrayOf()
