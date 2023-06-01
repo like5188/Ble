@@ -70,11 +70,6 @@ internal abstract class BaseAdvertisingExecutor(context: Context) : AbstractAdve
     }
 
     final override fun close() {
-        super.close()
-        stopAdvertising()
-    }
-
-    override fun onBleOff() {
         stopAdvertising()
     }
 
