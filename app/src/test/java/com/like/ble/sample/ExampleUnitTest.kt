@@ -1,15 +1,14 @@
 package com.like.ble.sample
 
 import kotlinx.coroutines.CancellableContinuation
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.junit.Test
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
+import kotlin.concurrent.thread
+import kotlin.system.measureTimeMillis
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -20,20 +19,26 @@ class ExampleUnitTest {
 
     @Test
     fun addition_isCorrect() = runBlocking {
-        channelFlow<Unit> {
-            suspendCancellableCoroutine<Unit> {
-                it.invokeOnCancellation {
-                    println("invokeOnCancellation")
-                    close()
+        val cost = measureTimeMillis {
+            channelFlow {
+                kotlinx.coroutines.withTimeout(10000) {
+                    suspendCancellableCoroutine {
+                        it.invokeOnCancellation {
+                            println("invokeOnCancellation")
+                        }
+                        thread {
+                            (0..4).forEach {
+                                Thread.sleep(1000)
+                                trySend(1)
+                            }
+                        }
+                    }
                 }
-                onStartScan(it)
-                println("onStartScan")
+            }.take(2).collectLatest {
+                println(it)
             }
-            delay(5000)
-        }.catch {
-            println(it)
-        }.collect()
-        println("finish")
+        }
+        println("finish $cost")
     }
 
     private fun onStartScan(continuation: CancellableContinuation<Unit>) {
