@@ -74,6 +74,11 @@ internal abstract class BaseAdvertisingExecutor(context: Context) : AbstractAdve
         stopAdvertising()
     }
 
+    override fun onBleOff() {
+        super.onBleOff()
+        stopAdvertising()
+    }
+
     protected abstract fun onStartAdvertising(
         settings: AdvertiseSettings,
         advertiseData: AdvertiseData,

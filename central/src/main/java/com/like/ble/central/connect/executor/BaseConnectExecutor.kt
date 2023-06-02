@@ -398,8 +398,9 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
 
     override fun onBleOff() {
         super.onBleOff()
+        // 在 connect 的时候关闭蓝牙开关，此时如果不调用 disconnect 方法，那么就不会清空回调（参考ConnectExecutor.onDisconnect），则会继续发送 connect 方法的相关错误，造成 UI 显示错乱。
+        disconnect()
         // 如果蓝牙开关关闭后重新连接失败，那么可以重新扫描，然后再重新连接就能成功。但是这个要看外围设备是否支持，有的不需要重新扫描就能重连成功。
-        // 这里不必调用 disconnect() 断开连接，因为蓝牙断开后，连接已经断了。
     }
 
     protected abstract fun onConnect(
