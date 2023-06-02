@@ -307,8 +307,10 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                     if (notifyUuid != null) {
                         // 启用通知
                         onSetCharacteristicNotification(notifyUuid, serviceUuid, notifyType, true) {
-                            if (continuation.isActive)
+                            if (continuation.isActive) {
                                 continuation.resumeWithException(it)
+                                return@onSetCharacteristicNotification
+                            }
                         }
                     }
                     // 设置监听
