@@ -398,8 +398,8 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
 
     override fun onBleOff() {
         super.onBleOff()
-        // 这里不能调用 disconnect() 断开连接，因为会造成必须重新扫描才能再次连接成功。
-        // 并且蓝牙断开后，连接已经断了，不需要重复断开。
+        // 如果蓝牙开关关闭后重新连接失败，那么可以重新扫描，然后再重新连接就能成功。但是这个要看外围设备是否支持，有的不需要重新扫描就能重连成功。
+        // 这里不必调用 disconnect() 断开连接，因为蓝牙断开后，连接已经断了。
     }
 
     protected abstract fun onConnect(
