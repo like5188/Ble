@@ -18,7 +18,6 @@ import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.sample.databinding.FragmentBleConnectBinding
 import com.like.ble.util.BleBroadcastReceiverManager
-import com.like.ble.util.isBluetoothEnable
 import com.like.common.util.Logger
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
 import kotlinx.coroutines.*
@@ -157,10 +156,8 @@ class BleConnectFragment : Fragment() {
         }
     }
 
+    @Synchronized
     private fun reConnect() {
-        if (context?.isBluetoothEnable() != true) {
-            return
-        }
         reConnectJob = lifecycleScope.launch {
             delay(3000)
             this@BleConnectFragment.connect()
