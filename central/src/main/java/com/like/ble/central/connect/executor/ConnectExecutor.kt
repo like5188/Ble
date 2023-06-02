@@ -27,11 +27,15 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
     }
 
     override fun onConnect(
-        device: BluetoothDevice,
         onDisconnectedListener: ((Throwable) -> Unit)?,
         onSuccess: ((List<BluetoothGattService>) -> Unit)?,
         onError: ((Throwable) -> Unit)?
     ) {
+        val device = mContext.getBluetoothAdapter()?.getRemoteDevice(address)
+        if (device == null) {
+            onError?.invoke(BleException("连接蓝牙失败，获取蓝牙设备：$address"))
+            return
+        }
         mConnectCallbackManager.setOnDisconnectedListener(null)
         mConnectCallbackManager.setConnectBleCallback(object : BleCallback<List<BluetoothGattService>>() {
             override fun onSuccess(data: List<BluetoothGattService>) {
