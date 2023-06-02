@@ -260,7 +260,6 @@ class BlePeripheralActivity : AppCompatActivity() {
                 mBinding.tvAdvertisingStatus.text = "蓝牙已打开"
             },
             onBleOff = {
-//                peripheralExecutor.stopAdvertising()
                 val redColor = ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_red)
                 mBinding.tvAdvertisingStatus.setTextColor(redColor)
                 mBinding.tvAdvertisingStatus.text = "蓝牙未打开"

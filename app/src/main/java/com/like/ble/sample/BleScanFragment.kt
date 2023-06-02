@@ -47,8 +47,6 @@ class BleScanFragment : Fragment() {
                 mBinding.tvScanStatus.text = "蓝牙已打开"
             },
             onBleOff = {
-                // 这里如果不停止扫描，那么会造成上次扫描不会终止，会直到超时完成为止，因为关闭蓝牙并不会造成 scanExecutor.startScan() 方法报错。
-                scanExecutor.stopScan()
                 val ctx = context ?: return@BleBroadcastReceiverManager
                 val redColor = ContextCompat.getColor(ctx, R.color.ble_text_red)
                 mBinding.tvScanStatus.setTextColor(redColor)

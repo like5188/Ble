@@ -387,8 +387,15 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     }
 
     final override fun close() {
+        super.close()
         disconnect()
         ConnectExecutorFactory.remove(address)
+    }
+
+    override fun onBleOff() {
+        super.onBleOff()
+        // 这里不能调用 disconnect() 断开连接，因为会造成必须重新扫描才能再次连接成功。
+        // 并且蓝牙断开后，连接已经断了，不需要重复断开。
     }
 
     protected abstract fun onConnect(

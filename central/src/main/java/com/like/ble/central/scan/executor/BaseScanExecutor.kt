@@ -63,6 +63,13 @@ internal abstract class BaseScanExecutor(context: Context) : AbstractScanExecuto
     }
 
     final override fun close() {
+        super.close()
+        stopScan()
+    }
+
+    override fun onBleOff() {
+        super.onBleOff()
+        // 这里如果不停止扫描，那么会造成上次扫描不会终止，会直到超时完成为止，因为关闭蓝牙并不会造成 scanExecutor.startScan() 方法报错。
         stopScan()
     }
 
