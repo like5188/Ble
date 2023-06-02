@@ -156,7 +156,6 @@ class BleConnectFragment : Fragment() {
         }
     }
 
-    @Synchronized
     private fun reConnect() {
         reConnectJob = lifecycleScope.launch {
             delay(3000)
