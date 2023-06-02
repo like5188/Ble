@@ -312,6 +312,8 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                                 return@onSetCharacteristicNotification
                             }
                         }
+                        // 延迟20毫秒，避免下面的写入命令失败。
+                        Thread.sleep(20)
                     }
                     // 设置监听
                     var result: ByteArray = byteArrayOf()
