@@ -43,7 +43,8 @@ class BleConnectFragment : Fragment() {
                 mBinding.tvConnectStatus.text = "蓝牙已打开"
             },
             onBleOff = {
-                connectExecutor.disconnect()
+                // 这里如果断开连接，那么会造成必须重新扫描才能再次连接成功。并且蓝牙断开后，连接已经断了，不需要重复断开。
+//                connectExecutor.disconnect()
                 val ctx = context ?: return@BleBroadcastReceiverManager
                 val redColor = ContextCompat.getColor(ctx, R.color.ble_text_red)
                 mBinding.tvConnectStatus.setTextColor(redColor)
