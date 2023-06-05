@@ -32,8 +32,8 @@ internal abstract class BaseAdvertisingExecutor(context: Context) : AbstractAdve
         timeout: Long
     ) {
         try {
+            checkEnvironmentOrThrow()
             mutexUtils.withTryLockOrThrow("正在开启广播，请稍后！") {
-                checkEnvironmentOrThrow()
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute<Unit>(timeout, "开启广播超时") { continuation ->
                         continuation.invokeOnCancellation {
