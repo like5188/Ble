@@ -21,8 +21,12 @@ object ConnectExecutorFactory {
         }
     }
 
-    fun getAll(): List<AbstractConnectExecutor> {
+    fun getExecutors(): List<AbstractConnectExecutor> {
         return connectExecutors.values.toList()
+    }
+
+    fun getAddresses(): List<String> {
+        return connectExecutors.keys().toList()
     }
 
     internal fun remove(address: String?) {
