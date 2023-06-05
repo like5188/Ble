@@ -45,7 +45,7 @@ class ConnectHelper {
             .onEach { address ->
                 val cost = System.currentTimeMillis() - startTime
                 val remainTime = timeout - cost
-                Log.d("ConnectHelper", "scanAndConnect addresses=$address timeout=$timeout cost=$cost remainTime=$remainTime")
+                Log.d("ConnectHelper", "scanAndConnect scan addresses=$address timeout=$timeout cost=$cost remainTime=$remainTime")
                 launch {
                     try {
                         ConnectExecutorFactory.get(context, address).connect(timeout = remainTime, onDisconnectedListener = {
@@ -54,6 +54,8 @@ class ConnectHelper {
                         onConnected?.invoke(address)
                     } catch (e: Exception) {
                         onDisconnected?.invoke(address, e)
+                    } finally {
+                        Log.d("ConnectHelper", "scanAndConnect connect finish")
                     }
                 }
             }
