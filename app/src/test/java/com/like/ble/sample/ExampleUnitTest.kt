@@ -1,13 +1,8 @@
 package com.like.ble.sample
 
-import kotlinx.coroutines.CancellableContinuation
-import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import org.junit.Test
-import kotlin.concurrent.thread
 import kotlin.system.measureTimeMillis
 
 /**
@@ -19,34 +14,32 @@ class ExampleUnitTest {
 
     @Test
     fun addition_isCorrect() = runBlocking {
+        val timeout = 1000L
         val cost = measureTimeMillis {
-            channelFlow {
-                kotlinx.coroutines.withTimeout(10000) {
-                    suspendCancellableCoroutine {
-                        it.invokeOnCancellation {
-                            println("invokeOnCancellation")
-                        }
-                        thread {
-                            (0..4).forEach {
-                                Thread.sleep(1000)
-                                trySend(1)
-                            }
-                        }
+            val startTime = System.currentTimeMillis()
+            val addressesTemp = mutableListOf("1", "4", "2")
+            val scanAddresses = flowOf("1", "1", "4", "4", "2", "5", "3", "6", "7", "8")
+                .onEach {
+                    delay(100)
+                }
+                .filter {
+                    addressesTemp.contains(it) && addressesTemp.remove(it)
+                }
+                .take(3)
+                .toList()
+            val cost = System.currentTimeMillis() - startTime
+            val remainTime = timeout - cost
+            println("scanAddresses=$scanAddresses timeout=$timeout cost=$cost remainTime=$remainTime")
+            withContext(Dispatchers.IO) {
+                scanAddresses.forEach {
+                    launch {
+                        delay(remainTime)
+                        println("connect")
                     }
                 }
-            }.take(2).collectLatest {
-                println(it)
             }
         }
         println("finish $cost")
     }
 
-    private fun onStartScan(continuation: CancellableContinuation<Unit>) {
-        continuation.cancel()
-        println("0")
-//        continuation.resume(Unit)
-//        println("1")
-//        continuation.resumeWithException(IllegalArgumentException("err"))
-//        println("2")
-    }
 }
