@@ -30,27 +30,20 @@ class ExampleUnitTest {
             val cost = System.currentTimeMillis() - startTime
             val remainTime = timeout - cost
             println("scanAddresses=$scanAddresses timeout=$timeout cost=$cost remainTime=$remainTime")
-            var exception: Throwable? = null
-            supervisorScope {
+            withContext(Dispatchers.IO) {
                 scanAddresses.forEach {
-                    val connectDeferred = async(Dispatchers.IO) {
-                        if (it == "1") throw RuntimeException("error 1")
-                        if (it == "2") throw RuntimeException("error 2")
-                        delay(remainTime)
-                        println("connect $it")
-                    }
-                    try {
-                        connectDeferred.await()
-                    } catch (e: Exception) {
-                        if (exception == null) {
-                            exception = e
-                        } else {
-                            exception?.addSuppressed(e)
+                    launch {
+                        try {
+                            if (it == "1") throw RuntimeException("error 1")
+                            if (it == "2") throw RuntimeException("error 2")
+                            delay(remainTime)
+                            println("connect success $it")
+                        } catch (e: Exception) {
+                            println("connect failure ${e.message}")
                         }
                     }
                 }
             }
-            exception?.printStackTrace()
         }
         println("finish $cost")
     }
