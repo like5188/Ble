@@ -1,6 +1,7 @@
 package com.like.ble.central.util
 
 import android.content.Context
+import android.util.Log
 import com.like.ble.central.connect.executor.ConnectExecutorFactory
 import com.like.ble.central.scan.executor.ScanExecutorFactory
 import com.like.ble.exception.BleException
@@ -27,10 +28,13 @@ class ConnectHelper {
         addresses: List<String>,
         onConnected: ((String) -> Unit)? = null,
         onDisconnected: ((String, Throwable) -> Unit)? = null
-    ) {
+    ) = withContext(Dispatchers.IO) {
         val startTime = System.currentTimeMillis()
         val addressesTemp = addresses.toMutableList()
-        val scanAddresses = ScanExecutorFactory.get(context).startScan(timeout = timeout)
+        ScanExecutorFactory.get(context).startScan(timeout = timeout)
+            .catch {
+                scanErrorToConnectErrorAndThrow(it)
+            }
             .filter {
                 addressesTemp.contains(it.device.address) && addressesTemp.remove(it.device.address)
             }
@@ -38,14 +42,10 @@ class ConnectHelper {
             .map {
                 it.device.address
             }
-            .catch {
-                scanErrorToConnectErrorAndThrow(it)
-            }
-            .toList()
-        val cost = System.currentTimeMillis() - startTime
-        val remainTime = timeout - cost
-        withContext(Dispatchers.IO) {
-            scanAddresses.forEach { address ->
+            .onEach { address ->
+                val cost = System.currentTimeMillis() - startTime
+                val remainTime = timeout - cost
+                Log.d("ConnectHelper", "scanAndConnect addresses=$address timeout=$timeout cost=$cost remainTime=$remainTime")
                 launch {
                     try {
                         ConnectExecutorFactory.get(context, address).connect(timeout = remainTime, onDisconnectedListener = {
@@ -57,7 +57,8 @@ class ConnectHelper {
                     }
                 }
             }
-        }
+            .collect()
+        Log.d("ConnectHelper", "scanAndConnect finish")
     }
 
     fun disconnect(context: Context) {

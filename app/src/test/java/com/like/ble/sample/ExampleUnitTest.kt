@@ -14,11 +14,15 @@ class ExampleUnitTest {
 
     @Test
     fun addition_isCorrect() = runBlocking {
+        aaa()
+    }
+
+    suspend fun aaa() = withContext(Dispatchers.IO) {
         val timeout = 1000L
         val cost = measureTimeMillis {
             val startTime = System.currentTimeMillis()
             val addressesTemp = mutableListOf("1", "4", "2")
-            val scanAddresses = flowOf("1", "1", "4", "4", "2", "5", "3", "6", "7", "8")
+            flowOf("1", "1", "4", "4", "2", "5", "3", "6", "7", "8")
                 .onEach {
                     delay(100)
                 }
@@ -26,13 +30,11 @@ class ExampleUnitTest {
                     addressesTemp.contains(it) && addressesTemp.remove(it)
                 }
                 .take(3)
-                .toList()
-            val cost = System.currentTimeMillis() - startTime
-            val remainTime = timeout - cost
-            println("scanAddresses=$scanAddresses timeout=$timeout cost=$cost remainTime=$remainTime")
-            withContext(Dispatchers.IO) {
-                scanAddresses.forEach {
+                .onEach {
                     launch {
+                        val cost = System.currentTimeMillis() - startTime
+                        val remainTime = timeout - cost
+                        println("addresses=$it timeout=$timeout cost=$cost remainTime=$remainTime")
                         try {
                             if (it == "1") throw RuntimeException("error 1")
                             if (it == "2") throw RuntimeException("error 2")
@@ -43,7 +45,7 @@ class ExampleUnitTest {
                         }
                     }
                 }
-            }
+                .collect()
         }
         println("finish $cost")
     }
