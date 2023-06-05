@@ -44,7 +44,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         mutexUtils.withTryLockOrThrow("正在建立连接，请稍后！") {
             checkEnvironmentOrThrow()
             if (mContext.isBleDeviceConnected(address)) {
-                throw BleExceptionBusy("设备已经连接")
+                throw BleExceptionBusy("设备已经连接：$address")
             }
             withContext(Dispatchers.IO) {
                 suspendCancellableCoroutineWithTimeout.execute(
