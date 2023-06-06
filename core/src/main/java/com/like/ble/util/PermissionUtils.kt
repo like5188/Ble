@@ -6,11 +6,10 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
 import com.like.ble.exception.BleExceptionDisabled
 import com.like.ble.exception.BleExceptionPermission
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 object PermissionUtils {
     private val advertisingPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -70,24 +69,24 @@ object PermissionUtils {
         checkEnvironmentOrThrow(context, scanPermissions)
     }
 
-    fun requestAdvertisingEnvironment(activity: ComponentActivity?) {
+    suspend fun requestAdvertisingEnvironment(activity: ComponentActivity) {
         requestEnvironment(activity, advertisingPermissions)
     }
 
-    fun requestConnectEnvironment(activity: ComponentActivity?) {
+    suspend fun requestConnectEnvironment(activity: ComponentActivity) {
         requestEnvironment(activity, connectPermissions)
     }
 
-    fun requestScanEnvironment(activity: ComponentActivity?) {
+    suspend fun requestScanEnvironment(activity: ComponentActivity) {
         requestEnvironment(activity, scanPermissions)
     }
 
     private fun checkEnvironment(context: Context, permissions: Array<out String>): Boolean {
-        return PermissionUtils.checkPermissions(context, *permissions) && context.isBluetoothEnable()
+        return checkPermissions(context, *permissions) && context.isBluetoothEnable()
     }
 
     private fun checkEnvironmentOrThrow(context: Context, permissions: Array<out String>) {
-        if (!PermissionUtils.checkPermissions(context, *permissions)) {
+        if (!checkPermissions(context, *permissions)) {
             throw BleExceptionPermission
         }
         if (!context.isBluetoothEnable()) {
@@ -100,12 +99,9 @@ object PermissionUtils {
      * 1、如果没有打开蓝牙开关，则去打开。
      * 2、如果没有相关权限，则去请求。
      */
-    private fun requestEnvironment(activity: ComponentActivity?, permissions: Array<out String>) {
-        activity ?: return
-        activity.lifecycleScope.launch(Dispatchers.Main) {
-            if (requestPermissions(activity, *permissions)) {
-                activity.isBluetoothEnableAndSettingIfDisabled()
-            }
+    private suspend fun requestEnvironment(activity: ComponentActivity, permissions: Array<out String>) = withContext(Dispatchers.Main) {
+        if (requestPermissions(activity, *permissions)) {
+            activity.isBluetoothEnableAndSettingIfDisabled()
         }
     }
 

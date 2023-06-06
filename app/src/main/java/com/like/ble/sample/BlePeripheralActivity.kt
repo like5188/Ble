@@ -270,8 +270,10 @@ class BlePeripheralActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mBinding
+        lifecycleScope.launch {
+            PermissionUtils.requestAdvertisingEnvironment(this@BlePeripheralActivity)
+        }
         bleBroadcastReceiverManager.register()
-        PermissionUtils.requestAdvertisingEnvironment(this)
     }
 
     fun startAdvertising(view: View) {
