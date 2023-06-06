@@ -8,6 +8,7 @@ import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.toBleException
 import com.like.ble.util.MutexUtils
+import com.like.ble.util.PermissionUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -32,7 +33,7 @@ internal abstract class BaseAdvertisingExecutor(context: Context) : AbstractAdve
         timeout: Long
     ) {
         try {
-            checkEnvironmentOrThrow()
+            PermissionUtils.checkAdvertisingEnvironmentOrThrow(mContext)
             mutexUtils.withTryLockOrThrow("正在开启广播，请稍后！") {
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute<Unit>(timeout, "开启广播超时") { continuation ->
@@ -61,7 +62,7 @@ internal abstract class BaseAdvertisingExecutor(context: Context) : AbstractAdve
         try {
             // 此处如果不取消，那么还会把超时错误传递出去的。
             suspendCancellableCoroutineWithTimeout.cancel()
-            if (checkEnvironment()) {
+            if (PermissionUtils.checkAdvertisingEnvironment(mContext)) {
                 onStopAdvertising()
             }
         } catch (e: Exception) {

@@ -19,6 +19,7 @@ import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.exception.BleExceptionTimeout
 import com.like.ble.sample.databinding.FragmentBleScanBinding
 import com.like.ble.util.BleBroadcastReceiverManager
+import com.like.ble.util.PermissionUtils
 import com.like.common.util.Logger
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
 import kotlinx.coroutines.flow.catch
@@ -72,7 +73,6 @@ class BleScanFragment : Fragment() {
             stopScan()
         }
         bleBroadcastReceiverManager.register()
-        scanExecutor.requestEnvironment(activity)
         return mBinding.root
     }
 

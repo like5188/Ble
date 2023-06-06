@@ -8,10 +8,7 @@ import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionDeviceDisconnected
 import com.like.ble.exception.toBleException
-import com.like.ble.util.MutexUtils
-import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
-import com.like.ble.util.getValidString
-import com.like.ble.util.isBleDeviceConnected
+import com.like.ble.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -41,7 +38,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         timeout: Long,
         onDisconnectedListener: ((Throwable) -> Unit)?
     ): List<BluetoothGattService> = try {
-        checkEnvironmentOrThrow()
+        PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
         if (mContext.isBleDeviceConnected(address)) {
             throw BleExceptionBusy("设备已经连接：$address")
         }
@@ -71,7 +68,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         try {
             // 此处如果不取消，那么还会把超时错误传递出去的。
             suspendCancellableCoroutineWithTimeout.cancel()
-            if (checkEnvironment()) {
+            if (PermissionUtils.checkConnectEnvironment(mContext)) {
                 onDisconnect()
             }
         } catch (e: Exception) {
@@ -81,7 +78,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
 
     final override suspend fun readCharacteristic(characteristicUuid: UUID, serviceUuid: UUID?, timeout: Long): ByteArray {
         return try {
-            checkEnvironmentOrThrow()
+            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
             if (!mContext.isBleDeviceConnected(address)) {
                 throw BleExceptionDeviceDisconnected(address)
             }
@@ -115,7 +112,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         timeout: Long
     ): ByteArray {
         return try {
-            checkEnvironmentOrThrow()
+            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
             if (!mContext.isBleDeviceConnected(address)) {
                 throw BleExceptionDeviceDisconnected(address)
             }
@@ -141,7 +138,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
 
     final override suspend fun readRemoteRssi(timeout: Long): Int {
         return try {
-            checkEnvironmentOrThrow()
+            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
             if (!mContext.isBleDeviceConnected(address)) {
                 throw BleExceptionDeviceDisconnected(address)
             }
@@ -167,7 +164,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
 
     final override suspend fun requestConnectionPriority(connectionPriority: Int, timeout: Long) {
         try {
-            checkEnvironmentOrThrow()
+            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
             if (!mContext.isBleDeviceConnected(address)) {
                 throw BleExceptionDeviceDisconnected(address)
             }
@@ -193,7 +190,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
 
     final override suspend fun requestMtu(mtu: Int, timeout: Long): Int {
         return try {
-            checkEnvironmentOrThrow()
+            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
             if (!mContext.isBleDeviceConnected(address)) {
                 throw BleExceptionDeviceDisconnected(address)
             }
@@ -225,7 +222,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         timeout: Long
     ) {
         try {
-            checkEnvironmentOrThrow()
+            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
             if (!mContext.isBleDeviceConnected(address)) {
                 throw BleExceptionDeviceDisconnected(address)
             }
@@ -257,7 +254,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         writeType: Int
     ) {
         try {
-            checkEnvironmentOrThrow()
+            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
             if (!mContext.isBleDeviceConnected(address)) {
                 throw BleExceptionDeviceDisconnected(address)
             }
@@ -295,7 +292,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         writeType: Int,
         isWholePackage: (ByteArray) -> Boolean
     ): ByteArray = try {
-        checkEnvironmentOrThrow()
+        PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
         if (!mContext.isBleDeviceConnected(address)) {
             throw BleExceptionDeviceDisconnected(address)
         }
@@ -349,7 +346,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         timeout: Long
     ) {
         try {
-            checkEnvironmentOrThrow()
+            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
             if (!mContext.isBleDeviceConnected(address)) {
                 throw BleExceptionDeviceDisconnected(address)
             }

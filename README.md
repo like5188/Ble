@@ -63,7 +63,11 @@
     peripheralExecutor.close()
 ```
 
-4、常用第三方库的引用
+4、权限
+
+    使用 com.like.ble.util.PermissionUtils 工具类处理
+
+5、常用第三方库的引用
 ```java
     implementation 'androidx.fragment:fragment-ktx:1.5.5'
 ```

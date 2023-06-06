@@ -1,8 +1,6 @@
 package com.like.ble.central.scan.executor
 
-import android.Manifest
 import android.content.Context
-import android.os.Build
 import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.executor.BleExecutor
 import kotlinx.coroutines.flow.Flow
@@ -11,22 +9,6 @@ import kotlinx.coroutines.flow.Flow
  * 中心设备蓝牙扫描执行者。
  */
 abstract class AbstractScanExecutor(context: Context) : BleExecutor(context) {
-
-    final override fun getPermissions(): Array<String> {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            // Android 12 中的新蓝牙权限
-            // https://developer.android.google.cn/about/versions/12/features/bluetooth-permissions?hl=zh-cn
-            arrayOf(
-                Manifest.permission.BLUETOOTH_SCAN,
-                Manifest.permission.BLUETOOTH_CONNECT,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            )
-        } else if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
-        } else {
-            arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)
-        }
-    }
 
     /**
      * 开始扫描蓝牙设备

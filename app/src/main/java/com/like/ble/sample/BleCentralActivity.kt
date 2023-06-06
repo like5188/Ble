@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import com.google.android.material.tabs.TabLayoutMediator
 import com.like.ble.sample.databinding.ActivityBleCentralBinding
 import com.like.ble.sample.databinding.ViewConnectTabBinding
+import com.like.ble.util.PermissionUtils
 
 /**
  * 蓝牙中心设备
@@ -20,6 +21,8 @@ class BleCentralActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        PermissionUtils.requestScanEnvironment(this)
+        PermissionUtils.requestConnectEnvironment(this)
         mFragments.add(BleScanFragment.newInstance())
         mBinding.vp.adapter = ViewPagerAdapter(mFragments, this)
         TabLayoutMediator(mBinding.tabLayout, mBinding.vp) { tab, position ->

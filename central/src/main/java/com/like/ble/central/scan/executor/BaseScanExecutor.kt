@@ -4,6 +4,7 @@ import android.content.Context
 import com.like.ble.central.scan.result.ScanResult
 import com.like.ble.exception.toBleException
 import com.like.ble.util.MutexUtils
+import com.like.ble.util.PermissionUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +26,7 @@ internal abstract class BaseScanExecutor(context: Context) : AbstractScanExecuto
     // 这里不使用 callbackFlow 是因为 awaitClose 有可能由于前面的代码抛异常，从而不能执行。所以这里需要把资源都放在 continuation.invokeOnCancellation 中释放了。
     final override fun startScan(timeout: Long): Flow<ScanResult> = channelFlow {
         try {
-            checkEnvironmentOrThrow()
+            PermissionUtils.checkScanEnvironmentOrThrow(mContext)
             mutexUtils.withTryLockOrThrow("正在扫描中……") {
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute<Unit>(timeout, "扫描完成") { continuation ->
@@ -54,7 +55,7 @@ internal abstract class BaseScanExecutor(context: Context) : AbstractScanExecuto
         try {
             // 此处如果不取消，那么还会把超时错误传递出去的。
             suspendCancellableCoroutineWithTimeout.cancel()
-            if (checkEnvironment()) {
+            if (PermissionUtils.checkScanEnvironment(mContext)) {
                 onStopScan()
             }
         } catch (e: Exception) {

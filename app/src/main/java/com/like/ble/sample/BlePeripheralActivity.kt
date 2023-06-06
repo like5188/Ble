@@ -271,7 +271,7 @@ class BlePeripheralActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         mBinding
         bleBroadcastReceiverManager.register()
-        peripheralExecutor.requestEnvironment(this)
+        PermissionUtils.requestAdvertisingEnvironment(this)
     }
 
     fun startAdvertising(view: View) {

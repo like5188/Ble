@@ -92,7 +92,6 @@ class BleConnectFragment : Fragment() {
             Logger.e("BleConnectFragment", "tvConnectStatus：${it.toString()}")
         }
         bleBroadcastReceiverManager.register()
-        connectExecutor.requestEnvironment(activity)
         return mBinding.root
     }
 
