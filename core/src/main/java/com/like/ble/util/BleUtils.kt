@@ -205,7 +205,7 @@ fun createBleUuidBy32Bit(uuidString: String?): UUID {
     if (uuidString?.length != 8) {
         throw IllegalArgumentException("uuidString 的长度必须为 8")
     }
-    return UUID.fromString("$uuidString-0000-1000-8000-00805F9B34FB")
+    return "$uuidString-0000-1000-8000-00805F9B34FB".toUUID()
 }
 
 fun createBleUuidOrNullBy16Bit(uuidString: String?): UUID? {
@@ -219,10 +219,23 @@ fun createBleUuidOrNullBy32Bit(uuidString: String?): UUID? {
     if (uuidString?.length != 8) {
         return null
     }
+    return "$uuidString-0000-1000-8000-00805F9B34FB".toUUIDOrNull()
+}
+
+fun String?.toUUID(): UUID {
+    if (this.isNullOrEmpty()) {
+        throw IllegalArgumentException("toUUID failure, string is null or empty")
+    }
+    return UUID.fromString(this)
+}
+
+fun String?.toUUIDOrNull(): UUID? {
+    if (this.isNullOrEmpty()) {
+        return null
+    }
     return try {
-        UUID.fromString("$uuidString-0000-1000-8000-00805F9B34FB")
+        UUID.fromString(this)
     } catch (e: Exception) {
-        e.printStackTrace()
         null
     }
 }
@@ -252,8 +265,11 @@ fun ByteArray.toHexString(): String {
  *
  * @return byte[] 字节数组
  */
-fun String.hexStringToByteArray(): ByteArray {
-    val hexString = this.replace(" ".toRegex(), "")
+fun String?.hexStringToByteArray(): ByteArray {
+    if (this == null || this.trim().isEmpty()) {
+        return byteArrayOf()
+    }
+    val hexString = this.replace(" ", "")
     val len = hexString.length
     val bytes = ByteArray(len / 2)
     var i = 0
