@@ -50,24 +50,24 @@ abstract class BleExecutor(context: Context) {
     fun requestEnvironment(activity: ComponentActivity?) {
         activity ?: return
         activity.lifecycleScope.launch(Dispatchers.Main) {
-            activity.isBluetoothEnableAndSettingIfDisabled()
-            PermissionUtils.requestPermissions(activity, *getPermissions())
+            if (PermissionUtils.requestPermissions(activity, *getPermissions())) {
+                activity.isBluetoothEnableAndSettingIfDisabled()
+            }
         }
     }
 
     protected abstract fun getPermissions(): Array<String>
 
     protected fun checkEnvironment(): Boolean {
-        return mContext.isBluetoothEnable() &&
-                PermissionUtils.checkPermissions(mContext, *getPermissions())
+        return PermissionUtils.checkPermissions(mContext, *getPermissions()) && mContext.isBluetoothEnable()
     }
 
     protected fun checkEnvironmentOrThrow() {
-        if (!mContext.isBluetoothEnable()) {
-            throw BleExceptionDisabled
-        }
         if (!PermissionUtils.checkPermissions(mContext, *getPermissions())) {
             throw BleExceptionPermission
+        }
+        if (!mContext.isBluetoothEnable()) {
+            throw BleExceptionDisabled
         }
     }
 
