@@ -196,7 +196,7 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
      * 设置通知监听，数据需要自己处理。
      *
      * 注意：
-     * 1、配合[writeCharacteristic]发送命令并接收通知数据，注意必须要开启通知[setCharacteristicNotification]才能接收数据。
+     * 1、必须要开启通知[setCharacteristicNotification]才能接收数据。
      * 2、可以使用[CoroutineScope.cancel]方法来取消协程作用域，从而会自动移除此监听。即 flow 停止收集则自动移除此监听，否则会一直存在。
      */
     abstract fun setNotifyCallback(): Flow<ByteArray>
