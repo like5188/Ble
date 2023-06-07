@@ -283,8 +283,8 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     }
 
     final override suspend fun writeCharacteristicAndWaitNotify(
-        data: ByteArray,
-        writeUuid: UUID,
+        data: ByteArray?,
+        writeUuid: UUID?,
         notifyUuid: UUID?,
         serviceUuid: UUID?,
         timeout: Long,
@@ -299,7 +299,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         mutexUtils.withTryLockOrThrow("正在写特征值……") {
             withContext(Dispatchers.IO) {
                 suspendCancellableCoroutineWithTimeout.execute(
-                    timeout, "写特征值超时：${writeUuid.getValidString()}"
+                    timeout, "写特征值超时：${writeUuid?.getValidString()}"
                 ) { continuation ->
                     if (notifyUuid != null) {
                         // 启用通知
@@ -327,9 +327,11 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                         }
                     }
                     // 写入命令
-                    onWriteCharacteristic(data, writeUuid, serviceUuid, writeType) {
-                        if (continuation.isActive)
-                            continuation.resumeWithException(it)
+                    if (data != null && data.isNotEmpty() && writeUuid != null) {
+                        onWriteCharacteristic(data, writeUuid, serviceUuid, writeType) {
+                            if (continuation.isActive)
+                                continuation.resumeWithException(it)
+                        }
                     }
                 }
             }
@@ -374,6 +376,26 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     }
 
     final override fun setNotifyCallback(): Flow<ByteArray> = callbackFlow {
+        onSetNotifyCallback {
+            trySend(it)
+        }
+        // 注意：不能在这个作用域里面使用挂起函数，这样会导致使用者使用 cancel 方法关闭协程作用域的时候，
+        // 因为还没有执行到 awaitClose 方法，所以就触发不了 awaitClose 里面的代码。所以如果要使用挂起函数，有两种方式：
+        // 1、使用 launch 方法重新开启一个子协程。
+        // 2、把挂起函数 try catch 起来，这样就能捕获 JobCancellationException 异常，然后就可以执行下面的 awaitClose 方法。
+        awaitClose {
+            onRemoveNotifyCallback()
+            Log.d("BaseConnectExecutor", "通知监听被取消")
+        }
+    }
+
+    override suspend fun setCharacteristicNotificationAndNotifyCallback(
+        characteristicUuid: UUID,
+        serviceUuid: UUID?,
+        type: Int,
+        timeout: Long
+    ): Flow<ByteArray> = callbackFlow {
+        setCharacteristicNotification(characteristicUuid, serviceUuid, type, true, timeout)
         onSetNotifyCallback {
             trySend(it)
         }
