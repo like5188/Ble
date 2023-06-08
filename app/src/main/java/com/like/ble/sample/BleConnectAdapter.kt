@@ -140,28 +140,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                     putSerializable("callback", object : WriteDataFragment.Callback {
                         override fun onData(data: ByteArray) {
                             when (data[0]) {
-                                0x1.toByte() -> {
-                                    mActivity.lifecycleScope.launch {
-                                        try {
-                                            val result = connectExecutor.writeCharacteristicAndWaitNotify(
-                                                data,
-                                                characteristic.uuid,
-                                                serviceUuid = serviceUuid
-                                            ) {
-                                                it.last() == Byte.MAX_VALUE
-                                            }
-                                            binding.ivNotify.setImageResource(R.drawable.notify)
-                                            Toast.makeText(
-                                                mActivity,
-                                                "写特征成功，并且收到通知(${characteristic.uuid.getValidString()})，数据长度：${result.size} ${result.contentToString()}",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        } catch (e: BleException) {
-                                            onError(e)
-                                        }
-                                    }
-                                }
-                                else -> {
+                                0x00.toByte() -> {
                                     mActivity.lifecycleScope.launch {
                                         try {
                                             connectExecutor.writeCharacteristic(
@@ -170,6 +149,31 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                                                 serviceUuid,
                                             )
                                             Toast.makeText(mActivity, "写特征成功", Toast.LENGTH_SHORT).show()
+                                        } catch (e: BleException) {
+                                            onError(e)
+                                        }
+                                    }
+                                }
+                                else -> {
+                                    mActivity.lifecycleScope.launch {
+                                        try {
+                                            var result = byteArrayOf()
+                                            connectExecutor.writeCharacteristicAndWaitNotify(
+                                                data,
+                                                characteristic.uuid,
+                                                serviceUuid = serviceUuid
+                                            ) {
+                                                if (result.isNotEmpty() || (it.first() == 0xAA.toByte() && it[1] == data[1])) {
+                                                    result += it
+                                                }
+                                                result.size == 30 && result.last() == 0xBB.toByte()
+                                            }
+                                            binding.ivNotify.setImageResource(R.drawable.notify)
+                                            Toast.makeText(
+                                                mActivity,
+                                                "写特征成功，并且收到通知(${characteristic.uuid.getValidString()})，数据长度：${result.size} ${result.contentToString()}",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
                                         } catch (e: BleException) {
                                             onError(e)
                                         }

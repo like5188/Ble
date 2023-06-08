@@ -55,10 +55,12 @@ class BlePeripheralActivity : AppCompatActivity() {
     private val mBluetoothGattServerCallback = object : BluetoothGattServerCallback() {
         private val mResponseData: ByteArray by lazy {
             val arr = ByteArray(30)// 最大只能传输600字节
-            for (i in 1 until arr.size) {
-                arr[i - 1] = i.toByte()
+            arr[0] = 0xAA.toByte()// 一帧开始的标志
+            // 第 1 的位置用于放命令
+            for (i in (2..28)) {
+                arr[i] = i.toByte()
             }
-            arr[arr.size - 1] = Byte.MAX_VALUE// 一帧结束的标志
+            arr[29] = 0xBB.toByte()// 一帧结束的标志
             arr
         }
         private var mMtu = 23
@@ -146,11 +148,12 @@ class BlePeripheralActivity : AppCompatActivity() {
                 mBluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, byteArrayOf())
             }
 
-            when (value[0]) {
-                0x1.toByte() -> {
+            when {
+                value[0] != 0x00.toByte() -> {
                     // 外围设备向中心设备不能发送数据，必须通过notify 或者indicate的方式，android只发现notify接口。
                     // 调用 notifyCharacteristicChanged() 方法向中心设备发送数据，会触发 onNotificationSent() 方法和中心设备的 BluetoothGattCallback.onCharacteristicChanged() 方法。
                     // 注意：默认mtu下一次只能传递20字节。
+                    mResponseData[1] = value[1]
                     mResponseData.batch(mMtu - 3).forEach {
                         characteristic.value = it
                         mBluetoothGattServer?.notifyCharacteristicChanged(device, characteristic, false)// 最后一个参数表示是否需要客户端确认

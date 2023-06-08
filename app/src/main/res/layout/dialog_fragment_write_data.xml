@@ -33,7 +33,7 @@
                 android:id="@+id/et_data"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="01"
+                android:text="01020304"
                 android:textColor="@color/ble_text_black_0"
                 android:textSize="16dp" />
         </LinearLayout>
