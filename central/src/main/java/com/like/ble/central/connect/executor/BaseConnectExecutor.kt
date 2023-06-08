@@ -290,53 +290,57 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         timeout: Long,
         notifyType: Int,
         writeType: Int,
-        onNotify: (ByteArray) -> Boolean
-    ) {
-        try {
-            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
-            if (!mContext.isBleDeviceConnected(address)) {
-                throw BleExceptionDeviceDisconnected(address)
-            }
-            mutexUtils.withTryLockOrThrow("正在写特征值……") {
-                withContext(Dispatchers.IO) {
-                    suspendCancellableCoroutineWithTimeout.execute<Unit>(
-                        timeout, "写特征值超时：${writeUuid?.getValidString()}"
-                    ) { continuation ->
-                        if (notifyUuid != null) {
-                            // 启用通知
-                            onSetCharacteristicNotification(notifyUuid, serviceUuid, notifyType, true) {
-                                if (continuation.isActive) {
-                                    continuation.resumeWithException(it)
-                                    return@onSetCharacteristicNotification
-                                }
-                            }
-                            // 延迟100毫秒，否则下面的写入命令会失败。
-                            Thread.sleep(100)
-                        }
-                        // 设置监听
-                        onSetNotifyCallback {
-                            Log.d("BaseConnectExecutor", "获取到数据 ${it.contentToString()}")
-                            if (onNotify(it)) {
-                                // 取消监听
-                                onRemoveNotifyCallback()
-                                Log.d("BaseConnectExecutor", "通知监听被取消")
-                                if (continuation.isActive)
-                                    continuation.resume(Unit)
+        isStart: (ByteArray) -> Boolean,
+        isWhole: (ByteArray) -> Boolean,
+    ): ByteArray = try {
+        PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
+        if (!mContext.isBleDeviceConnected(address)) {
+            throw BleExceptionDeviceDisconnected(address)
+        }
+        mutexUtils.withTryLockOrThrow("正在写特征值……") {
+            withContext(Dispatchers.IO) {
+                suspendCancellableCoroutineWithTimeout.execute<ByteArray>(
+                    timeout, "写特征值超时：${writeUuid?.getValidString()}"
+                ) { continuation ->
+                    if (notifyUuid != null) {
+                        // 启用通知
+                        onSetCharacteristicNotification(notifyUuid, serviceUuid, notifyType, true) {
+                            if (continuation.isActive) {
+                                continuation.resumeWithException(it)
+                                return@onSetCharacteristicNotification
                             }
                         }
-                        // 写入命令
-                        if (data != null && data.isNotEmpty() && writeUuid != null) {
-                            onWriteCharacteristic(data, writeUuid, serviceUuid, writeType) {
-                                if (continuation.isActive)
-                                    continuation.resumeWithException(it)
-                            }
+                        // 延迟100毫秒，否则下面的写入命令会失败。
+                        Thread.sleep(100)
+                    }
+                    // 设置监听
+                    var result: ByteArray = byteArrayOf()
+                    onSetNotifyCallback {
+                        Log.d("BaseConnectExecutor", "获取到数据 ${it.contentToString()}")
+                        if (isStart(it) || result.isNotEmpty()) {
+                            result += it
+                        }
+                        if (isWhole(result)) {
+                            Log.d("BaseConnectExecutor", "获取到了完整数据包 ${result.contentToString()}")
+                            // 取消监听
+                            onRemoveNotifyCallback()
+                            Log.d("BaseConnectExecutor", "通知监听被取消")
+                            if (continuation.isActive)
+                                continuation.resume(result)
+                        }
+                    }
+                    // 写入命令
+                    if (data != null && data.isNotEmpty() && writeUuid != null) {
+                        onWriteCharacteristic(data, writeUuid, serviceUuid, writeType) {
+                            if (continuation.isActive)
+                                continuation.resumeWithException(it)
                         }
                     }
                 }
             }
-        } catch (e: Exception) {
-            throw e.toBleException()
         }
+    } catch (e: Exception) {
+        throw e.toBleException()
     }
 
     final override suspend fun writeDescriptor(

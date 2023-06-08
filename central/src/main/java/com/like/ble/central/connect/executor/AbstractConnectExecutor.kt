@@ -107,8 +107,8 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
     )
 
     /**
-     * 写特征值并等待通知
-     * 注意：调用此方法会自动调用[setNotifyCallback]覆盖通知回调。
+     * 写特征值并等待通知数据
+     * 注意：调用此方法会调用[setNotifyCallback]覆盖通知回调。
      *
      * @param data                      需要写入的数据。
      * BLE默认单次传输长度为20字节（core spec里面定义了ATT的默认MTU为23个bytes，除去ATT的opcode一个字节以及ATT的handle2个字节之后，剩下的20个字节便是留给GATT的了。）。如果不分包的话，可以设置更大的MTU。
@@ -122,8 +122,11 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
      * WRITE_TYPE_DEFAULT 默认类型，需要外围设备的确认，也就是需要外围设备的回应，这样才能继续发送写。
      * WRITE_TYPE_NO_RESPONSE 设置该类型不需要外围设备的回应，可以继续写数据。加快传输速率。
      * WRITE_TYPE_SIGNED 写特征携带认证签名，具体作用不太清楚。
-     * @param onNotify                  通知的数据。当返回true，则会移除通知监听。
+     * @param isStart                   是否一个完整数据包的开始。当返回true，则开始缓存接下来的数据，然后把组合起来的数据传递给[isWhole]。
+     * @param isWhole                   是否一个完整数据包。当返回true，则会移除通知监听并结束本挂起函数。
      * @throws [com.like.ble.exception.BleException]
+     *
+     * @return 一个完整数据包
      */
     abstract suspend fun writeCharacteristicAndWaitNotify(
         data: ByteArray? = null,
@@ -134,8 +137,9 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
         @IntRange(from = 0, to = 1)
         notifyType: Int = 0,
         writeType: Int = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT,
-        onNotify: (ByteArray) -> Boolean
-    )
+        isStart: (ByteArray) -> Boolean,
+        isWhole: (ByteArray) -> Boolean,
+    ): ByteArray
 
     /**
      * 写特征值

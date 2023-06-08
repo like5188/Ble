@@ -157,16 +157,15 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                                 else -> {
                                     mActivity.lifecycleScope.launch {
                                         try {
-                                            var result = byteArrayOf()
-                                            connectExecutor.writeCharacteristicAndWaitNotify(
+                                            val result = connectExecutor.writeCharacteristicAndWaitNotify(
                                                 data,
                                                 characteristic.uuid,
-                                                serviceUuid = serviceUuid
-                                            ) {
-                                                if (result.isNotEmpty() || (it.first() == 0xAA.toByte() && it[1] == data[1])) {
-                                                    result += it
+                                                serviceUuid = serviceUuid,
+                                                isStart = {
+                                                    it.first() == 0xAA.toByte() && it[1] == data[1]
                                                 }
-                                                result.size == 30 && result.last() == 0xBB.toByte()
+                                            ) {
+                                                it.size == 30 && it.last() == 0xBB.toByte()
                                             }
                                             binding.ivNotify.setImageResource(R.drawable.notify)
                                             Toast.makeText(
