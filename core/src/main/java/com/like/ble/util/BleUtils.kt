@@ -75,7 +75,7 @@ fun BluetoothGatt.refreshDeviceCache(): Boolean = try {
  */
 fun BluetoothGatt.findCharacteristic(characteristicUuid: UUID, serviceUuid: UUID? = null): BluetoothGattCharacteristic? {
     if (serviceUuid != null) {
-        return services.firstOrNull { it.uuid == serviceUuid }?.getCharacteristic(characteristicUuid)
+        return getService(serviceUuid)?.getCharacteristic(characteristicUuid)
     } else {
         services.forEach {
             val characteristic = it.getCharacteristic(characteristicUuid)
@@ -99,6 +99,7 @@ fun BluetoothGatt.findDescriptor(
         serviceUuid != null && characteristicUuid != null -> {
             return services.firstOrNull { it.uuid == serviceUuid }?.getCharacteristic(characteristicUuid)?.getDescriptor(descriptorUuid)
         }
+
         serviceUuid != null -> {
             services.firstOrNull { it.uuid == serviceUuid }?.characteristics?.forEach {
                 val descriptor = it.getDescriptor(descriptorUuid)
@@ -108,6 +109,7 @@ fun BluetoothGatt.findDescriptor(
             }
             return null
         }
+
         characteristicUuid != null -> {
             services.forEach {
                 val characteristic = it.getCharacteristic(characteristicUuid)
@@ -120,6 +122,7 @@ fun BluetoothGatt.findDescriptor(
             }
             return null
         }
+
         else -> {
             services.forEach { service ->
                 service.characteristics.forEach { characteristic ->
