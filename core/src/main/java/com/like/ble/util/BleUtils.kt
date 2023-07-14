@@ -97,11 +97,11 @@ fun BluetoothGatt.findDescriptor(
 ): BluetoothGattDescriptor? {
     when {
         serviceUuid != null && characteristicUuid != null -> {
-            return services.firstOrNull { it.uuid == serviceUuid }?.getCharacteristic(characteristicUuid)?.getDescriptor(descriptorUuid)
+            return getService(serviceUuid)?.getCharacteristic(characteristicUuid)?.getDescriptor(descriptorUuid)
         }
 
         serviceUuid != null -> {
-            services.firstOrNull { it.uuid == serviceUuid }?.characteristics?.forEach {
+            getService(serviceUuid)?.characteristics?.forEach {
                 val descriptor = it.getDescriptor(descriptorUuid)
                 if (descriptor != null) {
                     return descriptor
