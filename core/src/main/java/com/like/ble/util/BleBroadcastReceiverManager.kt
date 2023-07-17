@@ -33,7 +33,6 @@ class BleBroadcastReceiverManager(private val mContext: Context, onBleOn: (() ->
         try {
             mContext.unregisterReceiver(mReceiver)
         } catch (e: Exception) {// 避免 java.lang.IllegalArgumentException: Receiver not registered
-            e.printStackTrace()
         }
     }
 }
