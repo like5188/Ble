@@ -7,9 +7,8 @@ import android.content.Context
 import androidx.annotation.IntRange
 import com.like.ble.executor.BleExecutor
 import com.like.ble.util.isBleDeviceConnected
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
-import java.util.*
+import java.util.UUID
 
 /**
  * 中心设备蓝牙连接及数据操作的执行者。
@@ -121,7 +120,7 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
      * @param writeUuid                 写特征UUID
      * 注意：如果[data]、[writeUuid]都有效，才会写入命令。否则就只是等待通知。
      * @param notifyUuid                通知特征UUID，如果为null，则需要自己调用[setCharacteristicNotification]方法启用通知才能收到返回数据
-     * @param serviceUuid               服务UUID，如果不为null，则会在此服务下查找[writeUuid]和[notifyUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
+     * @param serviceUuid               服务UUID，如果不为null，则会在此服务下查找[writeUuid]和[notifyUuid]；如果为null，则会遍历所有服务查找第一个匹配的
      * @param notifyType                类型：0 (notification 不需要应答)；1 (indication 需要客户端应答)
      * @param writeType
      * WRITE_TYPE_DEFAULT 默认类型，需要外围设备的确认，也就是需要外围设备的回应，这样才能继续发送写。
@@ -193,7 +192,7 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
      *
      * 注意：
      * 1、必须要开启通知[setCharacteristicNotification]才能接收数据。
-     * 2、可以使用[CoroutineScope.cancel]方法来取消协程作用域，从而会自动移除此监听。即 flow 停止收集则自动移除此监听，否则会一直存在。
+     * 2、可以使用[kotlinx.coroutines.Job.cancel]方法来取消协程作用域，从而会自动移除此监听。即 flow 停止收集则自动移除此监听，否则会一直存在。
      */
     abstract fun setNotifyCallback(): Flow<ByteArray>
 
