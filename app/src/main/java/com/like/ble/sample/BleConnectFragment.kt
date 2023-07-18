@@ -1,6 +1,5 @@
 package com.like.ble.sample
 
-import android.bluetooth.BluetoothGattService
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -20,7 +19,9 @@ import com.like.ble.sample.databinding.FragmentBleConnectBinding
 import com.like.ble.util.BleBroadcastReceiverManager
 import com.like.common.util.Logger
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * 连接设备界面
@@ -51,7 +52,6 @@ class BleConnectFragment : Fragment() {
         )
     }
     private val mAdapter: BleConnectAdapter by lazy { BleConnectAdapter(requireActivity(), connectExecutor) }
-    private var reConnectJob: Job? = null
 
     companion object {
         fun newInstance(bleScanInfo: BleScanInfo?): BleConnectFragment {
@@ -96,13 +96,13 @@ class BleConnectFragment : Fragment() {
     }
 
     private fun connect() {
+        val ctx = context ?: return
         val preState = mBinding.tvConnectStatus.text
-        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
+        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
         mBinding.tvConnectStatus.text = "连接中……"
 
-        fun onConnectSuccess(services: List<BluetoothGattService>) {
-            val ctx = context ?: return
-            lifecycleScope.launch(Dispatchers.Main) {
+        lifecycleScope.launch {
+            connectExecutor.connect(autoConnectInterval = 3000, onConnected = { services ->
                 mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
                 mBinding.tvConnectStatus.text = "连接成功"
                 if (services.isNotEmpty()) {
@@ -113,59 +113,34 @@ class BleConnectFragment : Fragment() {
                 } else {
                     mAdapter.submitList(null)
                 }
-            }
-        }
-
-        fun onDisconnected(throwable: Throwable) {
-            val ctx = context ?: return
-            lifecycleScope.launch(Dispatchers.Main) {
-                when (throwable) {
+            }) {
+                when (it) {
                     is BleExceptionCancelTimeout -> {
                         // 提前取消超时(BleExceptionCancelTimeout)不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
                     }
+
                     is BleExceptionBusy -> {
                         mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
                         mBinding.tvConnectStatus.text = preState
-                        Toast.makeText(ctx, throwable.message, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(ctx, it.message, Toast.LENGTH_SHORT).show()
                     }
+
                     else -> {
                         mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
-                        mBinding.tvConnectStatus.text = throwable.message
+                        mBinding.tvConnectStatus.text = it.message
                         mAdapter.submitList(null)
                         mBinding.etRequestMtu.setText("")
                         mBinding.etReadRemoteRssi.setText("")
                         mBinding.etRequestConnectionPriority.setText("")
-                        reConnect()
                     }
                 }
             }
-        }
-
-        lifecycleScope.launch {
-            try {
-                val services = connectExecutor.connect {
-                    // 连接成功后再断开会回调
-                    onDisconnected(it)
-                }
-                onConnectSuccess(services)
-            } catch (e: BleException) {
-                onDisconnected(e)
-            }
-        }
-    }
-
-    private fun reConnect() {
-        reConnectJob = lifecycleScope.launch {
-            delay(3000)
-            this@BleConnectFragment.connect()
         }
     }
 
     fun disconnect() {
         val ctx = context ?: return
         try {
-            reConnectJob?.cancel()
-            reConnectJob = null
             connectExecutor.disconnect()
             mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
             mBinding.tvConnectStatus.text = "连接断开了"
@@ -182,6 +157,7 @@ class BleConnectFragment : Fragment() {
                 is BleExceptionCancelTimeout -> {
                     // 提前取消超时(BleExceptionCancelTimeout)不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
                 }
+
                 else -> {
                     Toast.makeText(ctx, e.message, Toast.LENGTH_SHORT).show()
                 }

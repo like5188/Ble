@@ -48,8 +48,8 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     final override suspend fun connect(
         autoConnectInterval: Long,
         timeout: Long,
-        onConnected: (List<BluetoothGattService>) -> Unit,
-        onDisconnected: ((Throwable) -> Unit)?
+        onConnected: suspend (List<BluetoothGattService>) -> Unit,
+        onDisconnected: (suspend (Throwable) -> Unit)?
     ) {
         try {
             val result = doConnect(timeout) {
@@ -57,7 +57,9 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                 disconnect()// 此处必须断开连接，这样会取消其它需要连接的命令的等待(比如断开的时候正在读取数据)，如果不取消的话，是不能再次连接的，因为它们用的同一把锁。
                 throw it
             }
-            onConnected(result)
+            withContext(Dispatchers.Main) {
+                onConnected(result)
+            }
         } catch (throwable: Throwable) {
             if (throwable !is BleExceptionCancelTimeout && throwable !is BleExceptionBusy) {
                 reConnectJob = coroutineScope {
@@ -67,7 +69,9 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                     }
                 }
             }
-            onDisconnected?.invoke(throwable)
+            withContext(Dispatchers.Main) {
+                onDisconnected?.invoke(throwable)
+            }
         }
     }
 

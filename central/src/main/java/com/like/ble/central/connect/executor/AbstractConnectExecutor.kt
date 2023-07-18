@@ -25,15 +25,15 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
      *
      * @param autoConnectInterval   自动重连间隔时间，毫秒。如果为0，表示不自动重连。
      * @param timeout               连接超时间隔，毫秒。默认10000.
-     * @param onConnected           连接成功回调
-     * @param onDisconnected        连接断开回调
+     * @param onConnected           连接成功回调，主线程
+     * @param onDisconnected        连接断开回调，主线程
      * 注意：当断开原因为关闭蓝牙开关时，不回调，由 [com.like.ble.util.BleBroadcastReceiverManager] 设置的监听来回调。
      */
     abstract suspend fun connect(
         autoConnectInterval: Long = 0L,
         timeout: Long = 10000L,
-        onConnected: (List<BluetoothGattService>) -> Unit,
-        onDisconnected: ((Throwable) -> Unit)? = null
+        onConnected: suspend (List<BluetoothGattService>) -> Unit,
+        onDisconnected: (suspend (Throwable) -> Unit)? = null
     )
 
     /**
