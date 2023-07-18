@@ -161,7 +161,7 @@ class BleConnectAdapter(private val mActivity: FragmentActivity, private val con
                                                 data,
                                                 characteristic.uuid,
                                                 serviceUuid = serviceUuid,
-                                                isStart = {
+                                                isBeginOfPacket = {
                                                     it.first() == 0xAA.toByte() && it[1] == data[1]
                                                 }
                                             ) {

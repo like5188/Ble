@@ -122,8 +122,8 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
      * WRITE_TYPE_DEFAULT 默认类型，需要外围设备的确认，也就是需要外围设备的回应，这样才能继续发送写。
      * WRITE_TYPE_NO_RESPONSE 设置该类型不需要外围设备的回应，可以继续写数据。加快传输速率。
      * WRITE_TYPE_SIGNED 写特征携带认证签名，具体作用不太清楚。
-     * @param isStart                   是否一个完整数据包的开始。当返回true，则开始缓存接下来的数据，然后把组合起来的数据传递给[isWhole]。
-     * @param isWhole                   是否一个完整数据包。当返回true，则会移除通知监听并结束本挂起函数。
+     * @param isBeginOfPacket           是否一个完整数据包的开始。当返回true，则开始缓存接下来的数据，然后把组合起来的数据传递给[isFullPacket]。
+     * @param isFullPacket              是否一个完整数据包。当返回true，则会移除通知监听并结束本挂起函数。
      * @throws [com.like.ble.exception.BleException]
      *
      * @return 一个完整数据包
@@ -137,8 +137,8 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
         @IntRange(from = 0, to = 1)
         notifyType: Int = 0,
         writeType: Int = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT,
-        isStart: (ByteArray) -> Boolean,
-        isWhole: (ByteArray) -> Boolean,
+        isBeginOfPacket: (ByteArray) -> Boolean,
+        isFullPacket: (ByteArray) -> Boolean,
     ): ByteArray
 
     /**
@@ -200,7 +200,7 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
      * @param serviceUuid                   服务UUID，如果不为null，则会在此服务下查找[characteristicUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
      * @param type                          类型：0 (notification 不需要应答)；1 (indication 需要客户端应答)
      */
-    abstract suspend fun setCharacteristicNotificationAndNotifyCallback(
+    abstract fun setCharacteristicNotificationAndNotifyCallback(
         characteristicUuid: UUID,
         serviceUuid: UUID? = null,
         @IntRange(from = 0, to = 1)

@@ -8,13 +8,17 @@ import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionDeviceDisconnected
 import com.like.ble.exception.toBleException
-import com.like.ble.util.*
+import com.like.ble.util.MutexUtils
+import com.like.ble.util.PermissionUtils
+import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
+import com.like.ble.util.getValidString
+import com.like.ble.util.isBleDeviceConnected
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
-import java.util.*
+import java.util.UUID
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -120,7 +124,10 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLockOrThrow("正在读取描述值……") {
                 withContext(Dispatchers.IO) {
-                    suspendCancellableCoroutineWithTimeout.execute(timeout, "读取描述值超时：${descriptorUuid.getValidString()}") { continuation ->
+                    suspendCancellableCoroutineWithTimeout.execute(
+                        timeout,
+                        "读取描述值超时：${descriptorUuid.getValidString()}"
+                    ) { continuation ->
                         onReadDescriptor(descriptorUuid, characteristicUuid, serviceUuid, onSuccess = {
                             if (continuation.isActive)
                                 continuation.resume(it)
@@ -290,8 +297,8 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         timeout: Long,
         notifyType: Int,
         writeType: Int,
-        isStart: (ByteArray) -> Boolean,
-        isWhole: (ByteArray) -> Boolean,
+        isBeginOfPacket: (ByteArray) -> Boolean,
+        isFullPacket: (ByteArray) -> Boolean,
     ): ByteArray = try {
         PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
         if (!mContext.isBleDeviceConnected(address)) {
@@ -317,10 +324,10 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                     var result: ByteArray = byteArrayOf()
                     onSetNotifyCallback {
                         Log.d("BaseConnectExecutor", "获取到数据 ${it.contentToString()}")
-                        if (isStart(it) || result.isNotEmpty()) {
+                        if (isBeginOfPacket(it) || result.isNotEmpty()) {
                             result += it
                         }
-                        if (isWhole(result)) {
+                        if (isFullPacket(result)) {
                             Log.d("BaseConnectExecutor", "获取到了完整数据包 ${result.contentToString()}")
                             // 取消监听
                             onRemoveNotifyCallback()
@@ -392,7 +399,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         }
     }
 
-    override suspend fun setCharacteristicNotificationAndNotifyCallback(
+    final override fun setCharacteristicNotificationAndNotifyCallback(
         characteristicUuid: UUID,
         serviceUuid: UUID?,
         type: Int,
@@ -418,7 +425,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         ConnectExecutorFactory.remove(address)
     }
 
-    override fun onBleOff() {
+    final override fun onBleOff() {
         super.onBleOff()
         // 在 connect 的时候关闭蓝牙开关，此时如果不调用 disconnect 方法，那么就不会清空回调（参考ConnectExecutor.onDisconnect），则会继续发送 connect 方法的相关错误，造成 UI 显示错乱。
         disconnect()
