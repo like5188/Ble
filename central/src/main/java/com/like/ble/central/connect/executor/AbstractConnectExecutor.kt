@@ -7,6 +7,7 @@ import android.content.Context
 import androidx.annotation.IntRange
 import com.like.ble.executor.BleExecutor
 import com.like.ble.util.isBleDeviceConnected
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
@@ -29,11 +30,12 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
      * 注意：当断开原因为关闭蓝牙开关时，[onDisconnected]不回调，由 [com.like.ble.util.BleBroadcastReceiverManager] 设置的监听来回调。
      * 当不设置自动重连时。[onConnected]、[onDisconnected]最多每个回调一次。
      */
-    abstract suspend fun connect(
+    abstract fun connect(
+        coroutineScope: CoroutineScope,
         autoConnectInterval: Long = 0L,
         timeout: Long = 10000L,
-        onConnected: suspend (List<BluetoothGattService>) -> Unit,
-        onDisconnected: (suspend (Throwable) -> Unit)? = null
+        onConnected: (List<BluetoothGattService>) -> Unit,
+        onDisconnected: ((Throwable) -> Unit)? = null
     )
 
     /**
@@ -104,8 +106,7 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
     abstract suspend fun setCharacteristicNotification(
         characteristicUuid: UUID,
         serviceUuid: UUID? = null,
-        @IntRange(from = 0, to = 1)
-        type: Int = 0,
+        @IntRange(from = 0, to = 1) type: Int = 0,
         enable: Boolean = true,
         timeout: Long = 3000L,
     )
@@ -138,8 +139,7 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
         notifyUuid: UUID? = null,
         serviceUuid: UUID? = null,
         timeout: Long = 15000L,
-        @IntRange(from = 0, to = 1)
-        notifyType: Int = 0,
+        @IntRange(from = 0, to = 1) notifyType: Int = 0,
         writeType: Int = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT,
         isBeginOfPacket: (ByteArray) -> Boolean,
         isFullPacket: (ByteArray) -> Boolean,
@@ -207,8 +207,7 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
     abstract fun setCharacteristicNotificationAndNotifyCallback(
         characteristicUuid: UUID,
         serviceUuid: UUID? = null,
-        @IntRange(from = 0, to = 1)
-        type: Int = 0,
+        @IntRange(from = 0, to = 1) type: Int = 0,
         timeout: Long = 3000L,
     ): Flow<ByteArray>
 

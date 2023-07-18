@@ -15,10 +15,10 @@ import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
 import com.like.ble.util.getValidString
 import com.like.ble.util.isBleDeviceConnected
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -45,32 +45,33 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         }
     }
 
-    final override suspend fun connect(
+    final override fun connect(
+        coroutineScope: CoroutineScope,
         autoConnectInterval: Long,
         timeout: Long,
-        onConnected: suspend (List<BluetoothGattService>) -> Unit,
-        onDisconnected: (suspend (Throwable) -> Unit)?
+        onConnected: (List<BluetoothGattService>) -> Unit,
+        onDisconnected: ((Throwable) -> Unit)?
     ) {
-        try {
-            val result = doConnect(timeout) {
-                // 连接成功后再断开会回调
-                disconnect()// 此处必须断开连接，这样会取消其它需要连接的命令的等待(比如断开的时候正在读取数据)，如果不取消的话，是不能再次连接的，因为它们用的同一把锁。
-                throw it
-            }
-            withContext(Dispatchers.Main) {
-                onConnected(result)
-            }
-        } catch (throwable: Throwable) {
+        fun onDisconnected(throwable: Throwable) {
             if (throwable !is BleExceptionCancelTimeout && throwable !is BleExceptionBusy) {
-                reConnectJob = coroutineScope {
-                    launch {
-                        delay(autoConnectInterval)
-                        connect(autoConnectInterval, timeout, onConnected, onDisconnected)
-                    }
+                reConnectJob = coroutineScope.launch {
+                    delay(autoConnectInterval)
+                    connect(coroutineScope, autoConnectInterval, timeout, onConnected, onDisconnected)
                 }
             }
-            withContext(Dispatchers.Main) {
-                onDisconnected?.invoke(throwable)
+            onDisconnected?.invoke(throwable)
+        }
+
+        coroutineScope.launch {
+            try {
+                val result = doConnect(timeout) {
+                    // 连接成功后再断开会回调
+                    disconnect()// 此处必须断开连接，这样会取消其它需要连接的命令的等待(比如断开的时候正在读取数据)，如果不取消的话，是不能再次连接的，因为它们用的同一把锁。
+                    onDisconnected(it)
+                }
+                onConnected(result)
+            } catch (throwable: Throwable) {
+                onDisconnected(throwable)
             }
         }
     }

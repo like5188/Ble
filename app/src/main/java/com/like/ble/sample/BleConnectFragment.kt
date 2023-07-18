@@ -101,38 +101,36 @@ class BleConnectFragment : Fragment() {
         mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
         mBinding.tvConnectStatus.text = "连接中……"
 
-        lifecycleScope.launch {
-            connectExecutor.connect(autoConnectInterval = 3000, onConnected = { services ->
-                mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
-                mBinding.tvConnectStatus.text = "连接成功"
-                if (services.isNotEmpty()) {
-                    val bleGattServiceInfos = services.map { bluetoothGattService ->
-                        BleConnectInfo(mData.address, bluetoothGattService)
-                    }
-                    mAdapter.submitList(bleGattServiceInfos)
-                } else {
-                    mAdapter.submitList(null)
+        connectExecutor.connect(lifecycleScope, autoConnectInterval = 3000, onConnected = { services ->
+            mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
+            mBinding.tvConnectStatus.text = "连接成功"
+            if (services.isNotEmpty()) {
+                val bleGattServiceInfos = services.map { bluetoothGattService ->
+                    BleConnectInfo(mData.address, bluetoothGattService)
                 }
-            }) {
-                when (it) {
-                    is BleExceptionCancelTimeout -> {
-                        // 提前取消超时(BleExceptionCancelTimeout)不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
-                    }
+                mAdapter.submitList(bleGattServiceInfos)
+            } else {
+                mAdapter.submitList(null)
+            }
+        }) {
+            when (it) {
+                is BleExceptionCancelTimeout -> {
+                    // 提前取消超时(BleExceptionCancelTimeout)不做处理。因为这是调用 disconnect() 造成的，使用者可以直接在 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
+                }
 
-                    is BleExceptionBusy -> {
-                        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
-                        mBinding.tvConnectStatus.text = preState
-                        Toast.makeText(ctx, it.message, Toast.LENGTH_SHORT).show()
-                    }
+                is BleExceptionBusy -> {
+                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
+                    mBinding.tvConnectStatus.text = preState
+                    Toast.makeText(ctx, it.message, Toast.LENGTH_SHORT).show()
+                }
 
-                    else -> {
-                        mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
-                        mBinding.tvConnectStatus.text = it.message
-                        mAdapter.submitList(null)
-                        mBinding.etRequestMtu.setText("")
-                        mBinding.etReadRemoteRssi.setText("")
-                        mBinding.etRequestConnectionPriority.setText("")
-                    }
+                else -> {
+                    mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
+                    mBinding.tvConnectStatus.text = it.message
+                    mAdapter.submitList(null)
+                    mBinding.etRequestMtu.setText("")
+                    mBinding.etReadRemoteRssi.setText("")
+                    mBinding.etRequestConnectionPriority.setText("")
                 }
             }
         }
