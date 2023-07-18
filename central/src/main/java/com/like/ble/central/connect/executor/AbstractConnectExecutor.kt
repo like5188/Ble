@@ -24,6 +24,7 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
      * 连接蓝牙设备，并在连接断开后自动重连。
      *
      * @param autoConnectInterval   自动重连间隔时间，毫秒。如果为0，表示不自动重连。
+     * @param timeout               连接超时间隔，毫秒。默认10000.
      * @param onConnected           连接成功回调
      * @param onDisconnected        连接断开回调
      * 注意：当断开原因为关闭蓝牙开关时，不回调，由 [com.like.ble.util.BleBroadcastReceiverManager] 设置的监听来回调。

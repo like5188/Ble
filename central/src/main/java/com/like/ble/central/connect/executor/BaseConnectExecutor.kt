@@ -54,7 +54,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         try {
             val result = doConnect(timeout) {
                 // 连接成功后再断开会回调
-                disconnect()// 此处必须断开连接，这样会取消其它需要连接的命令的等待，如果不取消的话，是不能再次连接的，因为它们用的同一把锁。
+                disconnect()// 此处必须断开连接，这样会取消其它需要连接的命令的等待(比如断开的时候正在读取数据)，如果不取消的话，是不能再次连接的，因为它们用的同一把锁。
                 throw it
             }
             onConnected(result)
