@@ -21,10 +21,25 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
     abstract fun getDevice(): BluetoothDevice?
 
     /**
+     * 连接蓝牙设备，并在连接断开后自动重连。
+     *
+     * @param autoConnectInterval   自动重连间隔时间，毫秒
+     * @param onConnected           连接成功回调
+     * @param onDisconnected        连接断开回调
+     */
+    abstract suspend fun connect(
+        coroutineScope: CoroutineScope,
+        autoConnectInterval: Long,
+        timeout: Long = 10000L,
+        onConnected: (List<BluetoothGattService>) -> Unit,
+        onDisconnected: ((Throwable) -> Unit)? = null
+    )
+
+    /**
      * 连接蓝牙设备
      *
      * @param onDisconnectedListener    如果连接成功后再断开，就会触发此回调。
-     * 注意：当断开原因为关闭蓝牙开关时，不回调，由 [BleBroadcastReceiverManager] 设置的监听来回调。
+     * 注意：当断开原因为关闭蓝牙开关时，不回调，由 [com.like.ble.util.BleBroadcastReceiverManager] 设置的监听来回调。
      * @throws [com.like.ble.exception.BleException]
      */
     abstract suspend fun connect(
