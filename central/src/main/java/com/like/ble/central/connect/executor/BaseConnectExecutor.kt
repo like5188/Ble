@@ -14,10 +14,10 @@ import com.like.ble.util.PermissionUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
 import com.like.ble.util.getValidString
 import com.like.ble.util.isBleDeviceConnected
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -45,14 +45,13 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     }
 
     final override suspend fun connect(
-        coroutineScope: CoroutineScope,
         autoConnectInterval: Long,
         timeout: Long,
         onConnected: (List<BluetoothGattService>) -> Unit,
         onDisconnected: ((Throwable) -> Unit)?
     ) {
         try {
-            val result = connect(timeout) {
+            val result = doConnect(timeout) {
                 // 连接成功后再断开会回调
                 disconnect()// 此处必须断开连接，这样会取消其它需要连接的命令的等待，如果不取消的话，是不能再次连接的，因为它们用的同一把锁。
                 throw it
@@ -60,17 +59,23 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
             onConnected(result)
         } catch (throwable: Throwable) {
             if (throwable !is BleExceptionCancelTimeout && throwable !is BleExceptionBusy) {
-                reConnectJob = coroutineScope.launch {
-                    delay(autoConnectInterval)
-                    connect(coroutineScope, autoConnectInterval, timeout, onConnected, onDisconnected)
+                reConnectJob = coroutineScope {
+                    launch {
+                        delay(autoConnectInterval)
+                        connect(autoConnectInterval, timeout, onConnected, onDisconnected)
+                    }
                 }
             }
             onDisconnected?.invoke(throwable)
         }
     }
 
-    final override suspend fun connect(
-        timeout: Long, onDisconnected: ((Throwable) -> Unit)?
+    /**
+     * @param onDisconnectedListener    如果连接成功后再断开，就会触发此回调。
+     * 注意：当断开原因为关闭蓝牙开关时，不回调，由 [com.like.ble.util.BleBroadcastReceiverManager] 设置的监听来回调。
+     */
+    private suspend fun doConnect(
+        timeout: Long, onDisconnectedListener: ((Throwable) -> Unit)?
     ): List<BluetoothGattService> = try {
         PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
         if (mContext.isBleDeviceConnected(address)) {
@@ -84,7 +89,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                     continuation.invokeOnCancellation {
                         disconnect()
                     }
-                    onConnect(onDisconnected, onSuccess = {
+                    onConnect(onDisconnectedListener, onSuccess = {
                         if (continuation.isActive) continuation.resume(it)
                     }) {
                         if (continuation.isActive) continuation.resumeWithException(it)
@@ -423,7 +428,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     }
 
     protected abstract fun onConnect(
-        onDisconnected: ((Throwable) -> Unit)?, onSuccess: ((List<BluetoothGattService>) -> Unit)?, onError: ((Throwable) -> Unit)?
+        onDisconnectedListener: ((Throwable) -> Unit)?, onSuccess: ((List<BluetoothGattService>) -> Unit)?, onError: ((Throwable) -> Unit)?
     )
 
     protected abstract fun onDisconnect()

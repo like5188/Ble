@@ -23,33 +23,21 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
     /**
      * 连接蓝牙设备，并在连接断开后自动重连。
      *
-     * @param autoConnectInterval   自动重连间隔时间，毫秒
+     * @param autoConnectInterval   自动重连间隔时间，毫秒。如果为0，表示不自动重连。
      * @param onConnected           连接成功回调
      * @param onDisconnected        连接断开回调
+     * 注意：当断开原因为关闭蓝牙开关时，不回调，由 [com.like.ble.util.BleBroadcastReceiverManager] 设置的监听来回调。
      */
     abstract suspend fun connect(
-        coroutineScope: CoroutineScope,
-        autoConnectInterval: Long,
+        autoConnectInterval: Long = 0L,
         timeout: Long = 10000L,
         onConnected: (List<BluetoothGattService>) -> Unit,
         onDisconnected: ((Throwable) -> Unit)? = null
     )
 
     /**
-     * 连接蓝牙设备
-     *
-     * @param onDisconnectedListener    如果连接成功后再断开，就会触发此回调。
-     * 注意：当断开原因为关闭蓝牙开关时，不回调，由 [com.like.ble.util.BleBroadcastReceiverManager] 设置的监听来回调。
-     * @throws [com.like.ble.exception.BleException]
-     */
-    abstract suspend fun connect(
-        timeout: Long = 10000L,
-        onDisconnectedListener: ((Throwable) -> Unit)? = null
-    ): List<BluetoothGattService>
-
-    /**
      * 断开蓝牙设备
-     * 注意：断开连接不会触发[onConnectionStateChange]回调
+     * 注意：断开连接不会触发[android.bluetooth.BluetoothGattCallback.onConnectionStateChange]回调
      * @throws [com.like.ble.exception.BleException]
      */
     abstract fun disconnect()
@@ -131,7 +119,7 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
      * @param writeUuid                 写特征UUID
      * 注意：如果[data]、[writeUuid]都有效，才会写入命令。否则就只是等待通知。
      * @param notifyUuid                通知特征UUID，如果为null，则需要自己调用[setCharacteristicNotification]方法启用通知才能收到返回数据
-     * @param serviceUuid               服务UUID，如果不为null，则会在此服务下查找[characteristicUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
+     * @param serviceUuid               服务UUID，如果不为null，则会在此服务下查找[writeUuid]和[notifyUuid]；如果为null，则会遍历所有服务查找第一个匹配的[characteristicUuid]
      * @param notifyType                类型：0 (notification 不需要应答)；1 (indication 需要客户端应答)
      * @param writeType
      * WRITE_TYPE_DEFAULT 默认类型，需要外围设备的确认，也就是需要外围设备的回应，这样才能继续发送写。

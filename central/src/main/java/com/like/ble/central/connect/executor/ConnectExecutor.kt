@@ -27,7 +27,7 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
     }
 
     override fun onConnect(
-        onDisconnected: ((Throwable) -> Unit)?,
+        onDisconnectedListener: ((Throwable) -> Unit)?,
         onSuccess: ((List<BluetoothGattService>) -> Unit)?,
         onError: ((Throwable) -> Unit)?
     ) {
@@ -41,7 +41,7 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
             override fun onSuccess(data: List<BluetoothGattService>) {
                 onSuccess?.invoke(data)
                 // 连接成功再设置此监听，
-                mConnectCallbackManager.setOnDisconnectedListener(onDisconnected)
+                mConnectCallbackManager.setOnDisconnectedListener(onDisconnectedListener)
             }
 
             override fun onError(exception: BleException) {
