@@ -14,7 +14,6 @@ import com.like.ble.util.PermissionUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
 import com.like.ble.util.getValidString
 import com.like.ble.util.isBleDeviceConnected
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -393,49 +392,33 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     }
 
     final override fun setNotifyCallback(): Flow<ByteArray> = callbackFlow {
-        try {
-            onSetNotifyCallback {
-                trySend(it)
-            }
-            // 注意：不能在这个作用域里面使用挂起函数，这样会导致使用者使用 cancel 方法关闭协程作用域的时候，
-            // 因为还没有执行到 awaitClose 方法，所以就触发不了 awaitClose 里面的代码。所以如果要使用挂起函数，有两种方式：
-            // 1、使用 launch 方法重新开启一个子协程。
-            // 2、把挂起函数 try catch 起来，这样就能捕获 JobCancellationException 异常，然后就可以执行下面的 awaitClose 方法。
-            awaitClose {
-                onRemoveNotifyCallback()
-                Log.d("BaseConnectExecutor", "通知监听被取消")
-            }
-        } catch (e: Exception) {
-            // 当在异步回调时，由于线程原因，会使得使用了某些中间运算符(例如firstOrNull、take)的 flow 会抛出 AbortFlowException（CancellationException的子类） 异常，使用者不需要处理，因为这是正常的结束并取消协程。比如 AbstractScanExecutor.startScan 方法的实现方式。
-            // 当不使用异步线程时，这个异常被 AbortFlowException.checkOwnership() 方法处理了的，不会抛出。比如 AbstractConnectExecutor.setNotifyCallback 方法的实现方式。
-            if (e !is CancellationException) {
-                throw e.toBleException()
-            }
+        onSetNotifyCallback {
+            trySend(it)
+        }
+        // 注意：不能在这个作用域里面使用挂起函数，这样会导致使用者使用 cancel 方法关闭协程作用域的时候，
+        // 因为还没有执行到 awaitClose 方法，所以就触发不了 awaitClose 里面的代码。所以如果要使用挂起函数，有两种方式：
+        // 1、使用 launch 方法重新开启一个子协程。
+        // 2、把挂起函数 try catch 起来，这样就能捕获 JobCancellationException 异常，然后就可以执行下面的 awaitClose 方法。
+        awaitClose {
+            onRemoveNotifyCallback()
+            Log.d("BaseConnectExecutor", "通知监听被取消")
         }
     }
 
     final override fun setCharacteristicNotificationAndNotifyCallback(
         characteristicUuid: UUID, serviceUuid: UUID?, type: Int, timeout: Long
     ): Flow<ByteArray> = callbackFlow {
-        try {
-            setCharacteristicNotification(characteristicUuid, serviceUuid, type, true, timeout)
-            onSetNotifyCallback {
-                trySend(it)
-            }
-            // 注意：不能在这个作用域里面使用挂起函数，这样会导致使用者使用 cancel 方法关闭协程作用域的时候，
-            // 因为还没有执行到 awaitClose 方法，所以就触发不了 awaitClose 里面的代码。所以如果要使用挂起函数，有两种方式：
-            // 1、使用 launch 方法重新开启一个子协程。
-            // 2、把挂起函数 try catch 起来，这样就能捕获 JobCancellationException 异常，然后就可以执行下面的 awaitClose 方法。
-            awaitClose {
-                onRemoveNotifyCallback()
-                Log.d("BaseConnectExecutor", "通知监听被取消")
-            }
-        } catch (e: Exception) {
-            // 当在异步回调时，由于线程原因，会使得使用了某些中间运算符(例如firstOrNull、take)的 flow 会抛出 AbortFlowException（CancellationException的子类） 异常，使用者不需要处理，因为这是正常的结束并取消协程。比如 AbstractScanExecutor.startScan 方法的实现方式。
-            // 当不使用异步线程时，这个异常被 AbortFlowException.checkOwnership() 方法处理了的，不会抛出。比如 AbstractConnectExecutor.setNotifyCallback 方法的实现方式。
-            if (e !is CancellationException) {
-                throw e.toBleException()
-            }
+        setCharacteristicNotification(characteristicUuid, serviceUuid, type, true, timeout)
+        onSetNotifyCallback {
+            trySend(it)
+        }
+        // 注意：不能在这个作用域里面使用挂起函数，这样会导致使用者使用 cancel 方法关闭协程作用域的时候，
+        // 因为还没有执行到 awaitClose 方法，所以就触发不了 awaitClose 里面的代码。所以如果要使用挂起函数，有两种方式：
+        // 1、使用 launch 方法重新开启一个子协程。
+        // 2、把挂起函数 try catch 起来，这样就能捕获 JobCancellationException 异常，然后就可以执行下面的 awaitClose 方法。
+        awaitClose {
+            onRemoveNotifyCallback()
+            Log.d("BaseConnectExecutor", "通知监听被取消")
         }
     }
 
