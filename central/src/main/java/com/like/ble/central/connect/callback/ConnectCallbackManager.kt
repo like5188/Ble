@@ -6,8 +6,8 @@ import android.content.Context
 import android.util.Log
 import com.like.ble.callback.BleCallback
 import com.like.ble.exception.BleExceptionDeviceDisconnected
+import com.like.ble.exception.BleExceptionDisabled
 import com.like.ble.exception.BleExceptionDiscoverServices
-import com.like.ble.executor.BleExecutor
 import com.like.ble.util.getValidString
 import com.like.ble.util.isBluetoothEnable
 import com.like.ble.util.refreshDeviceCache
@@ -26,12 +26,11 @@ class ConnectCallbackManager(private val context: Context) {
                 gatt.disconnect()
                 gatt.refreshDeviceCache()
                 gatt.close()
-                val e = BleExceptionDeviceDisconnected(gatt.device.address)
-                /**
-                 * 当断开原因为关闭蓝牙开关时，不回调，由 [BleExecutor.setOnBleEnableListener] 设置的监听来回调。
-                 */
-                if (context.isBluetoothEnable()) {
-                    onDisconnectedListener?.invoke(e)
+                val e = if (context.isBluetoothEnable()) {
+                    BleExceptionDeviceDisconnected(gatt.device.address)
+                } else {
+                    // 当断开原因为关闭蓝牙开关时
+                    BleExceptionDisabled
                 }
                 connectBleCallback?.onError(e)
             }
@@ -114,7 +113,6 @@ class ConnectCallbackManager(private val context: Context) {
     private var writeCharacteristicBleCallback: BleCallback<Unit>? = null
     private var writeDescriptorBleCallback: BleCallback<Unit>? = null
     private var readNotifyBleCallback: BleCallback<ByteArray>? = null
-    private var onDisconnectedListener: ((Throwable) -> Unit)? = null
 
     fun getBluetoothGattCallback(): BluetoothGattCallback {
         return bluetoothGattCallback
@@ -150,10 +148,6 @@ class ConnectCallbackManager(private val context: Context) {
 
     fun setReadNotifyBleCallback(callback: BleCallback<ByteArray>?) {
         readNotifyBleCallback = callback
-    }
-
-    fun setOnDisconnectedListener(listener: ((Throwable) -> Unit)?) {
-        onDisconnectedListener = listener
     }
 
 }

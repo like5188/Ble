@@ -27,21 +27,17 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
     }
 
     override fun onConnect(
-        onDisconnectedListener: ((Throwable) -> Unit)?,
         onSuccess: ((List<BluetoothGattService>) -> Unit)?,
         onError: ((Throwable) -> Unit)?
     ) {
         val device = mContext.getBluetoothAdapter()?.getRemoteDevice(address)
         if (device == null) {
-            onError?.invoke(BleException("连接蓝牙失败，获取蓝牙设备：$address"))
+            onError?.invoke(BleException("连接蓝牙失败，获取蓝牙设备失败：$address"))
             return
         }
-        mConnectCallbackManager.setOnDisconnectedListener(null)
         mConnectCallbackManager.setConnectBleCallback(object : BleCallback<List<BluetoothGattService>>() {
             override fun onSuccess(data: List<BluetoothGattService>) {
                 onSuccess?.invoke(data)
-                // 连接成功再设置此监听，
-                mConnectCallbackManager.setOnDisconnectedListener(onDisconnectedListener)
             }
 
             override fun onError(exception: BleException) {
@@ -235,6 +231,7 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
                     BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
                 }
             }
+
             1 -> {
                 if (enable) {
                     BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
@@ -242,6 +239,7 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
                     BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
                 }
             }
+
             else -> {
                 onError?.invoke(BleException("type can only be 0 or 1"))
                 return

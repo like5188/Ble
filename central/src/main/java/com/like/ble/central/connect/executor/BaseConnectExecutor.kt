@@ -52,59 +52,58 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         onConnected: (List<BluetoothGattService>) -> Unit,
         onDisconnected: ((Throwable) -> Unit)?
     ) {
-        fun onDisconnected(throwable: Throwable) {
-            if (throwable !is BleExceptionCancelTimeout && throwable !is BleExceptionBusy) {
-                reConnectJob = coroutineScope.launch {
-                    delay(autoConnectInterval)
-                    connect(coroutineScope, autoConnectInterval, timeout, onConnected, onDisconnected)
-                }
-            }
-            onDisconnected?.invoke(throwable)
-        }
-
         coroutineScope.launch {
-            try {
-                val result = doConnect(timeout) {
-                    // 连接成功后再断开会回调
-                    disconnect()// 此处必须断开连接，这样会取消其它需要连接的命令的等待(比如断开的时候正在读取数据)，如果不取消的话，是不能再次连接的，因为它们用的同一把锁。
-                    onDisconnected(it)
+            doConnect(timeout, onConnected = {
+                launch(Dispatchers.Main) {
+                    onConnected(it)
                 }
-                onConnected(result)
-            } catch (throwable: Throwable) {
-                onDisconnected(throwable)
+            }) {
+                launch(Dispatchers.Main) {
+                    onDisconnected?.invoke(it)
+                }
+                if (it !is BleExceptionCancelTimeout && it !is BleExceptionBusy) {
+                    disconnect()// 此处必须断开连接，这样会取消其它需要连接的命令的等待(比如断开的时候正在读取数据)，如果不取消的话，是不能再次连接的，因为它们用的同一把锁。
+                    reConnectJob = coroutineScope.launch {
+                        delay(autoConnectInterval)
+                        connect(coroutineScope, autoConnectInterval, timeout, onConnected, onDisconnected)
+                    }
+                }
             }
         }
     }
 
-    /**
-     * @param onDisconnectedListener    如果连接成功后再断开，就会触发此回调。
-     * 注意：当断开原因为关闭蓝牙开关时，不回调，由 [com.like.ble.util.BleBroadcastReceiverManager] 设置的监听来回调。
-     */
     private suspend fun doConnect(
-        timeout: Long, onDisconnectedListener: ((Throwable) -> Unit)?
-    ): List<BluetoothGattService> = try {
-        PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
-        if (mContext.isBleDeviceConnected(address)) {
-            throw BleExceptionBusy("设备已经连接：$address")
-        }
-        mutexUtils.withTryLockOrThrow("正在建立连接，请稍后！") {
-            withContext(Dispatchers.IO) {
-                suspendCancellableCoroutineWithTimeout.execute(
-                    timeout, "连接蓝牙设备超时：$address"
-                ) { continuation ->
-                    continuation.invokeOnCancellation {
-                        disconnect()
-                    }
-                    onConnect(onDisconnectedListener, onSuccess = {
-                        if (continuation.isActive) continuation.resume(it)
-                    }) {
-                        if (continuation.isActive) continuation.resumeWithException(it)
+        timeout: Long, onConnected: (List<BluetoothGattService>) -> Unit, onDisconnected: ((Throwable) -> Unit)?
+    ) {
+        try {
+            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
+            if (mContext.isBleDeviceConnected(address)) {
+                throw BleExceptionBusy("设备已经连接：$address")
+            }
+            mutexUtils.withTryLockOrThrow("正在建立连接，请稍后！") {
+                withContext(Dispatchers.IO) {
+                    suspendCancellableCoroutineWithTimeout.execute(
+                        timeout, "连接蓝牙设备超时：$address"
+                    ) { continuation ->
+                        continuation.invokeOnCancellation {
+                            disconnect()
+                        }
+                        onConnect(onSuccess = {
+                            onConnected(it)
+                            if (continuation.isActive) continuation.resume(Unit)
+                        }) {
+                            if (continuation.isActive) {
+                                continuation.resumeWithException(it)
+                            } else {
+                                onDisconnected?.invoke(it)
+                            }
+                        }
                     }
                 }
             }
+        } catch (e: Exception) {
+            onDisconnected?.invoke(e.toBleException())
         }
-    } catch (e: Exception) {
-        throw e.toBleException()
     }
 
     final override fun disconnect() {
@@ -450,7 +449,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     }
 
     protected abstract fun onConnect(
-        onDisconnectedListener: ((Throwable) -> Unit)?, onSuccess: ((List<BluetoothGattService>) -> Unit)?, onError: ((Throwable) -> Unit)?
+        onSuccess: ((List<BluetoothGattService>) -> Unit)?, onError: ((Throwable) -> Unit)?
     )
 
     protected abstract fun onDisconnect()

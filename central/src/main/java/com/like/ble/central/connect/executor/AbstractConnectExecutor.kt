@@ -26,9 +26,8 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
      * @param autoConnectInterval   自动重连间隔时间，毫秒。如果为0，表示不自动重连。
      * @param timeout               连接超时间隔，毫秒。默认10000.
      * @param onConnected           连接成功回调，主线程
-     * @param onDisconnected        连接断开（连接时异常断开 或者 连接成功后再异常断开）回调，主线程
-     * 注意：当断开原因为关闭蓝牙开关时，[onDisconnected]不回调，由 [com.like.ble.util.BleBroadcastReceiverManager] 设置的监听来回调。
-     * 当不设置自动重连时。[onConnected]、[onDisconnected]最多每个回调一次。
+     * @param onDisconnected        连接断开回调，主线程
+     * 注意：当不设置自动重连时。[onConnected]、[onDisconnected]最多每个回调一次。
      */
     abstract fun connect(
         coroutineScope: CoroutineScope,
