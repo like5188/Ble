@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -38,6 +39,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         SuspendCancellableCoroutineWithTimeout()
     }
     private var reConnectJob: Job? = null
+    private val autoConnectInterval = AtomicLong(0)
 
     init {
         if (address.isNullOrEmpty() || !BluetoothAdapter.checkBluetoothAddress(address)) {
@@ -52,20 +54,22 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         onConnected: (List<BluetoothGattService>) -> Unit,
         onDisconnected: ((Throwable) -> Unit)?
     ) {
-        coroutineScope.launch {
-            doConnect(timeout, onConnected = {
-                launch(Dispatchers.Main) {
-                    onConnected(it)
-                }
-            }) {
-                launch(Dispatchers.Main) {
-                    onDisconnected?.invoke(it)
-                }
-                if (it !is BleExceptionCancelTimeout && it !is BleExceptionBusy) {
-                    disconnect()// 此处必须断开连接，这样会取消其它需要连接的命令的等待(比如断开的时候正在读取数据)，如果不取消的话，是不能再次连接的，因为它们用的同一把锁。
-                    reConnectJob = coroutineScope.launch {
-                        delay(autoConnectInterval)
-                        connect(coroutineScope, autoConnectInterval, timeout, onConnected, onDisconnected)
+        if (this.autoConnectInterval.compareAndSet(0, autoConnectInterval)) {
+            coroutineScope.launch {
+                doConnect(timeout, onConnected = {
+                    launch(Dispatchers.Main) {
+                        onConnected(it)
+                    }
+                }) {
+                    launch(Dispatchers.Main) {
+                        onDisconnected?.invoke(it)
+                    }
+                    if (it !is BleExceptionCancelTimeout && it !is BleExceptionBusy) {
+                        disconnect()// 此处必须断开连接，这样会取消其它需要连接的命令的等待(比如断开的时候正在读取数据)，如果不取消的话，是不能再次连接的，因为它们用的同一把锁。
+                        reConnectJob = coroutineScope.launch {
+                            delay(autoConnectInterval)
+                            connect(coroutineScope, autoConnectInterval, timeout, onConnected, onDisconnected)
+                        }
                     }
                 }
             }
