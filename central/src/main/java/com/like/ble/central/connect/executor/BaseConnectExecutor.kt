@@ -72,6 +72,8 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                     }
                 }
             }
+        } else {
+            onDisconnected?.invoke(BleException("已经开启自动重连，无限重复操作！"))
         }
     }
 
