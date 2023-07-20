@@ -67,6 +67,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         onConnected: (List<BluetoothGattService>) -> Unit,
         onDisconnected: ((Throwable) -> Unit)?
     ) {
+        Log.i("BaseConnectExecutor", "开始连接 $address")
         coroutineScope.launch {
             doConnect(timeout, onConnected = {
                 Log.i("BaseConnectExecutor", "连接成功 $address")
@@ -82,7 +83,6 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                     disconnect()// 此处必须断开连接，这样会取消其它需要连接的命令的等待(比如断开的时候正在读取数据)，如果不取消的话，是不能再次连接的，因为它们用的同一把锁。
                     reConnectJob = coroutineScope.launch {
                         delay(autoConnectInterval)
-                        Log.i("BaseConnectExecutor", "开始重连 $address")
                         autoConnect(coroutineScope, autoConnectInterval, timeout, onConnected, onDisconnected)
                     }
                 }
