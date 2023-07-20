@@ -1,6 +1,11 @@
 package com.like.ble.exception
 
-open class BleException(message: String?, val code: Int = -10000) : Exception(message)
+open class BleException(message: String?, val code: Int = -10000) : Exception(message) {
+    override fun toString(): String {
+        return "${this.javaClass.simpleName}($code：$message)"
+    }
+}
+
 object BleExceptionDisabled : BleException("蓝牙未打开", -10001)
 object BleExceptionPermission : BleException("操作失败，缺少蓝牙权限！", -10002)
 class BleExceptionDeviceDisconnected(address: String?, code: Int = -10003) : BleException("蓝牙设备未连接:$address", code)
