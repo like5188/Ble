@@ -1,7 +1,11 @@
 package com.like.ble.util
 
 import com.like.ble.exception.BleExceptionBusy
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.withContext
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
@@ -28,6 +32,15 @@ class MutexUtils {
             mutex.unlock()
         }
 
+    }
+
+    /**
+     * 等待释放锁
+     */
+    suspend fun waitUnlock() = withContext(Dispatchers.IO) {
+        while (isActive && mutex.isLocked) {
+            delay(10)
+        }
     }
 
 }

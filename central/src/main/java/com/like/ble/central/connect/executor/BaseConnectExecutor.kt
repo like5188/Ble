@@ -27,6 +27,7 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlin.system.measureTimeMillis
 
 /**
  * 蓝牙连接及数据操作的前提条件
@@ -80,10 +81,17 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                     onDisconnected?.invoke(it)
                 }
                 if (it !is BleExceptionCancelTimeout && it !is BleExceptionBusy) {
-                    disconnect()// 此处必须断开连接，这样会取消其它需要连接的命令的等待(比如断开的时候正在读取数据)，如果不取消的话，是不能再次连接的，因为它们用的同一把锁。
                     Log.i("BaseConnectExecutor", "准备延迟 $autoConnectInterval 毫秒后开始重连 $address")
                     reConnectJob = coroutineScope.launch {
-                        delay(autoConnectInterval)
+                        val waitUnlockCost = measureTimeMillis {
+                            Log.i("BaseConnectExecutor", "等待释放锁")
+                            // 此处必须等待锁，因为有可能此时正在读取数据，如果不等待锁的话，是不能再次连接的，因为它们用的同一把锁。那么就会报错 BleExceptionBusy ，然后就不能进行重连操作了。
+                            mutexUtils.waitUnlock()
+                        }
+                        if (waitUnlockCost < autoConnectInterval) {
+                            Log.i("BaseConnectExecutor", "等待延迟 ${autoConnectInterval - waitUnlockCost} 毫秒")
+                            delay(autoConnectInterval - waitUnlockCost)
+                        }
                         autoConnect(coroutineScope, autoConnectInterval, timeout, onConnected, onDisconnected)
                     }
                 }
