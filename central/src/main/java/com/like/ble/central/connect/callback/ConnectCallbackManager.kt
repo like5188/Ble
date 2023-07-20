@@ -27,7 +27,7 @@ class ConnectCallbackManager(private val context: Context) {
                 gatt.refreshDeviceCache()
                 gatt.close()
                 val e = if (context.isBluetoothEnable()) {
-                    BleExceptionDeviceDisconnected(gatt.device.address)
+                    BleExceptionDeviceDisconnected(gatt.device.address, status)
                 } else {
                     // 当断开原因为关闭蓝牙开关时
                     BleExceptionDisabled
