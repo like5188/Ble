@@ -81,10 +81,9 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                 }
                 if (it !is BleExceptionCancelTimeout && it !is BleExceptionBusy) {
                     disconnect()// 此处必须断开连接，这样会取消其它需要连接的命令的等待(比如断开的时候正在读取数据)，如果不取消的话，是不能再次连接的，因为它们用的同一把锁。
-                    Log.i("BaseConnectExecutor", "准备开始重连 $address，延迟 $autoConnectInterval 毫秒")
+                    Log.i("BaseConnectExecutor", "准备延迟 $autoConnectInterval 毫秒后开始重连 $address")
                     reConnectJob = coroutineScope.launch {
                         delay(autoConnectInterval)
-                        Log.i("BaseConnectExecutor", "延迟完毕，开始重连")
                         autoConnect(coroutineScope, autoConnectInterval, timeout, onConnected, onDisconnected)
                     }
                 }
