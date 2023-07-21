@@ -64,6 +64,8 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         // 假如使用传递进来的 CoroutineScope，那么在 doConnect 方法的成功或者失败回调中，
         // CoroutineScope 因为已经被取消了，就不能再使用了，所以无法调用 launch 方法。
         // 使用 GlobalScope 则不会出现这种情况。
+        reConnectJob?.cancel()
+        reConnectJob = null
         reConnectJob = GlobalScope.launch(Dispatchers.IO) {
             doConnect(timeout, onConnected = {
                 Log.i("BaseConnectExecutor", "连接成功 $address")

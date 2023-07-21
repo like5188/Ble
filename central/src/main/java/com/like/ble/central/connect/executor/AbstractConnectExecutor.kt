@@ -26,7 +26,7 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
      * @param timeout               连接超时间隔，毫秒。默认10000.
      * @param onConnected           连接成功回调，主线程
      * @param onDisconnected        连接断开回调，主线程
-     * 注意：此方法为持续监听。
+     * 注意：此方法为持续监听，调用此方法后，记得不使用的时候要调用[close]或者[disconnect]取消监听。
      */
     abstract fun connect(
         autoConnectInterval: Long = 0L,
