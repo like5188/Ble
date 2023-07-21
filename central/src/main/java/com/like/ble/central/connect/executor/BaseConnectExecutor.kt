@@ -14,8 +14,8 @@ import com.like.ble.util.PermissionUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
 import com.like.ble.util.getValidString
 import com.like.ble.util.isBleDeviceConnected
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
@@ -27,7 +27,6 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlin.system.measureTimeMillis
 
 /**
  * 蓝牙连接及数据操作的前提条件
@@ -48,51 +47,41 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     }
 
     final override fun connect(
-        coroutineScope: CoroutineScope,
-        autoConnectInterval: Long,
-        timeout: Long,
-        onConnected: (List<BluetoothGattService>) -> Unit,
-        onDisconnected: ((Throwable) -> Unit)?
+        autoConnectInterval: Long, timeout: Long, onConnected: (List<BluetoothGattService>) -> Unit, onDisconnected: ((Throwable) -> Unit)?
     ) {
         if (this.autoConnectInterval.compareAndSet(0, autoConnectInterval)) {
-            autoConnect(coroutineScope, autoConnectInterval, timeout, onConnected, onDisconnected)
+            autoConnect(autoConnectInterval, timeout, onConnected, onDisconnected)
         } else {
             onDisconnected?.invoke(BleExceptionBusy("正在自动重连，请稍后！"))
         }
     }
 
     private fun autoConnect(
-        coroutineScope: CoroutineScope,
-        autoConnectInterval: Long,
-        timeout: Long,
-        onConnected: (List<BluetoothGattService>) -> Unit,
-        onDisconnected: ((Throwable) -> Unit)?
+        autoConnectInterval: Long, timeout: Long, onConnected: (List<BluetoothGattService>) -> Unit, onDisconnected: ((Throwable) -> Unit)?
     ) {
         Log.i("BaseConnectExecutor", "开始连接 $address")
-        coroutineScope.launch {
+        // 由于 connect 方法的必须保持持续监听，又必须使用协程（doConnect 是挂起函数），所以必须使用 GlobalScope。
+        // 假如使用传递进来的 CoroutineScope，那么在 doConnect 方法的成功或者失败回调中，
+        // CoroutineScope 因为已经被取消了，就不能再使用了，所以无法调用 launch 方法。
+        // 使用 GlobalScope 则不会出现这种情况。
+        reConnectJob = GlobalScope.launch(Dispatchers.IO) {
             doConnect(timeout, onConnected = {
                 Log.i("BaseConnectExecutor", "连接成功 $address")
-                launch(Dispatchers.Main) {
+                GlobalScope.launch(Dispatchers.Main) {
                     onConnected(it)
                 }
             }) {
                 Log.e("BaseConnectExecutor", "连接断开 $address $it")
-                launch(Dispatchers.Main) {
+                // 释放锁
+                disconnect()
+                GlobalScope.launch(Dispatchers.Main) {
                     onDisconnected?.invoke(it)
-                }
-                if (it !is BleExceptionCancelTimeout && it !is BleExceptionBusy) {
-                    Log.i("BaseConnectExecutor", "准备延迟 $autoConnectInterval 毫秒后开始重连 $address")
-                    reConnectJob = coroutineScope.launch {
-                        val waitUnlockCost = measureTimeMillis {
-                            Log.i("BaseConnectExecutor", "等待释放锁")
-                            // 此处必须等待锁，因为有可能此时正在读取数据，如果不等待锁的话，是不能再次连接的，因为它们用的同一把锁。那么就会报错 BleExceptionBusy ，然后就不能进行重连操作了。
-                            mutexUtils.waitUnlock()
+                    if (it !is BleExceptionCancelTimeout && it !is BleExceptionBusy) {
+                        Log.i("BaseConnectExecutor", "准备延迟 $autoConnectInterval 毫秒后开始重连 $address")
+                        withContext(Dispatchers.IO) {
+                            delay(autoConnectInterval)
                         }
-                        if (waitUnlockCost < autoConnectInterval) {
-                            Log.i("BaseConnectExecutor", "等待延迟 ${autoConnectInterval - waitUnlockCost} 毫秒")
-                            delay(autoConnectInterval - waitUnlockCost)
-                        }
-                        autoConnect(coroutineScope, autoConnectInterval, timeout, onConnected, onDisconnected)
+                        autoConnect(autoConnectInterval, timeout, onConnected, onDisconnected)
                     }
                 }
             }

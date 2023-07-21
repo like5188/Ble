@@ -7,7 +7,6 @@ import android.content.Context
 import androidx.annotation.IntRange
 import com.like.ble.executor.BleExecutor
 import com.like.ble.util.isBleDeviceConnected
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
@@ -27,10 +26,9 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
      * @param timeout               连接超时间隔，毫秒。默认10000.
      * @param onConnected           连接成功回调，主线程
      * @param onDisconnected        连接断开回调，主线程
-     * 注意：当不设置自动重连时。[onConnected]、[onDisconnected]最多每个回调一次。
+     * 注意：此方法为持续监听。
      */
     abstract fun connect(
-        coroutineScope: CoroutineScope,
         autoConnectInterval: Long = 0L,
         timeout: Long = 10000L,
         onConnected: (List<BluetoothGattService>) -> Unit,
