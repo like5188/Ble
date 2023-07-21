@@ -65,6 +65,8 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         // CoroutineScope 因为已经被取消了，就不能再使用了，所以无法调用 launch 方法。
         // 使用 GlobalScope 则不会出现这种情况。
         reConnectJob = GlobalScope.launch(Dispatchers.IO) {
+            // 释放锁。否则会有可能出现问题：比如此时正在设置通知，然后连接就会由于锁被占用无法执行，并抛出 BleExceptionBusy，然后造成自动重连中断。
+            suspendCancellableCoroutineWithTimeout.cancel()
             doConnect(timeout, onConnected = {
                 Log.i("BaseConnectExecutor", "连接成功 $address")
                 GlobalScope.launch(Dispatchers.Main) {
