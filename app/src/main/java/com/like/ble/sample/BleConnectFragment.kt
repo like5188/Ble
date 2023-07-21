@@ -101,7 +101,7 @@ class BleConnectFragment : Fragment() {
         mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
         mBinding.tvConnectStatus.text = "连接中……"
 
-        connectExecutor.connect(lifecycleScope, autoConnectInterval = 3000, onConnected = { services ->
+        connectExecutor.connect(autoConnectInterval = 3000, onConnected = { services ->
             mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
             mBinding.tvConnectStatus.text = "连接成功"
             if (services.isNotEmpty()) {
