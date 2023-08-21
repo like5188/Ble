@@ -7,6 +7,7 @@ import android.content.Context
 import androidx.annotation.IntRange
 import com.like.ble.executor.BleExecutor
 import com.like.ble.util.isBleDeviceConnected
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
@@ -29,6 +30,7 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
      * 注意：此方法为持续监听，调用此方法后，记得不使用的时候要调用[close]或者[disconnect]取消监听。
      */
     abstract fun connect(
+        scope: CoroutineScope,
         autoConnectInterval: Long = 0L,
         timeout: Long = 10000L,
         onConnected: (BluetoothDevice, List<BluetoothGattService>) -> Unit,

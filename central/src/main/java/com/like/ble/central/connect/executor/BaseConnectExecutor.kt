@@ -15,9 +15,8 @@ import com.like.ble.util.PermissionUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
 import com.like.ble.util.getValidString
 import com.like.ble.util.isBleDeviceConnected
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -38,8 +37,12 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     private val suspendCancellableCoroutineWithTimeout by lazy {
         SuspendCancellableCoroutineWithTimeout()
     }
-    private var reConnectJob: Job? = null
+
+    // 重连时间间隔
     private val autoConnectInterval = AtomicLong(0)
+
+    // 是否自动重连
+    private var autoConnect = false
 
     init {
         if (address.isNullOrEmpty() || !BluetoothAdapter.checkBluetoothAddress(address)) {
@@ -48,49 +51,53 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     }
 
     final override fun connect(
+        scope: CoroutineScope,
         autoConnectInterval: Long,
         timeout: Long,
         onConnected: (BluetoothDevice, List<BluetoothGattService>) -> Unit,
         onDisconnected: ((Throwable) -> Unit)?
     ) {
-        if (this.autoConnectInterval.compareAndSet(0, autoConnectInterval)) {
-            autoConnect(autoConnectInterval, timeout, onConnected, onDisconnected)
+        autoConnect = autoConnectInterval > 0L
+        if (autoConnect) {
+            autoConnect(scope, autoConnectInterval, timeout, onConnected, onDisconnected)
         } else {
             onDisconnected?.invoke(BleExceptionBusy("正在自动重连，请稍后！"))
         }
     }
 
     private fun autoConnect(
+        scope: CoroutineScope,
         autoConnectInterval: Long,
         timeout: Long,
         onConnected: (BluetoothDevice, List<BluetoothGattService>) -> Unit,
         onDisconnected: ((Throwable) -> Unit)?
     ) {
         Log.i("BaseConnectExecutor", "开始连接 $address")
-        // 由于 connect 方法的必须保持持续监听，又必须使用协程（doConnect 是挂起函数），所以必须使用 GlobalScope。
-        // 假如使用传递进来的 CoroutineScope，那么在 doConnect 方法的成功或者失败回调中，
-        // CoroutineScope 因为已经被取消了，就不能再使用了，所以无法调用 launch 方法。
-        // 使用 GlobalScope 则不会出现这种情况。
-        reConnectJob = GlobalScope.launch(Dispatchers.IO) {
+        scope.launch(Dispatchers.IO) {
             // 释放锁。否则会有可能出现问题：比如此时正在设置通知，然后连接就会由于锁被占用无法执行，并抛出 BleExceptionBusy，然后造成自动重连中断。
             suspendCancellableCoroutineWithTimeout.cancel()
             doConnect(timeout, onConnected = { device, gattServiceList ->
                 Log.i("BaseConnectExecutor", "连接成功 $address")
-                GlobalScope.launch(Dispatchers.Main) {
+                scope.launch(Dispatchers.Main) {
                     onConnected(device, gattServiceList)
                 }
             }) {
                 Log.e("BaseConnectExecutor", "连接断开 $address $it")
                 // 释放锁，释放蓝牙相关的资源。避免无法连接。
-                disconnect()
-                GlobalScope.launch(Dispatchers.Main) {
+                doDisconnect()
+                // 如果外层的scope被取消了，那么这里也无法调用 launch 方法了。
+                // 所以我们使用 autoConnect 标记来取消重连
+                scope.launch(Dispatchers.Main) {
                     onDisconnected?.invoke(it)
                     if (it !is BleExceptionCancelTimeout && it !is BleExceptionBusy) {
                         Log.i("BaseConnectExecutor", "准备延迟 $autoConnectInterval 毫秒后开始重连 $address")
                         withContext(Dispatchers.IO) {
                             delay(autoConnectInterval)
                         }
-                        autoConnect(autoConnectInterval, timeout, onConnected, onDisconnected)
+
+                        if (autoConnect) {
+                            autoConnect(scope, autoConnectInterval, timeout, onConnected, onDisconnected)
+                        }
                     }
                 }
             }
@@ -111,7 +118,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                         timeout, "连接蓝牙设备超时：$address"
                     ) { continuation ->
                         continuation.invokeOnCancellation {
-                            disconnect()
+                            doDisconnect()
                         }
                         onConnect(onSuccess = { device, gattServiceList ->
                             onConnected(device, gattServiceList)
@@ -132,9 +139,13 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     }
 
     final override fun disconnect() {
+        autoConnectInterval.set(0)
+        autoConnect = false// 取消重连
+        doDisconnect()
+    }
+
+    private fun doDisconnect() {
         try {
-            reConnectJob?.cancel()
-            reConnectJob = null
             // 此处如果不取消，那么还会把超时错误传递出去的。
             suspendCancellableCoroutineWithTimeout.cancel()
             if (PermissionUtils.checkConnectEnvironment(mContext)) {
@@ -452,8 +463,8 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
 
     final override fun onBleOff() {
         super.onBleOff()
-        // 在 connect 的时候关闭蓝牙开关，此时如果不调用 disconnect 方法，那么就不会清空回调（参考ConnectExecutor.onDisconnect），则会继续发送 connect 方法的相关错误，造成 UI 显示错乱。
-        disconnect()
+        // 在 connect 的时候关闭蓝牙开关，此时如果不调用 doDisconnect 方法，那么就不会清空回调（参考ConnectExecutor.onDisconnect），则会继续发送 connect 方法的相关错误，造成 UI 显示错乱。
+        doDisconnect()
         // 如果蓝牙开关关闭后重新连接失败，那么可以重新扫描，然后再重新连接就能成功。但是这个要看外围设备是否支持，有的不需要重新扫描就能重连成功。
     }
 
