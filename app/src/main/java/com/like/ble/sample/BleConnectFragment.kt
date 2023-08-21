@@ -101,11 +101,11 @@ class BleConnectFragment : Fragment() {
         mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
         mBinding.tvConnectStatus.text = "连接中……"
 
-        connectExecutor.connect(autoConnectInterval = 3000, onConnected = { services ->
+        connectExecutor.connect(autoConnectInterval = 3000, onConnected = { device, gattServiceList ->
             mBinding.tvConnectStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
             mBinding.tvConnectStatus.text = "连接成功"
-            if (services.isNotEmpty()) {
-                val bleGattServiceInfos = services.map { bluetoothGattService ->
+            if (gattServiceList.isNotEmpty()) {
+                val bleGattServiceInfos = gattServiceList.map { bluetoothGattService ->
                     BleConnectInfo(mData.address, bluetoothGattService)
                 }
                 mAdapter.submitList(bleGattServiceInfos)

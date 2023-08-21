@@ -31,7 +31,7 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
     abstract fun connect(
         autoConnectInterval: Long = 0L,
         timeout: Long = 10000L,
-        onConnected: (List<BluetoothGattService>) -> Unit,
+        onConnected: (BluetoothDevice, List<BluetoothGattService>) -> Unit,
         onDisconnected: ((Throwable) -> Unit)? = null
     )
 

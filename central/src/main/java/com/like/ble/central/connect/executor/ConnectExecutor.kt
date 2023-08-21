@@ -27,7 +27,7 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
     }
 
     override fun onConnect(
-        onSuccess: ((List<BluetoothGattService>) -> Unit)?,
+        onSuccess: ((BluetoothDevice, List<BluetoothGattService>) -> Unit)?,
         onError: ((Throwable) -> Unit)?
     ) {
         val device = mContext.getBluetoothAdapter()?.getRemoteDevice(address)
@@ -37,7 +37,7 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
         }
         mConnectCallbackManager.setConnectBleCallback(object : BleCallback<List<BluetoothGattService>>() {
             override fun onSuccess(data: List<BluetoothGattService>) {
-                onSuccess?.invoke(data)
+                onSuccess?.invoke(device, data)
             }
 
             override fun onError(exception: BleException) {

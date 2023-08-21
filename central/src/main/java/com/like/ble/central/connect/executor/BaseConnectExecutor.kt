@@ -1,6 +1,7 @@
 package com.like.ble.central.connect.executor
 
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGattService
 import android.content.Context
 import android.util.Log
@@ -47,7 +48,10 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     }
 
     final override fun connect(
-        autoConnectInterval: Long, timeout: Long, onConnected: (List<BluetoothGattService>) -> Unit, onDisconnected: ((Throwable) -> Unit)?
+        autoConnectInterval: Long,
+        timeout: Long,
+        onConnected: (BluetoothDevice, List<BluetoothGattService>) -> Unit,
+        onDisconnected: ((Throwable) -> Unit)?
     ) {
         if (this.autoConnectInterval.compareAndSet(0, autoConnectInterval)) {
             autoConnect(autoConnectInterval, timeout, onConnected, onDisconnected)
@@ -57,7 +61,10 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     }
 
     private fun autoConnect(
-        autoConnectInterval: Long, timeout: Long, onConnected: (List<BluetoothGattService>) -> Unit, onDisconnected: ((Throwable) -> Unit)?
+        autoConnectInterval: Long,
+        timeout: Long,
+        onConnected: (BluetoothDevice, List<BluetoothGattService>) -> Unit,
+        onDisconnected: ((Throwable) -> Unit)?
     ) {
         Log.i("BaseConnectExecutor", "开始连接 $address")
         // 由于 connect 方法的必须保持持续监听，又必须使用协程（doConnect 是挂起函数），所以必须使用 GlobalScope。
@@ -67,10 +74,10 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         reConnectJob = GlobalScope.launch(Dispatchers.IO) {
             // 释放锁。否则会有可能出现问题：比如此时正在设置通知，然后连接就会由于锁被占用无法执行，并抛出 BleExceptionBusy，然后造成自动重连中断。
             suspendCancellableCoroutineWithTimeout.cancel()
-            doConnect(timeout, onConnected = {
+            doConnect(timeout, onConnected = { device, gattServiceList ->
                 Log.i("BaseConnectExecutor", "连接成功 $address")
                 GlobalScope.launch(Dispatchers.Main) {
-                    onConnected(it)
+                    onConnected(device, gattServiceList)
                 }
             }) {
                 Log.e("BaseConnectExecutor", "连接断开 $address $it")
@@ -91,7 +98,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     }
 
     private suspend fun doConnect(
-        timeout: Long, onConnected: (List<BluetoothGattService>) -> Unit, onDisconnected: ((Throwable) -> Unit)?
+        timeout: Long, onConnected: (BluetoothDevice, List<BluetoothGattService>) -> Unit, onDisconnected: ((Throwable) -> Unit)?
     ) {
         try {
             PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
@@ -106,8 +113,8 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                         continuation.invokeOnCancellation {
                             disconnect()
                         }
-                        onConnect(onSuccess = {
-                            onConnected(it)
+                        onConnect(onSuccess = { device, gattServiceList ->
+                            onConnected(device, gattServiceList)
                             if (continuation.isActive) continuation.resume(Unit)
                         }) {
                             if (continuation.isActive) {
@@ -451,7 +458,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     }
 
     protected abstract fun onConnect(
-        onSuccess: ((List<BluetoothGattService>) -> Unit)?, onError: ((Throwable) -> Unit)?
+        onSuccess: ((BluetoothDevice, List<BluetoothGattService>) -> Unit)?, onError: ((Throwable) -> Unit)?
     )
 
     protected abstract fun onDisconnect()
