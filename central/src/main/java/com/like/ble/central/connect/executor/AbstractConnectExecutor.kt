@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothGattService
 import android.content.Context
 import androidx.annotation.IntRange
 import com.like.ble.executor.BleExecutor
+import com.like.ble.util.hexStringToByteArray
 import com.like.ble.util.isBleDeviceConnected
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -144,6 +145,30 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
         isFullPacket: (ByteArray) -> Boolean,
     ): ByteArray
 
+    suspend fun writeCharacteristicAndWaitNotify(
+        data: String? = null,
+        writeUuid: UUID? = null,
+        notifyUuid: UUID? = null,
+        serviceUuid: UUID? = null,
+        timeout: Long = 15000L,
+        @IntRange(from = 0, to = 1) notifyType: Int = 0,
+        writeType: Int = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT,
+        isBeginOfPacket: (ByteArray) -> Boolean,
+        isFullPacket: (ByteArray) -> Boolean,
+    ): ByteArray {
+        return writeCharacteristicAndWaitNotify(
+            data?.hexStringToByteArray(),
+            writeUuid,
+            notifyUuid,
+            serviceUuid,
+            timeout,
+            notifyType,
+            writeType,
+            isBeginOfPacket,
+            isFullPacket
+        )
+    }
+
     /**
      * 写特征值
      *
@@ -166,6 +191,16 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
         writeType: Int = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT,
     )
 
+    suspend fun writeCharacteristic(
+        data: String,
+        characteristicUuid: UUID,
+        serviceUuid: UUID? = null,
+        timeout: Long = 10000L,
+        writeType: Int = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT,
+    ) {
+        writeCharacteristic(data.hexStringToByteArray(), characteristicUuid, serviceUuid, timeout, writeType)
+    }
+
     /**
      * 写描述值
      *
@@ -185,6 +220,16 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
         serviceUuid: UUID? = null,
         timeout: Long = 10000L,
     )
+
+    suspend fun writeDescriptor(
+        data: String,
+        descriptorUuid: UUID,
+        characteristicUuid: UUID? = null,
+        serviceUuid: UUID? = null,
+        timeout: Long = 10000L,
+    ) {
+        writeDescriptor(data.hexStringToByteArray(), descriptorUuid, characteristicUuid, serviceUuid, timeout)
+    }
 
     /**
      * 设置通知监听，数据需要自己处理。
