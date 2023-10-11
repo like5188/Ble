@@ -157,7 +157,7 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
         isFullPacket: (ByteArray) -> Boolean,
     ): ByteArray {
         return writeCharacteristicAndWaitNotify(
-            data?.hexStringToByteArray(),
+            data.hexStringToByteArray(),
             writeUuid,
             notifyUuid,
             serviceUuid,
