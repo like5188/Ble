@@ -57,12 +57,12 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         onConnected: (BluetoothDevice, List<BluetoothGattService>) -> Unit,
         onDisconnected: ((Throwable) -> Unit)?
     ) {
-        autoConnect = autoConnectInterval > 0L
         if (autoConnect) {
-            autoConnect(scope, autoConnectInterval, timeout, onConnected, onDisconnected)
-        } else {
-            onDisconnected?.invoke(BleExceptionBusy("正在自动重连，请稍后！"))
+            onDisconnected?.invoke(BleExceptionBusy("当前是自动重连模式，请勿重复操作！"))
+            return
         }
+        autoConnect = autoConnectInterval > 0L
+        autoConnect(scope, autoConnectInterval, timeout, onConnected, onDisconnected)
     }
 
     private fun autoConnect(
