@@ -57,12 +57,15 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
     }
 
     override fun onDisconnect() {
-        if (mContext.isBleDeviceConnected(mBluetoothGatt?.device)) {
-            mBluetoothGatt?.disconnect()
-        }
-        // close()时会清空BluetoothGatt内部的mCallback回调。导致收不到断开连接的消息。所以就不能在断开连接状态回调时处理 UI。
-        mBluetoothGatt?.close()
+        val gatt = mBluetoothGatt ?: return
         mBluetoothGatt = null
+        if (mContext.isBleDeviceConnected(gatt.device)) {
+            gatt.disconnect()
+        } else {
+            gatt.refreshDeviceCache()
+            // close()时会清空BluetoothGatt内部的mCallback回调。导致不能收到onConnectionStateChange断开连接的回调。所以就不能在此回调中处理 UI。需要直接处理。
+            gatt.close()
+        }
     }
 
     override fun onReadCharacteristic(

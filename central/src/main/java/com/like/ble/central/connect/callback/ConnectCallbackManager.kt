@@ -23,7 +23,6 @@ class ConnectCallbackManager(private val context: Context) {
                 // 连接蓝牙设备成功
                 gatt.discoverServices()
             } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
-                gatt.disconnect()
                 gatt.refreshDeviceCache()
                 gatt.close()
                 val e = if (context.isBluetoothEnable()) {
@@ -42,8 +41,6 @@ class ConnectCallbackManager(private val context: Context) {
                 connectBleCallback?.onSuccess(gatt.services)
             } else {
                 gatt.disconnect()
-                gatt.refreshDeviceCache()
-                gatt.close()
                 connectBleCallback?.onError(BleExceptionDiscoverServices(gatt.device.address))
             }
         }

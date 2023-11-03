@@ -82,14 +82,14 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                     onConnected(device, gattServiceList)
                 }
             }) {
-                Log.e("BaseConnectExecutor", "连接断开 $address $it")
-                // 释放锁，释放蓝牙相关的资源。避免无法连接。
-                doDisconnect()
+                Log.e("BaseConnectExecutor", "连接失败 $address $it")
                 // 如果外层的scope被取消了，那么这里也无法调用 launch 方法了。
                 // 所以我们使用 autoConnect 标记来取消重连
                 scope.launch(Dispatchers.Main) {
                     onDisconnected?.invoke(it)
                     if (it !is BleExceptionCancelTimeout && it !is BleExceptionBusy) {
+                        // 释放锁，释放蓝牙相关的资源。避免无法连接。
+                        doDisconnect()
                         Log.i("BaseConnectExecutor", "准备延迟 $autoConnectInterval 毫秒后开始重连 $address")
                         withContext(Dispatchers.IO) {
                             delay(autoConnectInterval)
