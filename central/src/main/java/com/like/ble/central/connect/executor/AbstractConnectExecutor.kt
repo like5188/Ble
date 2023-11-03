@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattService
 import android.content.Context
 import androidx.annotation.IntRange
-import androidx.annotation.MainThread
 import com.like.ble.executor.BleExecutor
 import com.like.ble.util.hexStringToByteArray
 import com.like.ble.util.isBleDeviceConnected
@@ -44,7 +43,6 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
      * 注意：断开连接不会触发[android.bluetooth.BluetoothGattCallback.onConnectionStateChange]回调
      * @throws [com.like.ble.exception.BleException]
      */
-    @MainThread
     abstract fun disconnect()
 
     /**
