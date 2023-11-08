@@ -8,7 +8,7 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import com.like.ble.sample.databinding.DialogFragmentWriteDataBinding
-import com.like.ble.util.hexStringToByteArray
+import com.like.ble.util.toByteArray
 import com.like.ble.util.isHexString
 import com.like.common.base.BaseDialogFragment
 import java.io.Serializable
@@ -27,7 +27,7 @@ class WriteDataFragment : BaseDialogFragment() {
         mBinding.btnConfirm.setOnClickListener {
             val data = mBinding.etData.text.toString().trim()
             if (data.isHexString() && data.length % 2 == 0) {
-                callback?.onData(data.hexStringToByteArray())
+                callback?.onData(data.toByteArray())
                 dismiss()
             } else {
                 Toast.makeText(context, "只能输入16进制的数据", Toast.LENGTH_SHORT).show()

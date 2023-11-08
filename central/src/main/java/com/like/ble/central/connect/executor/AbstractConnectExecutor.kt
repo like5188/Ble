@@ -6,7 +6,7 @@ import android.bluetooth.BluetoothGattService
 import android.content.Context
 import androidx.annotation.IntRange
 import com.like.ble.executor.BleExecutor
-import com.like.ble.util.hexStringToByteArray
+import com.like.ble.util.toByteArray
 import com.like.ble.util.isBleDeviceConnected
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -157,7 +157,7 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
         isFullPacket: (ByteArray) -> Boolean,
     ): ByteArray {
         return writeCharacteristicAndWaitNotify(
-            data.hexStringToByteArray(),
+            data.toByteArray(),
             writeUuid,
             notifyUuid,
             serviceUuid,
@@ -198,7 +198,7 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
         timeout: Long = 10000L,
         writeType: Int = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT,
     ) {
-        writeCharacteristic(data.hexStringToByteArray(), characteristicUuid, serviceUuid, timeout, writeType)
+        writeCharacteristic(data.toByteArray(), characteristicUuid, serviceUuid, timeout, writeType)
     }
 
     /**
@@ -228,7 +228,7 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
         serviceUuid: UUID? = null,
         timeout: Long = 10000L,
     ) {
-        writeDescriptor(data.hexStringToByteArray(), descriptorUuid, characteristicUuid, serviceUuid, timeout)
+        writeDescriptor(data.toByteArray(), descriptorUuid, characteristicUuid, serviceUuid, timeout)
     }
 
     /**
