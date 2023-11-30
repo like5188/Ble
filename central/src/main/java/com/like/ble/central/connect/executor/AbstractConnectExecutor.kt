@@ -32,6 +32,11 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
      */
     abstract suspend fun waitUnlock()
 
+    /**
+     * 锁是否被持有着
+     */
+    abstract fun isLocked(): Boolean
+
     abstract fun getDevice(): BluetoothDevice?
 
     /**

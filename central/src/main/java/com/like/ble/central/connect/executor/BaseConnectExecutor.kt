@@ -50,10 +50,9 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         }
     }
 
-    /**
-     * 等待释放锁
-     */
     final override suspend fun waitUnlock() = mutexUtils.waitUnlock()
+
+    final override fun isLocked() = mutexUtils.isLocked()
 
     final override fun connect(
         scope: CoroutineScope,

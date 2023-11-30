@@ -49,4 +49,6 @@ class MutexUtils {
         }
     }
 
+    fun isLocked() = mutex.isLocked
+
 }
