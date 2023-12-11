@@ -27,8 +27,7 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
     }
 
     override fun onConnect(
-        onSuccess: ((BluetoothDevice, List<BluetoothGattService>) -> Unit)?,
-        onError: ((Throwable) -> Unit)?
+        onSuccess: (() -> Unit)?, onError: ((Throwable) -> Unit)?
     ) {
         val device = mContext.getBluetoothAdapter()?.getRemoteDevice(address)
         if (device == null) {
@@ -37,7 +36,7 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
         }
         mConnectCallbackManager.setConnectBleCallback(object : BleCallback<List<BluetoothGattService>>() {
             override fun onSuccess(data: List<BluetoothGattService>) {
-                onSuccess?.invoke(device, data)
+                onSuccess?.invoke()
             }
 
             override fun onError(exception: BleException) {
@@ -69,10 +68,7 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
     }
 
     override fun onReadCharacteristic(
-        characteristicUuid: UUID,
-        serviceUuid: UUID?,
-        onSuccess: ((ByteArray) -> Unit)?,
-        onError: ((Throwable) -> Unit)?
+        characteristicUuid: UUID, serviceUuid: UUID?, onSuccess: ((ByteArray) -> Unit)?, onError: ((Throwable) -> Unit)?
     ) {
         val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
         if (characteristic == null) {
@@ -107,9 +103,7 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
         onError: ((Throwable) -> Unit)?
     ) {
         val descriptor = mBluetoothGatt?.findDescriptor(
-            descriptorUuid,
-            characteristicUuid,
-            serviceUuid
+            descriptorUuid, characteristicUuid, serviceUuid
         )
         if (descriptor == null) {
             onError?.invoke(BleException("描述不存在：${descriptorUuid.getValidString()}"))
@@ -137,8 +131,7 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
     }
 
     override fun onReadRemoteRssi(
-        onSuccess: ((Int) -> Unit)?,
-        onError: ((Throwable) -> Unit)?
+        onSuccess: ((Int) -> Unit)?, onError: ((Throwable) -> Unit)?
     ) {
         mConnectCallbackManager.setReadRemoteRssiBleCallback(object : BleCallback<Int>() {
             override fun onSuccess(data: Int) {
@@ -156,9 +149,7 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
     }
 
     override fun onRequestConnectionPriority(
-        connectionPriority: Int,
-        onSuccess: (() -> Unit)?,
-        onError: ((Throwable) -> Unit)?
+        connectionPriority: Int, onSuccess: (() -> Unit)?, onError: ((Throwable) -> Unit)?
     ) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             onError?.invoke(BleException("android 5.0及其以上才支持requestConnectionPriority：$address"))
@@ -173,9 +164,7 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
     }
 
     override fun onRequestMtu(
-        mtu: Int,
-        onSuccess: ((Int) -> Unit)?,
-        onError: ((Throwable) -> Unit)?
+        mtu: Int, onSuccess: ((Int) -> Unit)?, onError: ((Throwable) -> Unit)?
     ) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             onError?.invoke(BleException("android 5.0及其以上才支持设置MTU：$address"))
@@ -198,12 +187,7 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
     }
 
     override fun onSetCharacteristicNotification(
-        characteristicUuid: UUID,
-        serviceUuid: UUID?,
-        type: Int,
-        enable: Boolean,
-        onSuccess: (() -> Unit)?,
-        onError: ((Throwable) -> Unit)?
+        characteristicUuid: UUID, serviceUuid: UUID?, type: Int, enable: Boolean, onSuccess: (() -> Unit)?, onError: ((Throwable) -> Unit)?
     ) {
         val characteristic = mBluetoothGatt?.findCharacteristic(characteristicUuid, serviceUuid)
         if (characteristic == null) {
@@ -291,8 +275,7 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
             override fun onError(exception: BleException) {
                 onError?.invoke(exception)
             }
-        })
-        /*
+        })/*
             写特征值前可以设置写的类型setWriteType()，写类型有三种，如下：
             WRITE_TYPE_DEFAULT 默认类型，需要外围设备的确认，也就是需要外围设备的回应，这样才能继续发送写。
             WRITE_TYPE_NO_RESPONSE 设置该类型不需要外围设备的回应，可以继续写数据。加快传输速率。
@@ -366,6 +349,10 @@ internal class ConnectExecutor(context: Context, address: String?) : BaseConnect
 
     override fun getDevice(): BluetoothDevice? {
         return mBluetoothGatt?.device
+    }
+
+    override fun getServices(): List<BluetoothGattService>? {
+        return mBluetoothGatt?.services
     }
 
 }

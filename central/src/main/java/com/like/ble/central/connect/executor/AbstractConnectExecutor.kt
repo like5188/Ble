@@ -39,6 +39,8 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
 
     abstract fun getDevice(): BluetoothDevice?
 
+    abstract fun getServices(): List<BluetoothGattService>?
+
     /**
      * 连接蓝牙设备，并在连接断开后自动重连。
      *
@@ -52,7 +54,7 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
         scope: CoroutineScope,
         autoConnectInterval: Long = 0L,
         timeout: Long = 10000L,
-        onConnected: (BluetoothDevice, List<BluetoothGattService>) -> Unit,
+        onConnected: () -> Unit,
         onDisconnected: ((Throwable) -> Unit)? = null
     )
 

@@ -1,8 +1,6 @@
 package com.like.ble.central.connect.executor
 
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothGattService
 import android.content.Context
 import android.util.Log
 import com.like.ble.exception.BleException
@@ -58,7 +56,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         scope: CoroutineScope,
         autoConnectInterval: Long,
         timeout: Long,
-        onConnected: (BluetoothDevice, List<BluetoothGattService>) -> Unit,
+        onConnected: () -> Unit,
         onDisconnected: ((Throwable) -> Unit)?
     ) {
         if (autoConnect) {
@@ -73,17 +71,17 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         scope: CoroutineScope,
         autoConnectInterval: Long,
         timeout: Long,
-        onConnected: (BluetoothDevice, List<BluetoothGattService>) -> Unit,
+        onConnected: () -> Unit,
         onDisconnected: ((Throwable) -> Unit)?
     ) {
         Log.i("BaseConnectExecutor", "开始连接 $address")
         scope.launch(Dispatchers.IO) {
             // 释放锁。否则会有可能出现问题：比如此时正在设置通知，然后连接就会由于锁被占用无法执行，并抛出 BleExceptionBusy，然后造成自动重连中断。
             suspendCancellableCoroutineWithTimeout.cancel()
-            doConnect(timeout, onConnected = { device, gattServiceList ->
+            doConnect(timeout, onConnected = {
                 Log.i("BaseConnectExecutor", "连接成功 $address")
                 scope.launch(Dispatchers.Main) {
-                    onConnected(device, gattServiceList)
+                    onConnected()
                 }
             }) {
                 Log.e("BaseConnectExecutor", "连接失败 $address $it")
@@ -91,7 +89,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                 // 所以我们使用 autoConnect 标记来取消重连
                 scope.launch(Dispatchers.Main) {
                     onDisconnected?.invoke(it)
-                    if (it !is BleExceptionCancelTimeout && it !is BleExceptionBusy) {
+                    if (it !is BleExceptionCancelTimeout) {
                         // 释放锁，释放蓝牙相关的资源。避免无法连接。
                         doDisconnect()
                         Log.i("BaseConnectExecutor", "准备延迟 $autoConnectInterval 毫秒后开始重连 $address")
@@ -109,14 +107,15 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     }
 
     private suspend fun doConnect(
-        timeout: Long, onConnected: (BluetoothDevice, List<BluetoothGattService>) -> Unit, onDisconnected: ((Throwable) -> Unit)?
+        timeout: Long, onConnected: () -> Unit, onDisconnected: ((Throwable) -> Unit)?
     ) {
         try {
+            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
+            if (mContext.isBleDeviceConnected(address)) {
+                onConnected()
+                return
+            }
             mutexUtils.withTryLockOrThrow("正在建立连接，请稍后！") {
-                PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
-                if (mContext.isBleDeviceConnected(address)) {
-                    throw BleExceptionBusy("设备已经连接：$address")
-                }
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(
                         timeout, "连接蓝牙设备超时：$address"
@@ -124,8 +123,8 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                         continuation.invokeOnCancellation {
                             doDisconnect()
                         }
-                        onConnect(onSuccess = { device, gattServiceList ->
-                            onConnected(device, gattServiceList)
+                        onConnect(onSuccess = {
+                            onConnected()
                             if (continuation.isActive) continuation.resume(Unit)
                         }) {
                             if (continuation.isActive) {
@@ -162,13 +161,13 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
 
     final override suspend fun readCharacteristic(characteristicUuid: UUID, serviceUuid: UUID?, timeout: Long): ByteArray {
         return try {
+            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
+            if (!mContext.isBleDeviceConnected(address)) {
+                throw BleExceptionDeviceDisconnected(address)
+            }
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLockOrThrow("正在读取特征值……") {
-                PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
-                if (!mContext.isBleDeviceConnected(address)) {
-                    throw BleExceptionDeviceDisconnected(address)
-                }
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(
                         timeout, "读取特征值超时：${characteristicUuid.getValidString()}"
@@ -190,13 +189,13 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         descriptorUuid: UUID, characteristicUuid: UUID?, serviceUuid: UUID?, timeout: Long
     ): ByteArray {
         return try {
+            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
+            if (!mContext.isBleDeviceConnected(address)) {
+                throw BleExceptionDeviceDisconnected(address)
+            }
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLockOrThrow("正在读取描述值……") {
-                PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
-                if (!mContext.isBleDeviceConnected(address)) {
-                    throw BleExceptionDeviceDisconnected(address)
-                }
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(
                         timeout, "读取描述值超时：${descriptorUuid.getValidString()}"
@@ -216,13 +215,13 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
 
     final override suspend fun readRemoteRssi(timeout: Long): Int {
         return try {
+            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
+            if (!mContext.isBleDeviceConnected(address)) {
+                throw BleExceptionDeviceDisconnected(address)
+            }
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLockOrThrow("正在读取RSSI……") {
-                PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
-                if (!mContext.isBleDeviceConnected(address)) {
-                    throw BleExceptionDeviceDisconnected(address)
-                }
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(timeout, "读取RSSI超时：$address") { continuation ->
                         onReadRemoteRssi(onSuccess = {
@@ -240,13 +239,13 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
 
     final override suspend fun requestConnectionPriority(connectionPriority: Int, timeout: Long) {
         try {
+            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
+            if (!mContext.isBleDeviceConnected(address)) {
+                throw BleExceptionDeviceDisconnected(address)
+            }
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLockOrThrow("正在设置ConnectionPriority……") {
-                PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
-                if (!mContext.isBleDeviceConnected(address)) {
-                    throw BleExceptionDeviceDisconnected(address)
-                }
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute<Unit>(timeout, "设置ConnectionPriority超时：$address") { continuation ->
                         onRequestConnectionPriority(connectionPriority, onSuccess = {
@@ -264,13 +263,13 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
 
     final override suspend fun requestMtu(mtu: Int, timeout: Long): Int {
         return try {
+            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
+            if (!mContext.isBleDeviceConnected(address)) {
+                throw BleExceptionDeviceDisconnected(address)
+            }
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLockOrThrow("正在设置MTU……") {
-                PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
-                if (!mContext.isBleDeviceConnected(address)) {
-                    throw BleExceptionDeviceDisconnected(address)
-                }
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(timeout, "设置MTU超时：$address") { continuation ->
                         onRequestMtu(mtu, onSuccess = {
@@ -290,13 +289,13 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         characteristicUuid: UUID, serviceUuid: UUID?, type: Int, enable: Boolean, timeout: Long
     ) {
         try {
+            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
+            if (!mContext.isBleDeviceConnected(address)) {
+                throw BleExceptionDeviceDisconnected(address)
+            }
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLockOrThrow("正在设置通知……") {
-                PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
-                if (!mContext.isBleDeviceConnected(address)) {
-                    throw BleExceptionDeviceDisconnected(address)
-                }
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute<Unit>(timeout, "设置通知超时：$address") { continuation ->
                         onSetCharacteristicNotification(characteristicUuid, serviceUuid, type, enable, onSuccess = {
@@ -316,13 +315,13 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         data: ByteArray, characteristicUuid: UUID, serviceUuid: UUID?, timeout: Long, writeType: Int
     ) {
         try {
+            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
+            if (!mContext.isBleDeviceConnected(address)) {
+                throw BleExceptionDeviceDisconnected(address)
+            }
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLockOrThrow("正在写特征值……") {
-                PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
-                if (!mContext.isBleDeviceConnected(address)) {
-                    throw BleExceptionDeviceDisconnected(address)
-                }
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute<Unit>(
                         timeout, "写特征值超时：${characteristicUuid.getValidString()}"
@@ -352,11 +351,11 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         isBeginOfPacket: (ByteArray) -> Boolean,
         isFullPacket: (ByteArray) -> Boolean,
     ): ByteArray = try {
+        PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
+        if (!mContext.isBleDeviceConnected(address)) {
+            throw BleExceptionDeviceDisconnected(address)
+        }
         mutexUtils.withTryLockOrThrow("正在写特征值……") {
-            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
-            if (!mContext.isBleDeviceConnected(address)) {
-                throw BleExceptionDeviceDisconnected(address)
-            }
             withContext(Dispatchers.IO) {
                 suspendCancellableCoroutineWithTimeout.execute<ByteArray>(
                     timeout, "写特征值超时：${writeUuid?.getValidString()}"
@@ -404,13 +403,13 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         data: ByteArray, descriptorUuid: UUID, characteristicUuid: UUID?, serviceUuid: UUID?, timeout: Long
     ) {
         try {
+            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
+            if (!mContext.isBleDeviceConnected(address)) {
+                throw BleExceptionDeviceDisconnected(address)
+            }
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
             mutexUtils.withTryLockOrThrow("正在写描述值……") {
-                PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
-                if (!mContext.isBleDeviceConnected(address)) {
-                    throw BleExceptionDeviceDisconnected(address)
-                }
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute<Unit>(
                         timeout, "写描述值超时：${descriptorUuid.getValidString()}"
@@ -473,7 +472,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     }
 
     protected abstract fun onConnect(
-        onSuccess: ((BluetoothDevice, List<BluetoothGattService>) -> Unit)?, onError: ((Throwable) -> Unit)?
+        onSuccess: (() -> Unit)?, onError: ((Throwable) -> Unit)?
     )
 
     protected abstract fun onDisconnect()
