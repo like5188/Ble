@@ -3,8 +3,6 @@ package com.like.ble.central.connect.callback
 import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import com.like.ble.callback.BleCallback
 import com.like.ble.exception.BleExceptionDeviceDisconnected
@@ -16,10 +14,6 @@ import com.like.ble.util.refreshDeviceCache
 
 @SuppressLint("MissingPermission")
 class ConnectCallbackManager(private val context: Context) {
-    private val mainHandler: Handler by lazy {
-        Handler(Looper.getMainLooper())
-    }
-
     // 蓝牙Gatt回调方法中都不可以进行耗时操作，需要将其方法内进行的操作丢进另一个线程，尽快返回。
     private val bluetoothGattCallback = object : BluetoothGattCallback() {
         // 当连接状态改变
@@ -27,12 +21,8 @@ class ConnectCallbackManager(private val context: Context) {
             Log.i("ConnectCallbackManager", "onConnectionStateChange status=$status newState=$newState")
             if (newState == BluetoothGatt.STATE_CONNECTED) {
                 // 连接蓝牙设备成功
-                // 这里发现服务必须延迟，否则会造成 status 8 的错误。造成一直重连。
-                mainHandler.postDelayed({
-                    gatt.discoverServices()
-                }, 500)
+                gatt.discoverServices()
             } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
-                mainHandler.removeCallbacksAndMessages(null)
                 gatt.refreshDeviceCache()
                 gatt.close()
                 val e = if (context.isBluetoothEnable()) {
