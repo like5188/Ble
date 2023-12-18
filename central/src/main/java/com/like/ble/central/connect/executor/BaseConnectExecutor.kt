@@ -13,6 +13,7 @@ import com.like.ble.util.PermissionUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
 import com.like.ble.util.getValidString
 import com.like.ble.util.isBleDeviceConnected
+import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -50,11 +51,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     }
 
     final override fun connect(
-        scope: CoroutineScope,
-        autoConnectInterval: Long,
-        timeout: Long,
-        onConnected: () -> Unit,
-        onDisconnected: ((Throwable) -> Unit)?
+        scope: CoroutineScope, autoConnectInterval: Long, timeout: Long, onConnected: () -> Unit, onDisconnected: ((Throwable) -> Unit)?
     ) {
         if (autoConnect) {
             onDisconnected?.invoke(BleExceptionBusy("当前是自动重连模式，请勿重复操作！"))
@@ -65,11 +62,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
     }
 
     private fun autoConnect(
-        scope: CoroutineScope,
-        autoConnectInterval: Long,
-        timeout: Long,
-        onConnected: () -> Unit,
-        onDisconnected: ((Throwable) -> Unit)?
+        scope: CoroutineScope, autoConnectInterval: Long, timeout: Long, onConnected: () -> Unit, onDisconnected: ((Throwable) -> Unit)?
     ) {
         Log.i("BaseConnectExecutor", "开始连接 $address")
         scope.launch(Dispatchers.IO) {
@@ -156,186 +149,105 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         }
     }
 
-    final override suspend fun readCharacteristic(characteristicUuid: UUID, serviceUuid: UUID?, timeout: Long): ByteArray {
-        return try {
-            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
-            if (!mContext.isBleDeviceConnected(address)) {
-                throw BleExceptionDeviceDisconnected(address)
-            }
-            // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
-            // 所以不会产生 BleExceptionBusy 异常。
-            connectedMutexUtils.withTryLockOrThrow("正在读取特征值……") {
-                withContext(Dispatchers.IO) {
-                    suspendCancellableCoroutineWithTimeout.execute(
-                        timeout, "读取特征值超时：${characteristicUuid.getValidString()}"
-                    ) { continuation ->
-                        onReadCharacteristic(characteristicUuid, serviceUuid, onSuccess = {
-                            if (continuation.isActive) continuation.resume(it)
-                        }) {
-                            if (continuation.isActive) continuation.resumeWithException(it)
-                        }
-                    }
+    /**
+     * 封装连接状态的其它操作步骤。
+     */
+    private suspend inline fun <T> connectedExecute(
+        busyMessage: String?, timeout: Long, timeoutErrorMsg: String = "", crossinline block: (CancellableContinuation<T>) -> Unit
+    ): T = try {
+        PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
+        if (!mContext.isBleDeviceConnected(address)) {
+            throw BleExceptionDeviceDisconnected(address)
+        }
+        // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
+        // 所以不会产生 BleExceptionBusy 异常。
+        connectedMutexUtils.withTryLockOrThrow(busyMessage) {
+            withContext(Dispatchers.IO) {
+                suspendCancellableCoroutineWithTimeout.execute(timeout, timeoutErrorMsg) {
+                    block(it)
                 }
             }
-        } catch (e: Exception) {
-            throw e.toBleException()
         }
+    } catch (e: Exception) {
+        // 转换一下异常，方便使用者判断。
+        throw e.toBleException()
     }
+
+    final override suspend fun readCharacteristic(characteristicUuid: UUID, serviceUuid: UUID?, timeout: Long): ByteArray =
+        connectedExecute("正在读取特征值……", timeout, "读取特征值超时：${characteristicUuid.getValidString()}") { continuation ->
+            onReadCharacteristic(characteristicUuid, serviceUuid, onSuccess = {
+                if (continuation.isActive) continuation.resume(it)
+            }) {
+                if (continuation.isActive) continuation.resumeWithException(it)
+            }
+        }
 
     final override suspend fun readDescriptor(
         descriptorUuid: UUID, characteristicUuid: UUID?, serviceUuid: UUID?, timeout: Long
-    ): ByteArray {
-        return try {
-            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
-            if (!mContext.isBleDeviceConnected(address)) {
-                throw BleExceptionDeviceDisconnected(address)
-            }
-            // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
-            // 所以不会产生 BleExceptionBusy 异常。
-            connectedMutexUtils.withTryLockOrThrow("正在读取描述值……") {
-                withContext(Dispatchers.IO) {
-                    suspendCancellableCoroutineWithTimeout.execute(
-                        timeout, "读取描述值超时：${descriptorUuid.getValidString()}"
-                    ) { continuation ->
-                        onReadDescriptor(descriptorUuid, characteristicUuid, serviceUuid, onSuccess = {
-                            if (continuation.isActive) continuation.resume(it)
-                        }) {
-                            if (continuation.isActive) continuation.resumeWithException(it)
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            throw e.toBleException()
+    ): ByteArray = connectedExecute("正在读取描述值……", timeout, "读取描述值超时：${descriptorUuid.getValidString()}") { continuation ->
+        onReadDescriptor(descriptorUuid, characteristicUuid, serviceUuid, onSuccess = {
+            if (continuation.isActive) continuation.resume(it)
+        }) {
+            if (continuation.isActive) continuation.resumeWithException(it)
         }
     }
 
-    final override suspend fun readRemoteRssi(timeout: Long): Int {
-        return try {
-            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
-            if (!mContext.isBleDeviceConnected(address)) {
-                throw BleExceptionDeviceDisconnected(address)
+    final override suspend fun readRemoteRssi(timeout: Long): Int =
+        connectedExecute("正在读取RSSI……", timeout, "读取RSSI超时：$address") { continuation ->
+            onReadRemoteRssi(onSuccess = {
+                if (continuation.isActive) continuation.resume(it)
+            }) {
+                if (continuation.isActive) continuation.resumeWithException(it)
             }
-            // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
-            // 所以不会产生 BleExceptionBusy 异常。
-            connectedMutexUtils.withTryLockOrThrow("正在读取RSSI……") {
-                withContext(Dispatchers.IO) {
-                    suspendCancellableCoroutineWithTimeout.execute(timeout, "读取RSSI超时：$address") { continuation ->
-                        onReadRemoteRssi(onSuccess = {
-                            if (continuation.isActive) continuation.resume(it)
-                        }) {
-                            if (continuation.isActive) continuation.resumeWithException(it)
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            throw e.toBleException()
         }
-    }
 
-    final override suspend fun requestConnectionPriority(connectionPriority: Int, timeout: Long) {
-        try {
-            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
-            if (!mContext.isBleDeviceConnected(address)) {
-                throw BleExceptionDeviceDisconnected(address)
+    final override suspend fun requestConnectionPriority(connectionPriority: Int, timeout: Long) =
+        connectedExecute("正在设置ConnectionPriority……", timeout, "设置ConnectionPriority超时：$address") { continuation ->
+            onRequestConnectionPriority(connectionPriority, onSuccess = {
+                if (continuation.isActive) continuation.resume(Unit)
+            }) {
+                if (continuation.isActive) continuation.resumeWithException(it)
             }
-            // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
-            // 所以不会产生 BleExceptionBusy 异常。
-            connectedMutexUtils.withTryLockOrThrow("正在设置ConnectionPriority……") {
-                withContext(Dispatchers.IO) {
-                    suspendCancellableCoroutineWithTimeout.execute<Unit>(timeout, "设置ConnectionPriority超时：$address") { continuation ->
-                        onRequestConnectionPriority(connectionPriority, onSuccess = {
-                            if (continuation.isActive) continuation.resume(Unit)
-                        }) {
-                            if (continuation.isActive) continuation.resumeWithException(it)
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            throw e.toBleException()
         }
-    }
 
-    final override suspend fun requestMtu(mtu: Int, timeout: Long): Int {
-        return try {
-            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
-            if (!mContext.isBleDeviceConnected(address)) {
-                throw BleExceptionDeviceDisconnected(address)
+    final override suspend fun requestMtu(mtu: Int, timeout: Long): Int =
+        connectedExecute("正在设置MTU……", timeout, "设置MTU超时：$address") { continuation ->
+            onRequestMtu(mtu, onSuccess = {
+                if (continuation.isActive) continuation.resume(it)
+            }) {
+                if (continuation.isActive) continuation.resumeWithException(it)
             }
-            // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
-            // 所以不会产生 BleExceptionBusy 异常。
-            connectedMutexUtils.withTryLockOrThrow("正在设置MTU……") {
-                withContext(Dispatchers.IO) {
-                    suspendCancellableCoroutineWithTimeout.execute(timeout, "设置MTU超时：$address") { continuation ->
-                        onRequestMtu(mtu, onSuccess = {
-                            if (continuation.isActive) continuation.resume(it)
-                        }) {
-                            if (continuation.isActive) continuation.resumeWithException(it)
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            throw e.toBleException()
         }
-    }
 
     final override suspend fun setCharacteristicNotification(
-        characteristicUuid: UUID, serviceUuid: UUID?, type: Int, enable: Boolean, timeout: Long
-    ) {
-        try {
-            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
-            if (!mContext.isBleDeviceConnected(address)) {
-                throw BleExceptionDeviceDisconnected(address)
+        characteristicUuid: UUID,
+        serviceUuid: UUID?,
+        type: Int,
+        enable: Boolean,
+        timeout: Long
+    ) =
+        connectedExecute("正在设置通知……", timeout, "设置通知超时：$address") { continuation ->
+            onSetCharacteristicNotification(characteristicUuid, serviceUuid, type, enable, onSuccess = {
+                if (continuation.isActive) continuation.resume(Unit)
+            }) {
+                if (continuation.isActive) continuation.resumeWithException(it)
             }
-            // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
-            // 所以不会产生 BleExceptionBusy 异常。
-            connectedMutexUtils.withTryLockOrThrow("正在设置通知……") {
-                withContext(Dispatchers.IO) {
-                    suspendCancellableCoroutineWithTimeout.execute<Unit>(timeout, "设置通知超时：$address") { continuation ->
-                        onSetCharacteristicNotification(characteristicUuid, serviceUuid, type, enable, onSuccess = {
-                            if (continuation.isActive) continuation.resume(Unit)
-                        }) {
-                            if (continuation.isActive) continuation.resumeWithException(it)
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            throw e.toBleException()
         }
-    }
 
     final override suspend fun writeCharacteristic(
-        data: ByteArray, characteristicUuid: UUID, serviceUuid: UUID?, timeout: Long, writeType: Int
-    ) {
-        try {
-            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
-            if (!mContext.isBleDeviceConnected(address)) {
-                throw BleExceptionDeviceDisconnected(address)
+        data: ByteArray,
+        characteristicUuid: UUID,
+        serviceUuid: UUID?,
+        timeout: Long,
+        writeType: Int
+    ) =
+        connectedExecute("正在写特征值……", timeout, "写特征值超时：${characteristicUuid.getValidString()}") { continuation ->
+            onWriteCharacteristic(data, characteristicUuid, serviceUuid, writeType, onSuccess = {
+                if (continuation.isActive) continuation.resume(Unit)
+            }) {
+                if (continuation.isActive) continuation.resumeWithException(it)
             }
-            // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
-            // 所以不会产生 BleExceptionBusy 异常。
-            connectedMutexUtils.withTryLockOrThrow("正在写特征值……") {
-                withContext(Dispatchers.IO) {
-                    suspendCancellableCoroutineWithTimeout.execute<Unit>(
-                        timeout, "写特征值超时：${characteristicUuid.getValidString()}"
-                    ) { continuation ->
-                        onWriteCharacteristic(data, characteristicUuid, serviceUuid, writeType, onSuccess = {
-                            if (continuation.isActive) continuation.resume(Unit)
-                        }) {
-                            if (continuation.isActive) continuation.resumeWithException(it)
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            // 转换一下异常，方便使用者判断。
-            throw e.toBleException()
         }
-    }
 
     final override suspend fun writeCharacteristicAndWaitNotify(
         data: ByteArray?,
@@ -347,80 +259,49 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         writeType: Int,
         isBeginOfPacket: (ByteArray) -> Boolean,
         isFullPacket: (ByteArray) -> Boolean,
-    ): ByteArray = try {
-        PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
-        if (!mContext.isBleDeviceConnected(address)) {
-            throw BleExceptionDeviceDisconnected(address)
-        }
-        connectedMutexUtils.withTryLockOrThrow("正在写特征值……") {
-            withContext(Dispatchers.IO) {
-                suspendCancellableCoroutineWithTimeout.execute<ByteArray>(
-                    timeout, "写特征值超时：${writeUuid?.getValidString()}"
-                ) { continuation ->
-                    if (notifyUuid != null) {
-                        // 启用通知
-                        onSetCharacteristicNotification(notifyUuid, serviceUuid, notifyType, true) {
-                            if (continuation.isActive) {
-                                continuation.resumeWithException(it)
-                                return@onSetCharacteristicNotification
-                            }
-                        }
-                        // 延迟100毫秒，否则下面的写入命令会失败。
-                        Thread.sleep(100)
+    ): ByteArray =
+        connectedExecute("正在写特征值……", timeout, "写特征值超时：${writeUuid?.getValidString()}") { continuation ->
+            if (notifyUuid != null) {
+                // 启用通知
+                onSetCharacteristicNotification(notifyUuid, serviceUuid, notifyType, true) {
+                    if (continuation.isActive) {
+                        continuation.resumeWithException(it)
+                        return@onSetCharacteristicNotification
                     }
-                    // 设置监听
-                    var result: ByteArray = byteArrayOf()
-                    onSetNotifyCallback {
-                        Log.d("BaseConnectExecutor", "获取到数据 ${it.contentToString()}")
-                        if (isBeginOfPacket(it) || result.isNotEmpty()) {
-                            result += it
-                        }
-                        if (isFullPacket(result)) {
-                            Log.d("BaseConnectExecutor", "获取到了完整数据包 ${result.contentToString()}")
-                            // 取消监听
-                            onRemoveNotifyCallback()
-                            Log.d("BaseConnectExecutor", "通知监听被取消")
-                            if (continuation.isActive) continuation.resume(result)
-                        }
-                    }
-                    // 写入命令
-                    if (data != null && data.isNotEmpty() && writeUuid != null) {
-                        onWriteCharacteristic(data, writeUuid, serviceUuid, writeType) {
-                            if (continuation.isActive) continuation.resumeWithException(it)
-                        }
-                    }
+                }
+                // 延迟100毫秒，否则下面的写入命令会失败。
+                Thread.sleep(100)
+            }
+            // 设置监听
+            var result: ByteArray = byteArrayOf()
+            onSetNotifyCallback {
+                Log.d("BaseConnectExecutor", "获取到数据 ${it.contentToString()}")
+                if (isBeginOfPacket(it) || result.isNotEmpty()) {
+                    result += it
+                }
+                if (isFullPacket(result)) {
+                    Log.d("BaseConnectExecutor", "获取到了完整数据包 ${result.contentToString()}")
+                    // 取消监听
+                    onRemoveNotifyCallback()
+                    Log.d("BaseConnectExecutor", "通知监听被取消")
+                    if (continuation.isActive) continuation.resume(result)
+                }
+            }
+            // 写入命令
+            if (data != null && data.isNotEmpty() && writeUuid != null) {
+                onWriteCharacteristic(data, writeUuid, serviceUuid, writeType) {
+                    if (continuation.isActive) continuation.resumeWithException(it)
                 }
             }
         }
-    } catch (e: Exception) {
-        throw e.toBleException()
-    }
 
     final override suspend fun writeDescriptor(
         data: ByteArray, descriptorUuid: UUID, characteristicUuid: UUID?, serviceUuid: UUID?, timeout: Long
-    ) {
-        try {
-            PermissionUtils.checkConnectEnvironmentOrThrow(mContext)
-            if (!mContext.isBleDeviceConnected(address)) {
-                throw BleExceptionDeviceDisconnected(address)
-            }
-            // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
-            // 所以不会产生 BleExceptionBusy 异常。
-            connectedMutexUtils.withTryLockOrThrow("正在写描述值……") {
-                withContext(Dispatchers.IO) {
-                    suspendCancellableCoroutineWithTimeout.execute<Unit>(
-                        timeout, "写描述值超时：${descriptorUuid.getValidString()}"
-                    ) { continuation ->
-                        onWriteDescriptor(data, descriptorUuid, characteristicUuid, serviceUuid, onSuccess = {
-                            if (continuation.isActive) continuation.resume(Unit)
-                        }) {
-                            if (continuation.isActive) continuation.resumeWithException(it)
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            throw e.toBleException()
+    ) = connectedExecute("正在写描述值……", timeout, "写描述值超时：${descriptorUuid.getValidString()}") { continuation ->
+        onWriteDescriptor(data, descriptorUuid, characteristicUuid, serviceUuid, onSuccess = {
+            if (continuation.isActive) continuation.resume(Unit)
+        }) {
+            if (continuation.isActive) continuation.resumeWithException(it)
         }
     }
 
