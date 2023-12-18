@@ -1,7 +1,12 @@
 package com.like.ble.central.scan.callback
 
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanCallback
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.like.ble.callback.BleCallback
@@ -38,11 +43,21 @@ class ScanCallbackManager {
         }
     }
     private val leScanCallback: BluetoothAdapter.LeScanCallback = BluetoothAdapter.LeScanCallback { device, rssi, scanRecord ->
-        leScanBleCallback?.onSuccess(ScanResult(device, rssi, scanRecord))
+        scanBleCallback?.onSuccess(ScanResult(device, rssi, scanRecord))
+    }
+    private val classicBroadcastReceiver by lazy {
+        object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (intent?.action == BluetoothDevice.ACTION_FOUND) {
+                    val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE) ?: return
+                    val rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, 0)
+                    scanBleCallback?.onSuccess(ScanResult(device, rssi.toInt(), null))
+                }
+            }
+        }
     }
 
     private var scanBleCallback: BleCallback<ScanResult>? = null
-    private var leScanBleCallback: BleCallback<ScanResult>? = null
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun getScanCallback(): ScanCallback {
@@ -53,12 +68,21 @@ class ScanCallbackManager {
         return leScanCallback
     }
 
-    fun setScanBleCallback(callback: BleCallback<ScanResult>?) {
-        scanBleCallback = callback
+    fun registerClassicBroadcastReceiver(context: Context) {
+        context.registerReceiver(classicBroadcastReceiver, IntentFilter().apply {
+            addAction(BluetoothDevice.ACTION_FOUND) // 发现设备
+        })
     }
 
-    fun setLeScanBleCallback(callback: BleCallback<ScanResult>?) {
-        leScanBleCallback = callback
+    fun unRegisterClassicBroadcastReceiver(context: Context) {
+        try {
+            context.unregisterReceiver(classicBroadcastReceiver)
+        } catch (e: Exception) {
+        }
+    }
+
+    fun setScanBleCallback(callback: BleCallback<ScanResult>?) {
+        scanBleCallback = callback
     }
 
 }

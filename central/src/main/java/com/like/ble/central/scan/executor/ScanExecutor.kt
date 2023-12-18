@@ -3,10 +3,12 @@ package com.like.ble.central.scan.executor
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import com.like.ble.callback.BleCallback
 import com.like.ble.central.scan.callback.ScanCallbackManager
 import com.like.ble.central.scan.result.ScanResult
+import com.like.ble.central.util.hasGps
 import com.like.ble.exception.BleException
 import com.like.ble.util.getBluetoothAdapter
 
@@ -34,10 +36,17 @@ internal class ScanExecutor(context: Context) : BaseScanExecutor(context) {
             }
         }
         scanCallbackManager.setScanBleCallback(bleCallback)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            onStartScan21()
-        } else {
-            onStartScanBelow21()
+        if (mContext.hasGps()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                Log.i("ScanExecutor", "onStartScan21")
+                onStartScan21()
+            } else {
+                Log.i("ScanExecutor", "onStartScanBelow21")
+                onStartScanBelow21()
+            }
+        } else {// 如果没有 gps 模块，则需要使用经典蓝牙扫描，需要注册广播接收器来接收扫描结果。比如工控机上面。
+            Log.i("ScanExecutor", "onStartDiscovery")
+            onStartDiscovery()
         }
     }
 
@@ -56,11 +65,27 @@ internal class ScanExecutor(context: Context) : BaseScanExecutor(context) {
         }
     }
 
+    private fun onStartDiscovery() {
+        // startDiscovery在大多数手机上是可以同时发现经典蓝牙和Ble的，但是它是通过注册广播接收器来接收扫描结果的，
+        // 无法返回Ble设备的广播数据，所以无法通过广播识别设备，且startDiscovery扫描Ble的效率比StartLeScan低很多。
+        scanCallbackManager.registerClassicBroadcastReceiver(mContext)
+        val success = mContext.getBluetoothAdapter()?.startDiscovery() ?: false
+        if (!success) {
+            scanCallbackManager.unRegisterClassicBroadcastReceiver(mContext)
+            throw BleException("开启扫描失败")
+        }
+    }
+
     override fun onStopScan() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mContext.getBluetoothAdapter()?.bluetoothLeScanner?.stopScan(scanCallbackManager.getScanCallback())
-        } else {
-            mContext.getBluetoothAdapter()?.stopLeScan(scanCallbackManager.getLeScanCallback())
+        if (mContext.hasGps()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mContext.getBluetoothAdapter()?.bluetoothLeScanner?.stopScan(scanCallbackManager.getScanCallback())
+            } else {
+                mContext.getBluetoothAdapter()?.stopLeScan(scanCallbackManager.getLeScanCallback())
+            }
+        } else {// 如果没有 gps 模块，则需要使用经典蓝牙扫描。比如工控机上面。
+            mContext.getBluetoothAdapter()?.cancelDiscovery()
+            scanCallbackManager.unRegisterClassicBroadcastReceiver(mContext)
         }
     }
 

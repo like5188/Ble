@@ -19,7 +19,6 @@ import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.exception.BleExceptionTimeout
 import com.like.ble.sample.databinding.FragmentBleScanBinding
 import com.like.ble.util.BleBroadcastReceiverManager
-import com.like.ble.util.PermissionUtils
 import com.like.common.util.Logger
 import com.like.recyclerview.layoutmanager.WrapLinearLayoutManager
 import kotlinx.coroutines.flow.catch
@@ -83,21 +82,24 @@ class BleScanFragment : Fragment() {
             mBinding.tvScanStatus.text = "扫描中……"
             scanExecutor.startScan()
                 .catch {
-                    Logger.e("BleScanFragment catch scan error $it")
+                    Logger.e("BleScanFragment", "scan error $it")
                     val ctx = context ?: return@catch
                     when (it) {
                         is BleExceptionCancelTimeout -> {
                             // 提前取消超时不做处理。因为这是调用 stopScan() 造成的，使用者可以直接在 stopScan() 方法结束后处理 UI 的显示，不需要此回调。
                         }
+
                         is BleExceptionBusy -> {
                             mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
                             mBinding.tvScanStatus.text = "扫描中……"
                             Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
                         }
+
                         is BleExceptionTimeout -> {
                             mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_blue))
                             mBinding.tvScanStatus.text = "扫描完成"
                         }
+
                         else -> {
                             mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(ctx, R.color.ble_text_red))
                             mBinding.tvScanStatus.text = it.message
@@ -107,7 +109,7 @@ class BleScanFragment : Fragment() {
                 }
                 .conflate()// 如果消费者还在处理，则丢弃新的数据。然后消费者处理完后，再去获取生产者中的最新数据来处理。
                 .collect {
-                    Logger.w("BleScanFragment scan result ${it.device.address}")
+                    Logger.w("BleScanFragment", "scan result $it")
                     if (isFirstData) {
                         isFirstData = false
                         mAdapter.submitList(null)
