@@ -19,23 +19,8 @@ abstract class AbstractConnectExecutor(context: Context, val address: String?) :
 
     /**
      * 蓝牙设备是否已经连接
-     * 注意：
-     * 当我们同时使用connectExecutor中的连接方法和其它方法的时候，不能单独使用 isBleDeviceConnected() 方法来判断是否连接。
-     * 因为有可能这个方法判断已经连接，但是由于还没有释放锁，造成你后续操作其它方法失败，
-     * 比如后续操作：setCharacteristicNotification 报错：正在建立连接，请稍后！
-     * 所以当判断已经连接后去执行后续操作时，需要配合[waitUnlock]、[isLocked]等方法使用。
      */
     fun isBleDeviceConnected(): Boolean = mContext.isBleDeviceConnected(address)
-
-    /**
-     * 等待释放锁
-     */
-    abstract suspend fun waitUnlock()
-
-    /**
-     * 锁是否被持有着
-     */
-    abstract fun isLocked(): Boolean
 
     abstract fun getDevice(): BluetoothDevice?
 

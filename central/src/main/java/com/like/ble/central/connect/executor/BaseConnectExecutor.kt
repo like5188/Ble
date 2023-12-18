@@ -31,7 +31,8 @@ import kotlin.coroutines.resumeWithException
  * 包括：并发处理、超时处理、蓝牙相关的前置条件检查、错误处理。
  */
 internal abstract class BaseConnectExecutor(context: Context, address: String?) : AbstractConnectExecutor(context, address) {
-    private val mutexUtils = MutexUtils()
+    private val connectMutexUtils = MutexUtils()
+    private val connectedMutexUtils = MutexUtils()
     private val suspendCancellableCoroutineWithTimeout by lazy {
         SuspendCancellableCoroutineWithTimeout()
     }
@@ -47,10 +48,6 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
             throw BleException("invalid address：$address")
         }
     }
-
-    final override suspend fun waitUnlock() = mutexUtils.waitUnlock()
-
-    final override fun isLocked() = mutexUtils.isLocked()
 
     final override fun connect(
         scope: CoroutineScope,
@@ -115,7 +112,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                 onConnected()
                 return
             }
-            mutexUtils.withTryLockOrThrow("正在建立连接，请稍后！") {
+            connectMutexUtils.withTryLockOrThrow("正在建立连接，请稍后！") {
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(
                         timeout, "连接蓝牙设备超时：$address"
@@ -167,7 +164,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
             }
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
-            mutexUtils.withTryLockOrThrow("正在读取特征值……") {
+            connectedMutexUtils.withTryLockOrThrow("正在读取特征值……") {
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(
                         timeout, "读取特征值超时：${characteristicUuid.getValidString()}"
@@ -195,7 +192,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
             }
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
-            mutexUtils.withTryLockOrThrow("正在读取描述值……") {
+            connectedMutexUtils.withTryLockOrThrow("正在读取描述值……") {
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(
                         timeout, "读取描述值超时：${descriptorUuid.getValidString()}"
@@ -221,7 +218,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
             }
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
-            mutexUtils.withTryLockOrThrow("正在读取RSSI……") {
+            connectedMutexUtils.withTryLockOrThrow("正在读取RSSI……") {
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(timeout, "读取RSSI超时：$address") { continuation ->
                         onReadRemoteRssi(onSuccess = {
@@ -245,7 +242,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
             }
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
-            mutexUtils.withTryLockOrThrow("正在设置ConnectionPriority……") {
+            connectedMutexUtils.withTryLockOrThrow("正在设置ConnectionPriority……") {
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute<Unit>(timeout, "设置ConnectionPriority超时：$address") { continuation ->
                         onRequestConnectionPriority(connectionPriority, onSuccess = {
@@ -269,7 +266,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
             }
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
-            mutexUtils.withTryLockOrThrow("正在设置MTU……") {
+            connectedMutexUtils.withTryLockOrThrow("正在设置MTU……") {
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute(timeout, "设置MTU超时：$address") { continuation ->
                         onRequestMtu(mtu, onSuccess = {
@@ -295,7 +292,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
             }
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
-            mutexUtils.withTryLockOrThrow("正在设置通知……") {
+            connectedMutexUtils.withTryLockOrThrow("正在设置通知……") {
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute<Unit>(timeout, "设置通知超时：$address") { continuation ->
                         onSetCharacteristicNotification(characteristicUuid, serviceUuid, type, enable, onSuccess = {
@@ -321,7 +318,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
             }
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
-            mutexUtils.withTryLockOrThrow("正在写特征值……") {
+            connectedMutexUtils.withTryLockOrThrow("正在写特征值……") {
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute<Unit>(
                         timeout, "写特征值超时：${characteristicUuid.getValidString()}"
@@ -355,7 +352,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
         if (!mContext.isBleDeviceConnected(address)) {
             throw BleExceptionDeviceDisconnected(address)
         }
-        mutexUtils.withTryLockOrThrow("正在写特征值……") {
+        connectedMutexUtils.withTryLockOrThrow("正在写特征值……") {
             withContext(Dispatchers.IO) {
                 suspendCancellableCoroutineWithTimeout.execute<ByteArray>(
                     timeout, "写特征值超时：${writeUuid?.getValidString()}"
@@ -409,7 +406,7 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
             }
             // withTryLock 方法会一直持续到命令执行完成或者 suspendCancellableCoroutineWithTimeout 超时，这段时间是一直上锁了的，
             // 所以不会产生 BleExceptionBusy 异常。
-            mutexUtils.withTryLockOrThrow("正在写描述值……") {
+            connectedMutexUtils.withTryLockOrThrow("正在写描述值……") {
                 withContext(Dispatchers.IO) {
                     suspendCancellableCoroutineWithTimeout.execute<Unit>(
                         timeout, "写描述值超时：${descriptorUuid.getValidString()}"
