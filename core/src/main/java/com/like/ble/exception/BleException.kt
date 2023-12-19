@@ -15,6 +15,7 @@ class BleExceptionTimeout(message: String?) : BleException(message, -10006)
 
 // 提前取消超时不做处理。因为这是调用 stopScan() 或者 disconnect() 方法造成的，使用者可以直接在 stopScan() 或者 disconnect() 方法结束后处理 UI 的显示，不需要此回调。
 object BleExceptionCancelTimeout : BleException("操作被取消", -10007)
+object BleExceptionGpsClosed : BleException("定位服务未打开", -10008)
 
 fun Exception.toBleException(): BleException {
     // 转换一下异常，方便使用者判断。

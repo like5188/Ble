@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.like.ble.central.scan.executor.AbstractScanExecutor
 import com.like.ble.central.scan.executor.ScanExecutorFactory
+import com.like.ble.central.util.PermissionUtils
 import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionCancelTimeout
@@ -77,6 +78,7 @@ class BleScanFragment : Fragment() {
 
     private fun startScan() {
         lifecycleScope.launch {
+            PermissionUtils.requestScanEnvironment(requireActivity())
             var isFirstData = true
             mBinding.tvScanStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.ble_text_blue))
             mBinding.tvScanStatus.text = "扫描中……"

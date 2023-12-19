@@ -7,8 +7,8 @@ import android.content.Context
 import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.toBleException
+import com.like.ble.peripheral.util.PermissionUtils
 import com.like.ble.util.MutexUtils
-import com.like.ble.util.PermissionUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

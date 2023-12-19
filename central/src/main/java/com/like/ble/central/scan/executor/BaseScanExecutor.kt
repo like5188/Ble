@@ -2,9 +2,9 @@ package com.like.ble.central.scan.executor
 
 import android.content.Context
 import com.like.ble.central.scan.result.ScanResult
+import com.like.ble.central.util.PermissionUtils
 import com.like.ble.exception.toBleException
 import com.like.ble.util.MutexUtils
-import com.like.ble.util.PermissionUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers

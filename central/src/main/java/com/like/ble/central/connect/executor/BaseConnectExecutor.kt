@@ -3,13 +3,13 @@ package com.like.ble.central.connect.executor
 import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.util.Log
+import com.like.ble.central.util.PermissionUtils
 import com.like.ble.exception.BleException
 import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.exception.BleExceptionDeviceDisconnected
 import com.like.ble.exception.toBleException
 import com.like.ble.util.MutexUtils
-import com.like.ble.util.PermissionUtils
 import com.like.ble.util.SuspendCancellableCoroutineWithTimeout
 import com.like.ble.util.getValidString
 import com.like.ble.util.isBleDeviceConnected

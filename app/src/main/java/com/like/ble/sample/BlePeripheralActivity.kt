@@ -19,6 +19,7 @@ import com.like.ble.exception.BleExceptionBusy
 import com.like.ble.exception.BleExceptionCancelTimeout
 import com.like.ble.peripheral.executor.AbstractAdvertisingExecutor
 import com.like.ble.peripheral.executor.AdvertisingExecutorFactory
+import com.like.ble.peripheral.util.PermissionUtils
 import com.like.ble.sample.databinding.ActivityBlePeripheralBinding
 import com.like.ble.util.*
 import kotlinx.coroutines.delay
@@ -114,6 +115,7 @@ class BlePeripheralActivity : AppCompatActivity() {
                 UUID_CHARACTERISTIC_1 -> {
                     mResponseData.copyOfRangeByLength(offset, mMtu - 1)
                 }
+
                 else -> {
                     byteArrayOf(Byte.MAX_VALUE)
                 }
@@ -178,6 +180,7 @@ class BlePeripheralActivity : AppCompatActivity() {
                 UUID_DESCRIPTOR_1 -> {
                     byteArrayOf(Byte.MAX_VALUE, Byte.MAX_VALUE)
                 }
+
                 else -> {
                     mResponseData.copyOfRangeByLength(offset, mMtu - 1)
                 }
@@ -273,15 +276,13 @@ class BlePeripheralActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mBinding
-        lifecycleScope.launch {
-            PermissionUtils.requestAdvertisingEnvironment(this@BlePeripheralActivity)
-        }
         bleBroadcastReceiverManager.register()
     }
 
     fun startAdvertising(view: View) {
         lifecycleScope.launch {
             try {
+                PermissionUtils.requestAdvertisingEnvironment(this@BlePeripheralActivity)
                 peripheralExecutor.startAdvertising(
                     createAdvertiseSettings(),
                     createAdvertiseData(),
@@ -297,9 +298,11 @@ class BlePeripheralActivity : AppCompatActivity() {
                     is BleExceptionCancelTimeout -> {
                         // 提前取消超时不做处理。因为这是调用 stopAdvertising() 造成的，使用者可以直接在 stopAdvertising() 方法结束后处理 UI 的显示，不需要此回调。
                     }
+
                     is BleExceptionBusy -> {
                         Toast.makeText(this@BlePeripheralActivity, e.message, Toast.LENGTH_SHORT).show()
                     }
+
                     else -> {
                         val redColor = ContextCompat.getColor(this@BlePeripheralActivity, R.color.ble_text_red)
                         mBinding.tvAdvertisingStatus.setTextColor(redColor)
@@ -466,12 +469,15 @@ class BlePeripheralActivity : AppCompatActivity() {
     override fun onDestroy() {
         bleBroadcastReceiverManager.unregister()
         peripheralExecutor.close()
-        getBluetoothManager()?.getConnectedDevices(BluetoothProfile.GATT)?.forEach {
-            mBluetoothGattServer?.cancelConnection(it)
+        // 避免没有权限时退出界面造成闪退
+        if (PermissionUtils.checkAdvertisingEnvironment(this)) {
+            getBluetoothManager()?.getConnectedDevices(BluetoothProfile.GATT)?.forEach {
+                mBluetoothGattServer?.cancelConnection(it)
+            }
+            mBluetoothGattServer?.clearServices()
+            mBluetoothGattServer?.close()
+            mBluetoothGattServer = null
         }
-        mBluetoothGattServer?.clearServices()
-        mBluetoothGattServer?.close()
-        mBluetoothGattServer = null
         super.onDestroy()
     }
 }
