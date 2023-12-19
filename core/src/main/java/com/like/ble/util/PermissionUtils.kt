@@ -36,7 +36,7 @@ object PermissionUtils {
         // https://developer.android.google.cn/about/versions/12/features/bluetooth-permissions?hl=zh-cn
         arrayOf(
             Manifest.permission.BLUETOOTH_SCAN,
-            Manifest.permission.BLUETOOTH_CONNECT,
+            Manifest.permission.BLUETOOTH_CONNECT,// 获取设备名字的时候需要这个权限，BluetoothDevice.getName()
             Manifest.permission.ACCESS_FINE_LOCATION
         )
     } else if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
