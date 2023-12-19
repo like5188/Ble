@@ -7,7 +7,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <!--危险权限 如果您的应用查找蓝牙设备（如蓝牙低功耗 (BLE) 外围设备）-->
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
-    <!--如果您的应用不推导物理位置，那么您可以坚定地断言您的应用绝不会使用蓝牙权限来推导物理位置。并从移除 ACCESS_FINE_LOCATION 权限。-->
+    <!--如果您的应用不使用物理位置可以设置 neverForLocation，并移除 ACCESS_FINE_LOCATION 权限。虽然不需要位置权限了，但是 gps 还是必须打开才能扫描到结果。-->
     <!--    <uses-permission-->
     <!--        android:name="android.permission.BLUETOOTH_SCAN"-->
     <!--        android:usesPermissionFlags="neverForLocation" />-->
