@@ -37,7 +37,7 @@ object PermissionUtils {
         arrayOf(
             Manifest.permission.BLUETOOTH_SCAN,
             Manifest.permission.BLUETOOTH_CONNECT,// 获取设备名字的时候需要这个权限，BluetoothDevice.getName()
-            Manifest.permission.ACCESS_FINE_LOCATION
+            Manifest.permission.ACCESS_FINE_LOCATION// 如果使用了<uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation"/>，那么可以去掉此权限。
         )
     } else if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
         arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
