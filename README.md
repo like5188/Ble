@@ -65,7 +65,7 @@
 
 4、权限
 
-    使用 com.like.ble.util.PermissionUtils 工具类处理
+    使用 com.like.ble.central.util.PermissionUtils、 com.like.ble.peripheral.util.PermissionUtils工具类处理
 
 5、常用第三方库的引用
 ```java
