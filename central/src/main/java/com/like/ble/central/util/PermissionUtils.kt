@@ -43,10 +43,10 @@ object PermissionUtils {
      * 3、如果没有打开定位服务，则去打开。
      * 注意：此方法包含了[requestConnectEnvironment]方法的操作，不需要再重复调用了，重复调用会造成多次跳转去打开蓝牙或者打开定位服务
      */
-    suspend fun requestScanEnvironment(activity: ComponentActivity) {
-        if (activity.requestPermissions(*scanPermissions)) {
-            activity.isBluetoothEnableAndSettingIfDisabled() && activity.isGpsOpenAndSettingIfClosed()
-        }
+    suspend fun requestScanEnvironment(activity: ComponentActivity): Boolean {
+        return activity.requestPermissions(*scanPermissions) &&
+                activity.isBluetoothEnableAndSettingIfDisabled() &&
+                activity.isGpsOpenAndSettingIfClosed()
     }
 
     /**
@@ -55,38 +55,27 @@ object PermissionUtils {
      * 2、如果没有相关权限，则去请求。
      * 注意：如果调用了[requestScanEnvironment]方法，就不需要再调用此方法了，重复调用会造成多次跳转去打开蓝牙或者打开定位服务
      */
-    suspend fun requestConnectEnvironment(activity: ComponentActivity) {
-        if (activity.requestPermissions(*connectPermissions)) {
-            activity.isBluetoothEnableAndSettingIfDisabled()
-        }
-    }
-
-    /**
-     * 检查连接蓝牙操作需要的环境
-     */
-    fun checkConnectEnvironment(context: Context): Boolean {
-        return context.checkPermissions(*connectPermissions) && context.isBluetoothEnable()
+    suspend fun requestConnectEnvironment(activity: ComponentActivity): Boolean {
+        return activity.requestPermissions(*connectPermissions) &&
+                activity.isBluetoothEnableAndSettingIfDisabled()
     }
 
     /**
      * 检查扫描蓝牙操作需要的环境
      */
     fun checkScanEnvironment(context: Context): Boolean {
-        return context.checkPermissions(*scanPermissions) && context.isBluetoothEnable() && context.isGpsOpen()
+        return context.checkPermissions(*scanPermissions) &&
+                context.isBluetoothEnable() &&
+                context.isGpsOpen()
     }
 
     /**
-     * 检查连接蓝牙操作需要的环境，如果不满足，则抛异常。
+     * 检查连接蓝牙操作需要的环境
      */
-    internal fun checkConnectEnvironmentOrThrow(context: Context) {
-        if (!context.checkPermissions(*connectPermissions)) {
-            throw BleExceptionPermission
-        }
-        if (!context.isBluetoothEnable()) {
-            throw BleExceptionDisabled
-        }
+    fun checkConnectEnvironment(context: Context): Boolean {
+        return context.checkPermissions(*connectPermissions) &&
+                context.isBluetoothEnable()
     }
-
 
     /**
      * 检查扫描蓝牙操作需要的环境，如果不满足，则抛异常。
@@ -100,6 +89,18 @@ object PermissionUtils {
         }
         if (!context.isGpsOpen()) {
             throw BleExceptionGpsClosed
+        }
+    }
+
+    /**
+     * 检查连接蓝牙操作需要的环境，如果不满足，则抛异常。
+     */
+    internal fun checkConnectEnvironmentOrThrow(context: Context) {
+        if (!context.checkPermissions(*connectPermissions)) {
+            throw BleExceptionPermission
+        }
+        if (!context.isBluetoothEnable()) {
+            throw BleExceptionDisabled
         }
     }
 

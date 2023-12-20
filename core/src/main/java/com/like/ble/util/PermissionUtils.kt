@@ -22,10 +22,13 @@ fun Context.checkPermissions(vararg permissions: String): Boolean {
 
 /**
  * 检查是否拥有指定的权限，没有就去请求。
- * @return true：同意了所有权限；false：没有同意所有权限；
+ * @return true：权限为空或者同意了所有权限；false：没有同意所有权限；
  */
 suspend fun ComponentActivity.requestPermissions(vararg permissions: String): Boolean {
     if (permissions.isEmpty()) {
+        return true
+    }
+    if (checkPermissions(*permissions)) {
         return true
     }
     return requestMultiplePermissions(*permissions).all { it.value }

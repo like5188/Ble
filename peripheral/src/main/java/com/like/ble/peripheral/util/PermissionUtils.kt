@@ -27,17 +27,17 @@ object PermissionUtils {
      * 1、如果没有打开蓝牙开关，则去打开。
      * 2、如果没有相关权限，则去请求。
      */
-    suspend fun requestAdvertisingEnvironment(activity: ComponentActivity) {
-        if (activity.requestPermissions(*advertisingPermissions)) {
-            activity.isBluetoothEnableAndSettingIfDisabled()
-        }
+    suspend fun requestAdvertisingEnvironment(activity: ComponentActivity): Boolean {
+        return activity.requestPermissions(*advertisingPermissions) &&
+                activity.isBluetoothEnableAndSettingIfDisabled()
     }
 
     /**
      * 检查广播蓝牙操作需要的环境
      */
     fun checkAdvertisingEnvironment(context: Context): Boolean {
-        return context.checkPermissions(*advertisingPermissions) && context.isBluetoothEnable()
+        return context.checkPermissions(*advertisingPermissions) &&
+                context.isBluetoothEnable()
     }
 
     /**
