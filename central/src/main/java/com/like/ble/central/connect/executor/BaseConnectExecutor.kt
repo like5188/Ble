@@ -82,12 +82,11 @@ internal abstract class BaseConnectExecutor(context: Context, address: String?) 
                     if (it !is BleExceptionCancelTimeout) {
                         // 释放锁，释放蓝牙相关的资源。避免无法连接。
                         doDisconnect()
-                        Log.i("BaseConnectExecutor", "准备延迟 $autoConnectInterval 毫秒后开始重连 $address")
-                        withContext(Dispatchers.IO) {
-                            delay(autoConnectInterval)
-                        }
-
                         if (autoConnect) {
+                            Log.i("BaseConnectExecutor", "准备延迟 $autoConnectInterval 毫秒后开始重连 $address")
+                            withContext(Dispatchers.IO) {
+                                delay(autoConnectInterval)
+                            }
                             autoConnect(scope, autoConnectInterval, timeout, onConnected, onDisconnected)
                         }
                     }
